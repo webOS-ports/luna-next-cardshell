@@ -1,5 +1,5 @@
 {
-    "name": "cardshell",
+    "name": "card",
     "author": "webOS ports",
     "url": "https://www.webos-ports.org",
     "main": "qml/main.qml"
