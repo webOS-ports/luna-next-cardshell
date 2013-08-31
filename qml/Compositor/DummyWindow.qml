@@ -71,6 +71,6 @@ Item {
     }
 
     function takeFocus() {
-        // dummy method
+        console.log("DummyWindow: takeFocus()")
     }
 }
