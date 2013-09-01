@@ -116,7 +116,7 @@ Item {
     function removeWindow(windowWrapper) {
         // The actual model item will be removed once windowRemoved is called from the
         // compositor
-        compositor.closeWindowWithId(windowWrapper.wrappedWindow.id);
+        compositor.closeWindowWithId(windowWrapper.wrappedWindow.appId);
     }
 
     function setWindowState(windowWrapper, windowState) {

@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import LunaNext 0.1
 
 Item {
     id: launchBarDisplay
@@ -6,6 +7,12 @@ Item {
     signal toggleLauncherDisplay
 
     height: windowManager.computeFromLength(80);
+
+    LunaService {
+        id: lunaNextLS2Service
+        name: "org.webosports.luna"
+        usePrivateBus: true
+    }
 
     // background of quick laucnh
     Rectangle {
@@ -22,15 +29,19 @@ Item {
         id: launcherListModel
 
         ListElement {
+            appId: "DummyWindow"
             icon: "../images/default-app-icon.png"
         }
         ListElement {
+            appId: "DummyWindow"
             icon: "../images/default-app-icon.png"
         }
         ListElement {
+            appId: "DummyWindow"
             icon: "../images/default-app-icon.png"
         }
         ListElement {
+            appId: "DummyWindow"
             icon: "../images/default-app-icon.png"
         }
     }
@@ -46,17 +57,15 @@ Item {
             width: launchBarDisplay.width/(launcherListModel.count+1)
             height: launchBarDisplay.height
 
-            Image {
+            LaunchableAppIcon {
                 id: launcherIcon
-                fillMode: Image.PreserveAspectFit
+
+                appIcon: model.icon
+                appId: model.appId
+
                 anchors.centerIn: parent
                 height: parent.height
-                source: icon
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: windowManager.startApp("myApp")
-                }
+                width: parent.width
             }
         }
 

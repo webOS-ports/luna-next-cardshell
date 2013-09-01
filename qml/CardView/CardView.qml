@@ -60,7 +60,7 @@ Item {
                             "windowWrapper": windowWrapper});
 
         listCardsModel.append({"cardWindowInstance": cardComponentInstance});
-        // listCardsView.positionViewAtEnd();
+        listCardsView.positionViewAtEnd();
 
         // emit corresponding signal
         cardAdded(cardComponentInstance);

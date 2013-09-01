@@ -163,17 +163,6 @@ Compositor {
         }
 
         // bottom area: launcher bar
-        LaunchBar {
-            id: launchBarDisplay
-
-            anchors.bottom: gestureAreaDisplay.top
-            anchors.left: windowManager.left
-            anchors.right: windowManager.right
-
-            z: 1 // on top of cardview
-        }
-
-        // bottom area: launcher bar
         AppLauncher {
             id: appLauncherDisplay
 
@@ -187,6 +176,17 @@ Compositor {
                 target: launchBarDisplay
                 onToggleLauncherDisplay: appLauncherDisplay.toggleDisplay()
             }
+
+            z: 1 // on top of cardview
+        }
+
+        // bottom area: launcher bar
+        LaunchBar {
+            id: launchBarDisplay
+
+            anchors.bottom: gestureAreaDisplay.top
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
 
             z: 1 // on top of cardview
         }
@@ -251,15 +251,6 @@ Compositor {
 
         function addNotification(notif) {
             notificationsContainer.addNotification(notif);
-        }
-
-        // This is actually a stub test method that creates a test app window.
-        // TODO: move this code to the Tests module
-        function startApp(appName) {
-            // Simulate the creation of a new app window
-            var windowAppComponent = Qt.createComponent("Compositor/DummyWindow.qml");
-            var windowApp = windowAppComponent.createObject(windowManager);
-            compositor.windowAdded(windowApp);
         }
     }
 }

@@ -9,10 +9,14 @@ Item {
 
     function show() {
         visible = true;
-        console.log("Compositor: show()")
+        console.log("Compositor: show()");
     }
     function clearKeyboardFocus() {
-        console.log("Compositor: cleared keyboard focus.")
+        console.log("Compositor: cleared keyboard focus.");
+    }
+
+    function closeWindowWithId(appId) {
+        console.log("Compositor: closeWindowWithId (appId:" + appId + ")");
     }
 }
 

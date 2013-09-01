@@ -2,10 +2,11 @@ import QtQuick 2.0
 import LunaNext 0.1
 
 // this should be a plugin import
-import "WindowManagerServices.js" as WindowManagerServices
+import "../Compositor/WindowManagerServices.js" as WindowManagerServices
 
 Item {
     id: dummyWindow
+    property string appId: "org.webosports.tests.dummywindow"
     property alias scale: windowRectangle.scale
 
     Rectangle {
