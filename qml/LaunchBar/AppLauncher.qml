@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import LunaNext 0.1
 
 import "../LunaSysAPI" as LunaSysAPI
 
@@ -37,10 +38,8 @@ Rectangle {
         }
     ]
 
-    gradient: Gradient {
-        GradientStop { position: 0.00; color: "#2f2f2f"; }
-        GradientStop { position: 1.00; color: "#606060"; }
-    }
+    color: "#2f2f2f"
+
     LunaSysAPI.ApplicationModel {
         id: appsModel
     }
@@ -49,9 +48,13 @@ Rectangle {
         anchors.fill: parent
         model: appsModel
 
-        delegate: Text {
-            color: "white"
-            text: index + ":" + title
+        delegate: LaunchableAppIcon {
+            width: 128
+
+            appTitle: model.title
+            appIcon: model.icon
+            appId: model.id
+            showTitle: true
         }
     }
 

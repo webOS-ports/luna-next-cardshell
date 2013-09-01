@@ -47,9 +47,11 @@ import "LaunchBar"
 import "LunaGestureArea"
 import "NotificationArea"
 import "Compositor"
-import "Compositor/compositor.js" as CompositorLogic
 import "Utils" as Utils
 
+// The compositor is exposed by the LunaNext module.
+// It manages the creation/destruction of windows
+// in accordance with the lifecycle of the apps.
 Compositor {
     id: compositor
 
@@ -60,8 +62,14 @@ Compositor {
         compositor.show();
     }
 
+    // The window manager has two roles:
+    //  1. it manages the creation/destruction of
+    //     window wrappers whenever the compositor (or
+    //     eventually the app itself) requests it.
+    //  2. it manages the switch between different window modes
+    //     (card, maximized, fullscreen)
     WindowManager {
-        id: root
+        id: windowManager
 
         property real screenwidth: Settings.displayWidth
         property real screenheight: Settings.displayHeight
@@ -75,14 +83,14 @@ Compositor {
         gestureArea: gestureAreaDisplay
 
         Loader {
-                anchors.top: root.top
-            anchors.left: root.left
+            anchors.top: windowManager.top
+            anchors.left: windowManager.left
 
-                width: 50
-                height: 32
+            width: 50
+            height: 32
 
-                // always on top of everything else!
-                z: 1000
+            // always on top of everything else!
+            z: 1000
 
             Component {
                 id: fpsTextComponent
@@ -112,8 +120,8 @@ Compositor {
             id: background
             anchors.top: statusBarDisplay.bottom
             anchors.bottom: gestureAreaDisplay.top
-            anchors.left: root.left
-            anchors.right: root.right
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
 
             z: -1; // the background item should always be behind other components
 
@@ -130,7 +138,7 @@ Compositor {
 
             RoundedItem {
                 anchors.fill: parent
-                cornerRadius: root.cornerRadius
+                cornerRadius: windowManager.cornerRadius
             }
         }
 
@@ -138,31 +146,20 @@ Compositor {
         CardView.CardView {
             id: cardViewDisplay
 
-            anchors.top: root.top
+            anchors.top: windowManager.top
             anchors.bottom: gestureAreaDisplay.top
-            anchors.left: root.left
-            anchors.right: root.right
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
 
             z: 0
 
             Connections {
-                target: root
-                onWindowContainerCreated: {
+                target: windowManager
+                onWindowWrapperCreated: {
                     // insert a new card at the end
-                    cardViewDisplay.appendCard(window, winId);
+                    cardViewDisplay.appendCard(windowWrapper, winId);
                 }
             }
-        }
-
-        // bottom area: launcher bar
-        LaunchBar {
-            id: launchBarDisplay
-
-            anchors.bottom: gestureAreaDisplay.top
-            anchors.left: root.left
-            anchors.right: root.right
-
-            z: 1 // on top of cardview
         }
 
         // bottom area: launcher bar
@@ -172,8 +169,8 @@ Compositor {
             itemAboveLauncher: statusBarDisplay
             itemUnderLauncher: gestureAreaDisplay
 
-            anchors.left: root.left
-            anchors.right: root.right
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
 
             Connections {
                 target: launchBarDisplay
@@ -183,14 +180,25 @@ Compositor {
             z: 1 // on top of cardview
         }
 
+        // bottom area: launcher bar
+        LaunchBar {
+            id: launchBarDisplay
+
+            anchors.bottom: gestureAreaDisplay.top
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
+
+            z: 1 // on top of cardview
+        }
+
         // top area: status bar
         StatusBar {
             id: statusBarDisplay
 
-            anchors.top: root.top
-            anchors.left: root.left
-            anchors.right: root.right
-            height: root.computeFromLength(30);
+            anchors.top: windowManager.top
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
+            height: windowManager.computeFromLength(30);
 
             z: 2 // can only be hidden by a fullscreen window
         }
@@ -200,8 +208,8 @@ Compositor {
             id: notificationsContainer
 
             anchors.bottom: gestureAreaDisplay.top
-            anchors.left: root.left
-            anchors.right: root.right
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
 
             z: 2 // can only be hidden by a fullscreen window
         }
@@ -210,10 +218,10 @@ Compositor {
         LunaGestureArea {
             id: gestureAreaDisplay
 
-            anchors.bottom: root.bottom
-            anchors.left: root.left
-            anchors.right: root.right
-            height: root.computeFromLength(16);
+            anchors.bottom: windowManager.bottom
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
+            height: windowManager.computeFromLength(16);
 
             z: 3 // the gesture area is in front of everything, like the fullscreen window
 
@@ -225,8 +233,8 @@ Compositor {
             }
 
             function cardWindowOrShowLauncher() {
-                if( root.currentActiveWindow ) {
-                    root.restoreWindowToCard(root.currentActiveWindow);
+                if( windowManager.currentActiveWindowWrapper ) {
+                    windowManager.setToCard(windowManager.currentActiveWindowWrapper);
                 }
                 else {
                     // toggle launcher
@@ -238,18 +246,11 @@ Compositor {
         // Utility to convert a pixel length expressed at DPI=132 to
         // a pixel length expressed in our DPI
         function computeFromLength(lengthAt132DPI) {
-            return (lengthAt132DPI * (root.screenDPI / 132.0));
+            return (lengthAt132DPI * (windowManager.screenDPI / 132.0));
         }
 
         function addNotification(notif) {
             notificationsContainer.addNotification(notif);
-        }
-
-        function startApp(appName) {
-            // Simulate the creation of a new app window
-            var windowAppComponent = Qt.createComponent("Compositor/DummyWindow.qml");
-            var windowApp = windowAppComponent.createObject(root);
-            windowAdded(windowApp);
         }
     }
 }

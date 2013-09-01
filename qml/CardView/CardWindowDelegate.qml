@@ -59,7 +59,7 @@ Item {
             drag.minimumY: -cardDelegateWindow.height;
             drag.maximumY: listCardsView.height;
             drag.filterChildren: true
-            enabled: cardDelegateContainer.ListView.isCurrentItem && cardWindow.isWrappedWindowCarded()
+            enabled: cardDelegateContainer.ListView.isCurrentItem && cardWindow.isWindowCarded()
 
             onClicked: {
                 switchToMaximize();

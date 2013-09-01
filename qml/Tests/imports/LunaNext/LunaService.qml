@@ -5,19 +5,41 @@ QtObject {
     property string method
     property bool usePrivateBus: false
 
-    function call(serviceURI, jsonArgs, returnFct) {
+    function call(serviceURI, jsonArgs, returnFct, handleError) {
         if( serviceURI === "luna://com.palm.applicationManager/listApps" ) {
-            listApps_call(jsonArgs, returnFct);
+            listApps_call(jsonArgs, returnFct, handleError);
+        }
+        else if( serviceURI === "luna://com.palm.applicationManager/launch" ) {
+            launchApp_call(jsonArgs, returnFct, handleError);
+        }
+
+        else {
+            handleError("unrecognized call: " + serviceURI);
         }
     }
 
-    function listApps_call(jsonArgs, returnFct) {
+    function listApps_call(jsonArgs, returnFct, handleError) {
         returnFct({"returnValue": true,
                     "apps": [
-             { "title": "calendar", "id": "com.palm.calendar" },
-             { "title": "email", "id": "com.palm.email" },
-             { "title": "calculator", "id": "com.palm.calc", "showInSearch": false },
-             { "title": "snowshoe", "id": "snowshoe" }
+             { "title": "Calendar", "id": "com.palm.calendar", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
+             { "title": "Email", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
+             { "title": "Calculator", "id": "com.palm.calc", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png", "showInSearch": false },
+             { "title": "Snowshoe", "id": "snowshoe", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" }
            ]});
+    }
+
+    function launchApp_call(jsonArgs, returnFct, handleError) {
+        // The JSON params can contain "id" (string) and "params" (object)
+        if( jsonArgs.id ) {
+            // start a DummyWindow
+
+            // Simulate the attachement of a new window to the stub Wayland compositor
+            var windowComponent = Qt.createComponent("../../DummyWindow.qml");
+            var window = windowComponent.createObject(compositor);
+            compositor.windowAdded(window);
+        }
+        else {
+            handleError("Error: parameter 'id' not specified");
+        }
     }
 }

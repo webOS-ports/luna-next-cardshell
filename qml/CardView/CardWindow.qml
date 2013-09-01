@@ -4,18 +4,18 @@ import LunaNext 0.1
 Item {
     id: cardWindow
 
-    property Item windowContainer
+    property Item windowWrapper
     property Item cardView
 
     visible: false
 
-    onVisibleChanged: if( windowContainer && visible ) windowContainer.firstCardDisplayDone = true;
+    onVisibleChanged: if( windowWrapper && visible ) windowWrapper.firstCardDisplayDone = true;
 
     Component.onCompleted: {
-        windowContainer.cardViewParent = cardWindow;
+        windowWrapper.cardViewParent = cardWindow;
     }
 
-    function isWrappedWindowCarded() {
-        return (windowContainer && windowContainer.windowState === WindowState.Carded);
+    function isWindowCarded() {
+        return (windowWrapper && windowWrapper.windowState === WindowState.Carded);
     }
 }

@@ -5,8 +5,8 @@ ListModel {
     id: applicationModel
 
     property string filter: "*"
-    property QtObject applicationManagerService: LunaService {
-        id: service
+    property QtObject lunaNextLS2Service: LunaService {
+        id: lunaNextLS2Service
         name: "org.webosports.luna"
         usePrivateBus: true
     }
@@ -17,7 +17,7 @@ ListModel {
     }
 
     function refresh() {
-        service.call("luna://com.palm.applicationManager/listApps", {"filter": filter}, fillFromJSONResult, handleError);
+        lunaNextLS2Service.call("luna://com.palm.applicationManager/listApps", {"filter": filter}, fillFromJSONResult, handleError);
     }
 
     function fillFromJSONResult(result) {
