@@ -5,7 +5,7 @@ Item {
 
     signal toggleLauncherDisplay
 
-    height: root.computeFromLength(80);
+    height: windowManager.computeFromLength(80);
 
     // background of quick laucnh
     Rectangle {
@@ -55,7 +55,7 @@ Item {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: root.startApp("myApp")
+                    onClicked: windowManager.startApp("myApp")
                 }
             }
         }

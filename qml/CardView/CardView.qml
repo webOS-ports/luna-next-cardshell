@@ -1,7 +1,5 @@
 import QtQuick 2.0
 
-import "../Compositor/compositor.js" as CompositorLogic
-
 Item {
     id: cardViewDisplay
 
@@ -43,23 +41,23 @@ Item {
 
             onSwitchToMaximize: {
                 // maximize window
-                root.setCurrentMaximizedWindow(cardWindow.windowContainer);
+                windowManager.setToMaximized(cardWindow.windowWrapper);
             }
             onDestructionRequest: {
                 // remove card & emit signal
                 listCardsModel.remove(index);
-                cardRemoved(cardWindow.windowContainer);
+                cardRemoved(cardWindow);
             }
         }
     }
 
-    function appendCard(windowContainer, winId) {
+    function appendCard(windowWrapper, winId) {
         // First, instantiate a new card
         var cardComponent = Qt.createComponent("CardWindow.qml");
 
         var cardComponentInstance = cardComponent.createObject(listCardsView,
                            {"view": listCardsView,
-                            "windowContainer": windowContainer});
+                            "windowWrapper": windowWrapper});
 
         listCardsModel.append({"cardWindowInstance": cardComponentInstance});
         // listCardsView.positionViewAtEnd();

@@ -2,7 +2,7 @@ import QtQuick 2.0
 import LunaNext 0.1
 
 // this should be a plugin import
-import "compositor.js" as CompositorLogic
+import "WindowManagerServices.js" as WindowManagerServices
 
 Item {
     id: dummyWindow
@@ -28,7 +28,7 @@ Item {
             }
 
             Text {
-                text: "Current mode: " + CompositorLogic.getAppWindowState(dummyWindow)
+                text: "Current mode: " + WindowManagerServices.getWindowState(dummyWindow)
                 font.pointSize: 20
                 font.underline: true
                 color: "white"
@@ -37,7 +37,7 @@ Item {
                     anchors.fill: parent;
 
                     onClicked: {
-                        var currentState = CompositorLogic.getAppWindowState(dummyWindow);
+                        var currentState = WindowManagerServices.getWindowState(dummyWindow);
                         // switch to the next state
                         currentState = (currentState+1) % 4;
 
@@ -45,7 +45,7 @@ Item {
                         if (currentState === 0)
                             currentState = WindowState.Carded;
 
-                        CompositorLogic.setAppWindowState(dummyWindow, currentState);
+                        WindowManagerServices.setWindowState(dummyWindow, currentState);
                     }
                 }
             }
@@ -63,7 +63,7 @@ Item {
                             "icon": "../images/glow.png",
                             "content": "this is a new notification from DummyWindow"
                         };
-                        CompositorLogic.addNotification(newNotif);
+                        WindowManagerServices.addNotification(newNotif);
                     }
                 }
             }

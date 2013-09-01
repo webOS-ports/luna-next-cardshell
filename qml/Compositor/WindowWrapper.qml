@@ -3,10 +3,10 @@ import QtGraphicalEffects 1.0
 import LunaNext 0.1
 
 Item {
-    id: windowContainer
+    id: windowWrapper
 
     // the window app that will be wrapped in this window container
-    property alias child: childWrapper.child
+    property alias wrappedWindow: childWrapper.wrappedChild
     // a backlink to the window manager instance
     property variant windowManager
 
@@ -23,18 +23,18 @@ Item {
     // this is the radius that should be applied to the corners of this window container
     property real cornerRadius: 20
 
-    // The child container, to facilite the wrapping
+    // A simple container, to facilite the wrapping
     Item {
         id: childWrapper
-        property variant child
+        property variant wrappedChild
 
         anchors.fill: parent;
 
-        function setWrappedChild(appWindow) {
-            appWindow.parent = childWrapper;
-            childWrapper.child = appWindow;
-            childWrapper.children = [ appWindow ];
-            appWindow.anchors.fill = childWrapper;
+        function setWrappedChild(window) {
+            window.parent = childWrapper;
+            childWrapper.wrappedChild = window;
+            childWrapper.children = [ window ];
+            window.anchors.fill = childWrapper;
         }
     }
 
@@ -43,7 +43,7 @@ Item {
         id: cornerStaticMask
         anchors.fill: parent
         visible: false
-        cornerRadius: windowContainer.cornerRadius
+        cornerRadius: windowWrapper.cornerRadius
     }
     CornerShader {
         id: cornerShader
@@ -83,31 +83,31 @@ Item {
 
         ParentAnimation {
             id: parentChangeAnimation
-            target: windowContainer
+            target: windowWrapper
         }
         NumberAnimation {
             id: coordTargetAnimation
-            target: windowContainer
+            target: windowWrapper
             properties: "x,y"; to: 0; duration: 300
         }
         NumberAnimation {
             id: widthTargetAnimation
-            target: windowContainer
+            target: windowWrapper
             properties: "width"; duration: 300
         }
         NumberAnimation {
             id: heightTargetAnimation
-            target: windowContainer
+            target: windowWrapper
             properties: "height"; duration: 300
         }
         NumberAnimation {
             id: scaleTargetAnimation
-            target: windowContainer
+            target: windowWrapper
             properties: "scale"; to: 1; duration: 300
         }
 
         onStarted: {
-            windowContainer.anchors.fill = undefined;
+            windowWrapper.anchors.fill = undefined;
             if( useShaderForNewParent )
             {
                 cornerShader.sourceItem = childWrapper;
@@ -117,7 +117,7 @@ Item {
         }
 
         onStopped: {
-            windowContainer.anchors.fill = targetNewParent;
+            windowWrapper.anchors.fill = targetNewParent;
             if( !useShaderForNewParent )
             {
                 cornerShader.sourceItem = null;
@@ -127,8 +127,8 @@ Item {
         }
     }
 
-    function setWrappedChild(appWindow) {
-        childWrapper.setWrappedChild(appWindow);
+    function setWrappedWindow(window) {
+        childWrapper.setWrappedChild(window);
     }
 
     function setNewParent(newParent, useShader) {
@@ -143,8 +143,8 @@ Item {
     function startupAnimation() {
         // do the whole startup animation
         // first: show as card in the cardview
-        windowManager.restoreWindowToCard(windowContainer);
+        windowManager.setToCard(windowWrapper);
         newParentAnimation.complete(); // force animation to complete now
-        windowManager.setCurrentMaximizedWindow(windowContainer);
+        windowManager.setToMaximized(windowWrapper);
     }
 }

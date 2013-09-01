@@ -9,12 +9,12 @@ Item {
     property Item statusBar
     property Item notificationsContainer
 
-    property Item currentActiveWindow
+    property Item currentActiveWindowWrapper
 
     property real cornerRadius: 40
 
-    property alias maximizedWindowContainer: maximizedWindowContainer
-    property alias fullscreenWindowContainer: fullscreenWindowContainer
+    property alias maximizedwindowWrapperContainer: maximizedWindowWrapperContainer
+    property alias fullscreenwindowWrapperContainer: fullscreenWindowWrapperContainer
 
     QtObject {
         id: localProperties
@@ -27,17 +27,17 @@ Item {
         }
     }
 
-    signal windowContainerCreated(variant window, int winId);
+    signal windowWrapperCreated(Item windowWrapper, int winId);
 
     ListModel {
         // This model contains the list of the windows that are managed by the compositor.
-        // Each window is actually a "WindowContainer", whose child is the app's window.
+        // Each window is actually a "windowWrapper", whose child is the app's window.
         // It has only one property: "window", of type variant
-        id: listWindowsModel
+        id: listWindowWrappersModel
 
         function getIndexFromProperty(modelProperty, propertyValue) {
             var i=0;
-            for(i=0; i<listWindowsModel.count;i++) {
+            for(i=0; i<listWindowWrappersModel.count;i++) {
                 var item=get(i);
                 if(item && item[modelProperty] === propertyValue) {
                     return i;
@@ -51,24 +51,24 @@ Item {
 
     // maximized window container
     Item {
-        id: maximizedWindowContainer
+        id: maximizedWindowWrapperContainer
 
         anchors.top: statusBarDisplay.bottom
         anchors.bottom: notificationsContainer.top
-        anchors.left: root.left
-        anchors.right: root.right
+        anchors.left: windowManager.left
+        anchors.right: windowManager.right
 
         z: 2
     }
 
     // fullscreen window container
     Item {
-        id: fullscreenWindowContainer
+        id: fullscreenWindowWrapperContainer
 
-        anchors.top: root.top
+        anchors.top: windowManager.top
         anchors.bottom: gestureAreaDisplay.top
-        anchors.left: root.left
-        anchors.right: root.right
+        anchors.left: windowManager.left
+        anchors.right: windowManager.right
 
         z: 3 // in front of everything
     }
@@ -76,7 +76,7 @@ Item {
     Connections {
         target: cardView
         onCardRemoved: {
-            removeWindow(cardComponentInstance);
+            removeWindow(cardComponentInstance.windowWrapper);
         }
     }
 
@@ -86,81 +86,81 @@ Item {
         onWindowRemoved: handleWindowRemoved(window)
     }
 
-    function handleWindowAdded(appWindow) {
+    function handleWindowAdded(window) {
         // Create the window container
-        var windowContainerComponent = Qt.createComponent("WindowContainer.qml");
-        var windowContainer = windowContainerComponent.createObject(root);
-        windowContainer.windowManager = windowManager;
-        windowContainer.cornerRadius = cornerRadius
+        var windowWrapperComponent = Qt.createComponent("WindowWrapper.qml");
+        var windowWrapper = windowWrapperComponent.createObject(windowManager);
+        windowWrapper.windowManager = windowManager;
+        windowWrapper.cornerRadius = cornerRadius
 
         // Bind the container with its app window
-        windowContainer.setWrappedChild(appWindow);
+        windowWrapper.setWrappedWindow(window);
 
-        var winId = appWindow.id;
-        listWindowsModel.append({"window": windowContainer, "winId": winId});
+        var winId = window.id;
+        listWindowWrappersModel.append({"windowWrapper": windowWrapper, "winId": winId});
 
         // emit the signal
-        windowContainerCreated(windowContainer, winId);
+        windowWrapperCreated(windowWrapper, winId);
     }
 
-    function handleWindowRemoved(appWindow) {
-        var windowContainer = appWindow.parent;
-        var index = listWindowsModel.getIndexFromProperty('window', windowContainer);
+    function handleWindowRemoved(window) {
+        var windowWrapper = window.parent;
+        var index = listWindowWrappersModel.getIndexFromProperty('window', windowWrapper);
         if( index >= 0 )
         {
-            listWindowsModel.remove(index);
-            windowContainer.destroy();
+            listWindowWrappersModel.remove(index);
+            windowWrapper.destroy();
         }
     }
 
-    function removeWindow(windowContainer) {
+    function removeWindow(windowWrapper) {
         // The actual model item will be removed once windowRemoved is called from the
         // compositor
-        compositor.closeWindowWithId(windowContainer.child.id);
+        compositor.closeWindowWithId(windowWrapper.wrappedWindow.id);
     }
 
-    function setWindowState(windowContainer, windowState) {
+    function setWindowState(windowWrapper, windowState) {
         if( windowState === WindowState.Maximized ) {
-            setCurrentMaximizedWindow(windowContainer);
+            setToMaximized(windowWrapper);
         }
         else if(windowState === WindowState.Fullscreen) {
-            setCurrentFullscreenWindow(windowContainer);
+            setToFullscreen(windowWrapper);
         }
         else {
-            restoreWindowToCard(windowContainer);
+            setToCard(windowWrapper);
         }
     }
 
-    function setCurrentMaximizedWindow(windowContainer) {
+    function setToMaximized(windowWrapper) {
         // switch the state to maximized
-        windowContainer.windowState = WindowState.Maximized;
-        currentActiveWindow = windowContainer;
+        windowWrapper.windowState = WindowState.Maximized;
+        currentActiveWindowWrapper = windowWrapper;
 
-        windowContainer.setNewParent(maximizedWindowContainer, false);
+        windowWrapper.setNewParent(maximizedWindowWrapperContainer, false);
 
-        if (windowContainer.child) {
+        if (windowWrapper.child) {
             // take focus for receiving input events
-            windowContainer.child.takeFocus();
+            windowWrapper.child.takeFocus();
         }
     }
-    function setCurrentFullscreenWindow(windowContainer) {
+    function setToFullscreen(windowWrapper) {
         // switch the state to fullscreen
-        windowContainer.windowState = WindowState.Fullscreen;
-        currentActiveWindow = windowContainer;
+        windowWrapper.windowState = WindowState.Fullscreen;
+        currentActiveWindowWrapper = windowWrapper;
 
-        windowContainer.setNewParent(fullscreenWindowContainer, false);
+        windowWrapper.setNewParent(fullscreenWindowWrapperContainer, false);
 
-        if (windowContainer.child) {
+        if (windowWrapper.child) {
             // take focus for receiving input events
-            windowContainer.child.takeFocus();
+            windowWrapper.child.takeFocus();
         }
     }
-    function restoreWindowToCard(windowContainer) {
+    function setToCard(windowWrapper) {
         // switch the state to card
-        windowContainer.windowState = WindowState.Carded;
-        currentActiveWindow = null;
+        windowWrapper.windowState = WindowState.Carded;
+        currentActiveWindowWrapper = null;
 
-        windowContainer.setNewParent(windowContainer.cardViewParent, true);
+        windowWrapper.setNewParent(windowWrapper.cardViewParent, true);
 
         // we're back to card view so no card should have the focus
         // for the keyboard anymore
