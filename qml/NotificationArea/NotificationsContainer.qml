@@ -40,7 +40,7 @@ Rectangle {
         id: minimizedListView
 
         x: 0; y: 0; width: parent.width
-        height: root.computeFromLength(64);
+        height: windowManager.computeFromLength(64);
         interactive: false
 
         orientation: ListView.Horizontal
@@ -78,8 +78,8 @@ Rectangle {
                 Image {
                     anchors.verticalCenter: fullNotificationRow.verticalCenter
                     source: model.icon
-                    width: root.computeFromLength(30);
-                    height: root.computeFromLength(30);
+                    width: windowManager.computeFromLength(30);
+                    height: windowManager.computeFromLength(30);
                 }
                 Text {
                     anchors.verticalCenter: fullNotificationRow.verticalCenter
