@@ -6,11 +6,12 @@ QtObject {
     property bool usePrivateBus: false
 
     function call(serviceURI, jsonArgs, returnFct, handleError) {
+        var args = JSON.parse(jsonArgs);
         if( serviceURI === "luna://com.palm.applicationManager/listApps" ) {
-            listApps_call(jsonArgs, returnFct, handleError);
+            listApps_call(args, returnFct, handleError);
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launch" ) {
-            launchApp_call(jsonArgs, returnFct, handleError);
+            launchApp_call(args, returnFct, handleError);
         }
 
         else {
@@ -19,13 +20,13 @@ QtObject {
     }
 
     function listApps_call(jsonArgs, returnFct, handleError) {
-        returnFct({"returnValue": true,
+        returnFct(JSON.stringify({"returnValue": true,
                     "apps": [
              { "title": "Calendar", "id": "com.palm.calendar", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
              { "title": "Email", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
              { "title": "Calculator", "id": "com.palm.calc", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png", "showInSearch": false },
              { "title": "Snowshoe", "id": "snowshoe", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" }
-           ]});
+           ]}));
     }
 
     function launchApp_call(jsonArgs, returnFct, handleError) {
