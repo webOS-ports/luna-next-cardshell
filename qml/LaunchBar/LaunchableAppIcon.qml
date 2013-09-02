@@ -26,7 +26,7 @@ Column {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: launchableAppIcon.lunaNextLS2Service.call("luna://com.palm.applicationManager/launch", {"id": launchableAppIcon.appId}, undefined, handleError)
+            onClicked: launchableAppIcon.lunaNextLS2Service.call("luna://com.palm.applicationManager/launch", JSON.stringify({"id": launchableAppIcon.appId}), undefined, handleError)
 
             function handleError(message) {
                 console.log("Could not start application " + launchableAppIcon.appId + " : " + message);

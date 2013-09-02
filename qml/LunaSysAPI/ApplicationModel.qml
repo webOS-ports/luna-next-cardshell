@@ -17,10 +17,11 @@ ListModel {
     }
 
     function refresh() {
-        lunaNextLS2Service.call("luna://com.palm.applicationManager/listApps", {"filter": filter}, fillFromJSONResult, handleError);
+        lunaNextLS2Service.call("luna://com.palm.applicationManager/listApps", JSON.stringify({"filter": filter}), fillFromJSONResult, handleError);
     }
 
-    function fillFromJSONResult(result) {
+    function fillFromJSONResult(data) {
+        var result = JSON.parse(data);
         applicationModel.clear();
         if(result.returnValue && result.apps !== undefined) {
             for(var i=0; i<result.apps.length; i++) {
