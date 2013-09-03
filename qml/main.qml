@@ -41,7 +41,7 @@
 import QtQuick 2.0
 import LunaNext 0.1
 
-import "CardView" as CardView
+import "CardView"
 import "StatusBar"
 import "LaunchBar"
 import "LunaGestureArea"
@@ -78,9 +78,9 @@ Compositor {
         anchors.fill: parent
 
         notificationsContainer: notificationsContainer
-        cardView: cardViewDisplay
-        statusBar: statusBarDisplay
-        gestureArea: gestureAreaDisplay
+        cardView: cardViewInstance
+        statusBar: statusBarInstance
+        gestureArea: gestureAreaInstance
 
         Loader {
             anchors.top: windowManager.top
@@ -118,8 +118,8 @@ Compositor {
         // background
         Item {
             id: background
-            anchors.top: statusBarDisplay.bottom
-            anchors.bottom: gestureAreaDisplay.top
+            anchors.top: statusBarInstance.bottom
+            anchors.bottom: gestureAreaInstance.top
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
@@ -143,11 +143,11 @@ Compositor {
         }
 
         // cardview
-        CardView.CardView {
-            id: cardViewDisplay
+        CardView {
+            id: cardViewInstance
 
             anchors.top: windowManager.top
-            anchors.bottom: gestureAreaDisplay.top
+            anchors.bottom: gestureAreaInstance.top
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
@@ -157,34 +157,19 @@ Compositor {
                 target: windowManager
                 onWindowWrapperCreated: {
                     // insert a new card at the end
-                    cardViewDisplay.appendCard(windowWrapper, winId);
+                    cardViewInstance.appendCard(windowWrapper, winId);
                 }
             }
         }
 
-        // bottom area: launcher bar
-        AppLauncher {
-            id: appLauncherDisplay
+        Launcher {
+            id: launcherInstance
 
-            itemAboveLauncher: statusBarDisplay
-            itemUnderLauncher: gestureAreaDisplay
+            gestureArea: gestureAreaInstance
+            windowManager: windowManager
 
-            anchors.left: windowManager.left
-            anchors.right: windowManager.right
-
-            Connections {
-                target: launchBarDisplay
-                onToggleLauncherDisplay: appLauncherDisplay.toggleDisplay()
-            }
-
-            z: 1 // on top of cardview
-        }
-
-        // bottom area: launcher bar
-        LaunchBar {
-            id: launchBarDisplay
-
-            anchors.bottom: gestureAreaDisplay.top
+            anchors.top: statusBarInstance.bottom
+            anchors.bottom: gestureAreaInstance.top
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
@@ -193,7 +178,7 @@ Compositor {
 
         // top area: status bar
         StatusBar {
-            id: statusBarDisplay
+            id: statusBarInstance
 
             anchors.top: windowManager.top
             anchors.left: windowManager.left
@@ -207,7 +192,7 @@ Compositor {
         NotificationsContainer {
             id: notificationsContainer
 
-            anchors.bottom: gestureAreaDisplay.top
+            anchors.bottom: gestureAreaInstance.top
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
@@ -216,7 +201,7 @@ Compositor {
 
         // gesture area
         LunaGestureArea {
-            id: gestureAreaDisplay
+            id: gestureAreaInstance
 
             anchors.bottom: windowManager.bottom
             anchors.left: windowManager.left
@@ -226,19 +211,13 @@ Compositor {
             z: 3 // the gesture area is in front of everything, like the fullscreen window
 
             onSwipeUpGesture:{
-                cardWindowOrShowLauncher();
-            }
-            onTapGesture: {
-                cardWindowOrShowLauncher();
-            }
-
-            function cardWindowOrShowLauncher() {
                 if( windowManager.currentActiveWindowWrapper ) {
                     windowManager.setToCard(windowManager.currentActiveWindowWrapper);
                 }
-                else {
-                    // toggle launcher
-                    appLauncherDisplay.toggleDisplay();
+            }
+            onTapGesture: {
+                if( windowManager.currentActiveWindowWrapper ) {
+                    windowManager.setToCard(windowManager.currentActiveWindowWrapper);
                 }
             }
         }

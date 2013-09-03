@@ -2,7 +2,7 @@ import QtQuick 2.0
 // import Qt.labs.gestures 1.0
 
 Item {
-    id: gestureAreaDisplay
+    id: gestureAreaItem
 
     signal tapGesture
     signal swipeUpGesture(int modifiers)

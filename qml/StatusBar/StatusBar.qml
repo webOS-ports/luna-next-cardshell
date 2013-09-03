@@ -2,10 +2,10 @@ import QtQuick 2.0
 import LunaNext 0.1
 
 Item {
-    id: statusBarDisplay
+    id: statusBarItem
 
     Rectangle {
-        anchors.fill: statusBarDisplay
+        anchors.fill: statusBarItem
         color: "black"
 
         Text {

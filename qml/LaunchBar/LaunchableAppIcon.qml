@@ -18,6 +18,7 @@ Column {
     Image {
         width: parent.width
         anchors.horizontalCenter: parent.horizontalCenter
+
         fillMode: Image.PreserveAspectFit
 
         sourceSize.height: height
@@ -35,7 +36,6 @@ Column {
     }
     Text {
         visible: launchableAppIcon.showTitle
-        width: parent.width
         anchors.horizontalCenter: parent.horizontalCenter
         color: "white"
         text: launchableAppIcon.appTitle

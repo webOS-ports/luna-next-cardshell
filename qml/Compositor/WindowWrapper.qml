@@ -88,22 +88,22 @@ Item {
         NumberAnimation {
             id: coordTargetAnimation
             target: windowWrapper
-            properties: "x,y"; to: 0; duration: 300
+            properties: "x,y"; to: 0; duration: 150
         }
         NumberAnimation {
             id: widthTargetAnimation
             target: windowWrapper
-            properties: "width"; duration: 300
+            properties: "width"; duration: 150
         }
         NumberAnimation {
             id: heightTargetAnimation
             target: windowWrapper
-            properties: "height"; duration: 300
+            properties: "height"; duration: 150
         }
         NumberAnimation {
             id: scaleTargetAnimation
             target: windowWrapper
-            properties: "scale"; to: 1; duration: 300
+            properties: "scale"; to: 1; duration: 100
         }
 
         onStarted: {

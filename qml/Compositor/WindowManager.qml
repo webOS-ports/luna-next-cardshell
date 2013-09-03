@@ -16,6 +16,10 @@ Item {
     property alias maximizedwindowWrapperContainer: maximizedWindowWrapperContainer
     property alias fullscreenwindowWrapperContainer: fullscreenWindowWrapperContainer
 
+    signal switchToMaximize(Item windowWrapper)
+    signal switchToFullscreen(Item windowWrapper)
+    signal switchToCard(Item windowWrapper)
+
     QtObject {
         id: localProperties
 
@@ -53,7 +57,7 @@ Item {
     Item {
         id: maximizedWindowWrapperContainer
 
-        anchors.top: statusBarDisplay.bottom
+        anchors.top: statusBarInstance.bottom
         anchors.bottom: notificationsContainer.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
@@ -66,7 +70,7 @@ Item {
         id: fullscreenWindowWrapperContainer
 
         anchors.top: windowManager.top
-        anchors.bottom: gestureAreaDisplay.top
+        anchors.bottom: gestureAreaInstance.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
@@ -142,6 +146,9 @@ Item {
             // take focus for receiving input events
             windowWrapper.child.takeFocus();
         }
+
+        // emit signal
+        switchToMaximize(windowWrapper);
     }
     function setToFullscreen(windowWrapper) {
         // switch the state to fullscreen
@@ -154,6 +161,9 @@ Item {
             // take focus for receiving input events
             windowWrapper.child.takeFocus();
         }
+
+        // emit signal
+        switchToFullscreen(windowWrapper);
     }
     function setToCard(windowWrapper) {
         // switch the state to card
@@ -166,5 +176,8 @@ Item {
         // for the keyboard anymore
         if( compositor )
             compositor.clearKeyboardFocus();
+
+        // emit signal
+        switchToCard(windowWrapper);
     }
 }
