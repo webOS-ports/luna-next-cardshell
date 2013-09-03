@@ -1,7 +1,7 @@
 import QtQuick 2.0
 
 Item {
-    id: cardViewDisplay
+    id: cardViewItem
 
     signal cardAdded(Item cardComponentInstance)
     signal cardRemoved(Item cardComponentInstance)
