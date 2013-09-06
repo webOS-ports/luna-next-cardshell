@@ -7,9 +7,10 @@ Item {
     property Item windowWrapper
     property Item cardView
 
-    visible: false
+    property bool isCurrentCard: false
+    property bool firstCardDisplayDone: false
 
-    onVisibleChanged: if( windowWrapper && visible ) windowWrapper.firstCardDisplayDone = true;
+    visible: false
 
     Component.onCompleted: {
         windowWrapper.cardViewParent = cardWindow;
@@ -17,5 +18,14 @@ Item {
 
     function isWindowCarded() {
         return (windowWrapper && windowWrapper.windowState === WindowState.Carded);
+    }
+    function setCurrentCardState(isCurrent)
+    {
+        isCurrentCard = isCurrent;
+        if( isCurrentCard && !firstCardDisplayDone )
+        {
+            firstCardDisplayDone = true;
+            windowWrapper.startupAnimation();
+        }
     }
 }
