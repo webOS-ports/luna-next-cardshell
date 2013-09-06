@@ -1,8 +1,15 @@
 import QtQuick 2.0
+import LunaNext 0.1
 
 Item {
     property Item gestureArea
     property Item windowManager
+
+    property QtObject lunaNextLS2Service: LunaService {
+        id: lunaNextLS2Service
+        name: "org.webosports.luna"
+        usePrivateBus: true
+    }
 
     // App launcher, which can slide up or down on demand
     FullLauncher {
@@ -61,6 +68,28 @@ Item {
         onSwitchToFullscreen: {
             state = "hidden";
         }
+        onSwitchToCard: {
+            state = "launchbar";
+        }
+    }
+
+    Connections {
+        target: launchBarInstance
+        onStartLaunchApplication: {
+            state = "hidden";
+            lunaNextLS2Service.call("luna://com.palm.applicationManager/launch", JSON.stringify({"id": appId}), undefined, handleLaunchAppError)
+        }
+    }
+    Connections {
+        target: fullLauncherInstance
+        onStartLaunchApplication: {
+            state = "hidden";
+            lunaNextLS2Service.call("luna://com.palm.applicationManager/launch", JSON.stringify({"id": appId}), undefined, handleLaunchAppError)
+        }
+    }
+
+    function handleLaunchAppError(message) {
+        console.log("Could not start application " + launchableAppIcon.appId + " : " + message);
     }
 
     function switchToNextState() {
