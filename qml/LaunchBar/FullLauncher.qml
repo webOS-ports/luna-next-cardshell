@@ -1,10 +1,11 @@
 import QtQuick 2.0
-import LunaNext 0.1
 
 import "../LunaSysAPI" as LunaSysAPI
 
 Rectangle {
     id: fullLauncher
+
+    signal startLaunchApplication(string appId)
 
     state: "hidden"
     visible: false
@@ -46,12 +47,14 @@ Rectangle {
         model: appsModel
 
         delegate: LaunchableAppIcon {
-            width: 128
+            width: 64
 
             appTitle: model.title
             appIcon: model.icon
             appId: model.id
             showTitle: true
+
+            onStartLaunchApplication: fullLauncher.startLaunchApplication(appId);
         }
     }
 }

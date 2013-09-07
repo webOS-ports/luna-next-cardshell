@@ -1,19 +1,13 @@
 import QtQuick 2.0
-import LunaNext 0.1
 
 Item {
     id: launchBarItem
 
+    signal startLaunchApplication(string appId)
     signal toggleLauncherDisplay
 
     state: "visible"
     anchors.bottom: parent.bottom
-
-    LunaService {
-        id: lunaNextLS2Service
-        name: "org.webosports.luna"
-        usePrivateBus: true
-    }
 
     // list of icons
     ListModel {
@@ -87,6 +81,8 @@ Item {
                 anchors.centerIn: parent
                 height: parent.height
                 width: parent.width
+
+                onStartLaunchApplication: launchBarItem.startLaunchApplication(appId);
             }
         }
 

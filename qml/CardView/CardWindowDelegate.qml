@@ -9,8 +9,12 @@ Item {
 
     // this is the card window instance wrapping the window container
     property variant cardWindow
+
+    // this defines the size the card should have
     property real cardWidth
     property real cardHeight
+
+    property bool isCurrent: ListView.isCurrentItem
 
     signal switchToMaximize();
     signal destructionRequest()
@@ -59,7 +63,7 @@ Item {
             drag.minimumY: -cardDelegateWindow.height;
             drag.maximumY: listCardsView.height;
             drag.filterChildren: true
-            enabled: cardDelegateContainer.ListView.isCurrentItem && cardWindow.isWindowCarded()
+            enabled: cardDelegateContainer.isCurrent && cardWindow.isWindowCarded()
 
             onClicked: {
                 switchToMaximize();
@@ -75,4 +79,6 @@ Item {
             }
         }
     }
+
+    onIsCurrentChanged: cardWindow.setCurrentCardState(isCurrent);
 }

@@ -15,7 +15,6 @@ Item {
     //    * Maximized
     //    * Fullscreen
     property int windowState: WindowState.Carded
-    property bool firstCardDisplayDone: false
 
     // that part should be moved to a window manager, or maybe to the card view interface
     property variant cardViewParent
@@ -53,9 +52,6 @@ Item {
         visible: false
     }
     state: windowState === WindowState.Fullscreen ? "fullscreen" : windowState === WindowState.Maximized ? "maximized" : "card"
-    onFirstCardDisplayDoneChanged: if( firstCardDisplayDone === true ) {
-                                       startupAnimation();
-                                   }
 
     states: [
         State {
