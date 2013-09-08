@@ -146,6 +146,8 @@ Compositor {
         CardView {
             id: cardViewInstance
 
+            windowManagerInstance: windowManager
+
             anchors.top: windowManager.top
             anchors.bottom: gestureAreaInstance.top
             anchors.left: windowManager.left
@@ -158,6 +160,10 @@ Compositor {
                 onWindowWrapperCreated: {
                     // insert a new card at the end
                     cardViewInstance.appendCard(windowWrapper, winId);
+                }
+                onWindowWrapperDestruction: {
+                    // remove the corresponding card
+                    cardViewInstance.removeCard(windowWrapper, winId);
                 }
             }
         }
@@ -209,17 +215,6 @@ Compositor {
             height: windowManager.computeFromLength(16);
 
             z: 3 // the gesture area is in front of everything, like the fullscreen window
-
-            onSwipeUpGesture:{
-                if( windowManager.currentActiveWindowWrapper ) {
-                    windowManager.setToCard(windowManager.currentActiveWindowWrapper);
-                }
-            }
-            onTapGesture: {
-                if( windowManager.currentActiveWindowWrapper ) {
-                    windowManager.setToCard(windowManager.currentActiveWindowWrapper);
-                }
-            }
         }
 
         // Utility to convert a pixel length expressed at DPI=132 to

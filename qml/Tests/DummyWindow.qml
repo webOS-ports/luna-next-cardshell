@@ -6,6 +6,7 @@ import "../Compositor/WindowManagerServices.js" as WindowManagerServices
 
 Item {
     id: dummyWindow
+    property int winId: 0
     property string appId: "org.webosports.tests.dummywindow"
     property alias scale: windowRectangle.scale
 
