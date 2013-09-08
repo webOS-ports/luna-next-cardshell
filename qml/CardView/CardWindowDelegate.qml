@@ -1,8 +1,6 @@
 import QtQuick 2.0
 import LunaNext 0.1
 
-import "../Compositor" as Compositor
-
 Item {
     id: cardDelegateContainer
 

@@ -3,8 +3,7 @@ import QtQuick 2.0
 Item {
     id: cardViewItem
 
-    signal cardAdded(Item cardComponentInstance)
-    signal cardRemoved(Item cardComponentInstance)
+    property Item windowManagerInstance;
 
     ListModel {
         // This model contains the list of the cards
@@ -41,12 +40,11 @@ Item {
 
             onSwitchToMaximize: {
                 // maximize window
-                windowManager.setToMaximized(cardWindow.windowWrapper);
+                windowManagerInstance.setToMaximized(cardWindow.windowWrapper);
             }
             onDestructionRequest: {
-                // remove card & emit signal
-                listCardsModel.remove(index);
-                cardRemoved(cardWindow);
+                // remove window
+                windowManagerInstance.removeWindow(cardWindow.windowWrapper);
             }
         }
     }
@@ -61,9 +59,22 @@ Item {
 
         listCardsModel.append({"cardWindowInstance": cardComponentInstance});
         listCardsView.positionViewAtEnd();
+    }
 
-        // emit corresponding signal
-        cardAdded(cardComponentInstance);
+    function removeCard(windowWrapper, winId) {
+        // Find the corresponding card
+        var i=0;
+        for(i=0; i<listCardsModel.count;i++) {
+            var cardWindow=listCardsModel.get(i);
+            if(cardWindow && cardWindow.windowWrapper === windowWrapper) {
+                // remove the card instance from the model
+                listCardsModel.remove(i);
+                // actually destroy the card instance. The window wrapper will be destroyed
+                // by the window manager.
+                cardWindow.destroy();
+                break;
+            }
+        }
     }
 }
 

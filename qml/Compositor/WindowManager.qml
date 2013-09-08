@@ -20,23 +20,14 @@ Item {
     signal switchToFullscreen(Item windowWrapper)
     signal switchToCard(Item windowWrapper)
 
-    QtObject {
-        id: localProperties
-
-        property int nextWinId: 0;
-
-        function getNextWinId() {
-            nextWinId++;
-            return nextWinId;
-        }
-    }
-
     signal windowWrapperCreated(Item windowWrapper, int winId);
+    signal windowWrapperDestruction(Item windowWrapper, int winId);
 
     ListModel {
-        // This model contains the list of the windows that are managed by the compositor.
-        // Each window is actually a "windowWrapper", whose child is the app's window.
-        // It has only one property: "window", of type variant
+        // This model contains the list of the window wrappers that are managed by the
+        // window manager.
+        // Each window wrapper is a "WindowWrapper", whose child is the app's window.
+        // It has only one property: "windowWrapper", of type variant
         id: listWindowWrappersModel
 
         function getIndexFromProperty(modelProperty, propertyValue) {
@@ -48,7 +39,7 @@ Item {
                 }
             }
 
-            console.log("Couldn't find window!");
+            console.log("WindowManager: couldn't find " + modelProperty + "!");
             return -1;
         }
     }
@@ -57,7 +48,7 @@ Item {
     Item {
         id: maximizedWindowWrapperContainer
 
-        anchors.top: statusBarInstance.bottom
+        anchors.top: statusBar.bottom
         anchors.bottom: notificationsContainer.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
@@ -70,7 +61,7 @@ Item {
         id: fullscreenWindowWrapperContainer
 
         anchors.top: windowManager.top
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: gestureArea.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
@@ -78,16 +69,23 @@ Item {
     }
 
     Connections {
-        target: cardView
-        onCardRemoved: {
-            removeWindow(cardComponentInstance.windowWrapper);
-        }
-    }
-
-    Connections {
         target: compositor
         onWindowAdded: handleWindowAdded(window)
         onWindowRemoved: handleWindowRemoved(window)
+    }
+
+    Connections {
+        target: gestureArea
+        onSwipeUpGesture:{
+            if( windowManager.currentActiveWindowWrapper ) {
+                windowManager.setToCard(windowManager.currentActiveWindowWrapper);
+            }
+        }
+        onTapGesture: {
+            if( windowManager.currentActiveWindowWrapper ) {
+                windowManager.setToCard(windowManager.currentActiveWindowWrapper);
+            }
+        }
     }
 
     function handleWindowAdded(window) {
@@ -100,7 +98,7 @@ Item {
         // Bind the container with its app window
         windowWrapper.setWrappedWindow(window);
 
-        var winId = window.id;
+        var winId = window.winId;
         listWindowWrappersModel.append({"windowWrapper": windowWrapper, "winId": winId});
 
         // emit the signal
@@ -108,10 +106,13 @@ Item {
     }
 
     function handleWindowRemoved(window) {
-        var windowWrapper = window.parent;
-        var index = listWindowWrappersModel.getIndexFromProperty('window', windowWrapper);
+        var index = listWindowWrappersModel.getIndexFromProperty('winId', window.winId);
         if( index >= 0 )
         {
+            var windowWrapper = listWindowWrappersModel.get(index).windowWrapper;
+
+            windowWrapperDestruction(windowWrapper, window.winId);
+
             listWindowWrappersModel.remove(index);
             windowWrapper.destroy();
         }
@@ -120,7 +121,7 @@ Item {
     function removeWindow(windowWrapper) {
         // The actual model item will be removed once windowRemoved is called from the
         // compositor
-        compositor.closeWindowWithId(windowWrapper.wrappedWindow.appId);
+        compositor.closeWindowWithId(windowWrapper.wrappedWindow.winId);
     }
 
     function setWindowState(windowWrapper, windowState) {

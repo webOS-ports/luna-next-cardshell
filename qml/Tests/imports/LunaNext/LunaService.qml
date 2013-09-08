@@ -47,9 +47,7 @@ QtObject {
             // start a DummyWindow
 
             // Simulate the attachement of a new window to the stub Wayland compositor
-            var windowComponent = Qt.createComponent("../../DummyWindow.qml");
-            var window = windowComponent.createObject(compositor);
-            compositor.windowAdded(window);
+            compositor.createDummyWindow();
         }
         else {
             handleError("Error: parameter 'id' not specified");

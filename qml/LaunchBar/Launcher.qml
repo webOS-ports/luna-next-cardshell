@@ -53,10 +53,12 @@ Item {
     Connections {
         target: gestureArea
         onSwipeUpGesture:{
-            switchToNextState();
+            if( launchBarInstance.visible )
+                launchBarInstance.toggleLauncherDisplay();
         }
         onTapGesture: {
-            switchToNextState();
+            if( launchBarInstance.visible )
+                launchBarInstance.toggleLauncherDisplay();
         }
     }
 
@@ -93,10 +95,7 @@ Item {
     }
 
     function switchToNextState() {
-        if( state === "hidden" ) {
-            state = "launchbar";
-        }
-        else if( state === "launchbar" ) {
+        if( state === "launchbar" ) {
             state = "fullLauncher";
         }
         else if( state === "fullLauncher" ) {

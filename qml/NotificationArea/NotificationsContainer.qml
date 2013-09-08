@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import "../Compositor"
 
 // The notification area can take three states:
 //  - closed: nothing is shown
@@ -96,6 +97,12 @@ Rectangle {
         }
     }
 
+    // Rounded corners
+    RoundedItem {
+        id: cornerStaticMask
+        anchors.fill: parent
+        cornerRadius: windowManager.cornerRadius
+    }
 
     Behavior on height {
         NumberAnimation { duration: 300 }
