@@ -82,6 +82,7 @@ Compositor {
         statusBar: statusBarInstance
         gestureArea: gestureAreaInstance
 
+        //////////  fps counter ///////////
         Loader {
             anchors.top: windowManager.top
             anchors.left: windowManager.left
@@ -115,7 +116,7 @@ Compositor {
             source: Settings.showReticle ? "Utils/ReticleArea.qml" : ""
         }
 
-        // background
+        //////////  background ///////////
         Item {
             id: background
             anchors.top: statusBarInstance.bottom
@@ -135,21 +136,16 @@ Compositor {
                 smooth: true
                 sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
             }
-
-            RoundedItem {
-                anchors.fill: parent
-                cornerRadius: windowManager.cornerRadius
-            }
         }
 
-        // cardview
+        //////////  cardview ///////////
         CardView {
             id: cardViewInstance
 
             windowManagerInstance: windowManager
 
             anchors.top: windowManager.top
-            anchors.bottom: gestureAreaInstance.top
+            anchors.bottom: notificationsContainer.top
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
@@ -168,6 +164,7 @@ Compositor {
             }
         }
 
+        //////////  launcher ///////////
         Launcher {
             id: launcherInstance
 
@@ -175,14 +172,14 @@ Compositor {
             windowManager: windowManager
 
             anchors.top: statusBarInstance.bottom
-            anchors.bottom: gestureAreaInstance.top
+            anchors.bottom: notificationsContainer.top // not sure about this one
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
             z: 1 // on top of cardview
         }
 
-        // top area: status bar
+        //////////  status bar ///////////
         StatusBar {
             id: statusBarInstance
 
@@ -194,7 +191,19 @@ Compositor {
             z: 2 // can only be hidden by a fullscreen window
         }
 
-        // notification area
+        //////////  rounded corners of the main view ///////////
+        RoundedItem {
+            anchors.top: statusBarInstance.bottom
+            anchors.bottom: notificationsContainer.top
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
+
+            cornerRadius: windowManager.cornerRadius
+
+            z: 2 // can only be hidden by a fullscreen window
+        }
+
+        //////////  notification area ///////////
         NotificationsContainer {
             id: notificationsContainer
 
@@ -205,7 +214,7 @@ Compositor {
             z: 2 // can only be hidden by a fullscreen window
         }
 
-        // gesture area
+        //////////  gesture area ///////////
         LunaGestureArea {
             id: gestureAreaInstance
 

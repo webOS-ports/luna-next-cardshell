@@ -43,6 +43,9 @@ Item {
                 windowManagerInstance.setToMaximized(cardWindow.windowWrapper);
             }
             onDestructionRequest: {
+                deleteCardWindowOnDestruction = true;
+                // remove card from model
+                listCardsModel.remove(ListView.view.currentIndex);
                 // remove window
                 windowManagerInstance.removeWindow(cardWindow.windowWrapper);
             }
@@ -65,7 +68,7 @@ Item {
         // Find the corresponding card
         var i=0;
         for(i=0; i<listCardsModel.count;i++) {
-            var cardWindow=listCardsModel.get(i);
+            var cardWindow=listCardsModel.get(i).cardWindowInstance;
             if(cardWindow && cardWindow.windowWrapper === windowWrapper) {
                 // remove the card instance from the model
                 listCardsModel.remove(i);
