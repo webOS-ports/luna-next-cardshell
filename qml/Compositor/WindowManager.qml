@@ -11,7 +11,7 @@ Item {
 
     property Item currentActiveWindowWrapper
 
-    property real cornerRadius: 40
+    property real cornerRadius: 20
 
     property alias maximizedwindowWrapperContainer: maximizedWindowWrapperContainer
     property alias fullscreenwindowWrapperContainer: fullscreenWindowWrapperContainer

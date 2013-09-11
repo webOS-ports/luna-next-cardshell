@@ -16,7 +16,7 @@ Rectangle {
     height: 0
 
     color: "black"
-    opacity: 0.8
+    opacity: 0.9
     state: "closed"
 
     property alias notificationArea: notificationsModel
@@ -41,10 +41,11 @@ Rectangle {
         id: minimizedListView
 
         x: 0; y: 0; width: parent.width
-        height: windowManager.computeFromLength(64);
+        height: windowManager.computeFromLength(32);
         interactive: false
 
         orientation: ListView.Horizontal
+        layoutDirection: Qt.RightToLeft
         model: notificationsModel
 
         delegate: Item {
@@ -95,13 +96,6 @@ Rectangle {
             anchors.fill: parent
             onClicked: notificationsContainer.state = "closed"
         }
-    }
-
-    // Rounded corners
-    RoundedItem {
-        id: cornerStaticMask
-        anchors.fill: parent
-        cornerRadius: windowManager.cornerRadius
     }
 
     Behavior on height {

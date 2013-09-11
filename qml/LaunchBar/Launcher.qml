@@ -91,11 +91,15 @@ Item {
     }
 
     function handleLaunchAppError(message) {
-        console.log("Could not start application " + launchableAppIcon.appId + " : " + message);
+        console.log("Could not start application : " + message);
+        state = "launchbar";
     }
 
     function switchToNextState() {
-        if( state === "launchbar" ) {
+        if( state === "hidden" ) {
+            state = "launchbar";
+        }
+        else if( state === "launchbar" ) {
             state = "fullLauncher";
         }
         else if( state === "fullLauncher" ) {

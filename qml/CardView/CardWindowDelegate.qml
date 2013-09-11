@@ -14,8 +14,10 @@ Item {
 
     property bool isCurrent: ListView.isCurrentItem
 
-    signal switchToMaximize();
+    signal switchToMaximize()
     signal destructionRequest()
+
+    property bool deleteCardWindowOnDestruction: false
 
     Item {
         id: cardDelegateWindow
@@ -78,5 +80,10 @@ Item {
         }
     }
 
-    onIsCurrentChanged: cardWindow.setCurrentCardState(isCurrent);
+    onIsCurrentChanged: if(cardWindow) cardWindow.setCurrentCardState(isCurrent);
+
+    // Delayed destruction for the cardWindow instance, to avoid problems
+    // with evaluation of properties that depend on it
+    Component.onDestruction: if(deleteCardWindowOnDestruction && cardWindow) cardWindow.destroy();
+
 }
