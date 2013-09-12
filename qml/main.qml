@@ -108,6 +108,20 @@ Compositor {
 
             sourceComponent: Settings.displayFps ? fpsTextComponent : null;
         }
+        ScreenShooter {
+            id: screenShooter
+
+            property int nbScreenshotsTaken: 0
+
+            function takeScreenshot() {
+                nbScreenshotsTaken = nbScreenshotsTaken + 1
+                screenShooter.capture("/tmp/luna-next-screenshot-" + nbScreenshotsTaken + ".png");
+            }
+        }
+        Connections {
+            target: gestureAreaInstance
+            onSwipeRightGesture: screenShooter.takeScreenshot();
+        }
 
 
         Loader {
