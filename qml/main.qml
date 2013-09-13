@@ -44,9 +44,8 @@ import LunaNext 0.1
 import "CardView"
 import "StatusBar"
 import "LaunchBar"
-import "LunaGestureArea"
-import "NotificationArea"
-import "Compositor"
+import "Dashboard"
+import "WindowManager"
 import "Utils" as Utils
 
 // The compositor is exposed by the LunaNext module.
@@ -77,10 +76,9 @@ Compositor {
 
         anchors.fill: parent
 
-        notificationsContainer: notificationsContainer
-        cardView: cardViewInstance
-        statusBar: statusBarInstance
-        gestureArea: gestureAreaInstance
+        dashboardInstance: dashboardInstance
+        statusBarInstance: statusBarInstance
+        gestureAreaInstance: gestureAreaInstance
 
         //////////  fps counter ///////////
         Loader {
@@ -108,6 +106,8 @@ Compositor {
 
             sourceComponent: Settings.displayFps ? fpsTextComponent : null;
         }
+
+        //////////  screenshot component ///////////
         ScreenShooter {
             id: screenShooter
 
@@ -124,6 +124,7 @@ Compositor {
         }
 
 
+        //////////  reticle on clic ///////////
         Loader {
             id: reticleArea
             anchors.fill: parent
@@ -159,7 +160,7 @@ Compositor {
             windowManagerInstance: windowManager
 
             anchors.top: windowManager.top
-            anchors.bottom: notificationsContainer.top
+            anchors.bottom: dashboardInstance.top
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
@@ -186,7 +187,7 @@ Compositor {
             windowManager: windowManager
 
             anchors.top: statusBarInstance.bottom
-            anchors.bottom: notificationsContainer.top // not sure about this one
+            anchors.bottom: dashboardInstance.top // not sure about this one
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
@@ -208,7 +209,7 @@ Compositor {
         //////////  rounded corners of the main view ///////////
         RoundedItem {
             anchors.top: statusBarInstance.bottom
-            anchors.bottom: notificationsContainer.top
+            anchors.bottom: dashboardInstance.top
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
@@ -218,8 +219,10 @@ Compositor {
         }
 
         //////////  notification area ///////////
-        NotificationsContainer {
-            id: notificationsContainer
+        Dashboard {
+            id: dashboardInstance
+
+            windowManagerInstance: windowManager
 
             anchors.bottom: gestureAreaInstance.top
             anchors.left: windowManager.left
@@ -247,7 +250,7 @@ Compositor {
         }
 
         function addNotification(notif) {
-            notificationsContainer.addNotification(notif);
+            dashboardInstance.addNotification(notif);
         }
     }
 }

@@ -22,10 +22,14 @@ Item {
     function setCurrentCardState(isCurrent)
     {
         isCurrentCard = isCurrent;
-        if( isCurrentCard && !firstCardDisplayDone )
+        if( isCurrentCard )
         {
-            firstCardDisplayDone = true;
-            windowWrapper.startupAnimation();
+            windowWrapper.setAsCurrentWindow();
+
+            if( !firstCardDisplayDone ) {
+                firstCardDisplayDone = true;
+                windowWrapper.startupAnimation();
+            }
         }
     }
 }

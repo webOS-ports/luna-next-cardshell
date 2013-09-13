@@ -51,27 +51,21 @@ Item {
     ]
 
     Connections {
-        target: gestureArea
-        onSwipeUpGesture:{
-            if( launchBarInstance.visible )
-                launchBarInstance.toggleLauncherDisplay();
-        }
-        onTapGesture: {
-            if( launchBarInstance.visible )
-                launchBarInstance.toggleLauncherDisplay();
-        }
-    }
-
-    Connections {
         target: windowManager
+        onSwitchToDashboard: {
+            state = "hidden";
+        }
         onSwitchToMaximize: {
             state = "hidden";
         }
         onSwitchToFullscreen: {
             state = "hidden";
         }
-        onSwitchToCard: {
+        onSwitchToCardView: {
             state = "launchbar";
+        }
+        onExpandLauncher: {
+            state = "fullLauncher";
         }
     }
 

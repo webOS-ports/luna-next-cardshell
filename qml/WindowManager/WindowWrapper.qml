@@ -127,6 +127,25 @@ Item {
         childWrapper.setWrappedChild(window);
     }
 
+    function setAsCurrentWindow() {
+        windowManager.setWindowAsActive(windowWrapper);
+    }
+
+    function switchToState(newState)
+    {
+        windowManager.setWindowAsActive(windowWrapper)
+
+        if( newState === WindowState.Maximized ) {
+            windowManager.maximizedMode()
+        }
+        else if( newState === WindowState.Fullscreen ) {
+            windowManager.fullscreenMode()
+        }
+        else {
+            windowManager.cardViewMode()
+        }
+    }
+
     function setNewParent(newParent, useShader) {
         newParentAnimation.targetNewParent = newParent;
         newParentAnimation.targetWidth = newParent.width;
@@ -139,8 +158,9 @@ Item {
     function startupAnimation() {
         // do the whole startup animation
         // first: show as card in the cardview
-        windowManager.setToCard(windowWrapper);
+        windowManager.setWindowAsActive(windowWrapper);
+        windowManager.cardViewMode();
         newParentAnimation.complete(); // force animation to complete now
-        windowManager.setToMaximized(windowWrapper);
+        windowManager.maximizedMode();
     }
 }

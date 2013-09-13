@@ -39,8 +39,8 @@ Item {
             cardWindow: model.cardWindowInstance
 
             onSwitchToMaximize: {
-                // maximize window
-                windowManagerInstance.setToMaximized(cardWindow.windowWrapper);
+                // maximize current window
+                windowManagerInstance.maximizedMode();
             }
             onDestructionRequest: {
                 deleteCardWindowOnDestruction = true;
