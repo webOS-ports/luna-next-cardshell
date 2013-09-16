@@ -29,25 +29,45 @@ Item {
         smooth: true
         focus: true
 
-        delegate: CardWindowDelegate {
+        delegate: SlidingItemArea {
+            id: slidingCardDelegate
+
+            anchors.verticalCenter: parent.verticalCenter
             height: listCardsView.height
             width: listCardsView.cardWindowWidth
 
-            cardWidth: listCardsView.cardWindowWidth
-            cardHeight: listCardsView.cardWindowHeight
+            slidingTargetItem: cardDelegateContainer
+            slidingAxis: Drag.YAxis
+            minTreshold: 0.2
+            maxTreshold: 0.8
+            slidingEnabled: ListView.isCurrentItem && !!model.cardWindowInstance && model.cardWindowInstance.isWindowCarded()
+            filterChildren: true
 
-            cardWindow: model.cardWindowInstance
-
-            onSwitchToMaximize: {
-                // maximize current window
-                windowManagerInstance.maximizedMode();
-            }
-            onDestructionRequest: {
-                deleteCardWindowOnDestruction = true;
+            onSlidedLeft: {
+                cardDelegateContainer.deleteCardWindowOnDestruction = true;
+                var cardWindowInstance = model.cardWindowInstance;
                 // remove card from model
                 listCardsModel.remove(ListView.view.currentIndex);
                 // remove window
-                windowManagerInstance.removeWindow(cardWindow.windowWrapper);
+                windowManagerInstance.removeWindow(cardWindowInstance.windowWrapper);
+            }
+
+            onSliderClicked: {
+                // maximize window
+                windowManagerInstance.maximizedMode()
+            }
+
+            CardWindowDelegate {
+                id: cardDelegateContainer
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: slidingCardDelegate.height/2 - cardDelegateContainer.height/2
+                height: listCardsView.cardWindowHeight
+                width: listCardsView.cardWindowWidth
+
+                isCurrent: slidingCardDelegate.ListView.isCurrentItem
+
+                cardWindow: model.cardWindowInstance
             }
         }
     }
