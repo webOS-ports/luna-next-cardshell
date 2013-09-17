@@ -2,7 +2,7 @@ import QtQuick 2.0
 import LunaNext 0.1
 
 // this should be a plugin import
-import "../Compositor/WindowManagerServices.js" as WindowManagerServices
+import "../WindowManager/WindowManagerServices.js" as WindowManagerServices
 
 Item {
     id: dummyWindow
