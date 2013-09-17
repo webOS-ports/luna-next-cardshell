@@ -29,6 +29,6 @@ function getWindowState(window)
 function setWindowState(window, state)
 {
     var windowWrapper = getWrapperFromWindow(window);
-    windowManager.setWindowState(windowWrapper, state);
+    windowWrapper.switchToState(state);
 }
 

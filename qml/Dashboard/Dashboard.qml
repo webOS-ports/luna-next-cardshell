@@ -1,5 +1,4 @@
 import QtQuick 2.0
-import "../Compositor"
 
 // The notification area can take three states:
 //  - closed: nothing is shown
@@ -11,15 +10,14 @@ import "../Compositor"
 //       2. don't use a listview, because it is flickable and uselessly dynamic.
 
 Rectangle {
-    id: notificationsContainer
+    id: dashboard
+
+    property Item windowManagerInstance
 
     height: 0
 
     color: "black"
-    opacity: 0.9
     state: "closed"
-
-    property alias notificationArea: notificationsModel
 
     ListModel {
         id: notificationsModel
@@ -33,15 +31,15 @@ Rectangle {
 
         notificationsModel.append({"icon": icon, "htmlContent":content});
 
-        if( notificationsContainer.state === "closed" )
-            notificationsContainer.state = "minimized";
+        if( dashboard.state === "closed" )
+            dashboard.state = "minimized";
     }
 
     ListView {
         id: minimizedListView
 
         x: 0; y: 0; width: parent.width
-        height: windowManager.computeFromLength(32);
+        height: notificationsModel.count > 0 ? windowManager.computeFromLength(32) : 0;
         interactive: false
 
         orientation: ListView.Horizontal
@@ -61,7 +59,9 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
-            onClicked: notificationsContainer.state = "open"
+            onClicked: {
+                windowManagerInstance.dashboardMode();
+            }
         }
     }
 
@@ -94,12 +94,14 @@ Rectangle {
         }
         MouseArea {
             anchors.fill: parent
-            onClicked: notificationsContainer.state = "closed"
+            onClicked: {
+                windowManagerInstance.cardViewMode();
+            }
         }
     }
 
     Behavior on height {
-        NumberAnimation { duration: 300 }
+        NumberAnimation { duration: 150 }
     }
 
     states: [
@@ -107,19 +109,38 @@ Rectangle {
             name: "closed"
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationsContainer; height: 0 }
+            PropertyChanges { target: dashboard; height: 0 }
         },
         State {
             name: "minimized"
             PropertyChanges { target: minimizedListView; visible: true }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationsContainer; height: minimizedListView.height }
+            PropertyChanges { target: dashboard; height: minimizedListView.height }
         },
         State {
             name: "open"
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: true }
-            PropertyChanges { target: notificationsContainer; height: openListView.height }
+            PropertyChanges { target: dashboard; height: openListView.height }
         }
     ]
+
+    Connections {
+        target: windowManagerInstance
+        onSwitchToDashboard: {
+            state = "open";
+        }
+        onSwitchToMaximize: {
+            state = "minimized";
+        }
+        onSwitchToFullscreen: {
+            state = "closed";
+        }
+        onSwitchToCardView: {
+            state = "minimized";
+        }
+        onExpandLauncher: {
+            state = "minimized";
+        }
+    }
 }
