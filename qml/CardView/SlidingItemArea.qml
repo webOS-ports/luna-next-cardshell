@@ -62,6 +62,8 @@ Item {
         drag.filterChildren: filterChildren
         enabled: slidingEnabled
 
+        z: slidingTargetItem.z + 1
+
         onClicked: {
             sliderClicked();
         }
