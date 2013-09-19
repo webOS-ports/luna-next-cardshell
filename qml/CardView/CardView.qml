@@ -1,5 +1,7 @@
 import QtQuick 2.0
 
+import "../Utils"
+
 Item {
     id: cardViewItem
 
@@ -42,6 +44,7 @@ Item {
             maxTreshold: 0.8
             slidingEnabled: ListView.isCurrentItem && !!model.cardWindowInstance && model.cardWindowInstance.isWindowCarded()
             filterChildren: true
+            slideOnRight: false
 
             onSlidedLeft: {
                 cardDelegateContainer.deleteCardWindowOnDestruction = true;
