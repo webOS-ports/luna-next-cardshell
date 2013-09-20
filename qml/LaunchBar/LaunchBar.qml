@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQuick.Layouts 1.0
 
 Item {
     id: launchBarItem
@@ -8,6 +9,8 @@ Item {
 
     state: "visible"
     anchors.bottom: parent.bottom
+
+    property real launcherBarIconSize: launchBarItem.height * 0.7;
 
     // list of icons
     ListModel {
@@ -61,41 +64,46 @@ Item {
         }
     }
 
-    ListView {
+    RowLayout {
         id: launcherRow
 
         anchors.fill: launchBarItem
-        orientation: ListView.Horizontal
+        spacing: 0
 
-        model: launcherListModel
-        delegate: Item {
-            width: launchBarItem.width/(launcherListModel.count+1)
-            height: launchBarItem.height
+        Repeater {
+            model: launcherListModel
 
             LaunchableAppIcon {
                 id: launcherIcon
 
+                Layout.fillWidth: true
+                Layout.preferredHeight: launchBarItem.launcherBarIconSize
+                Layout.preferredWidth: launchBarItem.launcherBarIconSize
+
                 appIcon: model.icon
                 appId: model.appId
 
-                anchors.centerIn: parent
-                height: parent.height
-                width: parent.width
+                //anchors.verticalCenter: launcherRow.verticalCenter
+                height: launchBarItem.launcherBarIconSize
+                width: launchBarItem.launcherBarIconSize
 
                 onStartLaunchApplication: launchBarItem.startLaunchApplication(appId);
             }
         }
 
-        footer: Item {
-            width: launchBarItem.width/(launcherListModel.count+1)
-            height: launchBarItem.height
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredHeight: launchBarItem.launcherBarIconSize
+            Layout.preferredWidth: launchBarItem.launcherBarIconSize
 
             Image {
                 id: appsIcon
-                fillMode: Image.PreserveAspectFit
-                anchors.verticalCenter: parent.verticalCenter
+
                 anchors.right: parent.right
-                height: parent.height
+
+                height: launchBarItem.launcherBarIconSize
+                width: launchBarItem.launcherBarIconSize
+                fillMode: Image.PreserveAspectFit
                 source: "../images/empty-launcher.png"
 
                 MouseArea {

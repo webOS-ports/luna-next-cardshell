@@ -5,6 +5,8 @@ import "../LunaSysAPI" as LunaSysAPI
 Rectangle {
     id: fullLauncher
 
+    property real iconSize: 64
+
     signal startLaunchApplication(string appId)
 
     state: "hidden"
@@ -47,14 +49,14 @@ Rectangle {
         model: appsModel
 
         delegate: LaunchableAppIcon {
-            width: 64
+                width: fullLauncher.iconSize
 
-            appTitle: model.title
-            appIcon: model.icon
-            appId: model.id
-            showTitle: true
+                appTitle: model.title
+                appIcon: model.icon
+                appId: model.id
+                showTitle: true
 
-            onStartLaunchApplication: fullLauncher.startLaunchApplication(appId);
-        }
+                onStartLaunchApplication: fullLauncher.startLaunchApplication(appId);
+            }
     }
 }
