@@ -141,11 +141,13 @@ Item {
             if( state !== "cardview" ) {
                 state = "cardview";
             }
-            else if( windowManager.currentActiveWindowWrapper ) {
+            else {
                 state = "fulllauncher";
             }
         }
     }
+
+    Component.onCompleted: state = "cardview";
 
 
     function removeWindow(windowWrapper) {
