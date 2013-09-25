@@ -17,7 +17,7 @@ Rectangle {
     height: 0
 
     color: "black"
-    state: "closed"
+    state: "minimized"
 
     ListModel {
         id: notificationsModel
@@ -30,16 +30,13 @@ Rectangle {
         if(notif.content) content = notif.content;
 
         notificationsModel.append({"icon": icon, "htmlContent":content});
-
-        if( dashboard.state === "closed" )
-            dashboard.state = "minimized";
     }
 
     ListView {
         id: minimizedListView
 
         x: 0; y: 0; width: parent.width
-        height: notificationsModel.count > 0 ? windowManager.computeFromLength(32) : 0;
+        height: notificationsModel.count > 0 ? windowManager.computeFromLength(48) : 0;
         interactive: false
 
         orientation: ListView.Horizontal
@@ -65,37 +62,23 @@ Rectangle {
         }
     }
 
-    ListView {
+    Column {
         id: openListView
 
         x: 0; y: 0; width: parent.width
-        height: 0;
-        interactive: false
 
-        orientation: ListView.Vertical
-        model: notificationsModel
+        Repeater {
+            model: notificationsModel
+            FullNotificationDelegate {
+                id: fullNotificationDelegate
 
-        delegate: Row {
-                id: fullNotificationRow
-                Image {
-                    anchors.verticalCenter: fullNotificationRow.verticalCenter
-                    source: model.icon
-                    width: windowManager.computeFromLength(30);
-                    height: windowManager.computeFromLength(30);
-                }
-                Text {
-                    anchors.verticalCenter: fullNotificationRow.verticalCenter
-                    color: "white"
-                    text: model.htmlContent
-                }
+                width: openListView.width
+                height: windowManager.computeFromLength(32)
 
-                Component.onCompleted: openListView.height += fullNotificationRow.height;
-                Component.onDestruction: openListView.height -= fullNotificationRow.height;
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                windowManagerInstance.cardViewMode();
+                onSlidedLeft: notificationsModel.remove(index);
+                onSlidedRight: notificationsModel.remove(index);
+
+                onSliderClicked: windowManagerInstance.cardViewMode(); // should start the associated appId, ideally.
             }
         }
     }
@@ -106,7 +89,7 @@ Rectangle {
 
     states: [
         State {
-            name: "closed"
+            name: "hidden"
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
             PropertyChanges { target: dashboard; height: 0 }
@@ -134,7 +117,7 @@ Rectangle {
             state = "minimized";
         }
         onSwitchToFullscreen: {
-            state = "closed";
+            state = "hidden";
         }
         onSwitchToCardView: {
             state = "minimized";

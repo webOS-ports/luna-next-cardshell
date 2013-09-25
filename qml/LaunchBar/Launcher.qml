@@ -91,13 +91,13 @@ Item {
 
     function switchToNextState() {
         if( state === "hidden" ) {
-            state = "launchbar";
+            windowManager.cardViewMode();
         }
         else if( state === "launchbar" ) {
-            state = "fullLauncher";
+            windowManager.expandedLauncherMode();
         }
         else if( state === "fullLauncher" ) {
-            state = "launchbar";
+            windowManager.cardViewMode();
         }
     }
 }

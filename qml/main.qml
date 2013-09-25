@@ -207,7 +207,7 @@ Compositor {
         }
 
         //////////  rounded corners of the main view ///////////
-        RoundedItem {
+        Utils.RoundedItem {
             anchors.top: statusBarInstance.bottom
             anchors.bottom: dashboardInstance.top
             anchors.left: windowManager.left
