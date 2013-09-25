@@ -189,6 +189,10 @@ Item {
             state = "dashboard";
     }
 
+    function expandedLauncherMode() {
+            state = "fulllauncher";
+    }
+
     ////// private methods ///////
 
     function __handleWindowAdded(window) {
