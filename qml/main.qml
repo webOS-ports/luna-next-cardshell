@@ -79,6 +79,7 @@ Compositor {
         dashboardInstance: dashboardInstance
         statusBarInstance: statusBarInstance
         gestureAreaInstance: gestureAreaInstance
+        compositorInstance: compositor
 
         //////////  fps counter ///////////
         Loader {
