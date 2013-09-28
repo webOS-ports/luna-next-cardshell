@@ -16,11 +16,40 @@ Item {
         color: "black"
     }
     Image {
-        anchors.fill: parent
+        id: glowImage
+        anchors.centerIn: parent
+        height: parent.height/2
+        width: parent.width/2
         source: "../images/glow.png"
         smooth: true
         fillMode: Image.Stretch
     }
+    Image {
+        id: glowImageMask
+        visible: false
+        y: glowImage.y
+        height: glowImage.height
+        width: glowImage.width
+        source: "../images/glowMask.png"
+        smooth: true
+        fillMode: Image.Stretch
+    }
+
+    SequentialAnimation {
+        id: glowRightToLeft
+        PropertyAction { target: glowImageMask; property: "x"; value: glowImage.x + glowImage.width }
+        PropertyAction { target: glowImageMask; property: "visible"; value: true }
+        NumberAnimation { target: glowImageMask; property: "x"; to: glowImage.x - glowImage.width; duration: 500 }
+        PropertyAction { target: glowImageMask; property: "visible"; value: false }
+    }
+    SequentialAnimation {
+        id: glowLeftToRight
+        PropertyAction { target: glowImageMask; property: "x"; value: glowImage.x - glowImage.width }
+        PropertyAction { target: glowImageMask; property: "visible"; value: true }
+        NumberAnimation { target: glowImageMask; property: "x"; to: glowImage.x + glowImage.width; duration: 500 }
+        PropertyAction { target: glowImageMask; property: "visible"; value: false }
+    }
+
     MouseArea {
         id: gestureAreaInput
         anchors.fill: parent
@@ -55,10 +84,14 @@ Item {
                         swipeUpGesture(mouse.modifiers);
                 }
                 else {  // only posibility left: swipe Left or Right
-                    if( xDiff>0 )
+                    if( xDiff>0 ) {
+                        glowLeftToRight.start()
                         swipeRightGesture(mouse.modifiers);
-                    else
+                    }
+                    else {
+                        glowRightToLeft.start()
                         swipeLeftGesture(mouse.modifiers);
+                    }
                 }
             }
             else
