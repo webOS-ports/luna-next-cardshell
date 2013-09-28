@@ -44,6 +44,10 @@ Item {
         console.log("Compositor: cleared keyboard focus.");
     }
 
+    function postEvent(event) {
+        console.log("Compositor: postEvent(" + event + ")");
+    }
+
     function createDummyWindow() {
         var windowComponent = Qt.createComponent("../../DummyWindow.qml");
         var window = windowComponent.createObject(compositor);

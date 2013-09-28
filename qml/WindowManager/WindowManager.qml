@@ -7,6 +7,7 @@ Item {
     property Item gestureAreaInstance
     property Item statusBarInstance
     property Item dashboardInstance
+    property Item compositorInstance
 
     property Item currentActiveWindowWrapper
 
@@ -122,7 +123,7 @@ Item {
     ]
 
     Connections {
-        target: compositor
+        target: compositorInstance
         onWindowAdded: __handleWindowAdded(window)
         onWindowRemoved: __handleWindowRemoved(window)
     }
@@ -145,6 +146,14 @@ Item {
                 state = "fulllauncher";
             }
         }
+        onSwipeLeftGesture:{
+            if( compositorInstance && compositorInstance.postEvent )
+                compositorInstance.postEvent(EventType.CoreNaviBack);
+        }
+        onSwipeRightGesture:{
+            if( compositorInstance && compositorInstance.postEvent )
+                compositorInstance.postEvent(EventType.CoreNaviNext);
+        }
     }
 
     Component.onCompleted: state = "cardview";
@@ -153,7 +162,7 @@ Item {
     function removeWindow(windowWrapper) {
         // The actual model item will be removed once windowRemoved is called from the
         // compositor
-        compositor.closeWindowWithId(windowWrapper.wrappedWindow.winId);
+        compositorInstance.closeWindowWithId(windowWrapper.wrappedWindow.winId);
     }
 
     function setWindowAsActive(windowWrapper) {
@@ -265,8 +274,8 @@ Item {
 
         // we're back to card view so no card should have the focus
         // for the keyboard anymore
-        if( compositor )
-            compositor.clearKeyboardFocus();
+        if( compositorInstance )
+            compositorInstance.clearKeyboardFocus();
 
         // emit signal
         switchToCardView();
