@@ -7,6 +7,7 @@ Item {
     property Item gestureAreaInstance
     property Item statusBarInstance
     property Item dashboardInstance
+    property Item justTypeInstance
     property Item compositorInstance
 
     property Item currentActiveWindowWrapper
@@ -126,6 +127,11 @@ Item {
         target: compositorInstance
         onWindowAdded: __handleWindowAdded(window)
         onWindowRemoved: __handleWindowRemoved(window)
+    }
+
+    Connections {
+        target: justTypeInstance
+        onShowJustType: expandedLauncherMode()
     }
 
     Connections {
