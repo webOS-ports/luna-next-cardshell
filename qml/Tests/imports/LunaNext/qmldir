@@ -6,5 +6,6 @@ WindowState 0.1 WindowStateStub.js
 Settings 0.1 SettingsStub.js
 FpsCounter 0.1 FpsCounter.qml
 ScreenShooter 0.1 ScreenShooter.qml
+EventType 0.1 EventTypeStub.js
 
 typeinfo LunaNext.qmltypes
