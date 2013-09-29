@@ -3,7 +3,7 @@ import LunaNext 0.1
 
 Item {
     property Item gestureArea
-    property Item windowManager
+    property Item windowManagerInstance
 
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
@@ -23,7 +23,7 @@ Item {
     LaunchBar {
         id: launchBarInstance
 
-        height: windowManager.computeFromLength(80);
+        height: windowManagerInstance.computeFromLength(80);
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -51,7 +51,7 @@ Item {
     ]
 
     Connections {
-        target: windowManager
+        target: windowManagerInstance
         onSwitchToDashboard: {
             state = "hidden";
         }
@@ -91,13 +91,13 @@ Item {
 
     function switchToNextState() {
         if( state === "hidden" ) {
-            windowManager.cardViewMode();
+            windowManagerInstance.cardViewMode();
         }
         else if( state === "launchbar" ) {
-            windowManager.expandedLauncherMode();
+            windowManagerInstance.expandedLauncherMode();
         }
         else if( state === "fullLauncher" ) {
-            windowManager.cardViewMode();
+            windowManagerInstance.cardViewMode();
         }
     }
 }
