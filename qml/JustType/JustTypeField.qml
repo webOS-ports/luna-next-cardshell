@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import LunaNext 0.1
 
 Item {
     id: justTypeFieldItem
@@ -6,24 +7,58 @@ Item {
 
     signal showJustType(int pressedKey)
 
-    Rectangle {
-        anchors.fill: parent
+    Image {
+        id: bgLeft
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
 
-        radius: windowManagerInstance.cornerRadius
+        fillMode: Image.PreserveAspectFit
+        smooth: true
 
-        border.color: "#5a5a5a"
-        border.width: 2
+        source: "../images/search-field-bg-launcher-left.png"
+    }
+    Image {
+        id: bgRight
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
 
-        color: "#d7d7d7"
-        opacity: 0.2
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+
+        source: "../images/search-field-bg-launcher-right.png"
+    }
+    Image {
+        anchors.left: bgLeft.right
+        anchors.right: bgRight.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+
+        smooth: true
+
+        source: "../images/search-field-bg-launcher-center.png"
+    }
+    Image {
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        height: parent.height * 0.8
+        anchors.rightMargin: parent.width * 0.02
+
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+
+        source: "../images/search-button-launcher.png"
     }
     Text {
         anchors.fill: parent
-        anchors.leftMargin: parent.width * 0.02
+        anchors.leftMargin: parent.width * 0.03
 
         verticalAlignment: Text.AlignVCenter
         fontSizeMode: Text.VerticalFit
         text: "Just Type..."
+        color: "white"
+        font.family: Settings.fontStatusBar
     }
     MouseArea {
         anchors.fill: parent
