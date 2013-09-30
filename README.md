@@ -1,5 +1,5 @@
-Luna Next
-=========
+Luna Next Cardshell
+===================
 
 Summary
 -------
@@ -7,43 +7,33 @@ The new webOS UI of the webOS ports project.
 
 Description
 -----------
-This is the repository of a prototype for a next generation webOS UI. It's meant to be a
+This is the repository of a prototype for a next generation webOS UI. Together with Luna Next, it's meant to be a
 complete replacement for LunaSysMgr/WebAppMgr and is completely based on well known open
 source technologies like Qt 5 and Wayland.
 
+The Luna Next Cardshell is the default UI for Luna Next.
+
+For building Luna Next, please refer to the instructions on https://github.com/webOS-ports/luna-next-cardshell.
+
 CAUTION: At the moment it's not meant to be usable in any kind!
 
-## Dependencies
+Development on a desktop machine
+--------------------------------
 
-In order to build and run luna-next you will need a complete
-Wayland and Qt5 development environment.
+### Requirements
+A standard Qt 5.1 SDK installation is sufficient, as long as QtCreator and the QML toolchain are present.
 
-The Wayland site has some information to set this up:
+### Working with the QML description of Luna Next card UI
+First, get a copy of the luna-next-cardshell repository:
+git clone https://github.com/webOS-ports/luna-next-cardshell
 
-    http://wayland.freedesktop.org/building.html
+Then, simply open the qmlproject file in the qml subdirectory. You should be able to run the QML description of luna-next out of the box.
 
-More information about building Qt 5 can be found here:
+### Expect results
+The QML description of luna-next does '''not''' include the C++ module which lets it communicate with other components of WebOS. Do not expect any realistic result for the answers provided by the "LunaNext" QML module, as this desktop environment actually uses a fake stub LunaNext module for testing purposes.
 
-    http://qt-project.org/wiki/Building-Qt-5-from-Git
-
-## Build
-
-Now you're ready to build luna-next with
-
-```
-mkdir build
-(cd build ; cmake .. ; make)
-```
-
-Finally you can run luna-next with
-
-`build/luna-next -platform xcb`
-
-After the compositor is up you can launch a simple webapp client by
-
-`test_webapp -a /usr/palm/applications/org.webosports.app.firstuse/index.html`
-
-## Contributing
+Contributing
+------------
 
 If you want to contribute you can just start with cloning the repository and make your
 contributions. We're using a pull-request based development and utilizing github for the
