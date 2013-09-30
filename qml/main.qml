@@ -42,6 +42,7 @@ import QtQuick 2.0
 import LunaNext 0.1
 
 import "CardView"
+import "JustType"
 import "StatusBar"
 import "LaunchBar"
 import "Dashboard"
@@ -79,6 +80,7 @@ Compositor {
         dashboardInstance: dashboardInstance
         statusBarInstance: statusBarInstance
         gestureAreaInstance: gestureAreaInstance
+        justTypeInstance: justTypeFieldInstance
         compositorInstance: compositor
 
         //////////  fps counter ///////////
@@ -180,12 +182,27 @@ Compositor {
             }
         }
 
+        ////////// JustType ////////////
+        JustTypeField {
+            id: justTypeFieldInstance
+
+            windowManagerInstance: windowManager
+
+            anchors.top: statusBarInstance.bottom
+            anchors.topMargin: windowManager.computeFromLength(10);
+            width: windowManager.width * 0.8
+            height: windowManager.computeFromLength(40);
+            anchors.horizontalCenter: windowManager.horizontalCenter
+
+            z: 0
+        }
+
         //////////  launcher ///////////
         Launcher {
             id: launcherInstance
 
             gestureArea: gestureAreaInstance
-            windowManager: windowManager
+            windowManagerInstance: windowManager
 
             anchors.top: statusBarInstance.bottom
             anchors.bottom: dashboardInstance.top // not sure about this one

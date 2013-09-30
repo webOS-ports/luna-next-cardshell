@@ -1,6 +1,6 @@
 The following files are distributed under the Creative Commons CC-By-SA
 Non Commercial license :
-src/compositor/qml/images/background.png
+qml/images/background.png
 
 A copy of this license is included in the file
 "src/compositor/qml/images/LICENSE-CC-BY-SA-NC.txt"
@@ -8,13 +8,17 @@ A copy of this license is included in the file
 -------------------------------------------------------------------------
 
 The following files are distributed under the Apache License, Version 2.0 :
-src/compositor/qml/images/glow.png
-src/compositor/qml/images/default-app-icon.png
-src/compositor/qml/images/empty-launcher.png
-src/compositor/qml/images/wm-corner-bottom-left.png
-src/compositor/qml/images/wm-corner-bottom-rightt.png
-src/compositor/qml/images/wm-corner-top-left.png
-src/compositor/qml/images/wm-corner-top-right.png
+qml/images/glow.png
+qml/images/default-app-icon.png
+qml/images/empty-launcher.png
+qml/images/wm-corner-bottom-left.png
+qml/images/wm-corner-bottom-rightt.png
+qml/images/wm-corner-top-left.png
+qml/images/wm-corner-top-right.png
+qml/images/search-button-launcher.png
+qml/images/search-field-bg-launcher-left.png
+qml/images/search-field-bg-launcher-center.png
+qml/images/search-field-bg-launcher-right.png
 
 A copy of this license is included in the file
 "src/compositor/qml/images/LICENSE-APACHE-2.0.txt"

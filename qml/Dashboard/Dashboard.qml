@@ -36,7 +36,7 @@ Rectangle {
         id: minimizedListView
 
         x: 0; y: 0; width: parent.width
-        height: notificationsModel.count > 0 ? windowManager.computeFromLength(48) : 0;
+        height: notificationsModel.count > 0 ? windowManagerInstance.computeFromLength(24) : 0;
         interactive: false
 
         orientation: ListView.Horizontal
@@ -73,7 +73,7 @@ Rectangle {
                 id: fullNotificationDelegate
 
                 width: openListView.width
-                height: windowManager.computeFromLength(32)
+                height: windowManagerInstance.computeFromLength(32)
 
                 onSlidedLeft: notificationsModel.remove(index);
                 onSlidedRight: notificationsModel.remove(index);
