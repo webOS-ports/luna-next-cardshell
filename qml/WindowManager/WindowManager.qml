@@ -8,7 +8,7 @@ Item {
     property Item statusBarInstance
     property Item dashboardInstance
     property Item justTypeInstance
-    property Item compositorInstance
+    property QtObject compositorInstance
 
     property Item currentActiveWindowWrapper
 
