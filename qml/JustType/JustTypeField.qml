@@ -30,6 +30,8 @@ Item {
         source: "../images/search-field-bg-launcher-right.png"
     }
     Image {
+        id: bgCenter
+
         anchors.left: bgLeft.right
         anchors.right: bgRight.left
         anchors.top: parent.top
@@ -40,10 +42,9 @@ Item {
         source: "../images/search-field-bg-launcher-center.png"
     }
     Image {
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        height: parent.height * 0.8
-        anchors.rightMargin: parent.width * 0.02
+        anchors.right: bgCenter.right
+        anchors.verticalCenter: bgCenter.verticalCenter
+        height: bgCenter.height * 0.8
 
         fillMode: Image.PreserveAspectFit
         smooth: true
@@ -51,12 +52,11 @@ Item {
         source: "../images/search-button-launcher.png"
     }
     Text {
-        anchors.fill: parent
-        anchors.leftMargin: parent.width * 0.03
+        anchors.fill: bgCenter
 
         verticalAlignment: Text.AlignVCenter
         fontSizeMode: Text.VerticalFit
-        text: "Just Type..."
+        text: "Just type..."
         color: "white"
         font.family: Settings.fontStatusBar
     }
