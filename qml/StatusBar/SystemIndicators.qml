@@ -1,28 +1,40 @@
 import QtQuick 2.0
 
 Row {
+    id: indicatorsRow
+
     SequentialAnimation {
-        id: removeIndicatorAnimation
+        id: hideIndicatorAnimation
 
-        NumberAnimation { target: removeIndicatorAnimation.target; properties: "opacity"; to: 0; duration: 200 }
-        NumberAnimation { target: removeIndicatorAnimation.target; properties: "width"; to: 0; duration: 200 }
-        PropertyAction { target: removeIndicatorAnimation.target; properties: "visible"; value: false }
+        ParallelAnimation {
+            NumberAnimation { target: hideIndicatorAnimation.target; properties: "opacity"; to: 0; duration: 200 }
+            NumberAnimation { target: hideIndicatorAnimation.target; properties: "width"; to: 0; duration: 400 }
+        }
+        PropertyAction { target: hideIndicatorAnimation.target; properties: "visible"; value: false }
 
-        function removeItem(itemToRemove) {
-            target = itemToRemove;
+        function hideItem(itemToHide) {
+            target = itemToHide;
             start();
         }
 
         property Item target
     }
 
+    Repeater {
+        model: 13
+        delegate:
     BatteryIndicator {
-        width: 18
-        height: 24
-        anchors.verticalCenter: parent.verticalCenter
+        id: batteryIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        batteryLevel: model.index-1
+
         MouseArea {
             anchors.fill: parent
-            onClicked: { removeIndicatorAnimation.removeItem(parent) }
+            onClicked: { hideIndicatorAnimation.hideItem(parent) }
         }
+    }
     }
 }

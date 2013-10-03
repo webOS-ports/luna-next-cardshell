@@ -19,4 +19,18 @@ import QtQuick 2.0
 
 Item {
     id: indicatorRoot
+
+    property Image indicatorImage;
+
+    width: indicatorImage.width
+
+    clip: true
+
+    Component.onCompleted: {
+        indicatorImage.anchors.fill = undefined;
+        indicatorImage.anchors.left = indicatorRoot.left;
+        indicatorImage.anchors.top = indicatorRoot.top;
+        indicatorImage.anchors.bottom = indicatorRoot.bottom;
+        indicatorImage.sourceSize.height = Qt.binding(function() { return indicatorRoot.height*0.8 });
+    }
 }

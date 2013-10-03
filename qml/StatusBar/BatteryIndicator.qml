@@ -23,13 +23,14 @@ BaseIndicator {
     property int batteryLevel: 0
     property bool charging: false
 
-    Image {
-        anchors.fill: parent
+    indicatorImage: batteryIcon
 
-        fillMode: Image.Stretch
+    Image {
+        id: batteryIcon
+
+        fillMode: Image.PreserveAspectFit
         smooth: true
 
-        id: batteryIcon
         source: getIconForBatteryLevel(batteryLevel)
     }
 

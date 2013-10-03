@@ -71,7 +71,7 @@ Rectangle {
 
             color: "white"
             font.family: Settings.fontStatusBar
-            font.pixelSize: 24
+            font.pixelSize: 20
             font.bold: true
             text: Qt.formatDateTime(new Date(), "dd.MM.yyyy")
         }
@@ -81,7 +81,8 @@ Rectangle {
     SystemIndicators {
         id: systemIndicatorsStatusBarItem
 
-        anchors.verticalCenter: statusBarItem.verticalCenter
+        anchors.top: statusBarItem.top
+        anchors.bottom: statusBarItem.bottom
         anchors.right: systemMenuStatusBarItem.left
     }
 }
