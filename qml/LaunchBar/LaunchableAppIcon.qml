@@ -1,6 +1,7 @@
 import QtQuick 2.0
+import QtQuick.Layouts 1.0
 
-Column {
+ColumnLayout {
     id: launchableAppIcon
 
     property string appIcon
@@ -10,9 +11,13 @@ Column {
 
     signal startLaunchApplication(string appId)
 
+    spacing: 0
+
     Image {
-        width: parent.width
-        anchors.horizontalCenter: parent.horizontalCenter
+        Layout.fillHeight: true
+
+        anchors.left: launchableAppIcon.left
+        anchors.right: launchableAppIcon.right
 
         fillMode: Image.PreserveAspectFit
 
@@ -26,9 +31,13 @@ Column {
         }
     }
     Text {
-        width: parent.width
+        Layout.fillHeight: false
+
+        anchors.left: launchableAppIcon.left
+        anchors.right: launchableAppIcon.right
+
         visible: launchableAppIcon.showTitle
-        anchors.horizontalCenter: parent.horizontalCenter
+
         color: "white"
         text: launchableAppIcon.appTitle
         horizontalAlignment: Text.AlignHCenter
