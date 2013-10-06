@@ -10,8 +10,6 @@ Item {
     state: "visible"
     anchors.bottom: parent.bottom
 
-    property real launcherBarIconSize: launchBarItem.height * 0.7;
-
     // list of icons
     ListModel {
         id: launcherListModel
@@ -68,6 +66,8 @@ Item {
         id: launcherRow
 
         anchors.fill: launchBarItem
+        anchors.topMargin: launchBarItem.height * 0.15
+        anchors.bottomMargin: launchBarItem.height * 0.15
         spacing: 0
 
         Repeater {
@@ -77,15 +77,14 @@ Item {
                 id: launcherIcon
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: launchBarItem.launcherBarIconSize
-                Layout.preferredWidth: launchBarItem.launcherBarIconSize
+                Layout.preferredHeight: launcherRow.height
+                Layout.preferredWidth: launcherRow.width/(launcherListModel.count+1)
 
                 appIcon: model.icon
                 appId: model.appId
 
-                //anchors.verticalCenter: launcherRow.verticalCenter
-                height: launchBarItem.launcherBarIconSize
-                width: launchBarItem.launcherBarIconSize
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
 
                 onStartLaunchApplication: launchBarItem.startLaunchApplication(appId);
             }
@@ -93,16 +92,17 @@ Item {
 
         Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: launchBarItem.launcherBarIconSize
-            Layout.preferredWidth: launchBarItem.launcherBarIconSize
+            Layout.preferredHeight: launcherRow.height
+            Layout.preferredWidth: launcherRow.width/(launcherListModel.count+1)
+
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
 
             Image {
                 id: appsIcon
 
-                anchors.right: parent.right
+                anchors.fill: parent
 
-                height: launchBarItem.launcherBarIconSize
-                width: launchBarItem.launcherBarIconSize
                 fillMode: Image.PreserveAspectFit
                 source: "../images/empty-launcher.png"
 
