@@ -53,9 +53,12 @@ Item {
     }
     Text {
         anchors.fill: bgCenter
+        anchors.topMargin: bgCenter.height * 0.3
+        anchors.bottomMargin: bgCenter.height * 0.3
 
         verticalAlignment: Text.AlignVCenter
         fontSizeMode: Text.VerticalFit
+        font.pointSize: height>0?height:20
         text: "Just type..."
         color: "white"
         font.family: Settings.fontStatusBar

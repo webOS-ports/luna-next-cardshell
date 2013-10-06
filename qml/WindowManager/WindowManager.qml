@@ -153,12 +153,12 @@ Item {
             }
         }
         onSwipeLeftGesture:{
-            if( compositorInstance && compositorInstance.postEvent )
-                compositorInstance.postEvent(EventType.CoreNaviBack);
+            if( currentActiveWindowWrapper )
+                currentActiveWindowWrapper.postEvent(EventType.CoreNaviBack);
         }
         onSwipeRightGesture:{
-            if( compositorInstance && compositorInstance.postEvent )
-                compositorInstance.postEvent(EventType.CoreNaviNext);
+            if( currentActiveWindowWrapper )
+                currentActiveWindowWrapper.postEvent(EventType.CoreNaviNext);
         }
     }
 

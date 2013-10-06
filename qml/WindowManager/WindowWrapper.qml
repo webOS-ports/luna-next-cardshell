@@ -37,6 +37,12 @@ Item {
             childWrapper.children = [ window ];
             window.anchors.fill = childWrapper;
         }
+
+        function postEvent(event) {
+            if( wrappedChild && wrappedChild.postEvent )
+                wrappedChild.postEvent(event);
+             console.log("Wrapped window: postEvent(" + event + ")");
+        }
     }
 
     // Rounded corners
@@ -164,5 +170,9 @@ Item {
         windowManager.cardViewMode();
         newParentAnimation.complete(); // force animation to complete now
         windowManager.maximizedMode();
+    }
+
+    function postEvent(event) {
+        childWrapper.postEvent(event);
     }
 }
