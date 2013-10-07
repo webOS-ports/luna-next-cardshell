@@ -132,6 +132,7 @@ Compositor {
             id: reticleArea
             anchors.fill: parent
             source: Settings.showReticle ? "Utils/ReticleArea.qml" : ""
+            z: 1000
         }
 
         //////////  background ///////////
