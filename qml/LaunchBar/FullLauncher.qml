@@ -45,8 +45,19 @@ Rectangle {
     }
 
     GridView {
-        anchors.fill: parent
+        id: gridview
+
         model: appsModel
+
+        cellWidth: 115
+        cellHeight: cellWidth + 30
+        width: Math.floor(parent.width / cellWidth) * cellWidth
+        height: parent.height
+
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        header: Item { height: 30 }
+        footer: Item { height: 20 }
 
         delegate: LaunchableAppIcon {
                 width: fullLauncher.iconSize

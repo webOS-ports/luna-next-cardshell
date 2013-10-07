@@ -21,9 +21,6 @@ import LunaNext 0.1
 Item {
     id: container
 
-    // anchors.fill: parent
-    z: 1000
-
     Reticle {
         id: reticle
     }
