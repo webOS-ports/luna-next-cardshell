@@ -33,5 +33,7 @@ Column {
         text: launchableAppIcon.appTitle
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+        font.pixelSize: 25
+        elide: Text.ElideRight
     }
 }
