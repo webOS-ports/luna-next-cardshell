@@ -77,6 +77,9 @@ Compositor {
 
         anchors.fill: parent
 
+        defaultWindowWidth: Settings.displayWidth
+        defaultWindowHeight: Settings.displayHeight - statusBarInstance.height - gestureAreaInstance.height
+
         dashboardInstance: dashboardInstance
         statusBarInstance: statusBarInstance
         gestureAreaInstance: gestureAreaInstance

@@ -12,6 +12,9 @@ Item {
 
     property Item currentActiveWindowWrapper
 
+    property real defaultWindowWidth: Settings.displayWidth
+    property real defaultWindowHeight: Settings.displayHeight
+
     property real cornerRadius: 20
 
     signal requestPreviousState(Item windowWrapper)
