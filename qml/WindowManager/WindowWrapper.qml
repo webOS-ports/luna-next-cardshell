@@ -35,7 +35,13 @@ Item {
             window.parent = childWrapper;
             childWrapper.wrappedChild = window;
             childWrapper.children = [ window ];
+
+            /* This resizes only the quick item which contains the child surface but
+             * doesn't really resize the client window */
             window.anchors.fill = childWrapper;
+
+            /* Resize the real client window to have the right size */
+            window.changeSize(Qt.size(windowManager.defaultWindowWidth, windowManager.defaultWindowHeight));
         }
 
         function postEvent(event) {
