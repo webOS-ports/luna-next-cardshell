@@ -6,6 +6,8 @@ Item {
     id: cardViewItem
 
     property Item windowManagerInstance;
+    focus: true
+    Keys.forwardTo: listCardsView
 
     ListModel {
         // This model contains the list of the cards

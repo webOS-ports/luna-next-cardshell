@@ -73,6 +73,9 @@ Item {
     }
 
     function takeFocus() {
-        console.log("DummyWindow: takeFocus()")
+        console.log("DummyWindow: takeFocus()");
+    }
+    function changeSize(w, h) {
+        console.log("DummyWindow: changeSize(" + w + ", " + h + ")");
     }
 }
