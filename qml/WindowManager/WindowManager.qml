@@ -156,7 +156,10 @@ Item {
             }
         }
         onSwipeLeftGesture:{
-            if( currentActiveWindowWrapper )
+            if( state === "fulllauncher" ) {
+                state = "cardview"
+            }
+            else if( currentActiveWindowWrapper )
                 currentActiveWindowWrapper.postEvent(EventType.CoreNaviBack);
         }
         onSwipeRightGesture:{

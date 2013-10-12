@@ -70,15 +70,19 @@ Item {
     states: [
         State {
            name: "unintialized"
+           PropertyChanges { target: windowWrapper; Keys.forwardTo: [] }
         },
         State {
            name: "card"
+           PropertyChanges { target: windowWrapper; Keys.forwardTo: [] }
         },
         State {
            name: "maximized"
+           PropertyChanges { target: windowWrapper; Keys.forwardTo: [ wrappedWindow ] }
         },
         State {
            name: "fullscreen"
+           PropertyChanges { target: windowWrapper; Keys.forwardTo: [ wrappedWindow ] }
        }
     ]
 

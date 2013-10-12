@@ -86,6 +86,9 @@ Compositor {
         justTypeInstance: justTypeFieldInstance
         compositorInstance: compositor
 
+        focus: true
+        Keys.forwardTo: [ gestureAreaInstance, justTypeFieldInstance, cardViewInstance, currentActiveWindowWrapper ]
+
         //////////  fps counter ///////////
         Loader {
             anchors.top: windowManager.top

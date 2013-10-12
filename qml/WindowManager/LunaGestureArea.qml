@@ -10,6 +10,8 @@ Item {
     signal swipeLeftGesture(int modifiers)
     signal swipeRightGesture(int modifiers)
 
+    focus: true
+
     // Black rectangle behind, and a glowing image in front
     Rectangle {
         anchors.fill: parent
@@ -48,6 +50,24 @@ Item {
         PropertyAction { target: glowImageMask; property: "visible"; value: true }
         NumberAnimation { target: glowImageMask; property: "x"; to: glowImage.x + glowImage.width; duration: 500 }
         PropertyAction { target: glowImageMask; property: "visible"; value: false }
+    }
+
+    Keys.onPressed: {
+        if (event.key === Qt.Key_End) {
+            console.log("Key: End");
+            event.accepted = true;
+            swipeUpGesture(0);
+        }
+        else if(event.key === Qt.Key_Home) {
+            console.log("Key: Home");
+            event.accepted = true;
+            tapGesture();
+        }
+        else if(event.key === Qt.Key_Escape) {
+            console.log("Key: Escape");
+            event.accepted = true;
+            swipeLeftGesture(0);
+        }
     }
 
     MouseArea {

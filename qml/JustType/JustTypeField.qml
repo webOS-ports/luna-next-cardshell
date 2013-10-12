@@ -67,21 +67,22 @@ Item {
         anchors.fill: parent
         onClicked: justTypeFieldItem.showJustType(0)
     }
-    Keys.onPressed: if(visible && opacity>0) {
-                        showJustType(event.key);
-                    }
 
+    Keys.onPressed: {
+        if(visible && opacity>0 && __isDisplayableKey(event.key) ) {
+                        showJustType(event.key);
+                        event.accepted = true;
+        }
+    }
 
     states: [
         State {
             name: "hidden"
             PropertyChanges { target: justTypeFieldItem; opacity: 0 }
-            PropertyChanges { target: justTypeFieldItem; focus: false }
         },
         State {
             name: "visible"
             PropertyChanges { target: justTypeFieldItem; opacity: 1 }
-            PropertyChanges { target: justTypeFieldItem; focus: true }
         }
     ]
 
@@ -107,4 +108,16 @@ Item {
     }
 
     Component.onCompleted: state = "visible"
+
+    function __isDisplayableKey(key)
+    {
+        /*
+         * In QtQuick the keycode that can be actually displayed have a value
+         * between 0x00 and 0xff.
+        */
+
+        if( key <= 0x0ff )
+            return true;
+        return false;
+    }
 }
