@@ -91,8 +91,8 @@ Compositor {
 
         //////////  fps counter ///////////
         Loader {
-            anchors.top: windowManager.top
-            anchors.left: windowManager.left
+            anchors.top: background.top
+            anchors.left: background.left
 
             width: 50
             height: 32
@@ -226,9 +226,11 @@ Compositor {
             anchors.top: windowManager.top
             anchors.left: windowManager.left
             anchors.right: windowManager.right
-            height: windowManager.computeFromLength(30);
+            height: windowManager.computeFromLength(24);
 
             z: 2 // can only be hidden by a fullscreen window
+
+            windowManagerInstance: windowManager
         }
 
         //////////  rounded corners of the main view ///////////
