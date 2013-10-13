@@ -35,16 +35,19 @@ BaseIndicator {
     }
 
     function getIconForBatteryLevel(level) {
-        var normalizedLevel = level;
         var baseName = "../images/statusbar/battery-";
 
-        if (charging)
-            baseName += "charging-";
-
-        if (level > 11)
+        var normalizedLevel = level;
+        if (level > 11) {
             normalizedLevel = "charged";
-        else if (level < 0)
+        }
+        else if (level < 0) {
             normalizedLevel = "error";
+        }
+        else {
+            if (charging)
+                baseName += "charging-";
+        }
 
         return baseName + normalizedLevel + ".png";
     }
