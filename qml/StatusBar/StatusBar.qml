@@ -1,118 +1,26 @@
 import QtQuick 2.0
-import QtQuick.Layouts 1.0
 import LunaNext 0.1
 
-/// The status bar can be divided in four main regions: app menu, title, system indicators, system menu
-/// [ -- app menu -- |                       --- indicators -- | -- system menu -- ]
-///                  [           --- title ---                 ]
+/// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
+/// [-- app menu -- |   --- title ---    |  -- indicators --]
+
 Rectangle {
     id: statusBarItem
     color: "black"
 
-    /// app menu
-    Item {
-        id: appMenuItem
-        anchors.top: statusBarItem.top
-        anchors.bottom: statusBarItem.bottom
-        anchors.left: statusBarItem.left
-
-        anchors.topMargin: statusBarItem.height * 0.2
-        anchors.bottomMargin: statusBarItem.height * 0.2
-
-        width: appMenuBgImageLeft.width + appMenuBgImageCenter.width + appMenuBgImageRight.width
-
-        Image {
-            id: appMenuBgImageLeft
-
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-
-            source: "../images/statusbar/appname-background-left.png"
-        }
-        Image {
-            id: appMenuBgImageCenter
-
-            anchors.left: appMenuBgImageLeft.right
-            width: appMenuText.contentWidth
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-
-            smooth: true
-
-            source: "../images/statusbar/appname-background-center.png"
-        }
-        Image {
-            id: appMenuBgImageRight
-
-            anchors.left: appMenuBgImageCenter.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-
-            fillMode: Image.PreserveAspectFit
-            smooth: true
-
-            source: "../images/statusbar/appname-background-right.png"
-        }
-        Text {
-            id: appMenuText
-
-            anchors.left: appMenuBgImageCenter.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-
-            color: "white"
-            font.family: Settings.fontStatusBar
-            font.pointSize: 20
-            fontSizeMode: Text.VerticalFit
-            text: "App menu"
-        }
-    }
-
-    /// system menu
-    Item {
-        id: systemMenuStatusBarItem
-
-        anchors.top: statusBarItem.top
-        anchors.bottom: statusBarItem.bottom
-        anchors.right: statusBarItem.right
-
-        anchors.topMargin: statusBarItem.height * 0.2
-        anchors.bottomMargin: statusBarItem.height * 0.2
-
-        implicitWidth: systemMenuText.contentWidth
-
-        Text {
-            id: systemMenuText
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            anchors.right: parent.right
-
-            horizontalAlignment: Text.AlignRight
-
-            color: "white"
-            font.family: Settings.fontStatusBar
-            font.pointSize: 20
-            fontSizeMode: Text.VerticalFit
-            text: "System menu"
-        }
-    }
+    property Item windowManagerInstance
 
     /// general title
     Item {
         id: titleItem
         anchors.top: statusBarItem.top
         anchors.bottom: statusBarItem.bottom
-        anchors.left: appMenuItem.right
-        anchors.right: systemMenuStatusBarItem.left
+        anchors.horizontalCenter: statusBarItem.horizontalCenter
 
         anchors.topMargin: statusBarItem.height * 0.2
         anchors.bottomMargin: statusBarItem.height * 0.2
 
-        implicitWidth: titleText.implicitWidth
+        implicitWidth: titleText.contentWidth
 
         Text {
             id: titleText
@@ -129,15 +37,91 @@ Rectangle {
         }
     }
 
+    /// app menu/cellular network provider
+    Loader {
+        anchors.top: statusBarItem.top
+        anchors.bottom: statusBarItem.bottom
+        anchors.left: statusBarItem.left
+
+        anchors.topMargin: statusBarItem.height * 0.2
+        anchors.bottomMargin: statusBarItem.height * 0.2
+
+        Component {
+            id: networkNameComponent
+            Item {
+                width: networkNameText.contentWidth
+
+                Text {
+                    id: networkNameText
+                    anchors.fill: parent
+
+                    horizontalAlignment: Text.AlignHCenter
+
+                    color: "white"
+                    font.family: Settings.fontStatusBar
+                    font.pointSize: 20
+                    fontSizeMode: Text.VerticalFit
+                    font.bold: true
+                    text: "myNetwork"
+                }
+            }
+        }
+
+        Component {
+            id: appMenuComponent
+            StatusBarAppMenu {
+                id: appMenuItem
+            }
+        }
+
+        sourceComponent: statusBarItem.state === "appSpecific" ? appMenuComponent : networkNameComponent
+    }
+
     /// system indicators
     SystemIndicators {
         id: systemIndicatorsStatusBarItem
 
         anchors.top: statusBarItem.top
         anchors.bottom: statusBarItem.bottom
-        anchors.right: systemMenuStatusBarItem.left
+        anchors.right: statusBarItem.right
 
         anchors.topMargin: statusBarItem.height * 0.2
         anchors.bottomMargin: statusBarItem.height * 0.2
+    }
+
+    state: "genericStatus"
+
+    states: [
+        State {
+            name: "hidden"
+            PropertyChanges { target: statusBarItem; visible: false }
+        },
+        State {
+            name: "genericStatus"
+            PropertyChanges { target: statusBarItem; visible: true }
+        },
+        State {
+            name: "appSpecific"
+            PropertyChanges { target: statusBarItem; visible: true }
+        }
+    ]
+
+    Connections {
+        target: windowManagerInstance
+        onSwitchToDashboard: {
+            state = "genericStatus";
+        }
+        onSwitchToMaximize: {
+            state = "appSpecific";
+        }
+        onSwitchToFullscreen: {
+            state = "hidden";
+        }
+        onSwitchToCardView: {
+            state = "genericStatus";
+        }
+        onExpandLauncher: {
+            state = "appSpecific";
+        }
     }
 }

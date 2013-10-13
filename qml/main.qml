@@ -229,6 +229,8 @@ Compositor {
             height: windowManager.computeFromLength(24);
 
             z: 2 // can only be hidden by a fullscreen window
+
+            windowManagerInstance: windowManager
         }
 
         //////////  rounded corners of the main view ///////////
