@@ -37,7 +37,7 @@ Rectangle {
             id: appMenuBgImageCenter
 
             anchors.left: appMenuBgImageLeft.right
-            width: appMenuText.implicitWidth
+            width: appMenuText.contentWidth
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
@@ -83,7 +83,7 @@ Rectangle {
         anchors.topMargin: statusBarItem.height * 0.2
         anchors.bottomMargin: statusBarItem.height * 0.2
 
-        implicitWidth: systemMenuText.implicitWidth
+        implicitWidth: systemMenuText.contentWidth
 
         Text {
             id: systemMenuText

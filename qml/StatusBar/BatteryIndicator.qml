@@ -16,6 +16,7 @@
  */
 
 import QtQuick 2.0
+import LunaNext 0.1
 
 BaseIndicator {
     id: batteryIndicator
@@ -31,10 +32,24 @@ BaseIndicator {
         fillMode: Image.PreserveAspectFit
         smooth: true
 
-        source: getIconForBatteryLevel(batteryLevel)
+        source: __getIconForBatteryLevel(batteryLevel)
     }
 
-    function getIconForBatteryLevel(level) {
+    Component.onCompleted: {
+        StatusBarServicesConnector.signalBatteryLevelUpdated.connect(__onSignalBatteryLevelUpdated);
+        StatusBarServicesConnector.signalChargingStateUpdated.connect(__onSignalChargingStateUpdated);
+    }
+
+    function __onSignalBatteryLevelUpdated(percentage) {
+        // batteryLevel goes from 0 to 12.
+        batteryIndicator.batteryLevel = Math.floor((percentage * 12) / 100);
+    }
+
+    function __onSignalChargingStateUpdated(charging) {
+        batteryIndicator.charging = charging;
+    }
+
+    function __getIconForBatteryLevel(level) {
         var baseName = "../images/statusbar/battery-";
 
         var normalizedLevel = level;

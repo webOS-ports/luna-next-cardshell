@@ -20,21 +20,17 @@ Row {
         property Item target
     }
 
-    Repeater {
-        model: 13
-        delegate:
     BatteryIndicator {
         id: batteryIndicator
 
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        batteryLevel: model.index-1
+        batteryLevel: 0
 
         MouseArea {
             anchors.fill: parent
             onClicked: { hideIndicatorAnimation.hideItem(parent) }
         }
-    }
     }
 }
