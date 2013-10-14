@@ -20,11 +20,11 @@ Item {
     Image {
         id: glowImage
         anchors.centerIn: parent
-        height: parent.height/2
-        width: parent.width/2
+        height: parent.height*0.5
+        width: parent.width*0.7
         source: "../images/glow.png"
         smooth: true
-        fillMode: Image.Stretch
+        fillMode: Image.PreserveAspectFit
     }
     Image {
         id: glowImageMask
