@@ -57,10 +57,5 @@ Row {
         anchors.bottom: indicatorsRow.bottom
 
         batteryLevel: 0
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: { hideIndicatorAnimation.hideItem(parent) }
-        }
     }
 }

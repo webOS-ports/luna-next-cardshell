@@ -6,6 +6,7 @@ Rectangle {
     id: fullLauncher
 
     property real iconSize: 64
+    property real bottomMargin: 80
 
     signal startLaunchApplication(string appId)
 
@@ -49,23 +50,35 @@ Rectangle {
 
         model: appsModel
 
-        cellWidth: 115
-        cellHeight: cellWidth + 30
-        width: Math.floor(parent.width / cellWidth) * cellWidth
-        height: parent.height
+        property real appIconWidth: iconSize*1.5
+        property real appIconHMargin: function (parent, appIconWidth) {
+            var nbCellsPerLine = Math.floor(parent.width / (appIconWidth + 10));
+            var remainingHSpace = parent.width - nbCellsPerLine * appIconWidth;
+            return Math.floor(remainingHSpace / nbCellsPerLine);
+        } (parent, appIconWidth)
 
+        cellWidth: appIconWidth + appIconHMargin
+        cellHeight: iconSize + iconSize*0.4*2 // we give margin for two lines of text
+
+        width: Math.floor(parent.width / cellWidth) * cellWidth
         anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: fullLauncher.bottomMargin
+        clip: true
 
         header: Item { height: 30 }
         footer: Item { height: 20 }
 
         delegate: LaunchableAppIcon {
-                width: fullLauncher.iconSize
+                width: gridview.appIconWidth
 
                 appTitle: model.title
                 appIcon: model.icon
                 appId: model.id
                 showTitle: true
+
+                iconSize: fullLauncher.iconSize
 
                 onStartLaunchApplication: fullLauncher.startLaunchApplication(appId);
             }

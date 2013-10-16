@@ -68,8 +68,7 @@ Item {
 
         color: "white"
         font.family: Settings.fontStatusBar
-        font.pointSize: 20
-        fontSizeMode: Text.VerticalFit
+        font.pixelSize: parent.height;
         text: "App menu"
     }
 }

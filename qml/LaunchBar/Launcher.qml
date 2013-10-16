@@ -15,6 +15,9 @@ Item {
     FullLauncher {
         id: fullLauncherInstance
 
+        iconSize: windowManagerInstance.computeFromLength(40);
+        bottomMargin: launchBarInstance.height;
+
         anchors.left: parent.left
         anchors.right: parent.right
     }
@@ -72,14 +75,14 @@ Item {
     Connections {
         target: launchBarInstance
         onStartLaunchApplication: {
-            state = "hidden";
+            state = "launchbar";
             lunaNextLS2Service.call("luna://com.palm.applicationManager/launch", JSON.stringify({"id": appId}), undefined, handleLaunchAppError)
         }
     }
     Connections {
         target: fullLauncherInstance
         onStartLaunchApplication: {
-            state = "hidden";
+            state = "launchbar";
             lunaNextLS2Service.call("luna://com.palm.applicationManager/launch", JSON.stringify({"id": appId}), undefined, handleLaunchAppError)
         }
     }
