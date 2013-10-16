@@ -21,6 +21,7 @@ Item {
     id: indicatorRoot
 
     property Image indicatorImage;
+    property real originalWidth: indicatorImage.width
 
     width: indicatorImage.width
 

@@ -13,7 +13,7 @@ var signalCarrierTextChanged = new Object;
 //var signalVpnStateChanged(bool enabled);
 //var signalWanIndexChanged(bool show, StatusBar::IndexWAN index);
 //var signalBluetoothIndexChanged(bool show, StatusBar::IndexBluetooth index);
-//var signalWifiIndexChanged(bool show, StatusBar::IndexWiFi index);
+var signalWifiIndexChanged = new Object;
 
 var initialized;
 
@@ -38,6 +38,9 @@ function __init(rootObject)
         signalCarrierTextChanged.connect = function (cb) {
             signalCarrierTextChanged.target = cb;
         }
+        signalWifiIndexChanged.connect = function (cb) {
+            signalWifiIndexChanged.target = cb;
+        }
     }
 }
 
@@ -51,5 +54,7 @@ function spawnNotification()
         signalPowerdConnectionStateChanged.target(Math.random()>0.5);
     if( signalCarrierTextChanged.target )
         signalCarrierTextChanged.target("carrier " + Math.ceil(Math.random()*10));
+    if( signalWifiIndexChanged.target )
+        signalWifiIndexChanged.target(Math.random()>0.2, Math.floor(Math.random()*6));
 }
 
