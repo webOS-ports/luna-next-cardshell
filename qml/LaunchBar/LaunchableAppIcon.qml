@@ -8,10 +8,13 @@ Column {
     property string appId
     property bool showTitle: false
 
+    property real iconSize: 64
+
     signal startLaunchApplication(string appId)
 
     Image {
-        width: parent.width
+        width: iconSize
+        height: iconSize
         anchors.horizontalCenter: parent.horizontalCenter
 
         fillMode: Image.PreserveAspectFit
@@ -33,7 +36,9 @@ Column {
         text: launchableAppIcon.appTitle
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-        font.pixelSize: 25
+        font.pixelSize: iconSize*0.3
+        font.bold: true
+        maximumLineCount: 2
         elide: Text.ElideRight
     }
 }

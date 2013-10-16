@@ -47,8 +47,7 @@ Rectangle {
 
             color: "white"
             font.family: Settings.fontStatusBar
-            font.pointSize: 20
-            fontSizeMode: Text.VerticalFit
+            font.pixelSize: parent.height;
             font.bold: true
             text: Qt.formatDateTime(new Date(), "dd.MM.yyyy")
         }
@@ -76,8 +75,7 @@ Rectangle {
 
                     color: "white"
                     font.family: Settings.fontStatusBar
-                    font.pointSize: 20
-                    fontSizeMode: Text.VerticalFit
+                    font.pixelSize: parent.height;
                     font.bold: true
                     text: "myNetwork"
                 }
