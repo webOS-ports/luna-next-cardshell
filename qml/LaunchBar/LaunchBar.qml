@@ -83,6 +83,8 @@ Item {
                 appIcon: model.icon
                 appId: model.appId
 
+                iconSize: launchBarItem.launcherBarIconSize
+
                 //anchors.verticalCenter: launcherRow.verticalCenter
                 height: launchBarItem.launcherBarIconSize
                 width: launchBarItem.launcherBarIconSize

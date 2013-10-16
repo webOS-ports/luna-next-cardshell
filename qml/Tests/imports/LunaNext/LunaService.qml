@@ -22,22 +22,22 @@ QtObject {
     function listApps_call(jsonArgs, returnFct, handleError) {
         returnFct(JSON.stringify({"returnValue": true,
                     "apps": [
-             { "title": "Calendar", "id": "com.palm.calendar", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Email", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Calculator", "id": "com.palm.calc", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png", "showInSearch": false },
-             { "title": "Snowshoe", "id": "snowshoe", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "This is a long title", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "This_is_also_a_long_title", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Preware 5", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "iOS", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Oh My", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Test1", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Test2", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Test3", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Test5", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Test5bis", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "Test6", "id": "com.palm.email", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" },
-             { "title": "End Of All Tests", "id": "snowshoe", "icon": "/usr/share/icons/hicolor/32x32/apps/gnome-panel-clock.png" }
+             { "title": "Calendar", "id": "com.palm.calendar", "icon": "../images/default-app-icon.png" },
+             { "title": "Email", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Calculator", "id": "com.palm.calc", "icon": "../images/default-app-icon.png", "showInSearch": false },
+             { "title": "Snowshoe", "id": "snowshoe", "icon": "../images/default-app-icon.png" },
+             { "title": "This is a long title", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "This_is_also_a_long_title", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Preware 5", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "iOS", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Oh My", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Test1", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Test2", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Test3", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Test5", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Test5bis", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "Test6", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
+             { "title": "End Of All Tests", "id": "snowshoe", "icon": "../images/default-app-icon.png" }
            ]}));
     }
 
