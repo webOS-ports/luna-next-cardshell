@@ -20,22 +20,43 @@ import QtQuick 2.0
 Row {
     id: indicatorsRow
 
-    // Utility animation when an indicator must be hidden
+    // Utility animations when an indicator must be hidden or shown
     SequentialAnimation {
         id: hideIndicatorAnimation
 
         ParallelAnimation {
-            NumberAnimation { target: hideIndicatorAnimation.target; properties: "opacity"; to: 0; duration: 200 }
-            NumberAnimation { target: hideIndicatorAnimation.target; properties: "width"; to: 0; duration: 400 }
+            NumberAnimation { target: hideIndicatorAnimation.__target; properties: "opacity"; to: 0; duration: 200 }
+            NumberAnimation { target: hideIndicatorAnimation.__target; properties: "width"; to: 0; duration: 400 }
         }
-        PropertyAction { target: hideIndicatorAnimation.target; properties: "visible"; value: false }
+        PropertyAction { target: hideIndicatorAnimation.__target; properties: "visible"; value: false }
 
         function hideItem(itemToHide) {
-            target = itemToHide;
-            start();
+            __target = itemToHide;
+            if( __target )
+                start();
         }
 
-        property Item target
+        property Item __target
+    }
+
+    SequentialAnimation {
+        id: showIndicatorAnimation
+
+        PropertyAction { target: showIndicatorAnimation.__target; properties: "visible"; value: true }
+        ParallelAnimation {
+            NumberAnimation { target: showIndicatorAnimation.__target; properties: "opacity"; to: 1; duration: 200 }
+            NumberAnimation { target: showIndicatorAnimation.__target; properties: "width"; to: showIndicatorAnimation.__targetWidth; duration: 400 }
+        }
+
+        function showItem(itemToShow) {
+            __target = itemToShow;
+            __targetWidth = itemToShow.originalWidth;
+            if( __target )
+                start();
+        }
+
+        property Item __target
+        property real __targetWidth
     }
 
     Image {
@@ -48,6 +69,27 @@ Row {
         fillMode: Image.TileHorizontally
 
         source: "../images/statusbar/status-bar-separator.png"
+    }
+
+    WifiIndicator {
+        id: wifiIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        signalLevel: -1
+        enabled: false
+
+        width: 0
+
+        onEnabledChanged: {
+            if( enabled ) {
+                showIndicatorAnimation.showItem(wifiIndicator);
+            }
+            else {
+                hideIndicatorAnimation.hideItem(wifiIndicator);
+            }
+        }
     }
 
     BatteryIndicator {
