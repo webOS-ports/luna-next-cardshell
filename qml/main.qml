@@ -264,7 +264,7 @@ Compositor {
             anchors.bottom: windowManager.bottom
             anchors.left: windowManager.left
             anchors.right: windowManager.right
-            height: windowManager.computeFromLength(16);
+            height: windowManager.computeFromLength(40);
 
             z: 3 // the gesture area is in front of everything, like the fullscreen window
         }
