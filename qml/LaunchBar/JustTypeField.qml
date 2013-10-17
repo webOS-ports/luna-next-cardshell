@@ -99,7 +99,7 @@ Item {
         onSwitchToCardView: {
             state = "visible";
         }
-        onExpandLauncher: {
+        onSwitchToLauncherView: {
             state = "hidden";
         }
     }

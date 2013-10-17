@@ -83,11 +83,11 @@ Compositor {
         dashboardInstance: dashboardInstance
         statusBarInstance: statusBarInstance
         gestureAreaInstance: gestureAreaInstance
-        justTypeInstance: justTypeFieldInstance
         compositorInstance: compositor
+        launcherInstance: launcherInstance
 
         focus: true
-        Keys.forwardTo: [ gestureAreaInstance, justTypeFieldInstance, cardViewInstance, currentActiveWindowWrapper ]
+        Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, currentActiveWindowWrapper ]
 
         //////////  fps counter ///////////
         Loader {
@@ -179,29 +179,18 @@ Compositor {
             Connections {
                 target: windowManager
                 onWindowWrapperCreated: {
-                    // insert a new card at the end
-                    cardViewInstance.appendCard(windowWrapper, winId);
+                    if( windowWrapper.windowType === WindowType.Card ) {
+                        // insert a new card at the end
+                        cardViewInstance.appendCard(windowWrapper, winId);
+                    }
                 }
                 onWindowWrapperDestruction: {
-                    // remove the corresponding card
-                    cardViewInstance.removeCard(windowWrapper, winId);
+                    if( windowWrapper.windowType === WindowType.Card ) {
+                        // remove the corresponding card
+                        cardViewInstance.removeCard(windowWrapper, winId);
+                    }
                 }
             }
-        }
-
-        ////////// JustType ////////////
-        JustTypeField {
-            id: justTypeFieldInstance
-
-            windowManagerInstance: windowManager
-
-            anchors.top: statusBarInstance.bottom
-            anchors.topMargin: windowManager.computeFromLength(10);
-            width: windowManager.width * 0.8
-            height: windowManager.computeFromLength(40);
-            anchors.horizontalCenter: windowManager.horizontalCenter
-
-            z: 0
         }
 
         //////////  launcher ///////////
@@ -217,6 +206,16 @@ Compositor {
             anchors.right: windowManager.right
 
             z: 1 // on top of cardview
+
+            Connections {
+                target: windowManager
+                onWindowWrapperCreated: {
+                    if( windowWrapper.windowType === WindowType.Launcher ) {
+                        // insert a new card at the end
+                        launcherInstance.initJustTypeLauncherApp(windowWrapper, winId);
+                    }
+                }
+            }
         }
 
         //////////  status bar ///////////
