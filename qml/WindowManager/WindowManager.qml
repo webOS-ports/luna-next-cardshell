@@ -265,9 +265,9 @@ Item {
 
         windowWrapper.setNewParent(maximizedWindowWrapperContainer, false);
 
-        if (windowWrapper.child) {
+        if (windowWrapper.wrappedWindow) {
             // take focus for receiving input events
-            windowWrapper.child.takeFocus();
+            windowWrapper.wrappedWindow.takeFocus();
         }
     }
     function __setToFullscreen(windowWrapper) {
@@ -277,9 +277,9 @@ Item {
 
         windowWrapper.setNewParent(fullscreenWindowWrapperContainer, false);
 
-        if (windowWrapper.child) {
+        if (windowWrapper.wrappedWindow) {
             // take focus for receiving input events
-            windowWrapper.child.takeFocus();
+            windowWrapper.wrappedWindow.takeFocus();
         }
     }
     function __setToCard(windowWrapper) {

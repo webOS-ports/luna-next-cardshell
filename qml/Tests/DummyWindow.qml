@@ -70,6 +70,10 @@ Item {
                     }
                 }
             }
+
+            TextInput {
+                text: "try me !"
+            }
         }
     }
 
