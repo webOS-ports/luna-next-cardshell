@@ -42,7 +42,6 @@ import QtQuick 2.0
 import LunaNext 0.1
 
 import "CardView"
-import "JustType"
 import "StatusBar"
 import "LaunchBar"
 import "Dashboard"
