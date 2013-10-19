@@ -77,6 +77,25 @@ Item {
         }
     }
 
+    Connections {
+        target: windowManagerInstance
+        onSwitchToDashboard: {
+            listCardsView.enabled = false;
+        }
+        onSwitchToMaximize: {
+            listCardsView.enabled = false;
+        }
+        onSwitchToFullscreen: {
+            listCardsView.enabled = false;
+        }
+        onSwitchToCardView: {
+            listCardsView.enabled = true;
+        }
+        onSwitchToLauncherView: {
+            listCardsView.enabled = false;
+        }
+    }
+
     function appendCard(windowWrapper, winId) {
         // First, instantiate a new card
         var cardComponent = Qt.createComponent("CardWindow.qml");
