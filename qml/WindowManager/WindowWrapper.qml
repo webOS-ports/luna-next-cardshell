@@ -171,6 +171,12 @@ FocusScope {
         childWrapper.setWrappedChild(window);
 
         windowType = window.windowType;
+
+        // fallback to Card if the window type isn't managed yes
+        if( windowType === WindowType.Dashboard ||
+            windowType === WindowType.BannerAlert ||
+            windowType === WindowType.PopupAlert )
+            windowType = WindowType.Card
     }
 
     function setAsCurrentWindow() {
