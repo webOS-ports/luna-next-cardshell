@@ -210,8 +210,30 @@ Compositor {
                 target: windowManager
                 onWindowWrapperCreated: {
                     if( windowWrapper.windowType === WindowType.Launcher ) {
-                        // insert a new card at the end
+                        // init the launcher
                         launcherInstance.initJustTypeLauncherApp(windowWrapper, winId);
+                    }
+                }
+            }
+        }
+
+        OverlaysManager {
+            id: overlaysManagerInstance
+
+            windowManagerInstance: windowManager
+
+            anchors.bottom: dashboardInstance.top // not sure about this one
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
+
+            z: 1 // on top of cardview
+
+            Connections {
+                target: windowManager
+                onWindowWrapperCreated: {
+                    if( windowWrapper.windowType === WindowType.Overlay ) {
+                        // insert a new overlay on top of others
+                        overlaysManagerInstance.appendOverlayWindow(windowWrapper, winId);
                     }
                 }
             }
@@ -253,7 +275,7 @@ Compositor {
             anchors.left: windowManager.left
             anchors.right: windowManager.right
 
-            z: 2 // can only be hidden by a fullscreen window
+            z: 2 // can only be hidden by a fullscreen or overlay window
         }
 
         //////////  gesture area ///////////
