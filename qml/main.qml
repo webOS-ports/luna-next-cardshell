@@ -276,6 +276,16 @@ Compositor {
             anchors.right: windowManager.right
 
             z: 2 // can only be hidden by a fullscreen or overlay window
+
+            Connections {
+                target: windowManager
+                onWindowWrapperCreated: {
+                    if( windowWrapper.windowType === WindowType.Dashboard ) {
+                        // insert a new overlay on top of others
+                        dashboardInstance.appendDashboardWindow(windowWrapper, winId);
+                    }
+                }
+            }
         }
 
         //////////  gesture area ///////////

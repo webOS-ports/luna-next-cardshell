@@ -56,7 +56,7 @@ Item {
     MouseArea {
         id: slidingMouseArea
 
-        anchors.fill: slidingTargetItem
+        anchors.fill: slidingArea
         drag.target: slidingTargetItem
         drag.axis: slidingAxis
         drag.filterChildren: filterChildren

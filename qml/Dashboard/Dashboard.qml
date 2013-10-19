@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import "../Utils"
 
 // The notification area can take three states:
 //  - closed: nothing is shown
@@ -32,6 +33,12 @@ Rectangle {
         notificationsModel.append({"icon": icon, "htmlContent":content});
     }
 
+    function appendDashboardWindow(dashboardWindowWrapper, winId) {
+        notificationsModel.append({"dashboardWindowWrapper": dashboardWindowWrapper});
+
+        windowManagerInstance.dashboardMode();
+    }
+
     ListView {
         id: minimizedListView
 
@@ -49,7 +56,7 @@ Rectangle {
 
             Image {
                 id: notifIconImage
-                source: model.icon
+                source: model.dashboardWindowWrapper.wrappedWindow.appIcon
                 anchors.fill: parent
             }
         }
@@ -69,16 +76,29 @@ Rectangle {
 
         Repeater {
             model: notificationsModel
-            FullNotificationDelegate {
-                id: fullNotificationDelegate
+            delegate: SlidingItemArea {
+                id: dashboardWindowInstance
+
+                slidingTargetItem: dashboardWindowWrapper
+                filterChildren: true
 
                 width: openListView.width
-                height: windowManagerInstance.computeFromLength(32)
 
                 onSlidedLeft: notificationsModel.remove(index);
                 onSlidedRight: notificationsModel.remove(index);
 
-                onSliderClicked: windowManagerInstance.cardViewMode(); // should start the associated appId, ideally.
+                Component.onCompleted: {
+                    dashboardWindowWrapper.anchors.fill = undefined;
+                    dashboardWindowWrapper.parent = dashboardWindowInstance;
+                    dashboardWindowWrapper.anchors.top = dashboardWindowInstance.top
+                    dashboardWindowWrapper.width = dashboardWindowInstance.width
+                    dashboardWindowInstance.height = Qt.binding(function() { return dashboardWindowWrapper.height })
+                }
+
+                Component.onDestruction: {
+                    // remove window
+                    windowManagerInstance.removeWindow(slidingTargetItem);
+                }
             }
         }
     }
