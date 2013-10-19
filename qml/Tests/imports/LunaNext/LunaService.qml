@@ -7,8 +7,8 @@ QtObject {
 
     function call(serviceURI, jsonArgs, returnFct, handleError) {
         var args = JSON.parse(jsonArgs);
-        if( serviceURI === "luna://com.palm.applicationManager/listApps" ) {
-            listApps_call(args, returnFct, handleError);
+        if( serviceURI === "luna://com.palm.applicationManager/listLaunchPoints" ) {
+            listLaunchPoints_call(args, returnFct, handleError);
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launch" ) {
             launchApp_call(args, returnFct, handleError);
@@ -19,9 +19,23 @@ QtObject {
         }
     }
 
-    function listApps_call(jsonArgs, returnFct, handleError) {
+    function subscribe(serviceURI, jsonArgs, returnFct, handleError) {
+        var args = JSON.parse(jsonArgs);
+        if( serviceURI === "luna://com.palm.bus/signal/registerServerStatus" &&
+            args.serviceName === "com.palm.applicationManager")
+        {
+            returnFct(JSON.stringify({"connected":true}));
+        }
+        else if( serviceURI === "luna://com.palm.applicationManager/launchPointChanges" && args.subscribe)
+        {
+            returnFct(JSON.stringify({"subscribed":true})); // simulate subscription answer
+            returnFct("{}");
+        }
+    }
+
+    function listLaunchPoints_call(jsonArgs, returnFct, handleError) {
         returnFct(JSON.stringify({"returnValue": true,
-                    "apps": [
+                    "launchPoints": [
              { "title": "Calendar", "id": "com.palm.calendar", "icon": "../images/default-app-icon.png" },
              { "title": "Email", "id": "com.palm.email", "icon": "../images/default-app-icon.png" },
              { "title": "Calculator", "id": "com.palm.calc", "icon": "../images/default-app-icon.png", "showInSearch": false },
