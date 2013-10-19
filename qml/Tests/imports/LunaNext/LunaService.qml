@@ -13,6 +13,9 @@ QtObject {
         else if( serviceURI === "luna://com.palm.applicationManager/launch" ) {
             launchApp_call(args, returnFct, handleError);
         }
+        else if( serviceURI === "luna://com.palm.applicationManager/createNotification" ) {
+            createNotification_call(args, returnFct, handleError);
+        }
 
         else {
             handleError("unrecognized call: " + serviceURI);
@@ -62,6 +65,19 @@ QtObject {
 
             // Simulate the attachement of a new window to the stub Wayland compositor
             compositor.createDummyWindow();
+        }
+        else {
+            handleError("Error: parameter 'id' not specified");
+        }
+    }
+
+    function createNotification_call(jsonArgs, returnFct, handleError) {
+        // The JSON params can contain "id" (string) and "params" (object)
+        if( jsonArgs.type === "dashboard" ) {
+            // start a FakeDashboardWindow
+
+            // Simulate the attachement of a new dashboard window to the stub Wayland compositor
+            compositor.createFakeDashboardWindow(jsonArgs);
         }
         else {
             handleError("Error: parameter 'id' not specified");

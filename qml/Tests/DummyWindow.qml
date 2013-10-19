@@ -4,15 +4,16 @@ import LunaNext 0.1
 // this should be a plugin import
 import "../WindowManager/WindowManagerServices.js" as WindowManagerServices
 
-Item {
+FakeWindowBase {
     id: dummyWindow
-    property int winId: 0
-    property string appId: "org.webosports.tests.dummywindow"
-    property alias scale: windowRectangle.scale
-    property int windowType: WindowType.Card //WindowType.Overlay
+
+    appId: "org.webosports.tests.dummywindow"
+    windowType: WindowType.Card
 
     height: 200
     width: 600
+
+    property alias scale: windowRectangle.scale
 
     Rectangle {
         id: windowRectangle
@@ -65,11 +66,11 @@ Item {
                     anchors.fill: parent;
 
                     onClicked: {
-                        var newNotif = {
-                            "icon": "../images/glow.png",
-                            "content": "this is a new notification from DummyWindow"
-                        };
-                        WindowManagerServices.addNotification(newNotif);
+                        lunaNextLS2Service.call("luna://com.palm.applicationManager/createNotification",
+                                                JSON.stringify({"type": "dashboard",
+                                                                "appId": "org.webosports.tests.fakeJustTypeLauncher",
+                                                                "appIcon": "../images/glow.png"}),
+                                                undefined, undefined)
                     }
                 }
             }
@@ -78,12 +79,5 @@ Item {
                 text: "try me !"
             }
         }
-    }
-
-    function takeFocus() {
-        console.log("DummyWindow: takeFocus()");
-    }
-    function changeSize(w, h) {
-        console.log("DummyWindow: changeSize(" + w + ", " + h + ")");
     }
 }

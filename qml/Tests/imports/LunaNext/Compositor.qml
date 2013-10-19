@@ -60,6 +60,16 @@ Item {
         compositor.windowAdded(window);
     }
 
+    function createFakeDashboardWindow(options) {
+        var windowComponent = Qt.createComponent("../../FakeDashboardWindow.qml");
+        var window = windowComponent.createObject(compositor, options);
+        window.winId = localProperties.getNextWinId();
+
+        listWindowsModel.append({"window": window, "winId": window.winId});
+
+        compositor.windowAdded(window);
+    }
+
     function createJustTypeLauncherWindow() {
         var windowComponent = Qt.createComponent("../../FakeJustTypeLauncherWindow.qml");
         var window = windowComponent.createObject(compositor);
