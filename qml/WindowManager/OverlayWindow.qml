@@ -6,17 +6,19 @@ Item {
 
     state: "hidden"
     visible: false
-    anchors.top: parent.bottom
+
+    property Item overlaysManagerInstance
+    anchors.top: overlaysManagerInstance.bottom
 
     states: [
         State {
             name: "hidden"
-            AnchorChanges { target: overlayWindowItem; anchors.top: parent.bottom; anchors.bottom: undefined }
+            AnchorChanges { target: overlayWindowItem; anchors.top: overlaysManagerInstance.bottom; anchors.bottom: undefined }
             PropertyChanges { target: overlayWindowItem; visible: false }
         },
         State {
             name: "visible"
-            AnchorChanges { target: overlayWindowItem; anchors.top: undefined; anchors.bottom: parent.bottom }
+            AnchorChanges { target: overlayWindowItem; anchors.top: undefined; anchors.bottom: overlaysManagerInstance.bottom }
             PropertyChanges { target: overlayWindowItem; visible: true }
         }
     ]

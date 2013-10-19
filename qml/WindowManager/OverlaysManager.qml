@@ -4,8 +4,6 @@ import LunaNext 0.1
 Item {
     id: overlaysManagerItem
 
-    height: 600
-
     // a backlink to the window manager instance
     property variant windowManagerInstance
 
@@ -15,30 +13,31 @@ Item {
     }
 
     Repeater {
-        id: overlaysRepeater
-
-        anchors.left:overlaysManagerItem.left
-        anchors.right:overlaysManagerItem.right
-        anchors.bottom:overlaysManagerItem.bottom
-        height: 600
-
         model: listOverlaysModel
         delegate: OverlayWindow {
             id: overlayWindowInstance
 
-            anchors.left:parent.left
-            anchors.right:parent.right
+            anchors.left:overlaysManagerItem.left
+            anchors.right:overlaysManagerItem.right
+            overlaysManagerInstance: overlaysManagerItem
+
+            property Item windowWrapper: overlayWindowWrapper
 
             Component.onCompleted: {
                 //overlayWindowWrapper.setNewParent(overlayWindowInstance, false)
-                overlayWindowWrapper.anchors.fill = undefined;
-                overlayWindowWrapper.parent = overlayWindowInstance;
-                overlayWindowWrapper.anchors.top = overlayWindowInstance.top
-                overlayWindowWrapper.anchors.left = overlayWindowInstance.left
-                overlayWindowWrapper.anchors.right = overlayWindowInstance.right
-                overlayWindowInstance.height = Qt.binding(function() { return overlayWindowWrapper.height })
+                windowWrapper.anchors.fill = undefined;
+                windowWrapper.parent = overlayWindowInstance;
+                windowWrapper.anchors.top = overlayWindowInstance.top
+                windowWrapper.anchors.left = overlayWindowInstance.left
+                windowWrapper.anchors.right = overlayWindowInstance.right
+                overlayWindowInstance.height = Qt.binding(function() { return windowWrapper.height })
 
                 overlayWindowInstance.state = "visible";
+            }
+
+            Component.onDestruction: {
+                // remove window
+                windowManagerInstance.removeWindow(windowWrapper);
             }
         }
     }
@@ -47,6 +46,14 @@ Item {
         if( windowWrapper.windowType === WindowType.Overlay )
         {
             listOverlaysModel.append({"overlayWindowWrapper": windowWrapper});
+
+            // Add a tap action to hide the overlay
+            windowManagerInstance.addTapAction("hideOverlay", __hideLastOverlay, "")
         }
+    }
+
+    function __hideLastOverlay(data) {
+        // remove last overlay from the model
+        listOverlaysModel.remove(listOverlaysModel.count-1);
     }
 }
