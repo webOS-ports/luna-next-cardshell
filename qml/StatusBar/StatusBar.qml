@@ -132,7 +132,7 @@ Rectangle {
         onSwitchToCardView: {
             state = "genericStatus";
         }
-        onExpandLauncher: {
+        onSwitchToLauncherView: {
             state = "appSpecific";
         }
     }

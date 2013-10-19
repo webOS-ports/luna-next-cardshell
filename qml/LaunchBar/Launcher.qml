@@ -2,13 +2,38 @@ import QtQuick 2.0
 import LunaNext 0.1
 
 Item {
+    id: launcherItem
+
     property Item gestureArea
     property Item windowManagerInstance
+
+    property bool launcherActive: state === "fullLauncher" || state === "justTypeLauncher"
 
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
         name: "org.webosports.luna"
         usePrivateBus: true
+    }
+
+    Keys.forwardTo: [ justTypeFieldInstance ]
+
+    // JustType field
+    JustTypeField {
+        id: justTypeFieldInstance
+
+        windowManagerInstance: launcherItem.windowManagerInstance
+
+        anchors.top: parent.top
+        anchors.topMargin: launcherItem.windowManagerInstance.computeFromLength(10);
+        width: parent.width * 0.8
+        height: launcherItem.windowManagerInstance.computeFromLength(40);
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        onShowJustType: {
+            if( !!__justTypeLauncherWindowWrapper ) {
+                launcherItem.state = "justTypeLauncher";
+            }
+        }
     }
 
     // App launcher, which can slide up or down on demand
@@ -33,6 +58,14 @@ Item {
         onToggleLauncherDisplay: switchToNextState();
     }
 
+    // JustType launcher window container
+    JustTypeLauncher {
+        id: justTypeLauncherInstance
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+
     state: "launchbar"
 
     states: [
@@ -40,16 +73,29 @@ Item {
             name: "hidden"
             PropertyChanges { target: launchBarInstance; state: "hidden" }
             PropertyChanges { target: fullLauncherInstance; state: "hidden" }
+            PropertyChanges { target: justTypeFieldInstance; state: "hidden" }
+            PropertyChanges { target: justTypeLauncherInstance; state: "hidden" }
         },
         State {
             name: "launchbar"
             PropertyChanges { target: launchBarInstance; state: "visible" }
             PropertyChanges { target: fullLauncherInstance; state: "hidden" }
+            PropertyChanges { target: justTypeFieldInstance; state: "visible" }
+            PropertyChanges { target: justTypeLauncherInstance; state: "hidden" }
         },
         State {
             name: "fullLauncher"
             PropertyChanges { target: launchBarInstance; state: "visible" }
             PropertyChanges { target: fullLauncherInstance; state: "visible" }
+            PropertyChanges { target: justTypeFieldInstance; state: "hidden" }
+            PropertyChanges { target: justTypeLauncherInstance; state: "hidden" }
+        },
+        State {
+            name: "justTypeLauncher"
+            PropertyChanges { target: launchBarInstance; state: "hidden" }
+            PropertyChanges { target: fullLauncherInstance; state: "hidden" }
+            PropertyChanges { target: justTypeFieldInstance; state: "hidden" }
+            PropertyChanges { target: justTypeLauncherInstance; state: "visible" }
         }
     ]
 
@@ -67,8 +113,11 @@ Item {
         onSwitchToCardView: {
             state = "launchbar";
         }
-        onExpandLauncher: {
-            state = "fullLauncher";
+
+        onSwitchToLauncherView: {
+            if( !launcherActive ) {
+                state = "fullLauncher";
+            }
         }
     }
 
@@ -92,6 +141,10 @@ Item {
         state = "launchbar";
     }
 
+    function expandLauncher() {
+        state = "fullLauncher";
+    }
+
     function switchToNextState() {
         if( state === "hidden" ) {
             windowManagerInstance.cardViewMode();
@@ -103,4 +156,14 @@ Item {
             windowManagerInstance.cardViewMode();
         }
     }
+
+    function initJustTypeLauncherApp(windowWrapper, winId) {
+        if( windowWrapper.windowType === WindowType.Launcher && !__justTypeLauncherWindowWrapper )
+        {
+            __justTypeLauncherWindowWrapper = windowWrapper;
+            windowWrapper.setNewParent(justTypeLauncherInstance, false);
+        }
+    }
+
+    property Item __justTypeLauncherWindowWrapper;
 }

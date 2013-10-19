@@ -7,7 +7,7 @@ Item {
     property Item gestureAreaInstance
     property Item statusBarInstance
     property Item dashboardInstance
-    property Item justTypeInstance
+    property Item launcherInstance
     property QtObject compositorInstance
 
     property Item currentActiveWindowWrapper
@@ -18,12 +18,12 @@ Item {
     property real cornerRadius: 20
 
     signal requestPreviousState(Item windowWrapper)
-    signal expandLauncher
 
     signal switchToDashboard
     signal switchToCardView
     signal switchToMaximize(Item windowWrapper)
     signal switchToFullscreen(Item windowWrapper)
+    signal switchToLauncherView
 
     signal windowWrapperCreated(Item windowWrapper, int winId);
     signal windowWrapperDestruction(Item windowWrapper, int winId);
@@ -95,12 +95,12 @@ Item {
             }
         },
         State {
-            name: "fulllauncher"
+            name: "launcherview"
             StateChangeScript {
                 script: {
                     if( currentActiveWindowWrapper )
                         __setToCard(currentActiveWindowWrapper);
-                    expandLauncher();
+                    switchToLauncherView();
                 }
             }
         },
@@ -133,8 +133,17 @@ Item {
     }
 
     Connections {
-        target: justTypeInstance
-        onShowJustType: expandedLauncherMode()
+        target: launcherInstance
+        onLauncherActiveChanged: {
+            if( launcherInstance.launcherActive && state != "launcherview" )
+            {
+                state = "launcherview";
+            }
+            else if( !launcherInstance.launcherActive && state === "launcherview" )
+            {
+                state = "cardview"
+            }
+        }
     }
 
     Connections {
@@ -152,11 +161,11 @@ Item {
                 state = "cardview";
             }
             else {
-                state = "fulllauncher";
+                state = "launcherview";
             }
         }
         onSwipeLeftGesture:{
-            if( state === "fulllauncher" ) {
+            if( state === "launcherview" ) {
                 state = "cardview"
             }
             else if( currentActiveWindowWrapper )
@@ -211,7 +220,7 @@ Item {
     }
 
     function expandedLauncherMode() {
-            state = "fulllauncher";
+            state = "launcherview";
     }
 
     ////// private methods ///////
@@ -256,13 +265,10 @@ Item {
 
         windowWrapper.setNewParent(maximizedWindowWrapperContainer, false);
 
-        if (windowWrapper.child) {
+        if (windowWrapper.wrappedWindow) {
             // take focus for receiving input events
-            windowWrapper.child.takeFocus();
+            windowWrapper.wrappedWindow.takeFocus();
         }
-
-        // emit signal
-        switchToMaximize(windowWrapper);
     }
     function __setToFullscreen(windowWrapper) {
         // switch the state to fullscreen
@@ -271,13 +277,10 @@ Item {
 
         windowWrapper.setNewParent(fullscreenWindowWrapperContainer, false);
 
-        if (windowWrapper.child) {
+        if (windowWrapper.wrappedWindow) {
             // take focus for receiving input events
-            windowWrapper.child.takeFocus();
+            windowWrapper.wrappedWindow.takeFocus();
         }
-
-        // emit signal
-        switchToFullscreen(windowWrapper);
     }
     function __setToCard(windowWrapper) {
         // switch the state to card
@@ -288,8 +291,5 @@ Item {
         // for the keyboard anymore
         if( compositorInstance )
             compositorInstance.clearKeyboardFocus();
-
-        // emit signal
-        switchToCardView();
     }
 }

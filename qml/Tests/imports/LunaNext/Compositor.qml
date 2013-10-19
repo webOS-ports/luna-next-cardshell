@@ -38,6 +38,9 @@ Item {
         }
     }
 
+    Component.onCompleted: {
+        createJustTypeLauncherWindow();
+    }
 
     function show() {
         visible = true;
@@ -49,6 +52,16 @@ Item {
 
     function createDummyWindow() {
         var windowComponent = Qt.createComponent("../../DummyWindow.qml");
+        var window = windowComponent.createObject(compositor);
+        window.winId = localProperties.getNextWinId();
+
+        listWindowsModel.append({"window": window, "winId": window.winId});
+
+        compositor.windowAdded(window);
+    }
+
+    function createJustTypeLauncherWindow() {
+        var windowComponent = Qt.createComponent("../../FakeJustTypeLauncherWindow.qml");
         var window = windowComponent.createObject(compositor);
         window.winId = localProperties.getNextWinId();
 

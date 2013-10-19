@@ -122,7 +122,7 @@ Rectangle {
         onSwitchToCardView: {
             state = "minimized";
         }
-        onExpandLauncher: {
+        onSwitchToLauncherView: {
             state = "minimized";
         }
     }

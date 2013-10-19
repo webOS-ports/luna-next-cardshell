@@ -18,6 +18,8 @@ Item {
     //    * Fullscreen
     property int windowState: WindowState.Carded
 
+    property int windowType: WindowType.Card
+
     // that part should be moved to a window manager, or maybe to the card view interface
     property variant cardViewParent
 
@@ -143,6 +145,8 @@ Item {
 
     function setWrappedWindow(window) {
         childWrapper.setWrappedChild(window);
+
+        windowType = window.windowType;
     }
 
     function setAsCurrentWindow() {
