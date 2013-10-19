@@ -81,10 +81,12 @@ Item {
         State {
            name: "maximized"
            PropertyChanges { target: windowWrapper; Keys.forwardTo: [ wrappedWindow ] }
+           StateChangeScript { script: takeFocus() }
         },
         State {
            name: "fullscreen"
            PropertyChanges { target: windowWrapper; Keys.forwardTo: [ wrappedWindow ] }
+           StateChangeScript { script: takeFocus() }
        }
     ]
 
@@ -188,5 +190,10 @@ Item {
 
     function postEvent(event) {
         childWrapper.postEvent(event);
+    }
+
+    function takeFocus() {
+        if( wrappedWindow )
+            wrappedWindow.takeFocus();
     }
 }
