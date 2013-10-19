@@ -81,6 +81,7 @@ Rectangle {
 
                 slidingTargetItem: dashboardWindowWrapper
                 filterChildren: true
+                slidingEnabled: false
 
                 width: openListView.width
 
