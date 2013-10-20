@@ -5,7 +5,7 @@ Item {
     id: overlayWindowItem
 
     state: "hidden"
-    visible: false
+    opacity: 0
 
     property Item overlaysManagerInstance
     anchors.top: overlaysManagerInstance.bottom
@@ -14,12 +14,12 @@ Item {
         State {
             name: "hidden"
             AnchorChanges { target: overlayWindowItem; anchors.top: overlaysManagerInstance.bottom; anchors.bottom: undefined }
-            PropertyChanges { target: overlayWindowItem; visible: false }
+            PropertyChanges { target: overlayWindowItem; opacity: 0 }
         },
         State {
             name: "visible"
             AnchorChanges { target: overlayWindowItem; anchors.top: undefined; anchors.bottom: overlaysManagerInstance.bottom }
-            PropertyChanges { target: overlayWindowItem; visible: true }
+            PropertyChanges { target: overlayWindowItem; opacity: 1 }
         }
     ]
 
@@ -28,9 +28,9 @@ Item {
             to: "visible"
             reversible: true
 
-            SequentialAnimation {
-                PropertyAction { target: overlayWindowItem; property: "visible" }
-                AnchorAnimation { easing.type:Easing.InOutQuad;  duration: 150 }
+            ParallelAnimation {
+                NumberAnimation { target: overlayWindowItem; properties: "opacity"; easing.type:Easing.InOutQuad; duration: 400 }
+                AnchorAnimation { easing.type:Easing.InOutQuad;  duration: 300 }
             }
         }
     ]

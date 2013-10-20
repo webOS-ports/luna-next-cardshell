@@ -1,4 +1,6 @@
 import QtQuick 2.0
+import LunaNext 0.1
+
 import "../Utils"
 
 // The notification area can take three states:
@@ -20,23 +22,8 @@ Rectangle {
     color: "black"
     state: "minimized"
 
-    ListModel {
+    ListModelEx {
         id: notificationsModel
-    }
-
-    function addNotification(notif) {
-        var icon = "../images/generic-notification.png";
-        if(notif.icon) icon = notif.icon;
-        var content = "New notification";
-        if(notif.content) content = notif.content;
-
-        notificationsModel.append({"icon": icon, "htmlContent":content});
-    }
-
-    function appendDashboardWindow(dashboardWindowWrapper, winId) {
-        notificationsModel.append({"dashboardWindowWrapper": dashboardWindowWrapper});
-
-        windowManagerInstance.dashboardMode();
     }
 
     ListView {
@@ -56,7 +43,7 @@ Rectangle {
 
             Image {
                 id: notifIconImage
-                source: model.dashboardWindowWrapper.wrappedWindow.appIcon
+                source: model.appIcon
                 anchors.fill: parent
             }
         }
@@ -145,6 +132,37 @@ Rectangle {
         }
         onSwitchToLauncherView: {
             state = "minimized";
+        }
+    }
+
+    function addNotification(notif) {
+        var icon = "../images/generic-notification.png";
+        if(notif.icon) icon = notif.icon;
+        var content = "New notification";
+        if(notif.content) content = notif.content;
+
+        notificationsModel.append({"icon": icon, "htmlContent":content});
+    }
+
+    function appendDashboardWindow(dashboardWindowWrapper, winId) {
+        if( dashboardWindowWrapper.windowType === WindowType.Dashboard )
+        {
+            notificationsModel.append({"dashboardWindowWrapper": dashboardWindowWrapper,
+                                       "appIcon": dashboardWindowWrapper.appIcon});
+
+            windowManagerInstance.dashboardMode();
+        }
+    }
+
+    function removeDashboardWindow(dashboardWindowWrapper, winId) {
+        if( dashboardWindowWrapper.windowType === WindowType.Dashboard )
+        {
+            var index = notificationsModel.getIndexFromProperty("dashboardWindowWrapper", dashboardWindowWrapper);
+            if( index >= 0 )
+                notificationsModel.remove(index);
+
+            if( state === "open" )
+                windowManagerInstance.cardViewMode();
         }
     }
 }

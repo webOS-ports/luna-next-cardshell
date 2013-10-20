@@ -1,6 +1,8 @@
 import QtQuick 2.0
 import LunaNext 0.1
 
+import "../Utils"
+
 import "WindowManagerServices.js" as WindowManagerServices
 
 Item {
@@ -30,25 +32,12 @@ Item {
     signal windowWrapperCreated(Item windowWrapper, int winId);
     signal windowWrapperDestruction(Item windowWrapper, int winId);
 
-    ListModel {
+    ListModelEx {
         // This model contains the list of the window wrappers that are managed by the
         // window manager.
         // Each window wrapper is a "WindowWrapper", whose child is the app's window.
         // It has only one property: "windowWrapper", of type variant
         id: listWindowWrappersModel
-
-        function getIndexFromProperty(modelProperty, propertyValue) {
-            var i=0;
-            for(i=0; i<listWindowWrappersModel.count;i++) {
-                var item=get(i);
-                if(item && item[modelProperty] === propertyValue) {
-                    return i;
-                }
-            }
-
-            console.log("WindowManager: couldn't find " + modelProperty + "!");
-            return -1;
-        }
     }
 
     // maximized window container
@@ -193,7 +182,30 @@ Item {
     function removeWindow(windowWrapper) {
         // The actual model item will be removed once windowRemoved is called from the
         // compositor
-        compositorInstance.closeWindowWithId(windowWrapper.wrappedWindow.winId);
+        if( windowWrapper.wrappedWindow )
+        {
+            // the wrapped window still exists, let's do it the smooth way
+            compositorInstance.closeWindowWithId(windowWrapper.wrappedWindow.winId);
+        }
+        else
+        {
+            // emergency destruction: the wrapped window has already
+            // been destroyed: clean up the mess
+            var index = listWindowWrappersModel.getIndexFromProperty('windowWrapper', windowWrapper);
+            if( index >= 0 )
+            {
+                var winId = listWindowWrappersModel.get(index).winId;
+
+                if( currentActiveWindowWrapper === windowWrapper )
+                    currentActiveWindowWrapper = null;
+
+                listWindowWrappersModel.remove(index);
+
+                windowWrapperDestruction(windowWrapper, winId);
+
+                windowWrapper.destroy();
+            }
+        }
     }
 
     function setWindowAsActive(windowWrapper) {
@@ -277,9 +289,10 @@ Item {
             if( currentActiveWindowWrapper === windowWrapper )
                 currentActiveWindowWrapper = null;
 
+            listWindowWrappersModel.remove(index);
+
             windowWrapperDestruction(windowWrapper, window.winId);
 
-            listWindowWrappersModel.remove(index);
             windowWrapper.destroy();
         }
     }

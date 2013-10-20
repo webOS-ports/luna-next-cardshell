@@ -236,6 +236,12 @@ Compositor {
                         overlaysManagerInstance.appendOverlayWindow(windowWrapper, winId);
                     }
                 }
+                onWindowWrapperDestruction: {
+                    if( windowWrapper.windowType === WindowType.Overlay ) {
+                        // insert a new overlay on top of others
+                        overlaysManagerInstance.removeOverlayWindow(windowWrapper, winId);
+                    }
+                }
             }
         }
 
@@ -283,6 +289,12 @@ Compositor {
                     if( windowWrapper.windowType === WindowType.Dashboard ) {
                         // insert a new overlay on top of others
                         dashboardInstance.appendDashboardWindow(windowWrapper, winId);
+                    }
+                }
+                onWindowWrapperDestruction: {
+                    if( windowWrapper.windowType === WindowType.Dashboard ) {
+                        // insert a new overlay on top of others
+                        dashboardInstance.removeDashboardWindow(windowWrapper, winId);
                     }
                 }
             }

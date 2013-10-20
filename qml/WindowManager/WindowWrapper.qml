@@ -19,6 +19,7 @@ FocusScope {
     property int windowState: WindowState.Carded
 
     property int windowType: WindowType.Card
+    property string appIcon: Qt.resolvedUrl("../images/default-app-icon.png")
 
     // that part should be moved to a window manager, or maybe to the card view interface
     property variant cardViewParent
@@ -26,10 +27,13 @@ FocusScope {
     // this is the radius that should be applied to the corners of this window container
     property real cornerRadius: 20
 
+    signal windowVisibilityChanged(bool wrappedChildVisiblity)
+
     // A simple container, to facilite the wrapping
     Item {
         id: childWrapper
-        property variant wrappedChild
+        property Item wrappedChild
+        property bool wrappedChildVisiblity
 
         anchors.fill: parent;
 
@@ -37,6 +41,8 @@ FocusScope {
             window.parent = childWrapper;
             childWrapper.wrappedChild = window;
             childWrapper.children = [ window ];
+
+            wrappedChildVisiblity = Qt.binding(function() { return wrappedChild.visible })
 
             // depending on the window type, the height is either forced by the parent or by the child
             if( window.windowType !== WindowType.Overlay && window.windowType !== WindowType.Dashboard )
@@ -72,6 +78,20 @@ FocusScope {
             if( wrappedChild && wrappedChild.postEvent )
                 wrappedChild.postEvent(event);
              console.log("Wrapped window: postEvent(" + event + ")");
+        }
+
+        onWrappedChildChanged: {
+            if( !childWrapper.wrappedChild ) {
+                console.log("Wrapped child window has been destroyed!");
+                wrappedChildVisiblity = false;
+
+                // ask the window manager to remove this window
+                windowManager.removeWindow(windowWrapper);
+            }
+        }
+
+        onWrappedChildVisiblityChanged: {
+            windowWrapper.windowVisibilityChanged(wrappedChildVisiblity);
         }
     }
 

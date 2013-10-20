@@ -33,9 +33,12 @@ Item {
             cardWindow.visible = true;
         }
         Component.onDestruction: {
-            cardWindow.visible = false;
-            cardWindow.anchors.fill = undefined;
-            cardWindow.parent = null;
+            if( cardWindow )
+            {
+                cardWindow.visible = false;
+                cardWindow.anchors.fill = undefined;
+                cardWindow.parent = null;
+            }
         }
     }
 
