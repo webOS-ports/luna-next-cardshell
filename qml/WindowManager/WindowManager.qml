@@ -32,7 +32,7 @@ Item {
     signal windowWrapperCreated(Item windowWrapper, int winId);
     signal windowWrapperDestruction(Item windowWrapper, int winId);
 
-    ListModelEx {
+    ExtendedListModel {
         // This model contains the list of the window wrappers that are managed by the
         // window manager.
         // Each window wrapper is a "WindowWrapper", whose child is the app's window.

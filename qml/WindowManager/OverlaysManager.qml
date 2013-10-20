@@ -9,7 +9,7 @@ Item {
     // a backlink to the window manager instance
     property variant windowManagerInstance
 
-    ListModelEx {
+    ExtendedListModel {
         // This model contains the list of the cards
         id: listOverlaysModel
     }

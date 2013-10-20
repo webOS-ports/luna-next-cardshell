@@ -22,7 +22,7 @@ Rectangle {
     color: "black"
     state: "minimized"
 
-    ListModelEx {
+    ExtendedListModel {
         id: notificationsModel
     }
 

@@ -3,7 +3,7 @@ import QtQuick 2.0
 // Extended ListModel, with some useful functions to get items from the list
 
 ListModel {
-    id: listModelEx
+    id: extendedListModel
 
     function getIndexFromProperty(modelProperty, propertyValue) {
         var i=0;
@@ -14,7 +14,7 @@ ListModel {
             }
         }
 
-        console.log("ListModelEx " + objectName + ": couldn't find " + modelProperty + "!");
+        console.log("ExtendedListModel " + objectName + ": couldn't find " + modelProperty + "!");
         return -1;
     }
 }
