@@ -17,19 +17,19 @@ Item {
         id: launcherListModel
 
         ListElement {
-            appId: "DummyWindow"
+            appId: "org.webosports.tests.dummyWindow"
             icon: "../images/default-app-icon.png"
         }
         ListElement {
-            appId: "DummyWindow"
+            appId: "org.webosports.tests.fakeOverlayWindow"
             icon: "../images/default-app-icon.png"
         }
         ListElement {
-            appId: "DummyWindow"
+            appId: "org.webosports.tests.fakeDashboardWindow"
             icon: "../images/default-app-icon.png"
         }
         ListElement {
-            appId: "DummyWindow"
+            appId: "org.webosports.tests.dummyWindow"
             icon: "../images/default-app-icon.png"
         }
     }
@@ -39,18 +39,36 @@ Item {
             name: "hidden"
             AnchorChanges { target: launchBarItem; anchors.top: parent.bottom; anchors.bottom: undefined }
             PropertyChanges { target: launchBarItem; opacity: 0 }
+            PropertyChanges { target: launchBarItem; visible: false }
         },
         State {
             name: "visible"
             AnchorChanges { target: launchBarItem; anchors.top: undefined; anchors.bottom: parent.bottom }
             PropertyChanges { target: launchBarItem; opacity: 1 }
+            PropertyChanges { target: launchBarItem; visible: true }
         }
     ]
 
     transitions: [
         Transition {
+            to: "hidden"
+
             AnchorAnimation { easing.type:Easing.InOutQuad; duration: 150 }
-            NumberAnimation { property: "opacity"; duration: 150 }
+            SequentialAnimation {
+                NumberAnimation { property: "opacity"; duration: 150 }
+                PropertyAction { property: "visible" }
+            }
+        },
+        Transition {
+            to: "visible"
+
+            SequentialAnimation {
+                PropertyAction { property: "visible" }
+                ParallelAnimation {
+                    AnchorAnimation { easing.type:Easing.InOutQuad; duration: 150 }
+                    NumberAnimation { property: "opacity"; duration: 150 }
+                }
+            }
         }
     ]
 
