@@ -20,9 +20,9 @@ Item {
     width: 200
 
     function takeFocus() {
-        console.log("DummyWindow: takeFocus()");
+        console.log(fakeWindowBase + ": takeFocus()");
     }
     function changeSize(w, h) {
-        console.log("DummyWindow: changeSize(" + w + ", " + h + ")");
+        console.log(fakeWindowBase + ": changeSize(" + w + ", " + h + ")");
     }
 }

@@ -7,7 +7,7 @@ import "../WindowManager/WindowManagerServices.js" as WindowManagerServices
 FakeWindowBase {
     id: dummyWindow
 
-    appId: "org.webosports.tests.dummywindow"
+    appId: "org.webosports.tests.dummyWindow"
     windowType: WindowType.Card
 
     height: 200
@@ -71,6 +71,21 @@ FakeWindowBase {
                                                                 "appId": "org.webosports.tests.fakeJustTypeLauncher",
                                                                 "appIcon": "../images/glow.png"}),
                                                 undefined, undefined)
+                    }
+                }
+            }
+            Text {
+                text: "Kill me"
+                font.pointSize: 20
+                font.underline: true
+                color: "white"
+
+                MouseArea {
+                    anchors.fill: parent;
+
+                    onClicked: {
+                        // commit suicide
+                        dummyWindow.destroy();
                     }
                 }
             }

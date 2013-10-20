@@ -3,14 +3,14 @@ import QtQuick.Controls 1.0
 import LunaNext 0.1
 
 FakeWindowBase {
-    id: fakeDashboardWindow
+    id: fakeOverlayWindow
 
-    appId: "org.webosports.tests.fakeDashboardWindow"
-    windowType: WindowType.Dashboard
+    appId: "org.webosports.tests.fakeOverlayWindow"
+    windowType: WindowType.Overlay
 
     property string appIcon
 
-    height: 50 + Math.random()*50
+    height: 150 + Math.random()*50
 
     property alias scale: windowRectangle.scale
 
@@ -27,11 +27,20 @@ FakeWindowBase {
             anchors.centerIn: parent
 
             Button {
-                text: "OK"
-                onClicked: fakeDashboardWindow.destroy()
+                text: "Hide me"
+                onClicked: {
+                    fakeOverlayWindow.visible = false;
+                    showTimer.start();
+                }
+
+                Timer {
+                    id: showTimer
+                    interval: 3000
+                    onTriggered: fakeOverlayWindow.visible = true
+                }
             }
             Button {
-                text: "Cancel"
+                text: "Key"
                 checkable: true
             }
         }
