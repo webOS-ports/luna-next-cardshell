@@ -4,7 +4,7 @@ import LunaNext 0.1
 
 import "../Utils"
 
-Item {
+FocusScope {
     id: windowWrapper
 
     // the window app that will be wrapped in this window container
@@ -38,12 +38,34 @@ Item {
             childWrapper.wrappedChild = window;
             childWrapper.children = [ window ];
 
-            /* This resizes only the quick item which contains the child surface but
-             * doesn't really resize the client window */
-            window.anchors.fill = childWrapper;
+            // depending on the window type, the height is either forced by the parent or by the child
+            if( window.windowType !== WindowType.Overlay && window.windowType !== WindowType.Dashboard )
+            {
+                /* This resizes only the quick item which contains the child surface but
+                 * doesn't really resize the client window */
+                window.anchors.fill = childWrapper;
 
-            /* Resize the real client window to have the right size */
-            window.changeSize(Qt.size(windowManager.defaultWindowWidth, windowManager.defaultWindowHeight));
+                /* Resize the real client window to have the right size */
+                window.changeSize(Qt.size(windowManager.defaultWindowWidth, windowManager.defaultWindowHeight));
+            }
+            else
+            {
+                /* change the anchors bindings of the childWrapper and windowWrapper */
+                childWrapper.anchors.fill = undefined;
+                childWrapper.anchors.top = Qt.binding(function() { return windowWrapper.top })
+                childWrapper.anchors.left = Qt.binding(function() { return windowWrapper.left })
+                childWrapper.anchors.right = Qt.binding(function() { return windowWrapper.right })
+                windowWrapper.height = Qt.binding(function() { return childWrapper.height })
+
+                /* resize the child surface, execpt for height */
+                window.anchors.top = Qt.binding(function() { return childWrapper.top })
+                window.anchors.left = Qt.binding(function() { return childWrapper.left })
+                window.anchors.right = Qt.binding(function() { return childWrapper.right })
+                childWrapper.height = Qt.binding(function() { return window.height })
+
+                /* resize the window (keep the height) */
+                window.changeSize(Qt.size(windowManager.defaultWindowWidth, window.height));
+            }
         }
 
         function postEvent(event) {
@@ -81,10 +103,12 @@ Item {
         State {
            name: "maximized"
            PropertyChanges { target: windowWrapper; Keys.forwardTo: [ wrappedWindow ] }
+           StateChangeScript { script: takeFocus() }
         },
         State {
            name: "fullscreen"
            PropertyChanges { target: windowWrapper; Keys.forwardTo: [ wrappedWindow ] }
+           StateChangeScript { script: takeFocus() }
        }
     ]
 
@@ -147,6 +171,12 @@ Item {
         childWrapper.setWrappedChild(window);
 
         windowType = window.windowType;
+
+        // fallback to Card if the window type isn't managed yes
+        if( windowType === WindowType.Dashboard ||
+            windowType === WindowType.BannerAlert ||
+            windowType === WindowType.PopupAlert )
+            windowType = WindowType.Card
     }
 
     function setAsCurrentWindow() {
@@ -188,5 +218,13 @@ Item {
 
     function postEvent(event) {
         childWrapper.postEvent(event);
+    }
+
+    function takeFocus() {
+        // Give the focus to this FocusScope
+        windowWrapper = true;
+
+        if( wrappedWindow )
+            wrappedWindow.takeFocus();
     }
 }

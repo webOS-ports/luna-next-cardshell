@@ -96,6 +96,14 @@ Item {
             PropertyChanges { target: fullLauncherInstance; state: "hidden" }
             PropertyChanges { target: justTypeFieldInstance; state: "hidden" }
             PropertyChanges { target: justTypeLauncherInstance; state: "visible" }
+            StateChangeScript {
+                script: {
+                    if (__justTypeLauncherWindowWrapper) {
+                        // take focus for receiving input events
+                        __justTypeLauncherWindowWrapper.takeFocus();
+                    }
+                }
+            }
         }
     ]
 

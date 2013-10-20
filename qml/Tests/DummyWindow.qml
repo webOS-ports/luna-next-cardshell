@@ -9,7 +9,10 @@ Item {
     property int winId: 0
     property string appId: "org.webosports.tests.dummywindow"
     property alias scale: windowRectangle.scale
-    property int windowType: WindowType.Card
+    property int windowType: WindowType.Card //WindowType.Overlay
+
+    height: 200
+    width: 600
 
     Rectangle {
         id: windowRectangle

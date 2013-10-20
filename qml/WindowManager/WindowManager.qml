@@ -1,6 +1,8 @@
 import QtQuick 2.0
 import LunaNext 0.1
 
+import "WindowManagerServices.js" as WindowManagerServices
+
 Item {
     id: windowManager
 
@@ -149,14 +151,22 @@ Item {
     Connections {
         target: gestureAreaInstance
         onTapGesture: {
-                if( state !== "cardview" ) {
-                    state = "cardview";
+                if( WindowManagerServices.nbRegisteredTapActions() > 0 ) {
+                    WindowManagerServices.doNextTapAction();
                 }
-                else if( currentActiveWindowWrapper ) {
-                    state = "maximized";
+                else {
+                    if( state !== "cardview" ) {
+                        state = "cardview";
+                    }
+                    else if( currentActiveWindowWrapper ) {
+                        state = "maximized";
+                    }
                 }
         }
         onSwipeUpGesture:{
+            while( WindowManagerServices.nbRegisteredTapActions() > 0 ) {
+                WindowManagerServices.doNextTapAction();
+            }
             if( state !== "cardview" ) {
                 state = "cardview";
             }
@@ -199,6 +209,22 @@ Item {
         else if( state === "fullscreen" ) {
             __setToFullscreen(windowWrapper);
         }
+    }
+
+    function nbRegisteredTapActions() {
+        return WindowManagerServices.nbRegisteredTapActions();
+    }
+
+    function addTapAction(actionID, actionFct, actionData) {
+        return WindowManagerServices.addTapAction(actionID, actionFct, actionData);
+    }
+
+    function removeTapAction(actionID) {
+        return WindowManagerServices.removeTapAction(actionID);
+    }
+
+    function doNextTapAction() {
+        return WindowManagerServices.doNextTapAction();
     }
 
     function cardViewMode() {
@@ -260,32 +286,22 @@ Item {
 
     function __setToMaximized(windowWrapper) {
         // switch the state to maximized
-        windowWrapper.windowState = WindowState.Maximized;
-        currentActiveWindowWrapper = windowWrapper;
-
         windowWrapper.setNewParent(maximizedWindowWrapperContainer, false);
 
-        if (windowWrapper.wrappedWindow) {
-            // take focus for receiving input events
-            windowWrapper.wrappedWindow.takeFocus();
-        }
+        currentActiveWindowWrapper = windowWrapper;
+        windowWrapper.windowState = WindowState.Maximized;
     }
     function __setToFullscreen(windowWrapper) {
         // switch the state to fullscreen
-        windowWrapper.windowState = WindowState.Fullscreen;
-        currentActiveWindowWrapper = windowWrapper;
-
         windowWrapper.setNewParent(fullscreenWindowWrapperContainer, false);
 
-        if (windowWrapper.wrappedWindow) {
-            // take focus for receiving input events
-            windowWrapper.wrappedWindow.takeFocus();
-        }
+        currentActiveWindowWrapper = windowWrapper;
+        windowWrapper.windowState = WindowState.Fullscreen;
     }
     function __setToCard(windowWrapper) {
         // switch the state to card
-        windowWrapper.windowState = WindowState.Carded;
         windowWrapper.setNewParent(windowWrapper.cardViewParent, true);
+        windowWrapper.windowState = WindowState.Carded;
 
         // we're back to card view so no card should have the focus
         // for the keyboard anymore
