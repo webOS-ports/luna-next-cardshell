@@ -88,7 +88,7 @@ Item {
     Connections {
         target: windowManagerInstance
         onSwitchToDashboard: {
-            state = "visible";
+            state = "hidden";
         }
         onSwitchToMaximize: {
             state = "hidden";

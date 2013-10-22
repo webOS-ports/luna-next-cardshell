@@ -32,7 +32,7 @@ BaseIndicator {
         fillMode: Image.PreserveAspectFit
         smooth: true
 
-        source: __getIconForBatteryLevel(batteryLevel)
+        source: __getIconForBatteryLevel(batteryLevel, charging)
     }
 
     Component.onCompleted: {
@@ -49,18 +49,20 @@ BaseIndicator {
         batteryIndicator.charging = charging;
     }
 
-    function __getIconForBatteryLevel(level) {
+    function __getIconForBatteryLevel(level, isCharging) {
         var baseName = "../images/statusbar/battery-";
 
+        if (level > 11 && !isCharging) level = 11;
         var normalizedLevel = level;
-        if (level > 11) {
+
+        if (level > 11 && isCharging) {
             normalizedLevel = "charged";
         }
         else if (level < 0) {
             normalizedLevel = "error";
         }
         else {
-            if (charging)
+            if (isCharging)
                 baseName += "charging-";
         }
 

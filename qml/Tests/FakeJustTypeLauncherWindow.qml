@@ -1,15 +1,12 @@
 import QtQuick 2.0
 import LunaNext 0.1
 
-// this should be a plugin import
-import "../WindowManager/WindowManagerServices.js" as WindowManagerServices
-
-Item {
+FakeWindowBase {
     id: fakeJustTypeWindow
-    property int winId: 0
-    property string appId: "org.webosports.tests.fakeJustTypeLauncher"
+
+    appId: "org.webosports.tests.fakeJustTypeLauncher"
     property alias scale: windowRectangle.scale
-    property int windowType: WindowType.Launcher
+    windowType: WindowType.Launcher
 
     Rectangle {
         id: windowRectangle
@@ -19,12 +16,5 @@ Item {
             GradientStop { position: 0.0; color: "grey" }
             GradientStop { position: 1.0; color: "blue" }
         }
-    }
-
-    function takeFocus() {
-        console.log("FakeJustTypeLauncherWindow: takeFocus()");
-    }
-    function changeSize(w, h) {
-        console.log("FakeJustTypeLauncherWindow: changeSize(" + w + ", " + h + ")");
     }
 }

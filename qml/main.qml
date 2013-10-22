@@ -236,6 +236,12 @@ Compositor {
                         overlaysManagerInstance.appendOverlayWindow(windowWrapper, winId);
                     }
                 }
+                onWindowWrapperDestruction: {
+                    if( windowWrapper.windowType === WindowType.Overlay ) {
+                        // insert a new overlay on top of others
+                        overlaysManagerInstance.removeOverlayWindow(windowWrapper, winId);
+                    }
+                }
             }
         }
 
@@ -276,6 +282,22 @@ Compositor {
             anchors.right: windowManager.right
 
             z: 2 // can only be hidden by a fullscreen or overlay window
+
+            Connections {
+                target: windowManager
+                onWindowWrapperCreated: {
+                    if( windowWrapper.windowType === WindowType.Dashboard ) {
+                        // insert a new overlay on top of others
+                        dashboardInstance.appendDashboardWindow(windowWrapper, winId);
+                    }
+                }
+                onWindowWrapperDestruction: {
+                    if( windowWrapper.windowType === WindowType.Dashboard ) {
+                        // insert a new overlay on top of others
+                        dashboardInstance.removeDashboardWindow(windowWrapper, winId);
+                    }
+                }
+            }
         }
 
         //////////  gesture area ///////////

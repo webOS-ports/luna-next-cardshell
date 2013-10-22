@@ -1,4 +1,7 @@
 import QtQuick 2.0
+import LunaNext 0.1
+
+import "../Utils"
 
 // The notification area can take three states:
 //  - closed: nothing is shown
@@ -19,17 +22,8 @@ Rectangle {
     color: "black"
     state: "minimized"
 
-    ListModel {
+    ExtendedListModel {
         id: notificationsModel
-    }
-
-    function addNotification(notif) {
-        var icon = "../images/generic-notification.png";
-        if(notif.icon) icon = notif.icon;
-        var content = "New notification";
-        if(notif.content) content = notif.content;
-
-        notificationsModel.append({"icon": icon, "htmlContent":content});
     }
 
     ListView {
@@ -49,7 +43,7 @@ Rectangle {
 
             Image {
                 id: notifIconImage
-                source: model.icon
+                source: model.appIcon
                 anchors.fill: parent
             }
         }
@@ -69,16 +63,30 @@ Rectangle {
 
         Repeater {
             model: notificationsModel
-            FullNotificationDelegate {
-                id: fullNotificationDelegate
+            delegate: SlidingItemArea {
+                id: dashboardWindowInstance
+
+                slidingTargetItem: dashboardWindowWrapper
+                filterChildren: true
+                slidingEnabled: false
 
                 width: openListView.width
-                height: windowManagerInstance.computeFromLength(32)
 
                 onSlidedLeft: notificationsModel.remove(index);
                 onSlidedRight: notificationsModel.remove(index);
 
-                onSliderClicked: windowManagerInstance.cardViewMode(); // should start the associated appId, ideally.
+                Component.onCompleted: {
+                    dashboardWindowWrapper.anchors.fill = undefined;
+                    dashboardWindowWrapper.parent = dashboardWindowInstance;
+                    dashboardWindowWrapper.anchors.top = dashboardWindowInstance.top
+                    dashboardWindowWrapper.width = dashboardWindowInstance.width
+                    dashboardWindowInstance.height = Qt.binding(function() { return dashboardWindowWrapper.height })
+                }
+
+                Component.onDestruction: {
+                    // remove window
+                    windowManagerInstance.removeWindow(slidingTargetItem);
+                }
             }
         }
     }
@@ -124,6 +132,37 @@ Rectangle {
         }
         onSwitchToLauncherView: {
             state = "minimized";
+        }
+    }
+
+    function addNotification(notif) {
+        var icon = "../images/generic-notification.png";
+        if(notif.icon) icon = notif.icon;
+        var content = "New notification";
+        if(notif.content) content = notif.content;
+
+        notificationsModel.append({"icon": icon, "htmlContent":content});
+    }
+
+    function appendDashboardWindow(dashboardWindowWrapper, winId) {
+        if( dashboardWindowWrapper.windowType === WindowType.Dashboard )
+        {
+            notificationsModel.append({"dashboardWindowWrapper": dashboardWindowWrapper,
+                                       "appIcon": dashboardWindowWrapper.appIcon});
+
+            windowManagerInstance.dashboardMode();
+        }
+    }
+
+    function removeDashboardWindow(dashboardWindowWrapper, winId) {
+        if( dashboardWindowWrapper.windowType === WindowType.Dashboard )
+        {
+            var index = notificationsModel.getIndexFromProperty("dashboardWindowWrapper", dashboardWindowWrapper);
+            if( index >= 0 )
+                notificationsModel.remove(index);
+
+            if( state === "open" )
+                windowManagerInstance.cardViewMode();
         }
     }
 }

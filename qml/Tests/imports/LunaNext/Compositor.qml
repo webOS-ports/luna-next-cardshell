@@ -39,7 +39,7 @@ Item {
     }
 
     Component.onCompleted: {
-        createJustTypeLauncherWindow();
+        createFakeWindow("FakeJustTypeLauncherWindow", {});
     }
 
     function show() {
@@ -50,19 +50,9 @@ Item {
         console.log("Compositor: cleared keyboard focus.");
     }
 
-    function createDummyWindow() {
-        var windowComponent = Qt.createComponent("../../DummyWindow.qml");
-        var window = windowComponent.createObject(compositor);
-        window.winId = localProperties.getNextWinId();
-
-        listWindowsModel.append({"window": window, "winId": window.winId});
-
-        compositor.windowAdded(window);
-    }
-
-    function createJustTypeLauncherWindow() {
-        var windowComponent = Qt.createComponent("../../FakeJustTypeLauncherWindow.qml");
-        var window = windowComponent.createObject(compositor);
+    function createFakeWindow(name, options) {
+        var windowComponent = Qt.createComponent("../../" + name + ".qml");
+        var window = windowComponent.createObject(compositor, options);
         window.winId = localProperties.getNextWinId();
 
         listWindowsModel.append({"window": window, "winId": window.winId});
