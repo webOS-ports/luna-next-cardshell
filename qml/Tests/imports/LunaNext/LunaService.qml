@@ -36,6 +36,10 @@ QtObject {
         }
     }
 
+    function registerMethod(category, name, callback) {
+        /* do nothing */
+    }
+
     function listLaunchPoints_call(jsonArgs, returnFct, handleError) {
         returnFct(JSON.stringify({"returnValue": true,
                     "launchPoints": [
