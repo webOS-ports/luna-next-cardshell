@@ -6,11 +6,12 @@ Column {
     property string appIcon
     property string appTitle
     property string appId
+    property string appParams: "{}"
     property bool showTitle: false
 
     property real iconSize: 64
 
-    signal startLaunchApplication(string appId)
+    signal startLaunchApplication(string appId, string appParams)
 
     Image {
         width: iconSize
@@ -25,7 +26,7 @@ Column {
 
         MouseArea {
             anchors.fill: parent
-            onClicked:  startLaunchApplication(launchableAppIcon.appId);
+            onClicked:  startLaunchApplication(launchableAppIcon.appId, launchableAppIcon.appParams);
         }
     }
     Text {

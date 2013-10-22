@@ -8,7 +8,7 @@ Rectangle {
     property real iconSize: 64
     property real bottomMargin: 80
 
-    signal startLaunchApplication(string appId)
+    signal startLaunchApplication(string appId, string appParams)
 
     state: "hidden"
     visible: false
@@ -76,11 +76,12 @@ Rectangle {
                 appTitle: model.title
                 appIcon: model.icon
                 appId: model.id
+                appParams: model.params === undefined ? "{}" : model.params
                 showTitle: true
 
                 iconSize: fullLauncher.iconSize
 
-                onStartLaunchApplication: fullLauncher.startLaunchApplication(appId);
+                onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
             }
     }
 }
