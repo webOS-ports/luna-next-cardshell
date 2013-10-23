@@ -129,19 +129,21 @@ Item {
         }
     }
 
+    function launchApplication(id, params) {
+        console.log("launching app " + id + " with params " + params);
+        state = "launchbar";
+        lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",
+            JSON.stringify({"id": id, "params": params}), undefined, handleLaunchAppError)
+    }
+
     Connections {
         target: launchBarInstance
-        onStartLaunchApplication: {
-            state = "launchbar";
-            lunaNextLS2Service.call("luna://com.palm.applicationManager/launch", JSON.stringify({"id": appId}), undefined, handleLaunchAppError)
-        }
+        onStartLaunchApplication: launchApplication(appId, appParams)
     }
+
     Connections {
         target: fullLauncherInstance
-        onStartLaunchApplication: {
-            state = "launchbar";
-            lunaNextLS2Service.call("luna://com.palm.applicationManager/launch", JSON.stringify({"id": appId}), undefined, handleLaunchAppError)
-        }
+        onStartLaunchApplication: launchApplication(appId, appParams)
     }
 
     function handleLaunchAppError(message) {

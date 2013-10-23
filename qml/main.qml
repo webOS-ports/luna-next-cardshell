@@ -46,6 +46,7 @@ import "StatusBar"
 import "LaunchBar"
 import "Dashboard"
 import "WindowManager"
+import "LunaSysAPI"
 import "Utils" as Utils
 
 // The compositor is exposed by the LunaNext module.
@@ -121,14 +122,25 @@ Compositor {
 
             property int nbScreenshotsTaken: 0
 
-            function takeScreenshot() {
+            function takeScreenshot(path) {
+                if (path === undefined || path.length === 0)
+                    path = "/tmp/luna-next-screenshot-" + nbScreenshotsTaken + ".png";
+
                 nbScreenshotsTaken = nbScreenshotsTaken + 1
-                screenShooter.capture("/tmp/luna-next-screenshot-" + nbScreenshotsTaken + ".png");
+                screenShooter.capture(path);
             }
         }
         Connections {
             target: gestureAreaInstance
             onSwipeRightGesture: screenShooter.takeScreenshot();
+        }
+
+        ////////// System Service //////////
+
+        SystemService {
+            id: systemService
+
+            screenShooter: screenShooter
         }
 
 
