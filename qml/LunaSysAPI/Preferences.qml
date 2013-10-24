@@ -58,7 +58,7 @@ Item {
         }
 
         function setPreference(key, value) {
-            systemservice.subscribe("palm://com.palm.systemservice/setPreferences",
+            systemservice.call("palm://com.palm.systemservice/setPreferences",
                                     JSON.stringify({key:value}),
                                     function (data) { },
                                     handleError);
