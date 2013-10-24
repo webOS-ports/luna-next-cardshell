@@ -5,6 +5,12 @@ QtObject {
     property string method
     property bool usePrivateBus: false
 
+    signal initialized
+
+    Component.onCompleted: {
+        initialized();
+    }
+
     function call(serviceURI, jsonArgs, returnFct, handleError) {
         var args = JSON.parse(jsonArgs);
         if( serviceURI === "luna://com.palm.applicationManager/listLaunchPoints" ) {

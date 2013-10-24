@@ -143,6 +143,11 @@ Compositor {
             screenShooter: screenShooter
         }
 
+        ////////// Preferences /////////////
+
+        Preferences {
+            id: preferences
+        }
 
         //////////  reticle on clic ///////////
         Loader {
@@ -167,7 +172,7 @@ Compositor {
 
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectCrop
-                source: "images/background.jpg"
+                source: preferences.wallpaperFile
                 asynchronous: true
                 smooth: true
                 sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
