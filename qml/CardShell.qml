@@ -201,6 +201,7 @@ WindowManager {
 
         windowManagerInstance: windowManager
 
+        anchors.top: statusBarInstance.bottom
         anchors.bottom: dashboardInstance.top // not sure about this one
         anchors.left: windowManager.left
         anchors.right: windowManager.right
@@ -209,16 +210,16 @@ WindowManager {
 
         Connections {
             target: windowManager
-            onWindowWrapperCreated: {
-                if( windowWrapper.windowType === WindowType.Overlay ) {
+            onOverlayWindowAdded: {
+                if( window.windowType === WindowType.Overlay ) {
                     // insert a new overlay on top of others
-                    overlaysManagerInstance.appendOverlayWindow(windowWrapper, winId);
+                    overlaysManagerInstance.appendOverlayWindow(window);
                 }
             }
-            onWindowWrapperDestruction: {
-                if( windowWrapper.windowType === WindowType.Overlay ) {
+            onOverlayWindowRemoval: {
+                if( window.windowType === WindowType.Overlay ) {
                     // insert a new overlay on top of others
-                    overlaysManagerInstance.removeOverlayWindow(windowWrapper, winId);
+                    overlaysManagerInstance.removeOverlayWindow(window);
                 }
             }
         }

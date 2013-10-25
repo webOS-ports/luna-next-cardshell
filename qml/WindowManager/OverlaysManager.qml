@@ -28,69 +28,34 @@ Item {
     property variant windowManagerInstance
 
     ExtendedListModel {
-        // This model contains the list of the cards
+        // This model contains the list of the overlays
         id: listOverlaysModel
     }
 
-    Repeater {
-        model: listOverlaysModel
-        delegate: OverlayWindow {
-            id: overlayWindowInstance
+    function appendOverlayWindow(window) {
+        if( window.windowType === WindowType.Overlay )
+        {
+            listOverlaysModel.append({"overlayWindow": window});
 
-            anchors.left:overlaysManagerItem.left
-            anchors.right:overlaysManagerItem.right
-            overlaysManagerInstance: overlaysManagerItem
+            if( !window.parent ) {
+                window.parent = overlaysManagerItem
 
-            property Item windowWrapper: overlayWindowWrapper
-
-            Component.onCompleted: {
-                //overlayWindowWrapper.setNewParent(overlayWindowInstance, false)
-                windowWrapper.anchors.fill = undefined;
-                windowWrapper.parent = overlayWindowInstance;
-                windowWrapper.anchors.top = overlayWindowInstance.top
-                windowWrapper.anchors.left = overlayWindowInstance.left
-                windowWrapper.anchors.right = overlayWindowInstance.right
-                overlayWindowInstance.height = Qt.binding(function() { return windowWrapper.height })
-
-                overlayWindowInstance.state = "visible";
-
-                windowWrapper.windowVisibilityChanged.connect(__onWindowVisibilityChanged);
-            }
-
-            Component.onDestruction: {
-                // remove window
-                windowManagerInstance.removeWindow(windowWrapper);
-            }
-
-            function __onWindowVisibilityChanged(isVisible) {
-                if( isVisible && overlayWindowInstance.state !== "visible" )
-                    overlayWindowInstance.state = "visible";
-                else if( overlayWindowInstance.state !== "hidden" )
-                    overlayWindowInstance.state = "hidden";
+                // Add a tap action to hide the overlay
+                windowManagerInstance.addTapAction("hideOverlay", __hideOverlay, window)
             }
         }
     }
 
-    function appendOverlayWindow(windowWrapper, winId) {
-        if( windowWrapper.windowType === WindowType.Overlay )
+    function removeOverlayWindow(window) {
+        if( window.windowType === WindowType.Overlay )
         {
-            listOverlaysModel.append({"overlayWindowWrapper": windowWrapper});
-
-            // Add a tap action to hide the overlay
-            windowManagerInstance.addTapAction("hideOverlay", __hideLastOverlay, windowWrapper)
-        }
-    }
-
-    function removeOverlayWindow(windowWrapper, winId) {
-        if( windowWrapper.windowType === WindowType.Overlay )
-        {
-            var index = listOverlaysModel.getIndexFromProperty("overlayWindowWrapper", windowWrapper);
+            var index = listOverlaysModel.getIndexFromProperty("overlayWindow", window);
             if( index >= 0 )
                 listOverlaysModel.remove(index);
         }
     }
 
-    function __hideLastOverlay(data) {
+    function __hideOverlay(data) {
         // remove last overlay from the model
         //listOverlaysModel.remove(listOverlaysModel.count-1);
     }
