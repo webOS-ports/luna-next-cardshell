@@ -32,13 +32,27 @@ Item {
         id: listOverlaysModel
     }
 
+    function dumpObject(object) {
+        console.log("-> Dump of " + object);
+        var _property
+        for (_property in object) {
+          console.log( "---> " + _property + ': ' + object[_property]+'; ' );
+        }
+    }
+
     function appendOverlayWindow(window) {
         if( window.windowType === WindowType.Overlay )
         {
             listOverlaysModel.append({"overlayWindow": window});
 
-            if( !window.parent ) {
-                window.parent = overlaysManagerItem
+            console.log("OverlayManager: adding " + window + " as window " + (listOverlaysModel.count-1));
+
+            //dumpObject(window)
+
+            if( listOverlaysModel.getIndexFromProperty("overlayWindow", window.parent) < 0 ) {
+                window.parent = overlaysManagerItem;
+                window.anchors.bottom = overlaysManagerItem.bottom;
+                window.anchors.horizontalCenter = overlaysManagerItem.horizontalCenter;
 
                 // Add a tap action to hide the overlay
                 windowManagerInstance.addTapAction("hideOverlay", __hideOverlay, window)

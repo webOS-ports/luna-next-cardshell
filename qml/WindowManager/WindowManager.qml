@@ -142,6 +142,8 @@ Item {
         target: compositorInstance
         onWindowAdded: __handleWindowAdded(window)
         onWindowRemoved: __handleWindowRemoved(window)
+        onWindowShown: __handleWindowShown(window)
+        onWindowHidden: __handleWindowHidden(window)
     }
 
     Connections {
@@ -302,6 +304,7 @@ Item {
             windowWrapperCreated(windowWrapper, winId);
         }
         else {
+            console.log("WindowManager: adding overlay window : " + window);
             overlayWindowAdded(window);
         }
     }
@@ -324,7 +327,18 @@ Item {
             }
         }
         else {
+            console.log("WindowManager: removing overlay window : " + window);
             overlayWindowRemoval(window);
+        }
+    }
+
+    function __handleWindowShown(window) {
+        if( window.windowType !== WindowType.Overlay ) {
+        }
+    }
+
+    function __handleWindowHidden(window) {
+        if( window.windowType !== WindowType.Overlay ) {
         }
     }
 
