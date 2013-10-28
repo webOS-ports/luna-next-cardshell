@@ -22,7 +22,7 @@ import QtQuick.Layouts 1.0
 Item {
     id: launchBarItem
 
-    signal startLaunchApplication(string appId)
+    signal startLaunchApplication(string appId, string appParams)
     signal toggleLauncherDisplay
 
     state: "visible"
@@ -125,7 +125,7 @@ Item {
                 height: launchBarItem.launcherBarIconSize
                 width: launchBarItem.launcherBarIconSize
 
-                onStartLaunchApplication: launchBarItem.startLaunchApplication(appId);
+                onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, "");
             }
         }
 

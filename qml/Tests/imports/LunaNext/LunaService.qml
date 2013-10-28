@@ -50,16 +50,21 @@ QtObject {
         if( serviceURI === "luna://com.palm.bus/signal/registerServerStatus" &&
             args.serviceName === "com.palm.applicationManager")
         {
-            returnFct(JSON.stringify({"connected":true}));
+            returnFct(JSON.stringify({connected: true}));
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launchPointChanges" && args.subscribe)
         {
-            returnFct(JSON.stringify({"subscribed":true})); // simulate subscription answer
+            returnFct(JSON.stringify({subscribed: true})); // simulate subscription answer
             returnFct("{}");
         }
         else if( serviceURI === "luna://com.palm.systemmanager/getBootStatus" && args.subscribe )
         {
             returnFct(JSON.stringify({"subscribed":true, "firstUse": false})); // simulate subscription answer
+        }
+        else if( serviceURI === "palm://com.palm.systemservice/getPreferences" && args.subscribe)
+        {
+            returnFct(JSON.stringify({subscribed: true})); // simulate subscription answer
+            returnFct(JSON.stringify({wallpaper: { wallpaperFile: Qt.resolvedUrl("../../../images/background.jpg") }}));
         }
     }
 
