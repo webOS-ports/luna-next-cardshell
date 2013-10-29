@@ -24,9 +24,10 @@ Item {
     LunaService {
         id: systemService
         name: "org.webosports.luna"
+        usePrivateBus: true
         onInitialized: {
             console.log("Calling boot status service ...");
-            systemService.subscribe("luna://com.palm.systemmanager/getBootStatus",
+            systemService.subscribe("luna://org.webosports.bootmgr/getStatus",
                                     JSON.stringify({"subscribe":true}),
                                     handleBootStatusChanged,
                                     handleError);
@@ -35,11 +36,11 @@ Item {
         function handleBootStatusChanged(data) {
             var response = JSON.parse(data);
 
-            if( response.hasOwnProperty("firstUse") ) {
-                if( response.firstUse ) {
+            if( response.hasOwnProperty("state") ) {
+                if( response.state === "firstuse" ) {
                     shellLoader.source = "FirstUseShell.qml";
                 }
-                else {
+                else if ( response.state === "normal" ) {
                     shellLoader.source = "CardShell.qml";
                 }
             }
