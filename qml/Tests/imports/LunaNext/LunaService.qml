@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ */
+
 import QtQuick 2.0
 
 QtObject {
@@ -33,12 +50,21 @@ QtObject {
         if( serviceURI === "luna://com.palm.bus/signal/registerServerStatus" &&
             args.serviceName === "com.palm.applicationManager")
         {
-            returnFct(JSON.stringify({"connected":true}));
+            returnFct(JSON.stringify({connected: true}));
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launchPointChanges" && args.subscribe)
         {
-            returnFct(JSON.stringify({"subscribed":true})); // simulate subscription answer
+            returnFct(JSON.stringify({subscribed: true})); // simulate subscription answer
             returnFct("{}");
+        }
+        else if( serviceURI === "luna://com.palm.systemmanager/getBootStatus" && args.subscribe )
+        {
+            returnFct(JSON.stringify({"subscribed":true, "firstUse": false})); // simulate subscription answer
+        }
+        else if( serviceURI === "palm://com.palm.systemservice/getPreferences" && args.subscribe)
+        {
+            returnFct(JSON.stringify({subscribed: true})); // simulate subscription answer
+            returnFct(JSON.stringify({wallpaper: { wallpaperFile: Qt.resolvedUrl("../../../images/background.jpg") }}));
         }
     }
 

@@ -1,4 +1,5 @@
 /*
+ * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
  *
  * This program is free software: you can redistribute it and/or modify
