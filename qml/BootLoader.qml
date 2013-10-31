@@ -71,6 +71,7 @@ Item {
             source: "images/webosports-logo-normal.png"
             width: parent.width/2
             height: parent.height/2
+            fillMode: Image.PreserveAspectFit
         }
 
         Image {
@@ -79,6 +80,7 @@ Item {
             source: "images/webosports-logo-glow.png"
             width: logoNormal.width
             height: logoNormal.height
+            fillMode: Image.PreserveAspectFit
             opacity: 0.1
         }
 
