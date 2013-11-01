@@ -23,8 +23,9 @@ Item {
 
     property Image indicatorImage;
     property real originalWidth: indicatorImage.width
+    property bool enabled: true
 
-    width: indicatorImage.width
+    width: enabled ? indicatorImage.width : 0
 
     clip: true
 

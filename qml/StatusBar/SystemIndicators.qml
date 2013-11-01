@@ -21,6 +21,9 @@ import QtQuick 2.0
 Row {
     id: indicatorsRow
 
+    spacing: 5
+    anchors.margins: 3
+
     // Utility animations when an indicator must be hidden or shown
     SequentialAnimation {
         id: hideIndicatorAnimation
@@ -60,18 +63,6 @@ Row {
         property real __targetWidth
     }
 
-    Image {
-        id: indicatorSeparator
-
-        anchors.top: indicatorsRow.top
-        anchors.bottom: indicatorsRow.bottom
-
-        width: 8
-        fillMode: Image.TileHorizontally
-
-        source: "../images/statusbar/status-bar-separator.png"
-    }
-
     WifiIndicator {
         id: wifiIndicator
 
@@ -80,8 +71,6 @@ Row {
 
         signalLevel: -1
         enabled: false
-
-        width: 0
 
         onEnabledChanged: {
             if( enabled ) {

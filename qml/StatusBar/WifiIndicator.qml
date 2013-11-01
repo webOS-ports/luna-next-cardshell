@@ -23,7 +23,6 @@ BaseIndicator {
     id: wifiIndicator
 
     property int signalLevel: 0
-    property bool enabled: false
 
     indicatorImage: batteryIcon
 
@@ -36,31 +35,23 @@ BaseIndicator {
         source: __getIconForSignalLevel(signalLevel)
     }
 
-    Component.onCompleted: {
-        StatusBarServicesConnector.signalWifiIndexChanged.connect(__onSignalWifiIndexChanged);
-    }
+    Connections {
+        target: StatusBarServicesConnector
 
-    function __onSignalWifiIndexChanged(show, index) {
-        /*
-            enum IndexWiFi {
-                WIFI_OFF  = 0,
-                WIFI_ON,
-                WIFI_CONNECTING,
-                WIFI_BAR_1,
-                WIFI_BAR_2,
-                WIFI_BAR_3
-            };
-        */
-        if( index === 0 || index === 1 ) {
-            wifiIndicator.signalLevel = 0; // off, or on and no bar
+        onSignalWifiIndexChanged: {
+            if (index === StatusBarIconIndex.WIFI_OFF ||
+               index === StatusBarIconIndex.WIFI_ON) {
+                wifiIndicator.signalLevel = 0; // off, or on and no bar
+            }
+            else if (index === StatusBarIconIndex.WIFI_CONNECTING) {
+                wifiIndicator.signalLevel = -1; // connecting
+            }
+            else {
+                wifiIndicator.signalLevel = index - 2; // 1, 2 or 3 bars
+            }
+
+            wifiIndicator.enabled = show;
         }
-        else if( index === 2 ) {
-            wifiIndicator.signalLevel = -1; // connecting
-        }
-        else {
-            wifiIndicator.signalLevel = index-2; // 1, 2 or 3 bars
-        }
-        wifiIndicator.enabled = show;
     }
 
     function __getIconForSignalLevel(level) {
