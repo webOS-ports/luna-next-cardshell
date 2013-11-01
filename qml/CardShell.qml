@@ -206,7 +206,7 @@ WindowManager {
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
-        z: 1 // on top of cardview
+        z: 4 // on top of everything (including fullscreen)
 
         Connections {
             target: windowManager
