@@ -232,7 +232,7 @@ WindowManager {
         anchors.top: windowManager.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
-        height: windowManager.computeFromLength(24);
+        height: Units.length(24);
 
         z: 2 // can only be hidden by a fullscreen window
 
@@ -287,15 +287,9 @@ WindowManager {
         anchors.bottom: windowManager.bottom
         anchors.left: windowManager.left
         anchors.right: windowManager.right
-        height: windowManager.computeFromLength(40);
+        height: Units.length(40);
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
-    }
-
-    // Utility to convert a pixel length expressed at DPI=132 to
-    // a pixel length expressed in our DPI
-    function computeFromLength(lengthAt132DPI) {
-        return (lengthAt132DPI * (windowManager.screenDPI / 132.0));
     }
 
     function addNotification(notif) {
