@@ -36,7 +36,7 @@ BaseIndicator {
     }
 
     Connections {
-        target: StatusBarServicesConnector
+        target: statusBarServicesConnector
 
         onSignalWifiIndexChanged: {
             if (index === StatusBarIconIndex.WIFI_OFF ||

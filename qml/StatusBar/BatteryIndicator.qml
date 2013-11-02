@@ -36,18 +36,16 @@ BaseIndicator {
         source: __getIconForBatteryLevel(batteryLevel, charging)
     }
 
-    Component.onCompleted: {
-        StatusBarServicesConnector.signalBatteryLevelUpdated.connect(__onSignalBatteryLevelUpdated);
-        StatusBarServicesConnector.signalChargingStateUpdated.connect(__onSignalChargingStateUpdated);
-    }
+    Connections {
+        target: statusBarServicesConnector
 
-    function __onSignalBatteryLevelUpdated(percentage) {
-        // batteryLevel goes from 0 to 12.
-        batteryIndicator.batteryLevel = Math.floor((percentage * 12) / 100);
-    }
-
-    function __onSignalChargingStateUpdated(charging) {
-        batteryIndicator.charging = charging;
+        onSignalBatteryLevelUpdated: {
+            // batteryLevel goes from 0 to 12.
+            batteryIndicator.batteryLevel = Math.floor((percentage * 12) / 100);
+        }
+        onSignalChargingStateUpdated: {
+            batteryIndicator.charging = charging;
+        }
     }
 
     function __getIconForBatteryLevel(level, isCharging) {
