@@ -50,6 +50,9 @@ Item {
     signal windowWrapperCreated(Item windowWrapper, int winId);
     signal windowWrapperDestruction(Item windowWrapper, int winId);
 
+    signal overlayWindowAdded(Item window);
+    signal overlayWindowRemoval(Item window);
+
     ExtendedListModel {
         // This model contains the list of the window wrappers that are managed by the
         // window manager.
@@ -139,6 +142,8 @@ Item {
         target: compositorInstance
         onWindowAdded: __handleWindowAdded(window)
         onWindowRemoved: __handleWindowRemoved(window)
+        onWindowShown: __handleWindowShown(window)
+        onWindowHidden: __handleWindowHidden(window)
     }
 
     Connections {
@@ -282,36 +287,58 @@ Item {
     ////// private methods ///////
 
     function __handleWindowAdded(window) {
-        // Create the window container
-        var windowWrapperComponent = Qt.createComponent("WindowWrapper.qml");
-        var windowWrapper = windowWrapperComponent.createObject(windowManager);
-        windowWrapper.windowManager = windowManager;
-        windowWrapper.cornerRadius = cornerRadius
+        if( window.windowType !== WindowType.Overlay ) {
+            // Create the window container
+            var windowWrapperComponent = Qt.createComponent("WindowWrapper.qml");
+            var windowWrapper = windowWrapperComponent.createObject(windowManager);
+            windowWrapper.windowManager = windowManager;
+            windowWrapper.cornerRadius = cornerRadius
 
-        // Bind the container with its app window
-        windowWrapper.setWrappedWindow(window);
+            // Bind the container with its app window
+            windowWrapper.setWrappedWindow(window);
 
-        var winId = window.winId;
-        listWindowWrappersModel.append({"windowWrapper": windowWrapper, "winId": winId});
+            var winId = window.winId;
+            listWindowWrappersModel.append({"windowWrapper": windowWrapper, "winId": winId});
 
-        // emit the signal
-        windowWrapperCreated(windowWrapper, winId);
+            // emit the signal
+            windowWrapperCreated(windowWrapper, winId);
+        }
+        else {
+            console.log("WindowManager: adding overlay window : " + window);
+            overlayWindowAdded(window);
+        }
     }
 
     function __handleWindowRemoved(window) {
-        var index = listWindowWrappersModel.getIndexFromProperty('winId', window.winId);
-        if( index >= 0 )
-        {
-            var windowWrapper = listWindowWrappersModel.get(index).windowWrapper;
+        if( window.windowType !== WindowType.Overlay ) {
+            var index = listWindowWrappersModel.getIndexFromProperty('winId', window.winId);
+            if( index >= 0 )
+            {
+                var windowWrapper = listWindowWrappersModel.get(index).windowWrapper;
 
-            if( currentActiveWindowWrapper === windowWrapper )
-                currentActiveWindowWrapper = null;
+                if( currentActiveWindowWrapper === windowWrapper )
+                    currentActiveWindowWrapper = null;
 
-            listWindowWrappersModel.remove(index);
+                listWindowWrappersModel.remove(index);
 
-            windowWrapperDestruction(windowWrapper, window.winId);
+                windowWrapperDestruction(windowWrapper, window.winId);
 
-            windowWrapper.destroy();
+                windowWrapper.destroy();
+            }
+        }
+        else {
+            console.log("WindowManager: removing overlay window : " + window);
+            overlayWindowRemoval(window);
+        }
+    }
+
+    function __handleWindowShown(window) {
+        if( window.windowType !== WindowType.Overlay ) {
+        }
+    }
+
+    function __handleWindowHidden(window) {
+        if( window.windowType !== WindowType.Overlay ) {
         }
     }
 

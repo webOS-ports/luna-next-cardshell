@@ -201,24 +201,25 @@ WindowManager {
 
         windowManagerInstance: windowManager
 
+        anchors.top: statusBarInstance.bottom
         anchors.bottom: dashboardInstance.top // not sure about this one
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
-        z: 1 // on top of cardview
+        z: 4 // on top of everything (including fullscreen)
 
         Connections {
             target: windowManager
-            onWindowWrapperCreated: {
-                if( windowWrapper.windowType === WindowType.Overlay ) {
+            onOverlayWindowAdded: {
+                if( window.windowType === WindowType.Overlay ) {
                     // insert a new overlay on top of others
-                    overlaysManagerInstance.appendOverlayWindow(windowWrapper, winId);
+                    overlaysManagerInstance.appendOverlayWindow(window);
                 }
             }
-            onWindowWrapperDestruction: {
-                if( windowWrapper.windowType === WindowType.Overlay ) {
+            onOverlayWindowRemoval: {
+                if( window.windowType === WindowType.Overlay ) {
                     // insert a new overlay on top of others
-                    overlaysManagerInstance.removeOverlayWindow(windowWrapper, winId);
+                    overlaysManagerInstance.removeOverlayWindow(window);
                 }
             }
         }
@@ -231,7 +232,7 @@ WindowManager {
         anchors.top: windowManager.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
-        height: windowManager.computeFromLength(24);
+        height: Units.length(24);
 
         z: 2 // can only be hidden by a fullscreen window
 
@@ -286,15 +287,9 @@ WindowManager {
         anchors.bottom: windowManager.bottom
         anchors.left: windowManager.left
         anchors.right: windowManager.right
-        height: windowManager.computeFromLength(40);
+        height: Units.length(40);
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
-    }
-
-    // Utility to convert a pixel length expressed at DPI=132 to
-    // a pixel length expressed in our DPI
-    function computeFromLength(lengthAt132DPI) {
-        return (lengthAt132DPI * (windowManager.screenDPI / 132.0));
     }
 
     function addNotification(notif) {

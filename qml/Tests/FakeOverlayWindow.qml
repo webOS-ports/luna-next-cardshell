@@ -27,6 +27,9 @@ FakeWindowBase {
 
     property string appIcon
 
+    x: Math.random()*200
+    y: parent.height - height
+    width: 300 + Math.random()*150
     height: 150 + Math.random()*50
 
     property alias scale: windowRectangle.scale

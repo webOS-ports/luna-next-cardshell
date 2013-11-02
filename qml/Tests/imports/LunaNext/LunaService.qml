@@ -57,9 +57,9 @@ QtObject {
             returnFct(JSON.stringify({subscribed: true})); // simulate subscription answer
             returnFct("{}");
         }
-        else if( serviceURI === "luna://com.palm.systemmanager/getBootStatus" && args.subscribe )
+        else if( serviceURI === "luna://org.webosports.bootmgr/getStatus" && args.subscribe )
         {
-            returnFct(JSON.stringify({"subscribed":true, "firstUse": false})); // simulate subscription answer
+            returnFct(JSON.stringify({"subscribed":true, "state": "normal"})); // simulate subscription answer
         }
         else if( serviceURI === "palm://com.palm.systemservice/getPreferences" && args.subscribe)
         {

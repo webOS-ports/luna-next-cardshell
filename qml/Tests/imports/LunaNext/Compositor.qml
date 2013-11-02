@@ -16,7 +16,6 @@
  */
 
 import QtQuick 2.0
-import "StatusBarServicesConnector.js" as StatusBarServicesConnector
 
 Item {
     id: compositor
@@ -24,8 +23,10 @@ Item {
 
     signal windowAdded(Item window);
     signal windowRemoved(Item window);
+    signal windowShown(Item window);
+    signal windowHidden(Item window);
 
-    property variant initStatusBar: StatusBarServicesConnector.__init(compositor); // provoke earky init
+    property Item statusBarServicesConnector: StatusBarServicesConnector {}
 
     QtObject {
         id: localProperties

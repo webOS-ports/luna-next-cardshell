@@ -45,7 +45,7 @@ Item {
         highlightRangeMode: ListView.StrictlyEnforceRange
 
         model: listCardsModel
-        spacing: 0 //root.computeFromLength(4)
+        spacing: 0
         orientation: ListView.Horizontal
         smooth: true
         focus: true
