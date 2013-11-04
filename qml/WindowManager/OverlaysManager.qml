@@ -53,6 +53,8 @@ Item {
                 window.parent = overlaysManagerItem;
                 window.anchors.bottom = overlaysManagerItem.bottom;
                 window.anchors.horizontalCenter = overlaysManagerItem.horizontalCenter;
+                window.transformOrigin = Item.Bottom;
+                window.scale = overlaysManagerItem.width / window.width;
 
                 // Add a tap action to hide the overlay
                 windowManagerInstance.addTapAction("hideOverlay", __hideOverlay, window)
