@@ -39,7 +39,9 @@ Item {
     function takeFocus() {
         console.log(fakeWindowBase + ": takeFocus()");
     }
-    function changeSize(w, h) {
-        console.log(fakeWindowBase + ": changeSize(" + w + ", " + h + ")");
+    function changeSize(size) {
+        console.log(fakeWindowBase + ": changeSize(" + size + ")");
+        width = size.width;
+        height = size.height;
     }
 }
