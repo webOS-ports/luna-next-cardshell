@@ -133,10 +133,12 @@ FocusScope {
         State {
            name: "unintialized"
            PropertyChanges { target: windowWrapper; Keys.forwardTo: [] }
+           StateChangeScript { script: loseFocus() }
         },
         State {
            name: "card"
            PropertyChanges { target: windowWrapper; Keys.forwardTo: [] }
+           StateChangeScript { script: loseFocus() }
         },
         State {
            name: "maximized"
@@ -257,9 +259,13 @@ FocusScope {
         childWrapper.postEvent(event);
     }
 
+    function loseFocus() {
+        windowWrapper.focus = false;
+    }
+
     function takeFocus() {
         // Give the focus to this FocusScope
-        windowWrapper = true;
+        windowWrapper.focus = true;
 
         if( wrappedWindow )
             wrappedWindow.takeFocus();
