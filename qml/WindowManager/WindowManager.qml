@@ -100,6 +100,11 @@ Item {
             name: "cardview"
             StateChangeScript {
                 script: {
+                    // we're back to card view so no card should have the focus
+                    // for the keyboard anymore
+                    if( compositorInstance )
+                        compositorInstance.clearKeyboardFocus();
+
                     if( currentActiveWindowWrapper )
                         __setToCard(currentActiveWindowWrapper);
                     switchToCardView();
@@ -360,10 +365,5 @@ Item {
         // switch the state to card
         windowWrapper.setNewParent(windowWrapper.cardViewParent, true);
         windowWrapper.windowState = WindowState.Carded;
-
-        // we're back to card view so no card should have the focus
-        // for the keyboard anymore
-        if( compositorInstance )
-            compositorInstance.clearKeyboardFocus();
     }
 }
