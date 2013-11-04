@@ -17,6 +17,8 @@
 
 .pragma library
 
+var isTestEnvironment = true;
+
 /* A500 alike
 var displayWidth = 1024;
 var displayHeight = 768;
@@ -36,4 +38,4 @@ var displayFps = true;
 var fontStatusBar = "Prelude"
 var showReticle = false;
 
-var layoutScale = dpi/132
+var layoutScale = dpi/132;

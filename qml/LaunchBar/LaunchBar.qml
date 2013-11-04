@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
+import LunaNext 0.1
 
 Item {
     id: launchBarItem
@@ -33,23 +34,6 @@ Item {
     // list of icons
     ListModel {
         id: launcherListModel
-
-        ListElement {
-            appId: "org.webosports.tests.dummyWindow"
-            icon: "../images/default-app-icon.png"
-        }
-        ListElement {
-            appId: "org.webosports.tests.fakeOverlayWindow"
-            icon: "../images/default-app-icon.png"
-        }
-        ListElement {
-            appId: "org.webosports.tests.fakeDashboardWindow"
-            icon: "../images/default-app-icon.png"
-        }
-        ListElement {
-            appId: "org.webosports.tests.dummyWindow"
-            icon: "../images/default-app-icon.png"
-        }
     }
 
     states: [
@@ -103,6 +87,7 @@ Item {
     RowLayout {
         id: launcherRow
 
+        visible: false
         anchors.fill: launchBarItem
         spacing: 0
 
@@ -150,5 +135,23 @@ Item {
                 }
             }
         }
+    }
+
+    Component.onCompleted: {
+        // fill the listModel statically
+        if( !Settings.isTestEnvironment ) {
+            launcherListModel.append({"appId": "com.palm.app.calendar", "icon": "/usr/palm/applications/com.palm.app.calendar/images/icon-256x256.png"});
+            launcherListModel.append({"appId": "com.palm.app.email", "icon": "/usr/palm/applications/com.palm.app.email/icon.png"});
+            launcherListModel.append({"appId": "org.webosinternals.preware", "icon": "/usr/palm/applications/org.webosinternals.preware/icon.png"});
+            launcherListModel.append({"appId": "org.webosports.app.memos", "icon": "/usr/palm/applications/org.webosports.app.memos/icon.png"});
+        }
+        else
+        {
+            launcherListModel.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.append({"appId": "org.webosports.tests.fakeOverlayWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.append({"appId": "org.webosports.tests.fakeDashboardWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+        }
+        launcherRow.visible = true;
     }
 }
