@@ -54,7 +54,9 @@ Item {
                 window.anchors.bottom = overlaysManagerItem.bottom;
                 window.anchors.horizontalCenter = overlaysManagerItem.horizontalCenter;
                 window.transformOrigin = Item.Bottom;
-                window.scale = overlaysManagerItem.width / window.width;
+                // Scaling: try to fill the whole width, but never fill up more than half the height of the screen
+                var maxScale = Math.max(1.0, overlaysManagerItem.height*0.5 / window.height);
+                window.scale = Math.min(overlaysManagerItem.width / window.width, maxScale);
 
                 // Add a tap action to hide the overlay
                 windowManagerInstance.addTapAction("hideOverlay", __hideOverlay, window)
