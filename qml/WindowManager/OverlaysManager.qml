@@ -57,6 +57,8 @@ Item {
                 // Scaling: try to fill the whole width, but never fill up more than half the height of the screen
                 var maxScale = Math.max(1.0, overlaysManagerItem.height*0.5 / window.height);
                 window.scale = Math.min(overlaysManagerItem.width / window.width, maxScale);
+                // Hack to ensure the alpha channel of the window will be taken into account
+                window.opacity = 0.99;
 
                 // Add a tap action to hide the overlay
                 windowManagerInstance.addTapAction("hideOverlay", __hideOverlay, window)
