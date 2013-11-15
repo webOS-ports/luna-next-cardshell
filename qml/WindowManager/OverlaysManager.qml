@@ -47,22 +47,13 @@ Item {
 
             console.log("OverlayManager: adding " + window + " as window " + (listOverlaysModel.count-1));
 
-            //dumpObject(window)
-
-            if( listOverlaysModel.getIndexFromProperty("overlayWindow", window.parent) < 0 ) {
-                window.parent = overlaysManagerItem;
-                window.anchors.bottom = overlaysManagerItem.bottom;
-                window.anchors.horizontalCenter = overlaysManagerItem.horizontalCenter;
-                window.transformOrigin = Item.Bottom;
-                // Scaling: try to fill the whole width, but never fill up more than half the height of the screen
-                var maxScale = Math.max(1.0, overlaysManagerItem.height*0.5 / window.height);
-                window.scale = Math.min(overlaysManagerItem.width / window.width, maxScale);
-                // Hack to ensure the alpha channel of the window will be taken into account
-                window.opacity = 0.99;
-
-                // Add a tap action to hide the overlay
-                windowManagerInstance.addTapAction("hideOverlay", __hideOverlay, window)
-            }
+            window.parent = overlaysManagerItem;
+            window.anchors.bottom = overlaysManagerItem.bottom;
+            window.anchors.horizontalCenter = overlaysManagerItem.horizontalCenter;
+            window.transformOrigin = Item.Bottom;
+            // Scaling: try to fill the whole width, but never fill up more than half the height of the screen
+            var maxScale = Math.max(1.0, overlaysManagerItem.height*0.5 / window.height);
+            window.scale = Math.min(overlaysManagerItem.width / window.width, maxScale);
         }
     }
 
@@ -73,10 +64,5 @@ Item {
             if( index >= 0 )
                 listOverlaysModel.remove(index);
         }
-    }
-
-    function __hideOverlay(data) {
-        // remove last overlay from the model
-        //listOverlaysModel.remove(listOverlaysModel.count-1);
     }
 }
