@@ -25,6 +25,7 @@ import "Dashboard"
 import "WindowManager"
 import "LunaSysAPI"
 import "Utils" as Utils
+import "Alerts"
 
 // The window manager has two roles:
 //  1. it manages the creation/destruction of
@@ -117,6 +118,11 @@ WindowManager {
         anchors.fill: parent
         source: Settings.showReticle ? "Utils/ReticleArea.qml" : ""
         z: 1000
+    }
+
+    VolumeControlAlert {
+        id: volumeControlAlert
+        z: 900
     }
 
     //////////  background ///////////

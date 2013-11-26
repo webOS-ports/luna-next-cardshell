@@ -66,6 +66,10 @@ QtObject {
             returnFct(JSON.stringify({subscribed: true})); // simulate subscription answer
             returnFct(JSON.stringify({wallpaper: { wallpaperFile: Qt.resolvedUrl("../../../images/background.jpg") }}));
         }
+        else if (serviceURI === "luna://org.webosports.audio/getStatus")
+        {
+            returnFct(JSON.stringify({"volume":54,"mute":false}));
+        }
     }
 
     function registerMethod(category, name, callback) {
