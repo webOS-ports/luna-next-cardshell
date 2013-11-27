@@ -19,6 +19,17 @@ qml/images/search-button-launcher.png
 qml/images/search-field-bg-launcher-left.png
 qml/images/search-field-bg-launcher-center.png
 qml/images/search-field-bg-launcher-right.png
+qml/images/notification-music-indicator-0.png
+qml/images/notification-music-indicator-10.png
+qml/images/notification-music-indicator-20.png
+qml/images/notification-music-indicator-30.png
+qml/images/notification-music-indicator-40.png
+qml/images/notification-music-indicator-50.png
+qml/images/notification-music-indicator-60.png
+qml/images/notification-music-indicator-70.png
+qml/images/notification-music-indicator-80.png
+qml/images/notification-music-indicator-90.png
+qml/images/bell_off.png
 
 A copy of this license is included in the file
 "src/compositor/qml/images/LICENSE-APACHE-2.0.txt"
