@@ -295,7 +295,7 @@ Item {
         if( window.windowType !== WindowType.Overlay ) {
             // Create the window container
             var windowWrapperComponent = Qt.createComponent("WindowWrapper.qml");
-            var windowWrapper = windowWrapperComponent.createObject(windowManager);
+            var windowWrapper = windowWrapperComponent.createObject(windowManager, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2, "y": gestureAreaInstance.y});
             windowWrapper.windowManager = windowManager;
             windowWrapper.cornerRadius = cornerRadius
 
