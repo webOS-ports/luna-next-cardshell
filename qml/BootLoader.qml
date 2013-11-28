@@ -38,9 +38,11 @@ Item {
 
             if( response.hasOwnProperty("state") ) {
                 if( response.state === "firstuse" ) {
+                    bootScreenItem.opacity = 0;
                     shellLoader.source = "FirstUseShell.qml";
                 }
                 else if ( response.state === "normal" ) {
+                    bootScreenItem.opacity = 0;
                     shellLoader.source = "CardShell.qml";
                 }
             }
@@ -106,14 +108,6 @@ Item {
                 easing.type: Easing.Linear
                 duration: 700
             }
-        }
-
-        // After 3 second, fade out to show the shell
-        Timer {
-            interval: 3000
-            running: true
-            repeat: false
-            onTriggered: bootScreenItem.opacity = 0;
         }
     }
 }
