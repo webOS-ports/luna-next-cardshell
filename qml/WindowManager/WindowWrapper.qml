@@ -45,6 +45,8 @@ FocusScope {
     // this is the radius that should be applied to the corners of this window container
     property real cornerRadius: 20
 
+    property bool aboutToBeDestroyed: false;
+
     signal windowVisibilityChanged(bool wrappedChildVisiblity)
 
     // A simple container, to facilite the wrapping
@@ -100,15 +102,20 @@ FocusScope {
 
         onWrappedChildChanged: {
             if( !childWrapper.wrappedChild ) {
-                console.log("Wrapped child window has been destroyed!");
-                wrappedChildVisiblity = false;
+                console.log("Wrapped child window has been destroyed.");
+                wrappedChildVisiblity = false; // remove binding
 
-                // ask the window manager to remove this window
-                windowManager.removeWindow(windowWrapper);
+                if( !windowWrapper.aboutToBeDestroyed ) {
+                    // ask the window manager to remove this window
+                    windowManager.removeWindow(windowWrapper);
+                    // the following call shouldn't be necessary, as the window manager already does this.
+                    windowWrapper.requestDestruction();
+                }
             }
         }
 
         onWrappedChildVisiblityChanged: {
+            windowWrapper.visible = wrappedChildVisiblity;
             windowWrapper.windowVisibilityChanged(wrappedChildVisiblity);
         }
     }
@@ -190,9 +197,9 @@ FocusScope {
             windowWrapper.anchors.fill = undefined;
             if( useShaderForNewParent )
             {
+                cornerStaticMask.visible = false;
                 cornerShader.sourceItem = childWrapper;
                 cornerShader.visible = true;
-                cornerStaticMask.visible = false;
             }
         }
 
@@ -200,8 +207,8 @@ FocusScope {
             windowWrapper.anchors.fill = targetNewParent;
             if( !useShaderForNewParent )
             {
-                cornerShader.sourceItem = null;
                 cornerShader.visible = false;
+                cornerShader.sourceItem = null;
                 cornerStaticMask.visible = true;
             }
         }
@@ -269,5 +276,16 @@ FocusScope {
 
         if( wrappedWindow )
             wrappedWindow.takeFocus();
+    }
+
+    function requestDestruction() {
+        if( !aboutToBeDestroyed ) {
+            aboutToBeDestroyed = true;
+
+            cornerShader.visible = false;
+            cornerShader.sourceItem = null;
+
+            windowWrapper.destroy();
+        }
     }
 }

@@ -208,15 +208,19 @@ Item {
 
 
     function removeWindow(windowWrapper) {
+        if( windowWrapper.aboutToBeDestroyed ) return;
+
         // The actual model item will be removed once windowRemoved is called from the
         // compositor
-        if( windowWrapper.wrappedWindow )
+        if( windowWrapper && windowWrapper.wrappedWindow )
         {
             // the wrapped window still exists, let's do it the smooth way
+            console.log("WindowManager.removeWindow(" + windowWrapper +"): calling closeWindowWithId(" + windowWrapper.wrappedWindow.winId + ")");
             compositorInstance.closeWindowWithId(windowWrapper.wrappedWindow.winId);
         }
-        else
+        else if( windowWrapper )
         {
+            console.log("WindowManager.removeWindow: cleaning up windowWrapper which has lost its wrapped window.");
             // emergency destruction: the wrapped window has already
             // been destroyed: clean up the mess
             var index = listWindowWrappersModel.getIndexFromProperty('windowWrapper', windowWrapper);
@@ -231,7 +235,7 @@ Item {
 
                 windowWrapperDestruction(windowWrapper, winId);
 
-                windowWrapper.destroy();
+                windowWrapper.requestDestruction();
             }
         }
     }
@@ -295,7 +299,7 @@ Item {
         if( window.windowType !== WindowType.Overlay ) {
             // Create the window container
             var windowWrapperComponent = Qt.createComponent("WindowWrapper.qml");
-            var windowWrapper = windowWrapperComponent.createObject(windowManager);
+            var windowWrapper = windowWrapperComponent.createObject(windowManager, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2, "y": gestureAreaInstance.y});
             windowWrapper.windowManager = windowManager;
             windowWrapper.cornerRadius = cornerRadius
 
@@ -328,7 +332,7 @@ Item {
 
                 windowWrapperDestruction(windowWrapper, window.winId);
 
-                windowWrapper.destroy();
+                windowWrapper.requestDestruction();
             }
         }
         else {
@@ -338,12 +342,12 @@ Item {
     }
 
     function __handleWindowShown(window) {
-        if( window.windowType !== WindowType.Overlay ) {
+        if( window && window.windowType !== WindowType.Overlay ) {
         }
     }
 
     function __handleWindowHidden(window) {
-        if( window.windowType !== WindowType.Overlay ) {
+        if( window && window.windowType !== WindowType.Overlay ) {
         }
     }
 
@@ -353,6 +357,7 @@ Item {
 
         currentActiveWindowWrapper = windowWrapper;
         windowWrapper.windowState = WindowState.Maximized;
+        windowWrapper.takeFocus();
     }
     function __setToFullscreen(windowWrapper) {
         // switch the state to fullscreen
@@ -360,10 +365,12 @@ Item {
 
         currentActiveWindowWrapper = windowWrapper;
         windowWrapper.windowState = WindowState.Fullscreen;
+        windowWrapper.takeFocus();
     }
     function __setToCard(windowWrapper) {
         // switch the state to card
         windowWrapper.setNewParent(windowWrapper.cardViewParent, true);
         windowWrapper.windowState = WindowState.Carded;
+        windowWrapper.loseFocus();
     }
 }
