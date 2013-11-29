@@ -62,6 +62,8 @@ Rectangle {
         anchors.topMargin: statusBarItem.height * 0.2
         anchors.bottomMargin: statusBarItem.height * 0.2
 
+        visible: false
+
         Component {
             id: networkNameComponent
             Item {
