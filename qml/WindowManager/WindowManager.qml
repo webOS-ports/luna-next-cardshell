@@ -309,8 +309,14 @@ Item {
             var winId = window.winId;
             listWindowWrappersModel.append({"windowWrapper": windowWrapper, "winId": winId});
 
-            // emit the signal
-            windowWrapperCreated(windowWrapper, winId);
+            if( window.appId === "com.palm.launcher" || window.windowType === WindowType.Launcher ) {
+                // init the launcher
+                launcherInstance.initJustTypeLauncherApp(windowWrapper, winId);
+            }
+            else {
+                // emit the signal
+                windowWrapperCreated(windowWrapper, winId);
+            }
         }
         else {
             console.log("WindowManager: adding overlay window : " + window);
