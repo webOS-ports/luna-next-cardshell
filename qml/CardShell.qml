@@ -190,16 +190,6 @@ WindowManager {
         anchors.right: windowManager.right
 
         z: 1 // on top of cardview
-
-        Connections {
-            target: windowManager
-            onWindowWrapperCreated: {
-                if( windowWrapper.windowType === WindowType.Launcher ) {
-                    // init the launcher
-                    launcherInstance.initJustTypeLauncherApp(windowWrapper, winId);
-                }
-            }
-        }
     }
 
     OverlaysManager {
