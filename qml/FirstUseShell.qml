@@ -29,6 +29,12 @@ Item {
         onWindowRemoved: __handleWindowRemoved(window)
     }
 
+    Rectangle {
+        id: background
+        anchors.fill: parent
+        color: "black"
+    }
+
     FocusScope {
         id: childWrapperFocus
 
