@@ -186,7 +186,7 @@ Item {
     }
 
     function initJustTypeLauncherApp(windowWrapper, winId) {
-        if( windowWrapper.windowType === WindowType.Launcher && !__justTypeLauncherWindowWrapper )
+        if( !__justTypeLauncherWindowWrapper )
         {
             __justTypeLauncherWindowWrapper = windowWrapper;
             windowWrapper.setNewParent(justTypeLauncherInstance, false);
