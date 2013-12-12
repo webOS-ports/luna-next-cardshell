@@ -47,8 +47,8 @@ QtObject {
 
     function subscribe(serviceURI, jsonArgs, returnFct, handleError) {
         var args = JSON.parse(jsonArgs);
-        if( serviceURI === "luna://com.palm.bus/signal/registerServerStatus" &&
-            args.serviceName === "com.palm.applicationManager")
+        if( serviceURI === "palm://com.palm.bus/signal/registerServerStatus" &&
+            args.serviceName === "org.webosports.bootmgr" )
         {
             returnFct(JSON.stringify({connected: true}));
         }
@@ -59,6 +59,7 @@ QtObject {
         }
         else if( serviceURI === "luna://org.webosports.bootmgr/getStatus" && args.subscribe )
         {
+            console.log("bootmgr status: normal");
             returnFct(JSON.stringify({"subscribed":true, "state": "normal"})); // simulate subscription answer
         }
         else if( serviceURI === "palm://com.palm.systemservice/getPreferences" && args.subscribe)
