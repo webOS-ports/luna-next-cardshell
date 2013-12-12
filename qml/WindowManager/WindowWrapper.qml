@@ -47,13 +47,10 @@ FocusScope {
 
     property bool aboutToBeDestroyed: false;
 
-    signal windowVisibilityChanged(bool wrappedChildVisiblity)
-
     // A simple container, to facilite the wrapping
     Item {
         id: childWrapper
         property Item wrappedChild
-        property bool wrappedChildVisiblity
 
         anchors.fill: parent;
 
@@ -61,8 +58,6 @@ FocusScope {
             window.parent = childWrapper;
             childWrapper.wrappedChild = window;
             childWrapper.children = [ window ];
-
-            wrappedChildVisiblity = Qt.binding(function() { return wrappedChild.visible })
 
             // depending on the window type, the height is either forced by the parent or by the child
             if( window.windowType !== WindowType.Overlay && window.windowType !== WindowType.Dashboard )
@@ -103,7 +98,6 @@ FocusScope {
         onWrappedChildChanged: {
             if( !childWrapper.wrappedChild ) {
                 console.log("Wrapped child window has been destroyed.");
-                wrappedChildVisiblity = false; // remove binding
 
                 if( !windowWrapper.aboutToBeDestroyed ) {
                     // ask the window manager to remove this window
@@ -112,11 +106,6 @@ FocusScope {
                     windowWrapper.requestDestruction();
                 }
             }
-        }
-
-        onWrappedChildVisiblityChanged: {
-            windowWrapper.visible = wrappedChildVisiblity;
-            windowWrapper.windowVisibilityChanged(wrappedChildVisiblity);
         }
     }
 

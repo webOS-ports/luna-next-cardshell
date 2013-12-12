@@ -21,9 +21,9 @@ import LunaNext 0.1
 FakeWindowBase {
     id: fakeJustTypeWindow
 
-    appId: "org.webosports.tests.fakeJustTypeLauncher"
+    appId: "com.palm.launcher"
     property alias scale: windowRectangle.scale
-    windowType: WindowType.Launcher
+    windowType: WindowType.Card
 
     Rectangle {
         id: windowRectangle
