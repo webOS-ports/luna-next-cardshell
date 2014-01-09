@@ -30,6 +30,14 @@ qml/images/notification-music-indicator-70.png
 qml/images/notification-music-indicator-80.png
 qml/images/notification-music-indicator-90.png
 qml/images/bell_off.png
+qml/images/systemui/palm-notification-button-affirmative-press.png
+qml/images/systemui/palm-notification-button-affirmative.png
+qml/images/systemui/palm-notification-button-alternate-press.png
+qml/images/systemui/palm-notification-button-alternate.png
+qml/images/systemui/palm-notification-button-negative-press.png
+qml/images/systemui/palm-notification-button-negative.png
+qml/images/systemui/palm-notification-button-press.png
+qml/images/systemui/palm-notification-button.png
 
 A copy of this license is included in the file
 "src/compositor/qml/images/LICENSE-APACHE-2.0.txt"
