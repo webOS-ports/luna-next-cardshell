@@ -120,6 +120,17 @@ WindowManager {
         z: 1000
     }
 
+    PowerMenu {
+        id: powerMenuAlert
+        z: 800
+
+        anchors.top: statusBarInstance.bottom
+        anchors.right: launcherInstance.right
+        anchors.margins: 20
+
+        width: parent.width * 0.6
+    }
+
     VolumeControlAlert {
         id: volumeControlAlert
         z: 900
