@@ -30,8 +30,9 @@ Item {
 
     Rectangle {
         id: bgImage
-        radius: 5
+        radius: 10
         color: "black"
+        opacity: 0.8
 
         anchors.centerIn: powerMenuColumn
         width: root.width
@@ -54,7 +55,7 @@ Item {
     Column {
         id: powerMenuColumn
 
-        property real buttonsHeight: Units.length(80);
+        property real buttonsHeight: Units.length(40);
 
         anchors.top: root.top
         width: root.width - contentMargin
