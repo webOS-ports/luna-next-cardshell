@@ -18,16 +18,26 @@
 import QtQuick 2.0
 import LunaNext 0.1
 
-LunaService {
+Item {
     id: systemService
-
-    name: "org.webosports.luna"
 
     property variant screenShooter
 
-    onInitialized: {
-        console.log("Starting system service ...");
-        systemService.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+    LunaService {
+        id: systemServicePrivate
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        onInitialized: {
+            systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+        }
+    }
+
+    LunaService {
+        id: systemServicePublic
+        name: "org.webosports.luna"
+        onInitialized: {
+            systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+        }
     }
 
     function buildErrorResponse(message) {
@@ -37,13 +47,17 @@ LunaService {
     function handleTakeScreenShot(data) {
         var request = JSON.parse(data);
 
-        if (request === null || request.file === undefined)
+        if (request === null)
             return buildErrorResponse("Invalid parameters.");
 
-        if (systemService.screenShooter == null)
+        if (systemService.screenShooter === null)
             return buildErrorResponse("Internal error.");
 
-        screenShooter.takeScreenshot(request.file);
+        var filename = "";
+        if (typeof request.file !== 'undefined')
+            filename = request.file;
+
+        screenShooter.takeScreenshot(filename);
 
         return JSON.stringify({"returnValue":true});
     }
