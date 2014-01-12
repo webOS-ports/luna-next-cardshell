@@ -26,7 +26,7 @@ Item {
     focus: true
     Keys.forwardTo: listCardsView
 
-    ListModel {
+    ExtendedListModel {
         // This model contains the list of the cards
         id: listCardsModel
     }
@@ -111,6 +111,25 @@ Item {
         onSwitchToLauncherView: {
             listCardsView.enabled = false;
         }
+        onActiveWindowChanged: {
+            __switchToCurrentWindow();
+        }
+    }
+
+    function __switchToCurrentWindow() {
+        var windowWrapper = windowManagerInstance.currentActiveWindowWrapper;
+
+        if (!windowWrapper || windowWrapper.wrappedWindow)
+            return;
+
+        var index = listCardsModel.getIndexFromProperty("winId", windowWrapper.wrappedWindow.winId);
+        if (index < 0)
+            return;
+
+        if (listCardsView.currentIndex == index)
+            return;
+
+        listCardsView.positionViewAtIndex(index, ListView.Beginning);
     }
 
     function appendCard(windowWrapper, winId) {
@@ -121,7 +140,7 @@ Item {
                            {"view": listCardsView,
                             "windowWrapper": windowWrapper});
 
-        listCardsModel.append({"cardWindowInstance": cardComponentInstance});
+        listCardsModel.append({"cardWindowInstance": cardComponentInstance,"winId":windowWrapper.wrappedWindow.winId});
         listCardsView.positionViewAtEnd();
     }
 

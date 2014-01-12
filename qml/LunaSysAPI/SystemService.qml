@@ -18,33 +18,120 @@
 import QtQuick 2.0
 import LunaNext 0.1
 
-LunaService {
+Item {
     id: systemService
 
-    name: "org.webosports.luna"
-
     property variant screenShooter
+    property variant windowManager
 
-    onInitialized: {
-        console.log("Starting system service ...");
-        systemService.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+    property variant currentWindow: null
+
+    LunaService {
+        id: systemServicePrivate
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        onInitialized: {
+            systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+            systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);
+            systemServicePrivate.registerMethod("/", "getFocusApplication", handleGetFocusApplication);
+        }
     }
 
-    function buildErrorResponse(message) {
-        return JSON.stringify({ "returnValue": false, "errorMessage": message });
+    LunaService {
+        id: systemServicePublic
+        name: "org.webosports.luna"
+        onInitialized: {
+            systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+        }
     }
 
-    function handleTakeScreenShot(data) {
-        var request = JSON.parse(data);
+    function buildErrorResponse(message, subscribed) {
+        var response = { "returnValue": false, "errorMessage": message };
 
-        if (request === null || request.file === undefined)
+        if (typeof subscribed !== 'undefined')
+            response["subscribed"] = false;
+
+        return JSON.stringify(response);
+    }
+
+    function handleTakeScreenShot(message) {
+        var request = JSON.parse(message.payload);
+
+        if (request === null)
             return buildErrorResponse("Invalid parameters.");
 
-        if (systemService.screenShooter == null)
+        if (systemService.screenShooter === null)
             return buildErrorResponse("Internal error.");
 
-        screenShooter.takeScreenshot(request.file);
+        var filename = "";
+        if (typeof request.file !== 'undefined')
+            filename = request.file;
+
+        screenShooter.takeScreenshot(filename);
 
         return JSON.stringify({"returnValue":true});
+    }
+
+    function handleFocusApplication(message) {
+        var request = JSON.parse(message.payload);
+
+        if (request === null)
+            return buildErrorResponse("Invalid parameters.");
+
+        if (typeof request.appId === 'undefined' || request.appId.length === 0)
+            return buildErrorResponse("Invalid application id");
+
+        if (!windowManager.focusApplication(request.appId))
+            return buildErrorResponse("Failed to focus application");
+
+        return JSON.stringify({"returnValue":true});
+    }
+
+    function handleGetFocusApplication(message) {
+        var request = JSON.parse(message.payload);
+        var subscribed = false;
+
+        if (request.subscribe) {
+            systemServicePrivate.addSubscription("/getFocusApplication", message);
+            subscribed = true;
+        }
+
+        if (windowManager.currentActiveWindowWrapper === null ||
+            (windowManager.currentActiveWindowWrapper.windowState !== WindowState.Maximized &&
+             windowManager.currentActiveWindowWrapper.windowState !== WindowState.Fullscreen))
+            return JSON.stringify({"returnValue":true, "subscribed": subscribed});
+
+        var currentWindow = windowManager.currentActiveWindowWrapper.wrappedWindow;
+        return JSON.stringify({"returnValue":true,
+                               "appId":currentWindow.appId,
+                               "processId":currentWindow.processId});
+    }
+
+    property bool windowHasFocus: false
+
+    Connections {
+        target: windowManager
+        onActiveWindowChanged: {
+            var payload = { "returnValue": true };
+            var focusChanged = false;
+
+            if (windowManager.currentActiveWindowWrapper) {
+                var windowState = windowManager.currentActiveWindowWrapper.windowState;
+                if (windowState === WindowState.Maximized || windowState === WindowState.Fullscreen) {
+                    var currentWindow = windowManager.currentActiveWindowWrapper.wrappedWindow;
+                    payload["appId"] = currentWindow.appId;
+                    payload["processId"] = currentWindow.processId;
+                    focusChanged = true;
+                }
+            }
+
+            if (!windowHasFocus && !focusChanged)
+                return;
+
+            windowHasFocus = focusChanged;
+
+            systemServicePrivate.replyToSubscribers("/getFocusApplication",
+                                                    JSON.stringify(payload));
+        }
     }
 }

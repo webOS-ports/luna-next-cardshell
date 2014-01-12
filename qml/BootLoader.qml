@@ -33,8 +33,8 @@ Item {
                                handleBootMgrStatus, handleError);
         }
 
-        function handleBootMgrStatus(data) {
-            var response = JSON.parse(data);
+        function handleBootMgrStatus(message) {
+            var response = JSON.parse(message.payload);
             if (response.hasOwnProperty("connected") && response.connected) {
                 systemService.subscribe("luna://org.webosports.bootmgr/getStatus",
                                         JSON.stringify({"subscribe":true}),
@@ -43,8 +43,9 @@ Item {
             }
         }
 
-        function handleBootStatusChanged(data) {
-            var response = JSON.parse(data);
+        function handleBootStatusChanged(message) {
+            console.log("Got response");
+            var response = JSON.parse(message.payload);
 
             if( response.hasOwnProperty("state") ) {
                 if( response.state === "firstuse" ) {

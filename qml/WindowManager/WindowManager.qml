@@ -47,6 +47,8 @@ Item {
     signal switchToFullscreen(Item windowWrapper)
     signal switchToLauncherView
 
+    signal activeWindowChanged
+
     signal windowWrapperCreated(Item windowWrapper, int winId);
     signal windowWrapperDestruction(Item windowWrapper, int winId);
 
@@ -229,7 +231,7 @@ Item {
                 var winId = listWindowWrappersModel.get(index).winId;
 
                 if( currentActiveWindowWrapper === windowWrapper )
-                    currentActiveWindowWrapper = null;
+                    __setCurrentActiveWindowWrapper(null);
 
                 listWindowWrappersModel.remove(index);
 
@@ -246,7 +248,7 @@ Item {
         if( currentActiveWindowWrapper )
             __setToCard(currentActiveWindowWrapper);
 
-        currentActiveWindowWrapper = windowWrapper;
+        __setCurrentActiveWindowWrapper(windowWrapper);
         if( state === "maximized" ) {
             __setToMaximized(windowWrapper);
         }
@@ -293,6 +295,20 @@ Item {
             state = "launcherview";
     }
 
+    function focusApplication(appId) {
+        if (typeof appId === 'undefined' || appId.length === 0)
+            return false;
+
+        var index = listWindowWrappersModel.getIndexFromProperty("appId", appId);
+        if (index < 0)
+            return false;
+
+        var windowWrapper = listWindowWrappersModel.get(index);
+        setWindowAsActive(windowWrapper.windowWrapper);
+        maximizedMode();
+        return true;
+    }
+
     ////// private methods ///////
 
     function __handleWindowAdded(window) {
@@ -307,7 +323,8 @@ Item {
             windowWrapper.setWrappedWindow(window);
 
             var winId = window.winId;
-            listWindowWrappersModel.append({"windowWrapper": windowWrapper, "winId": winId});
+            var appId = window.appId;
+            listWindowWrappersModel.append({"windowWrapper": windowWrapper, "winId": winId, "appId": appId});
 
             if( window.appId === "com.palm.launcher" ) {
                 // init the launcher
@@ -332,7 +349,7 @@ Item {
                 var windowWrapper = listWindowWrappersModel.get(index).windowWrapper;
 
                 if( currentActiveWindowWrapper === windowWrapper )
-                    currentActiveWindowWrapper = null;
+                    __setCurrentActiveWindowWrapper(null);
 
                 listWindowWrappersModel.remove(index);
 
@@ -361,22 +378,28 @@ Item {
         // switch the state to maximized
         windowWrapper.setNewParent(maximizedWindowWrapperContainer, false);
 
-        currentActiveWindowWrapper = windowWrapper;
         windowWrapper.windowState = WindowState.Maximized;
+        __setCurrentActiveWindowWrapper(windowWrapper);
         windowWrapper.takeFocus();
     }
     function __setToFullscreen(windowWrapper) {
         // switch the state to fullscreen
         windowWrapper.setNewParent(fullscreenWindowWrapperContainer, false);
 
-        currentActiveWindowWrapper = windowWrapper;
         windowWrapper.windowState = WindowState.Fullscreen;
+        __setCurrentActiveWindowWrapper(windowWrapper);
         windowWrapper.takeFocus();
     }
     function __setToCard(windowWrapper) {
         // switch the state to card
         windowWrapper.setNewParent(windowWrapper.cardViewParent, true);
         windowWrapper.windowState = WindowState.Carded;
+        __setCurrentActiveWindowWrapper(null);
         windowWrapper.loseFocus();
+    }
+
+    function __setCurrentActiveWindowWrapper(windowWrapper) {
+        currentActiveWindowWrapper = windowWrapper;
+        activeWindowChanged();
     }
 }

@@ -86,10 +86,6 @@ WindowManager {
         property int nbScreenshotsTaken: 0
 
         function takeScreenshot(path) {
-            if (path === undefined || path.length === 0)
-                path = "/tmp/luna-next-screenshot-" + nbScreenshotsTaken + ".png";
-
-            nbScreenshotsTaken = nbScreenshotsTaken + 1
             screenShooter.capture(path);
         }
     }
@@ -102,8 +98,8 @@ WindowManager {
 
     SystemService {
         id: systemService
-
         screenShooter: screenShooter
+        windowManager: windowManager
     }
 
     ////////// Preferences /////////////

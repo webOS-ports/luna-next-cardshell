@@ -130,9 +130,9 @@ Item {
 
         }
 
-        function onPowerKeyStatusChanged(data) {
-            var message = JSON.parse(data);
-            if (message.showDialog) {
+        function onPowerKeyStatusChanged(message) {
+            var response = JSON.parse(message.payload);
+            if (response.showDialog) {
                 root.visible = true;
             }
         }
