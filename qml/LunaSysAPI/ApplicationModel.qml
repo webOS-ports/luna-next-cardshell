@@ -39,8 +39,8 @@ ListModel {
             "{}", fillFromJSONResult, handleError);
     }
 
-    function fillFromJSONResult(data) {
-        var result = JSON.parse(data);
+    function fillFromJSONResult(message) {
+        var result = JSON.parse(message.payload);
         applicationModel.clear();
         if(result.returnValue && result.launchPoints !== undefined) {
             for(var i=0; i<result.launchPoints.length; i++) {
@@ -49,8 +49,8 @@ ListModel {
         }
     }
 
-    function handleLaunchPointChanges(data) {
-        var response = JSON.parse(data);
+    function handleLaunchPointChanges(message) {
+        var response = JSON.parse(message.payload);
 
         // skip the initial subscription confirmation
         if (response.subscribed !== undefined)
@@ -59,8 +59,8 @@ ListModel {
         refresh();
     }
 
-    function handleApplicationManagerStatusChanged(data) {
-        var response = JSON.parse(data);
+    function handleApplicationManagerStatusChanged(message) {
+        var response = JSON.parse(message.payload);
 
         if (!response.connected)
             return;
@@ -72,8 +72,8 @@ ListModel {
         refresh();
     }
 
-    function handleError(errorMessage) {
-        console.log("Failed to call application manager: " + errorMessage);
+    function handleError(message) {
+        console.log("Failed to call application manager: " + message);
     }
 
     Component.onCompleted: {

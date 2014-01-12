@@ -24,6 +24,8 @@ Item {
     property variant screenShooter
     property variant windowManager
 
+    property variant currentWindow: null
+
     LunaService {
         id: systemServicePrivate
         name: "org.webosports.luna"
@@ -31,7 +33,7 @@ Item {
         onInitialized: {
             systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
             systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);
-            systemServicePrivate.registerMethod("/", "getFocusApplication", handleGetFocusApplication);s
+            systemServicePrivate.registerMethod("/", "getFocusApplication", handleGetFocusApplication);
         }
     }
 
@@ -43,12 +45,17 @@ Item {
         }
     }
 
-    function buildErrorResponse(message) {
-        return JSON.stringify({ "returnValue": false, "errorMessage": message });
+    function buildErrorResponse(message, subscribed) {
+        var response = { "returnValue": false, "errorMessage": message };
+
+        if (typeof subscribed !== 'undefined')
+            response["subscribed"] = false;
+
+        return JSON.stringify(response);
     }
 
-    function handleTakeScreenShot(data) {
-        var request = JSON.parse(data);
+    function handleTakeScreenShot(message) {
+        var request = JSON.parse(message.payload);
 
         if (request === null)
             return buildErrorResponse("Invalid parameters.");
@@ -65,8 +72,8 @@ Item {
         return JSON.stringify({"returnValue":true});
     }
 
-    function handleFocusApplication(data) {
-        var request = JSON.parse(data);
+    function handleFocusApplication(message) {
+        var request = JSON.parse(message.payload);
 
         if (request === null)
             return buildErrorResponse("Invalid parameters.");
@@ -80,15 +87,51 @@ Item {
         return JSON.stringify({"returnValue":true});
     }
 
-    function handleGetFocusApplication(data) {
+    function handleGetFocusApplication(message) {
+        var request = JSON.parse(message.payload);
+        var subscribed = false;
+
+        if (request.subscribe) {
+            systemServicePrivate.addSubscription("/getFocusApplication", message);
+            subscribed = true;
+        }
+
         if (windowManager.currentActiveWindowWrapper === null ||
             (windowManager.currentActiveWindowWrapper.windowState !== WindowState.Maximized &&
              windowManager.currentActiveWindowWrapper.windowState !== WindowState.Fullscreen))
-            return JSON.stringify({"returnValue":true});
+            return JSON.stringify({"returnValue":true, "subscribed": subscribed});
 
         var currentWindow = windowManager.currentActiveWindowWrapper.wrappedWindow;
         return JSON.stringify({"returnValue":true,
                                "appId":currentWindow.appId,
                                "processId":currentWindow.processId});
+    }
+
+    property bool windowHasFocus: false
+
+    Connections {
+        target: windowManager
+        onActiveWindowChanged: {
+            var payload = { "returnValue": true };
+            var focusChanged = false;
+
+            if (windowManager.currentActiveWindowWrapper) {
+                var windowState = windowManager.currentActiveWindowWrapper.windowState;
+                if (windowState === WindowState.Maximized || windowState === WindowState.Fullscreen) {
+                    var currentWindow = windowManager.currentActiveWindowWrapper.wrappedWindow;
+                    payload["appId"] = currentWindow.appId;
+                    payload["processId"] = currentWindow.processId;
+                    focusChanged = true;
+                }
+            }
+
+            if (!windowHasFocus && !focusChanged)
+                return;
+
+            windowHasFocus = focusChanged;
+
+            systemServicePrivate.replyToSubscribers("/getFocusApplication",
+                                                    JSON.stringify(payload));
+        }
     }
 }

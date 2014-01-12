@@ -53,8 +53,8 @@ Item {
                                     handleError);
         }
 
-        function handlePreferencesChanged(data) {
-            var response = JSON.parse(data);
+        function handlePreferencesChanged(message) {
+            var response = JSON.parse(message.payload);
 
             if (response.hasOwnProperty("wallpaper")) {
                 preferences.wallpaperFile = response.wallpaper.wallpaperFile;
@@ -77,7 +77,7 @@ Item {
         function setPreference(key, value) {
             systemservice.call("palm://com.palm.systemservice/setPreferences",
                                     JSON.stringify({key:value}),
-                                    function (data) { },
+                                    function (message) { },
                                     handleError);
         }
     }

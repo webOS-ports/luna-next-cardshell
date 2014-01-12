@@ -69,17 +69,17 @@ Item {
         }
     }
 
-    function onAudioStatusChanged(data) {
-        var message = JSON.parse(data);
+    function onAudioStatusChanged(message) {
+        var response = JSON.parse(message.payload);
 
         // we don't indicate volume changes when sound is muted
-        if (message.mute) {
+        if (response.mute) {
             image.source = "../images/bell_off.png"
         }
         else {
             var normalizedVolume = 0;
-            if (message.volume > 0)
-                normalizedVolume = (Math.round(message.volume/10) - 1) * 10;
+            if (response.volume > 0)
+                normalizedVolume = (Math.round(response.volume/10) - 1) * 10;
             if (normalizedVolume < 0)
                 normalizedVolume = 0;
             image.source = ("../images/notification-music-indicator-" + normalizedVolume + ".png");
