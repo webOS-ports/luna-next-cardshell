@@ -20,6 +20,7 @@ import LunaNext 0.1
 
 // this should be a plugin import
 import "../WindowManager/WindowManagerServices.js" as WindowManagerServices
+import "../Utils"
 
 FakeWindowBase {
     id: dummyWindow
@@ -30,84 +31,85 @@ FakeWindowBase {
     height: 200
     width: 600
 
-    property alias scale: windowRectangle.scale
+    property alias scale: windowFlickable.scale
 
     Rectangle {
-        id: windowRectangle
-
         anchors.fill: parent
         gradient: Gradient {
             GradientStop { position: 0.0; color: "grey" }
             GradientStop { position: 1.0; color: "black" }
         }
+    }
+
+    Flickable {
+        id: windowFlickable
+        anchors.fill: parent
+        flickableDirection: Flickable.VerticalFlick
+
+        contentHeight: contentColumn.height
 
         Column {
+            id: contentColumn
+
             anchors.centerIn: parent
+            width: parent.width
             spacing: 20
 
             Text {
+                anchors.horizontalCenter: parent.horizontalCenter
                 text: "Test Window App"
                 font.pointSize: 20
                 color: "white"
             }
 
-            Text {
-                text: "Current mode: " + WindowManagerServices.getWindowState(dummyWindow)
-                font.pointSize: 20
-                font.underline: true
-                color: "white"
+            ActionButton {
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width / 2
+                height: 50
 
-                MouseArea {
-                    anchors.fill: parent;
+                caption: "Current mode: " + WindowManagerServices.getWindowState(dummyWindow)
 
-                    onClicked: {
-                        var currentState = WindowManagerServices.getWindowState(dummyWindow);
-                        // switch to the next state
-                        currentState = (currentState+1) % 4;
+                onAction: {
+                    var currentState = WindowManagerServices.getWindowState(dummyWindow);
+                    // switch to the next state
+                    currentState = (currentState+1) % 4;
 
-                        // Skip Invisible state
-                        if (currentState === 0)
-                            currentState = WindowState.Carded;
+                    // Skip Invisible state
+                    if (currentState === 0)
+                        currentState = WindowState.Carded;
 
-                        WindowManagerServices.setWindowState(dummyWindow, currentState);
-                    }
+                    WindowManagerServices.setWindowState(dummyWindow, currentState);
                 }
             }
-            Text {
-                text: "Add notification"
-                font.pointSize: 20
-                font.underline: true
-                color: "white"
+            ActionButton {
+                anchors.horizontalCenter: parent.horizontalCenter
+                caption: "Add notification"
+                width: parent.width / 2
+                height: 50
 
-                MouseArea {
-                    anchors.fill: parent;
-
-                    onClicked: {
-                        lunaNextLS2Service.call("luna://com.palm.applicationManager/createNotification",
-                                                JSON.stringify({"type": "dashboard",
-                                                                "appId": "org.webosports.tests.fakeJustTypeLauncher",
-                                                                "appIcon": "../images/glow.png"}),
-                                                undefined, undefined)
-                    }
+                onAction: {
+                    lunaNextLS2Service.call("luna://com.palm.applicationManager/createNotification",
+                                            JSON.stringify({"type": "dashboard",
+                                                            "appId": "org.webosports.tests.fakeJustTypeLauncher",
+                                                            "appIcon": "../images/glow.png"}),
+                                            undefined, undefined)
                 }
             }
-            Text {
-                text: "Kill me"
-                font.pointSize: 20
-                font.underline: true
-                color: "white"
+            ActionButton {
+                anchors.horizontalCenter: parent.horizontalCenter
+                negative: true
+                caption: "Kill me"
+                width: parent.width / 2
+                height: 50
 
-                MouseArea {
-                    anchors.fill: parent;
-
-                    onClicked: {
-                        // commit suicide
-                        dummyWindow.destroy();
-                    }
+                onAction: {
+                    // commit suicide
+                    dummyWindow.destroy();
                 }
             }
 
             TextInput {
+                anchors.horizontalCenter: parent.horizontalCenter
                 text: "try me !"
             }
         }

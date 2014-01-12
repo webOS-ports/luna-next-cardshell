@@ -17,6 +17,8 @@
 
 import QtQuick 2.0
 
+import "LunaServiceRegistering.js" as LSRegisteredMethods
+
 QtObject {
     property string name
     property string method
@@ -29,6 +31,7 @@ QtObject {
     }
 
     function call(serviceURI, jsonArgs, returnFct, handleError) {
+        console.log("LunaService::call called with serviceURI=" + serviceURI + ", args=" + jsonArgs);
         var args = JSON.parse(jsonArgs);
         if( serviceURI === "luna://com.palm.applicationManager/listLaunchPoints" ) {
             listLaunchPoints_call(args, returnFct, handleError);
@@ -39,8 +42,7 @@ QtObject {
         else if( serviceURI === "luna://com.palm.applicationManager/createNotification" ) {
             createNotification_call(args, returnFct, handleError);
         }
-
-        else {
+        else if( !(LSRegisteredMethods.executeMethod(serviceURI, jsonArgs)) ) {
             handleError("unrecognized call: " + serviceURI);
         }
     }
@@ -73,8 +75,9 @@ QtObject {
         }
     }
 
-    function registerMethod(category, name, callback) {
-        /* do nothing */
+    function registerMethod(category, fct, callback) {
+        console.log("registering " + "luna://" + name + category + fct);
+        LSRegisteredMethods.addRegisteredMethod("luna://" + name + category + fct, callback);
     }
 
     function addSubscription() {
