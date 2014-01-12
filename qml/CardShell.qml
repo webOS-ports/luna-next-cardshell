@@ -98,8 +98,8 @@ WindowManager {
 
     SystemService {
         id: systemService
-
         screenShooter: screenShooter
+        windowManager: windowManager
     }
 
     ////////// Preferences /////////////

@@ -22,6 +22,7 @@ Item {
     id: systemService
 
     property variant screenShooter
+    property variant windowManager
 
     LunaService {
         id: systemServicePrivate
@@ -29,6 +30,8 @@ Item {
         usePrivateBus: true
         onInitialized: {
             systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+            systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);
+            systemServicePrivate.registerMethod("/", "getFocusApplication", handleGetFocusApplication);s
         }
     }
 
@@ -60,5 +63,32 @@ Item {
         screenShooter.takeScreenshot(filename);
 
         return JSON.stringify({"returnValue":true});
+    }
+
+    function handleFocusApplication(data) {
+        var request = JSON.parse(data);
+
+        if (request === null)
+            return buildErrorResponse("Invalid parameters.");
+
+        if (typeof request.appId === 'undefined' || request.appId.length === 0)
+            return buildErrorResponse("Invalid application id");
+
+        if (!windowManager.focusApplication(request.appId))
+            return buildErrorResponse("Failed to focus application");
+
+        return JSON.stringify({"returnValue":true});
+    }
+
+    function handleGetFocusApplication(data) {
+        if (windowManager.currentActiveWindowWrapper === null ||
+            (windowManager.currentActiveWindowWrapper.windowState !== WindowState.Maximized &&
+             windowManager.currentActiveWindowWrapper.windowState !== WindowState.Fullscreen))
+            return JSON.stringify({"returnValue":true});
+
+        var currentWindow = windowManager.currentActiveWindowWrapper.wrappedWindow;
+        return JSON.stringify({"returnValue":true,
+                               "appId":currentWindow.appId,
+                               "processId":currentWindow.processId});
     }
 }
