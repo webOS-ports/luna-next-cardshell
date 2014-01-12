@@ -77,7 +77,7 @@ function removeTapAction(actionID) {
     var index = 0;
 
     for (var n = _listRegisteredTapActions.length-1; n >= 0; n--) {
-        actionItem = list[n];
+        var actionItem = _listRegisteredTapActions[n];
         if( actionItem.id === actionID ) {
             _listRegisteredTapActions.splice(n, 1);
         }
