@@ -242,18 +242,6 @@ WindowManager {
         windowManagerInstance: windowManager
     }
 
-    //////////  rounded corners of the main view ///////////
-    Utils.RoundedItem {
-        anchors.top: statusBarInstance.bottom
-        anchors.bottom: dashboardInstance.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-
-        cornerRadius: windowManager.cornerRadius
-
-        z: 2 // can only be hidden by a fullscreen window
-    }
-
     //////////  notification area ///////////
     Dashboard {
         id: dashboardInstance
