@@ -19,7 +19,7 @@ import QtQuick 2.0
 
 import "../LunaSysAPI" as LunaSysAPI
 
-Rectangle {
+Image {
     id: fullLauncher
 
     property real iconSize: 64
@@ -30,6 +30,9 @@ Rectangle {
     state: "hidden"
     visible: false
     anchors.top: parent.bottom
+
+    source: "../images/launcher/launcher-bg.png"
+    fillMode: Image.Tile
 
     states: [
         State {
@@ -56,8 +59,6 @@ Rectangle {
         }
     ]
 
-    color: "#2f2f2f"
-
     LunaSysAPI.ApplicationModel {
         id: appsModel
     }
@@ -67,12 +68,14 @@ Rectangle {
 
         model: appsModel
 
-        property real appIconWidth: iconSize*1.5
-        property real appIconHMargin: function (parent, appIconWidth) {
+        function calculateAppIconHMargin(parent, appIconWidth) {
             var nbCellsPerLine = Math.floor(parent.width / (appIconWidth + 10));
             var remainingHSpace = parent.width - nbCellsPerLine * appIconWidth;
             return Math.floor(remainingHSpace / nbCellsPerLine);
-        } (parent, appIconWidth)
+        }
+
+        property real appIconWidth: iconSize*1.5
+        property real appIconHMargin: calculateAppIconHMargin(parent, appIconWidth)
 
         cellWidth: appIconWidth + appIconHMargin
         cellHeight: iconSize + iconSize*0.4*2 // we give margin for two lines of text

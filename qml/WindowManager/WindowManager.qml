@@ -378,23 +378,25 @@ Item {
         // switch the state to maximized
         windowWrapper.setNewParent(maximizedWindowWrapperContainer, false);
 
+        currentActiveWindowWrapper = windowWrapper;
         windowWrapper.windowState = WindowState.Maximized;
-        __setCurrentActiveWindowWrapper(windowWrapper);
+        activeWindowChanged();
         windowWrapper.takeFocus();
     }
     function __setToFullscreen(windowWrapper) {
         // switch the state to fullscreen
         windowWrapper.setNewParent(fullscreenWindowWrapperContainer, false);
 
+        currentActiveWindowWrapper = windowWrapper;
         windowWrapper.windowState = WindowState.Fullscreen;
-        __setCurrentActiveWindowWrapper(windowWrapper);
+        activeWindowChanged();
         windowWrapper.takeFocus();
     }
     function __setToCard(windowWrapper) {
         // switch the state to card
         windowWrapper.setNewParent(windowWrapper.cardViewParent, true);
         windowWrapper.windowState = WindowState.Carded;
-        __setCurrentActiveWindowWrapper(null);
+        activeWindowChanged();
         windowWrapper.loseFocus();
     }
 

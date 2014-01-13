@@ -21,11 +21,35 @@ import LunaNext 0.1
 /// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
 /// [-- app menu -- |   --- title ---    |  -- indicators --]
 
-Rectangle {
+Item {
     id: statusBarItem
-    color: "black"
 
     property Item windowManagerInstance
+    property bool fullLauncherVisible: false
+
+    Rectangle {
+        id: coloredBackground
+        color: "#2f2f2f"
+        visible: false
+        anchors.fill: parent
+    }
+
+    Image {
+        id: background
+        anchors.fill: parent
+        source: "../images/statusbar/status-bar-background.png"
+    }
+
+    onFullLauncherVisibleChanged: {
+        if (fullLauncherVisible) {
+            coloredBackground.visible = true;
+            background.parent = coloredBackground;
+        }
+        else {
+            coloredBackground.visible = false;
+            background.parent = statusBarItem;
+        }
+    }
 
     /// general title
     Item {

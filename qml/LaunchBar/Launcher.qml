@@ -24,6 +24,7 @@ Item {
 
     property Item gestureArea
     property Item windowManagerInstance
+    property bool fullLauncherVisible: false
 
     property bool launcherActive: state === "fullLauncher" || state === "justTypeLauncher"
 
@@ -93,6 +94,7 @@ Item {
             PropertyChanges { target: fullLauncherInstance; state: "hidden" }
             PropertyChanges { target: justTypeFieldInstance; state: "hidden" }
             PropertyChanges { target: justTypeLauncherInstance; state: "hidden" }
+            PropertyChanges { target: launcherItem; fullLauncherVisible: false }
         },
         State {
             name: "launchbar"
@@ -100,6 +102,7 @@ Item {
             PropertyChanges { target: fullLauncherInstance; state: "hidden" }
             PropertyChanges { target: justTypeFieldInstance; state: "visible" }
             PropertyChanges { target: justTypeLauncherInstance; state: "hidden" }
+            PropertyChanges { target: launcherItem; fullLauncherVisible: false }
         },
         State {
             name: "fullLauncher"
@@ -107,6 +110,7 @@ Item {
             PropertyChanges { target: fullLauncherInstance; state: "visible" }
             PropertyChanges { target: justTypeFieldInstance; state: "hidden" }
             PropertyChanges { target: justTypeLauncherInstance; state: "hidden" }
+            PropertyChanges { target: launcherItem; fullLauncherVisible: true }
         },
         State {
             name: "justTypeLauncher"
@@ -114,6 +118,7 @@ Item {
             PropertyChanges { target: fullLauncherInstance; state: "hidden" }
             PropertyChanges { target: justTypeFieldInstance; state: "hidden" }
             PropertyChanges { target: justTypeLauncherInstance; state: "visible" }
+            PropertyChanges { target: launcherItem; fullLauncherVisible: true }
             StateChangeScript {
                 script: {
                     if (__justTypeLauncherWindowWrapper) {
