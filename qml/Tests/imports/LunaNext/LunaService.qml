@@ -17,6 +17,8 @@
 
 import QtQuick 2.0
 
+import "LunaServiceRegistering.js" as LSRegisteredMethods
+
 QtObject {
     property string name
     property string method
@@ -29,6 +31,7 @@ QtObject {
     }
 
     function call(serviceURI, jsonArgs, returnFct, handleError) {
+        console.log("LunaService::call called with serviceURI=" + serviceURI + ", args=" + jsonArgs);
         var args = JSON.parse(jsonArgs);
         if( serviceURI === "luna://com.palm.applicationManager/listLaunchPoints" ) {
             listLaunchPoints_call(args, returnFct, handleError);
@@ -39,8 +42,7 @@ QtObject {
         else if( serviceURI === "luna://com.palm.applicationManager/createNotification" ) {
             createNotification_call(args, returnFct, handleError);
         }
-
-        else {
+        else if( !(LSRegisteredMethods.executeMethod(serviceURI, jsonArgs)) ) {
             handleError("unrecognized call: " + serviceURI);
         }
     }
@@ -50,43 +52,45 @@ QtObject {
         if( serviceURI === "palm://com.palm.bus/signal/registerServerStatus" &&
             args.serviceName === "org.webosports.bootmgr" )
         {
-            returnFct({payload: JSON.stringify({connected: true})});
+            returnFct({"payload": JSON.stringify({"connected": true})});
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launchPointChanges" && args.subscribe)
         {
-            returnFct({payload: JSON.stringify({subscribed: true})}); // simulate subscription answer
-            returnFct({payload: "{}"});
+            returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
+            returnFct({"payload": JSON.stringify({})});
         }
         else if( serviceURI === "luna://org.webosports.bootmgr/getStatus" && args.subscribe )
         {
             console.log("bootmgr status: normal");
-            returnFct({payload: JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
+            returnFct({"payload": JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
         }
         else if( serviceURI === "palm://com.palm.systemservice/getPreferences" && args.subscribe)
         {
-            returnFct({payload: JSON.stringify({subscribed: true})}); // simulate subscription answer
-            returnFct({payload: JSON.stringify({wallpaper: { wallpaperFile: Qt.resolvedUrl("../../../images/background.jpg") }})});
+            returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
+            returnFct({"payload": JSON.stringify({"wallpaper": { "wallpaperFile": Qt.resolvedUrl("../../../images/background.jpg")}})});
         }
         else if (serviceURI === "luna://org.webosports.audio/getStatus")
         {
-            returnFct({payload: JSON.stringify({"volume":54,"mute":false})});
+            returnFct({"payload": JSON.stringify({"volume":54,"mute":false})});
         }
     }
 
-    function registerMethod(category, name, callback) {
-        /* do nothing */
+    function registerMethod(category, fct, callback) {
+        console.log("registering " + "luna://" + name + category + fct);
+        LSRegisteredMethods.addRegisteredMethod("luna://" + name + category + fct, callback);
     }
 
     function addSubscription() {
         /* do nothing */
     }
 
-    function replyToSubscribers() {
-        /* do nothing */
+    function replyToSubscribers(path, jsonArgs) {
+        console.log("replyToSubscribers " + "luna://" + name + path);
+        LSRegisteredMethods.executeMethod("luna://" + name + path, {"payload": jsonArgs});
     }
 
     function listLaunchPoints_call(jsonArgs, returnFct, handleError) {
-        returnFct({payload: JSON.stringify({"returnValue": true,
+        returnFct({"payload": JSON.stringify({"returnValue": true,
                     "launchPoints": [
              { "title": "Calendar", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "Email", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
