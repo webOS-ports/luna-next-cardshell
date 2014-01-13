@@ -67,12 +67,14 @@ Rectangle {
 
         model: appsModel
 
-        property real appIconWidth: iconSize*1.5
-        property real appIconHMargin: function (parent, appIconWidth) {
+        function calculateAppIconHMargin(parent, appIconWidth) {
             var nbCellsPerLine = Math.floor(parent.width / (appIconWidth + 10));
             var remainingHSpace = parent.width - nbCellsPerLine * appIconWidth;
             return Math.floor(remainingHSpace / nbCellsPerLine);
-        } (parent, appIconWidth)
+        }
+
+        property real appIconWidth: iconSize*1.5
+        property real appIconHMargin: calculateAppIconHMargin(parent, appIconWidth)
 
         cellWidth: appIconWidth + appIconHMargin
         cellHeight: iconSize + iconSize*0.4*2 // we give margin for two lines of text
