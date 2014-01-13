@@ -123,6 +123,7 @@ FocusScope {
         radius: cornerRadius
         visible: false
     }
+
     state: windowState === WindowState.Fullscreen ? "fullscreen" : windowState === WindowState.Maximized ? "maximized" : "card"
 
     states: [
@@ -198,7 +199,7 @@ FocusScope {
             {
                 cornerShader.visible = false;
                 cornerShader.sourceItem = null;
-                cornerStaticMask.visible = true;
+                cornerStaticMask.visible = false;
             }
         }
     }
@@ -239,7 +240,6 @@ FocusScope {
         newParentAnimation.targetHeight = newParent.height;
         newParentAnimation.useShaderForNewParent = useShader;
         newParentAnimation.start();
-
     }
 
     function startupAnimation() {
