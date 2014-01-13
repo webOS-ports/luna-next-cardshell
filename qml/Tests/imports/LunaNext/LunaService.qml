@@ -50,26 +50,26 @@ QtObject {
         if( serviceURI === "palm://com.palm.bus/signal/registerServerStatus" &&
             args.serviceName === "org.webosports.bootmgr" )
         {
-            returnFct(JSON.stringify({connected: true}));
+            returnFct({payload: JSON.stringify({connected: true})});
         }
         else if( serviceURI === "luna://com.palm.applicationManager/launchPointChanges" && args.subscribe)
         {
-            returnFct(JSON.stringify({subscribed: true})); // simulate subscription answer
-            returnFct("{}");
+            returnFct({payload: JSON.stringify({subscribed: true})}); // simulate subscription answer
+            returnFct({payload: "{}"});
         }
         else if( serviceURI === "luna://org.webosports.bootmgr/getStatus" && args.subscribe )
         {
             console.log("bootmgr status: normal");
-            returnFct(JSON.stringify({"subscribed":true, "state": "normal"})); // simulate subscription answer
+            returnFct({payload: JSON.stringify({"subscribed":true, "state": "normal"})}); // simulate subscription answer
         }
         else if( serviceURI === "palm://com.palm.systemservice/getPreferences" && args.subscribe)
         {
-            returnFct(JSON.stringify({subscribed: true})); // simulate subscription answer
-            returnFct(JSON.stringify({wallpaper: { wallpaperFile: Qt.resolvedUrl("../../../images/background.jpg") }}));
+            returnFct({payload: JSON.stringify({subscribed: true})}); // simulate subscription answer
+            returnFct({payload: JSON.stringify({wallpaper: { wallpaperFile: Qt.resolvedUrl("../../../images/background.jpg") }})});
         }
         else if (serviceURI === "luna://org.webosports.audio/getStatus")
         {
-            returnFct(JSON.stringify({"volume":54,"mute":false}));
+            returnFct({payload: JSON.stringify({"volume":54,"mute":false})});
         }
     }
 
@@ -77,8 +77,16 @@ QtObject {
         /* do nothing */
     }
 
+    function addSubscription() {
+        /* do nothing */
+    }
+
+    function replyToSubscribers() {
+        /* do nothing */
+    }
+
     function listLaunchPoints_call(jsonArgs, returnFct, handleError) {
-        returnFct(JSON.stringify({"returnValue": true,
+        returnFct({payload: JSON.stringify({"returnValue": true,
                     "launchPoints": [
              { "title": "Calendar", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "Email", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
@@ -96,7 +104,7 @@ QtObject {
              { "title": "Test5bis", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "Test6", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "End Of All Tests", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" }
-           ]}));
+           ]})});
     }
 
     function launchApp_call(jsonArgs, returnFct, handleError) {
