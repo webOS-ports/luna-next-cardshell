@@ -21,11 +21,12 @@ import LunaNext 0.1
 /// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
 /// [-- app menu -- |   --- title ---    |  -- indicators --]
 
-Rectangle {
+Image {
     id: statusBarItem
-    color: "black"
 
     property Item windowManagerInstance
+
+    source: "../images/statusbar/status-bar-background.png"
 
     /// general title
     Item {

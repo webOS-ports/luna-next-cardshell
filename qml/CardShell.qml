@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
+
 import QtQuick 2.0
 import LunaNext 0.1
 
@@ -135,7 +136,7 @@ WindowManager {
     //////////  background ///////////
     Item {
         id: background
-        anchors.top: statusBarInstance.bottom
+        anchors.top: windowManager.top
         anchors.bottom: gestureAreaInstance.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
