@@ -241,6 +241,7 @@ WindowManager {
         z: 2 // can only be hidden by a fullscreen window
 
         windowManagerInstance: windowManager
+        fullLauncherVisible: launcherInstance.fullLauncherVisible
     }
 
     //////////  notification area ///////////

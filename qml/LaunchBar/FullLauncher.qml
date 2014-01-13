@@ -19,7 +19,7 @@ import QtQuick 2.0
 
 import "../LunaSysAPI" as LunaSysAPI
 
-Rectangle {
+Image {
     id: fullLauncher
 
     property real iconSize: 64
@@ -30,6 +30,9 @@ Rectangle {
     state: "hidden"
     visible: false
     anchors.top: parent.bottom
+
+    source: "../images/launcher/launcher-bg.png"
+    fillMode: Image.Tile
 
     states: [
         State {
@@ -55,8 +58,6 @@ Rectangle {
             }
         }
     ]
-
-    color: "#2f2f2f"
 
     LunaSysAPI.ApplicationModel {
         id: appsModel
