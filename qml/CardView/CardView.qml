@@ -119,14 +119,14 @@ Item {
     function __switchToCurrentWindow() {
         var windowWrapper = windowManagerInstance.currentActiveWindowWrapper;
 
-        if (!windowWrapper || windowWrapper.wrappedWindow)
+        if (!windowWrapper || !windowWrapper.wrappedWindow)
             return;
 
         var index = listCardsModel.getIndexFromProperty("winId", windowWrapper.wrappedWindow.winId);
         if (index < 0)
             return;
 
-        if (listCardsView.currentIndex == index)
+        if (listCardsView.currentIndex === index)
             return;
 
         listCardsView.positionViewAtIndex(index, ListView.Beginning);
