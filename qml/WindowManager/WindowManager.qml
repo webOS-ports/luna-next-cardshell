@@ -309,6 +309,12 @@ Item {
         return true;
     }
 
+    function getAppIdForFocusApplication() {
+        if (!currentActiveWindowWrapper)
+            return null;
+        return currentActiveWindowWrapper.wrappedWindow.appId;
+    }
+
     ////// private methods ///////
 
     function __handleWindowAdded(window) {

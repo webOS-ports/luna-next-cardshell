@@ -38,6 +38,7 @@ qml/images/systemui/palm-notification-button-negative-press.png
 qml/images/systemui/palm-notification-button-negative.png
 qml/images/systemui/palm-notification-button-press.png
 qml/images/systemui/palm-notification-button.png
+qml/images/statusbar/*
 
 A copy of this license is included in the file
 "src/compositor/qml/images/LICENSE-APACHE-2.0.txt"

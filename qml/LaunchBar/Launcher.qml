@@ -27,6 +27,7 @@ Item {
     property bool fullLauncherVisible: false
 
     property bool launcherActive: state === "fullLauncher" || state === "justTypeLauncher"
+    property bool justTypeLauncherActive: state === "justTypeLauncher"
 
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service

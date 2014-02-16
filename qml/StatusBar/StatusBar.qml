@@ -22,10 +22,11 @@ import LunaNext 0.1
 /// [-- app menu -- |   --- title ---    |  -- indicators --]
 
 Item {
-    id: statusBarItem
+    id: statusBar
 
     property Item windowManagerInstance
     property bool fullLauncherVisible: false
+    property bool justTypeLauncherActive: false
 
     Rectangle {
         id: coloredBackground
@@ -40,57 +41,38 @@ Item {
         source: "../images/statusbar/status-bar-background.png"
 
         Item {
-            id: titleItem
+            id: title
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.horizontalCenter: parent.horizontalCenter
-
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-
             implicitWidth: titleText.contentWidth
 
             Text {
                 id: titleText
                 anchors.fill: parent
-
                 horizontalAlignment: Text.AlignHCenter
-
                 color: "white"
                 font.family: Settings.fontStatusBar
                 font.pixelSize: parent.height;
-                font.bold: true
+                font.bold: false
                 text: Qt.formatDateTime(new Date(), "dd.MM.yyyy")
             }
         }
 
-        /// app menu/cellular network provider
-        Loader {
+        AppMenu {
+            id: appMenu
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-
-            Component {
-                id: networkNameComponent
-                Item { }
-            }
-
-            Component {
-                id: appMenuComponent
-                StatusBarAppMenu {
-                    id: appMenuItem
-                }
-            }
-
-            sourceComponent: statusBarItem.state === "appSpecific" ? appMenuComponent : networkNameComponent
+            state: statusBar.state === "application-visible" || launcherInstance.state === "justTypeLauncher" ? "visible" : "hidden"
         }
 
-        /// system indicators
         SystemIndicators {
-            id: systemIndicatorsStatusBarItem
-
+            id: systemIndicators
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
@@ -104,34 +86,35 @@ Item {
         }
         else {
             coloredBackground.visible = false;
-            background.parent = statusBarItem;
+            background.parent = statusBar;
         }
     }
 
-    state: "genericStatus"
+    state: "default"
 
     states: [
         State {
             name: "hidden"
-            PropertyChanges { target: statusBarItem; visible: false }
+            PropertyChanges { target: statusBar; visible: false }
         },
         State {
-            name: "genericStatus"
-            PropertyChanges { target: statusBarItem; visible: true }
+            name: "default"
+            PropertyChanges { target: statusBar; visible: true }
         },
         State {
-            name: "appSpecific"
-            PropertyChanges { target: statusBarItem; visible: true }
+            name: "application-visible"
+            PropertyChanges { target: statusBar; visible: true }
+
         }
     ]
 
     Connections {
         target: windowManagerInstance
         onSwitchToDashboard: {
-            state = "genericStatus";
+            state = "default";
         }
         onSwitchToMaximize: {
-            state = "appSpecific";
+            state = "application-visible";
             switchBackgroundParent(true);
         }
         onSwitchToFullscreen: {
@@ -139,11 +122,11 @@ Item {
             switchBackgroundParent(true);
         }
         onSwitchToCardView: {
-            state = "genericStatus";
+            state = "default";
             switchBackgroundParent(false);
         }
         onSwitchToLauncherView: {
-            state = "appSpecific";
+            state = "default";
             switchBackgroundParent(true);
         }
     }
