@@ -242,6 +242,7 @@ WindowManager {
 
         windowManagerInstance: windowManager
         fullLauncherVisible: launcherInstance.fullLauncherVisible
+        justTypeLauncherActive: launcherInstance.justTypeLauncherActive
     }
 
     //////////  notification area ///////////
