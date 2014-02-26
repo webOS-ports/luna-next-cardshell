@@ -34,8 +34,8 @@ Item {
 
     property Item currentActiveWindowWrapper
 
-    property real defaultWindowWidth: Settings.displayWidth
-    property real defaultWindowHeight: Settings.displayHeight
+    property real defaultWindowWidth: maximizedWindowWrapperContainer.width
+    property real defaultWindowHeight: maximizedWindowWrapperContainer.height
 
     property real cornerRadius: 20
 
@@ -383,6 +383,8 @@ Item {
     function __setToMaximized(windowWrapper) {
         // switch the state to maximized
         windowWrapper.setNewParent(maximizedWindowWrapperContainer, false);
+        if( !!windowWrapper.wrappedWindow )
+            windowWrapper.wrappedWindow.changeSize(Qt.size(maximizedWindowWrapperContainer.width, maximizedWindowWrapperContainer.height));
 
         currentActiveWindowWrapper = windowWrapper;
         windowWrapper.windowState = WindowState.Maximized;
@@ -392,6 +394,8 @@ Item {
     function __setToFullscreen(windowWrapper) {
         // switch the state to fullscreen
         windowWrapper.setNewParent(fullscreenWindowWrapperContainer, false);
+        if( !!windowWrapper.wrappedWindow )
+            windowWrapper.wrappedWindow.changeSize(Qt.size(fullscreenWindowWrapperContainer.width, fullscreenWindowWrapperContainer.height));
 
         currentActiveWindowWrapper = windowWrapper;
         windowWrapper.windowState = WindowState.Fullscreen;
