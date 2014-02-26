@@ -50,6 +50,8 @@ WindowManager {
     compositorInstance: compositor
     launcherInstance: launcherInstance
 
+    cornerRadius: 5
+
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, currentActiveWindowWrapper ]
 
