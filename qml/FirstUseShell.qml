@@ -23,8 +23,13 @@ import "Utils"
 Item {
     property QtObject compositorInstance:compositor
 
+    // it looks like this QML Item will never be really destroyed when we change the
+    // source of the parent Loader. Therefore, to avoid having conflicts when creating or
+    // removing windows, we just disable the signal handler when the first use app is finished.
+    property bool ignoreSignals: false
+
     Connections {
-        target: compositorInstance
+        target: ignoreSignals?null:compositorInstance
         onWindowAdded: __handleWindowAdded(window)
         onWindowRemoved: __handleWindowRemoved(window)
     }
@@ -86,5 +91,6 @@ Item {
 
     function __handleWindowRemoved(window) {
         childWrapperFocus.childWrapper.setWrappedChild(null);
+        ignoreSignals = true;
     }
 }
