@@ -23,6 +23,7 @@ Item {
 
     property variant screenShooter
     property variant windowManager
+    property variant compositor
 
     property variant currentWindow: null
 
@@ -34,6 +35,7 @@ Item {
             systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
             systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);
             systemServicePrivate.registerMethod("/", "getFocusApplication", handleGetFocusApplication);
+            systemServicePrivate.registerMethod("/", "setDisplayState", handleSetDisplayState);
         }
     }
 
@@ -133,5 +135,25 @@ Item {
             systemServicePrivate.replyToSubscribers("/getFocusApplication",
                                                     JSON.stringify(payload));
         }
+    }
+
+    function handleSetDisplayState(message) {
+        var request = JSON.parse(message.payload);
+
+        if (!request || !request.state)
+            return buildErrorResponse("Invalid parameters.");
+
+        if (request.state === "on") {
+            DisplayController.displayOn();
+            compositor.show();
+        }
+        else if (request.state === "off") {
+            compositor.hide();
+            DisplayController.displayOff();
+        }
+        else
+            return buildErrorResponse("Invalid parameters");
+
+        return JSON.stringify({"returnValue":true});
     }
 }
