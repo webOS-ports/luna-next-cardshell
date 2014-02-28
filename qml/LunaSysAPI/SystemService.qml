@@ -23,7 +23,7 @@ Item {
 
     property variant screenShooter
     property variant windowManager
-    property variant compositor
+    property QtObject compositorInstance
 
     property variant currentWindow: null
 
@@ -145,10 +145,10 @@ Item {
 
         if (request.state === "on") {
             DisplayController.displayOn();
-            compositor.show();
+            compositorInstance.show();
         }
         else if (request.state === "off") {
-            compositor.hide();
+            compositorInstance.hide();
             DisplayController.displayOff();
         }
         else

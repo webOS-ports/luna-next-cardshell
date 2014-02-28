@@ -103,7 +103,7 @@ WindowManager {
         id: systemService
         screenShooter: screenShooter
         windowManager: windowManager
-        compositor: compositor
+        compositorInstance: compositor
     }
 
     ////////// Preferences /////////////
