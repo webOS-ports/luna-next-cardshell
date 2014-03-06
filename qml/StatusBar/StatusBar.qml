@@ -27,6 +27,8 @@ Item {
     property Item windowManagerInstance
     property bool fullLauncherVisible: false
     property bool justTypeLauncherActive: false
+    property Item batteryService
+    property Item wifiService
 
     Rectangle {
         id: coloredBackground

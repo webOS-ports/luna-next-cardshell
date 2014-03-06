@@ -17,6 +17,8 @@
  */
 
 import QtQuick 2.0
+import LunaNext 0.1
+import "../Connectors"
 
 Row {
     id: indicatorsRow
@@ -69,8 +71,11 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        signalLevel: -1
-        enabled: false
+        WiFiService {
+            id: wifiService
+        }
+
+        enabled: wifiService.powered
 
         onEnabledChanged: {
             if( enabled ) {
@@ -82,12 +87,18 @@ Row {
         }
     }
 
+
     BatteryIndicator {
         id: batteryIndicator
 
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        batteryLevel: 0
+        BatteryService {
+            id: batteryService
+        }
+
+        level: batteryService.level
+        charging: batteryService.charging
     }
 }
