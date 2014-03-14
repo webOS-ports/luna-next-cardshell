@@ -38,6 +38,9 @@ Compositor {
         property QtObject compositor: compositor
 
         anchors.fill: parent
+
+        focus: true
+        onSourceChanged: Keys.forwardTo = [ mainShellLoader.item ]
     }
 
     BootLoader {
