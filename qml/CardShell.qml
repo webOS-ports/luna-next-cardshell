@@ -27,6 +27,7 @@ import "WindowManager"
 import "LunaSysAPI"
 import "Utils" as Utils
 import "Alerts"
+import "Connectors"
 
 // The window manager has two roles:
 //  1. it manages the creation/destruction of
@@ -54,6 +55,7 @@ WindowManager {
 
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, currentActiveWindowWrapper ]
+
 
     //////////  fps counter ///////////
     Loader {

@@ -18,34 +18,17 @@
 
 import QtQuick 2.0
 import LunaNext 0.1
+import Connman 0.2
 
-BaseIndicator {
-    id: wifiIndicator
+Item {
+    id: wifiService
 
+    property bool powered: wifiModel.powered
+    property bool connected: wifiModel.connected
     property int signalLevel: 0
 
-    indicatorImage: batteryIcon
-
-    Image {
-        id: batteryIcon
-
-        fillMode: Image.PreserveAspectFit
-        smooth: true
-
-        source: __getIconForSignalLevel(signalLevel)
-    }
-
-    function __getIconForSignalLevel(level) {
-        var baseName = "../images/statusbar/wifi-";
-
-        var normalizedLevel = level;
-        if (level > 3) {
-            normalizedLevel = "3";
-        }
-        else if (level < 0) {
-            normalizedLevel = "connecting";
-        }
-
-        return baseName + normalizedLevel + ".png";
+    TechnologyModel {
+        id: wifiModel
+        name: "wifi"
     }
 }

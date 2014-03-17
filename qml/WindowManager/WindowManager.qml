@@ -299,6 +299,13 @@ Item {
         if (typeof appId === 'undefined' || appId.length === 0)
             return false;
 
+        /* Focusing the launcher app isn't possible as it's not handled like other
+         * windows so we have to reject this here. One case where this will happen
+         * is when the app menu for the launcher app should be shown but in that case
+         * the launcher app should already have the focus so nothing left to for us */
+        if (appId === "com.palm.launcher")
+            return false;
+
         var index = listWindowWrappersModel.getIndexFromProperty("appId", appId);
         if (index < 0)
             return false;

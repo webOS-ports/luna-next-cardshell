@@ -22,7 +22,7 @@ import LunaNext 0.1
 BaseIndicator {
     id: batteryIndicator
 
-    property int batteryLevel: 0
+    property int level: -1
     property bool charging: false
 
     indicatorImage: batteryIcon
@@ -33,19 +33,7 @@ BaseIndicator {
         fillMode: Image.PreserveAspectFit
         smooth: true
 
-        source: __getIconForBatteryLevel(batteryLevel, charging)
-    }
-
-    Connections {
-        target: statusBarServicesConnector
-
-        onSignalBatteryLevelUpdated: {
-            // batteryLevel goes from 0 to 12.
-            batteryIndicator.batteryLevel = Math.floor((percentage * 12) / 100);
-        }
-        onSignalChargingStateUpdated: {
-            batteryIndicator.charging = charging;
-        }
+        source: __getIconForBatteryLevel(level, charging)
     }
 
     function __getIconForBatteryLevel(level, isCharging) {
@@ -65,6 +53,8 @@ BaseIndicator {
                 baseName += "charging-";
         }
 
-        return baseName + normalizedLevel + ".png";
+        var result = baseName + normalizedLevel + ".png";
+        console.log("battery icon: " + result);
+        return result;
     }
 }
