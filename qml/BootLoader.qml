@@ -78,23 +78,34 @@ Item {
             NumberAnimation { duration: 1000 }
         }
 
-        Image {
-            id: logoNormal
-            anchors.centerIn: parent
-            source: "images/webosports-logo-normal.png"
-            width: parent.width/2
-            height: parent.height/2
-            fillMode: Image.PreserveAspectFit
-        }
+        /* glow percentage, between 0 and 1 */
+        property real glow: 0
 
         Image {
             id: logoGlow
-            anchors.centerIn: logoNormal
-            source: "images/webosports-logo-glow.png"
-            width: logoNormal.width
-            height: logoNormal.height
+            anchors.centerIn: logoMoon
+            source: "images/boot/glow-bg.png"
+            width: Math.min(parent.width, parent.height)
+            height: Math.min(parent.width, parent.height)
             fillMode: Image.PreserveAspectFit
-            opacity: 0.1
+            opacity: 0.1 + 0.9*bootScreenItem.glow
+        }
+
+        Image {
+            id: logoMoon
+            anchors.centerIn: parent
+            source: "images/boot/moon.png"
+            fillMode: Image.PreserveAspectFit
+            opacity: 0.7 + 0.3*bootScreenItem.glow
+        }
+
+        Image {
+            id: logoText
+            anchors.horizontalCenter: logoMoon.horizontalCenter
+            anchors.verticalCenter: logoMoon.verticalCenter
+            anchors.verticalCenterOffset: 160
+            source: "images/boot/lune-os-txt.png"
+            fillMode: Image.PreserveAspectFit
         }
 
         SequentialAnimation {
@@ -103,21 +114,21 @@ Item {
             loops: Animation.Infinite
 
             NumberAnimation {
-                target: logoGlow
-                properties: "opacity"
-                from: 0.1
-                to: 1.0
+                target: bootScreenItem
+                properties: "glow"
+                from: 0
+                to: 1
                 easing.type: Easing.Linear
-                duration: 700
+                duration: 1200
             }
 
             NumberAnimation {
-                target: logoGlow
-                properties: "opacity"
-                from: 1.0
-                to: 0.1
+                target: bootScreenItem
+                properties: "glow"
+                from: 1
+                to: 0
                 easing.type: Easing.Linear
-                duration: 700
+                duration: 1200
             }
         }
     }
