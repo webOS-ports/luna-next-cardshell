@@ -37,6 +37,20 @@ Item {
 
     scale:  isCurrent ? 1.0: 0.9
 
+    BorderImage {
+        source: Qt.resolvedUrl("../images/card-shadow-tile.png");
+        //sourceSize: Qt.size(87,87);
+
+        anchors.centerIn: cardWindowWrapper
+        width: cardWindowWrapper.width+2*30
+        height: cardWindowWrapper.height+2*30
+
+        border { left: 30; top: 30; right: 30; bottom: 30 }
+        horizontalTileMode: BorderImage.Stretch
+        verticalTileMode: BorderImage.Stretch
+
+    }
+
     Item {
         id: cardWindowWrapper
 

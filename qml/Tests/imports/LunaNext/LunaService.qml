@@ -42,6 +42,9 @@ QtObject {
         else if( serviceURI === "luna://com.palm.applicationManager/createNotification" ) {
             createNotification_call(args, returnFct, handleError);
         }
+        else if( serviceURI === "palm://com.palm.applicationManager/getAppInfo" ) {
+            giveFakeAppInfo_call(args, returnFct, handleError);
+        }
         else if( !(LSRegisteredMethods.executeMethod(serviceURI, jsonArgs)) ) {
             handleError("unrecognized call: " + serviceURI);
         }
@@ -109,6 +112,10 @@ QtObject {
              { "title": "Test6", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "End Of All Tests", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" }
            ]})});
+    }
+
+    function giveFakeAppInfo_call(args, returnFct, handleError) {
+        returnFct({"payload": JSON.stringify({"returnValue": true, "appInfo": { "appmenu": "Fake App" } })});
     }
 
     function launchApp_call(jsonArgs, returnFct, handleError) {
