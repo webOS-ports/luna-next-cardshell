@@ -22,7 +22,7 @@ import LunaNext 0.1
 Item {
     id: launcherItem
 
-    property Item gestureArea
+    property Item gestureAreaInstance
     property Item windowManagerInstance
     property bool fullLauncherVisible: false
 
@@ -50,7 +50,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
 
         onShowJustType: {
-            if( !!__justTypeLauncherWindowWrapper ) {
+            if( !!__justTypeLauncherWindow ) {
                 launcherItem.state = "justTypeLauncher";
             }
         }
@@ -75,7 +75,14 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        onToggleLauncherDisplay: switchToNextState();
+        onToggleLauncherDisplay: {
+            if( launcherItem.state === "launchbar" ) {
+                launcherItem.state = "fullLauncher";
+            }
+            else {
+                launcherItem.state = "launchbar";
+            }
+        }
     }
 
     // JustType launcher window container
@@ -84,6 +91,7 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
+        height: launcherItem.height
     }
 
     state: "launchbar"
@@ -104,6 +112,7 @@ Item {
             PropertyChanges { target: justTypeFieldInstance; state: "visible" }
             PropertyChanges { target: justTypeLauncherInstance; state: "hidden" }
             PropertyChanges { target: launcherItem; fullLauncherVisible: false }
+            StateChangeScript { script: windowManagerInstance.switchToCardView() }
         },
         State {
             name: "fullLauncher"
@@ -112,6 +121,7 @@ Item {
             PropertyChanges { target: justTypeFieldInstance; state: "hidden" }
             PropertyChanges { target: justTypeLauncherInstance; state: "hidden" }
             PropertyChanges { target: launcherItem; fullLauncherVisible: true }
+            StateChangeScript { script: windowManagerInstance.switchToLauncherView() }
         },
         State {
             name: "justTypeLauncher"
@@ -122,36 +132,15 @@ Item {
             PropertyChanges { target: launcherItem; fullLauncherVisible: true }
             StateChangeScript {
                 script: {
-                    if (__justTypeLauncherWindowWrapper) {
+                    if (__justTypeLauncherWindow) {
                         // take focus for receiving input events
-                        __justTypeLauncherWindowWrapper.takeFocus();
+                        __justTypeLauncherWindow.takeFocus();
                     }
                 }
             }
+            StateChangeScript { script: windowManagerInstance.switchToLauncherView() }
         }
     ]
-
-    Connections {
-        target: windowManagerInstance
-        onSwitchToDashboard: {
-            state = "hidden";
-        }
-        onSwitchToMaximize: {
-            state = "hidden";
-        }
-        onSwitchToFullscreen: {
-            state = "hidden";
-        }
-        onSwitchToCardView: {
-            state = "launchbar";
-        }
-
-        onSwitchToLauncherView: {
-            if( !launcherActive ) {
-                state = "fullLauncher";
-            }
-        }
-    }
 
     function launchApplication(id, params) {
         console.log("launching app " + id + " with params " + params);
@@ -179,25 +168,69 @@ Item {
         state = "fullLauncher";
     }
 
-    function switchToNextState() {
-        if( state === "hidden" ) {
-            windowManagerInstance.cardViewMode();
+
+    Connections {
+        target: windowManagerInstance
+        onSwitchToDashboard: {
+            gestureAreaConnections.target = null;
+            state = "hidden";
         }
-        else if( state === "launchbar" ) {
-            windowManagerInstance.expandedLauncherMode();
+        onSwitchToMaximize: {
+            gestureAreaConnections.target = null;
+            state = "hidden";
         }
-        else if( state === "fullLauncher" ) {
-            windowManagerInstance.cardViewMode();
+        onSwitchToFullscreen: {
+            gestureAreaConnections.target = null;
+            state = "hidden";
+        }
+        onSwitchToCardView: {
+            gestureAreaConnections.target = gestureAreaInstance;
+            state = "launchbar";
+        }
+        onSwitchToLauncherView: {
+            gestureAreaConnections.target = gestureAreaInstance;
+            if( !launcherActive ) {
+                state = "fullLauncher";
+            }
         }
     }
 
-    function initJustTypeLauncherApp(windowWrapper, winId) {
-        if( !__justTypeLauncherWindowWrapper )
+    ///////// gesture area management ///////////
+    Connections {
+        id: gestureAreaConnections
+        target: gestureAreaInstance
+        onTapGesture: {
+            state = "launchbar";
+        }
+        onSwipeUpGesture:{
+            if( state === "launchbar" ) {
+                state = "fullLauncher";
+            }
+            else {
+                state = "launchbar";
+            }
+        }
+        onSwipeLeftGesture:{
+            state = "launchbar";
+        }
+    }
+
+    WindowModel {
+        id: launcherListModel
+        windowTypeFilter: WindowType.Launcher
+
+        onRowsInserted: {
+            initJustTypeLauncherApp(launcherListModel.get(launcherListModel.count-1).window);
+        }
+    }
+
+    function initJustTypeLauncherApp(window) {
+        if( !__justTypeLauncherWindow )
         {
-            __justTypeLauncherWindowWrapper = windowWrapper;
-            windowWrapper.setNewParent(justTypeLauncherInstance, false);
+            __justTypeLauncherWindow = window;
+            justTypeLauncherInstance.setLauncherWindow(window);
         }
     }
 
-    property Item __justTypeLauncherWindowWrapper;
+    property Item __justTypeLauncherWindow;
 }

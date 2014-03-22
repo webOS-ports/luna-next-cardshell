@@ -26,7 +26,8 @@ Item {
         width: cornerRadius
         height: cornerRadius
         source: "../images/wm-corner-top-left.png"
-        sourceSize: Qt.size(cornerRadius, cornerRadius)
+        sourceSize.width: cornerRadius
+        sourceSize.height: 0 // ratio will be kept (see Image documentation)
     }
     Image {
         anchors.top: parent.top
@@ -34,7 +35,8 @@ Item {
         width: cornerRadius
         height: cornerRadius
         source: "../images/wm-corner-top-right.png"
-        sourceSize: Qt.size(cornerRadius, cornerRadius)
+        sourceSize.width: cornerRadius
+        sourceSize.height: 0 // ratio will be kept (see Image documentation)
     }
     Image {
         anchors.bottom: parent.bottom
@@ -42,7 +44,8 @@ Item {
         width: cornerRadius
         height: cornerRadius
         source: "../images/wm-corner-bottom-left.png"
-        sourceSize: Qt.size(cornerRadius, cornerRadius)
+        sourceSize.width: cornerRadius
+        sourceSize.height: 0 // ratio will be kept (see Image documentation)
     }
     Image {
         anchors.bottom: parent.bottom
@@ -50,6 +53,7 @@ Item {
         width: cornerRadius
         height: cornerRadius
         source: "../images/wm-corner-bottom-right.png"
-        sourceSize: Qt.size(cornerRadius, cornerRadius)
+        sourceSize.width: cornerRadius
+        sourceSize.height: 0 // ratio will be kept (see Image documentation)
     }
 }

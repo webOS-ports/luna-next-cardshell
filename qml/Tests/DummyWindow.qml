@@ -47,6 +47,7 @@ FakeWindowBase {
         flickableDirection: Flickable.VerticalFlick
 
         contentHeight: contentColumn.height
+        clip: true
 
         Column {
             id: contentColumn
@@ -57,7 +58,7 @@ FakeWindowBase {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Test Window App"
+                text: "Test Window App " + winId
                 font.pointSize: 20
                 color: "white"
             }
@@ -67,18 +68,20 @@ FakeWindowBase {
                 width: parent.width / 2
                 height: 50
 
-                caption: "Current mode: " + WindowManagerServices.getWindowState(dummyWindow)
+                caption: "Current mode: " + (dummyWindow.userData ? dummyWindow.userData.windowState : -1)
 
                 onAction: {
-                    var currentState = WindowManagerServices.getWindowState(dummyWindow);
-                    // switch to the next state
-                    currentState = (currentState+1) % 4;
+                    if( dummyWindow.userData ) {
+                        var currentState = dummyWindow.userData.windowState;
+                        // switch to the next state
+                        currentState = (currentState+1) % 4;
 
-                    // Skip Invisible state
-                    if (currentState === 0)
-                        currentState = WindowState.Carded;
+                        // Skip Invisible state
+                        if (currentState === 0)
+                            currentState = WindowState.Carded;
 
-                    WindowManagerServices.setWindowState(dummyWindow, currentState);
+                        dummyWindow.userData.windowState = currentState;
+                    }
                 }
             }
             ActionButton {

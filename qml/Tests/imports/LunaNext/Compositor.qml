@@ -26,6 +26,9 @@ Item {
     signal windowShown(Item window);
     signal windowHidden(Item window);
 
+    signal windowAddedInListModel(Item window);
+    signal windowRemovedFromListModel(Item window);
+
     property Item statusBarServicesConnector: StatusBarServicesConnector {}
 
     QtObject {
@@ -69,11 +72,13 @@ Item {
     }
 
     function createFakeWindow(name, options) {
+        console.log("createFakeWindow: Creating " + name + " window");
         var windowComponent = Qt.createComponent("../../" + name + ".qml");
         var window = windowComponent.createObject(compositor, options);
         window.winId = localProperties.getNextWinId();
 
         listWindowsModel.append({"window": window, "winId": window.winId});
+        compositor.windowAddedInListModel(window);
 
         compositor.windowAdded(window);
     }
@@ -87,9 +92,12 @@ Item {
         if( window )
         {
             console.log("About to destroy window: " + window);
+
+            listWindowsModel.remove(indexWindow); // this will delete the userData
+            compositor.windowRemovedFromListModel(window);
+
             windowRemoved(window); // I do hope this is synchronous ?
 
-            listWindowsModel.remove(indexWindow);
             window.destroy();
         }
     }

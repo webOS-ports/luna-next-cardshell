@@ -1,163 +1,269 @@
-/*
- * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
- */
-
 import QtQuick 2.0
+import LunaNext 0.1
 
 import "../Utils"
 
 Item {
     id: cardViewItem
 
-    property Item windowManagerInstance;
-    focus: true
-    Keys.forwardTo: listCardsView
+    property QtObject compositorInstance
+    property Item gestureAreaInstance
+    property Item windowManagerInstance
 
-    ExtendedListModel {
-        // This model contains the list of the cards
-        id: listCardsModel
+    property real maximizedCardTopMargin;
+    property real defaultWindowWidth: cardViewItem.width
+    property real defaultWindowHeight: cardViewItem.height - maximizedCardTopMargin
+
+    property Item currentActiveWindow: cardListViewInstance.currentCardIndex>=0?cardsModel.get(cardListViewInstance.currentCardIndex).window:null
+    property bool isCurrentCardActive: currentActiveWindow &&
+                                       currentActiveWindow.userData.windowState !== WindowState.Carded
+
+
+    property real cornerRadius: 20
+
+    focus: true
+    Keys.forwardTo: cardListViewInstance
+
+    /* this WindowModel could be moved down to CardListView eventually */
+    WindowModel {
+        id: cardsModel
+        windowTypeFilter: WindowType.Card
     }
 
-    ListView {
-        id: listCardsView
+    CardListView {
+        id: cardListViewInstance
 
-        anchors.fill: parent
+        anchors.fill: cardViewItem
+        listCardsModel: cardsModel
+        maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin
 
-        property real cardScale: 0.6
-        property real cardWindowWidth: width*cardScale
-        property real cardWindowHeight: height*cardScale
-
-        preferredHighlightBegin: width/2-cardWindowWidth/2
-        preferredHighlightEnd: width/2+cardWindowWidth/2
-        highlightRangeMode: ListView.StrictlyEnforceRange
-
-        model: listCardsModel
-        spacing: 0
-        orientation: ListView.Horizontal
-        smooth: true
-        focus: true
-
-        delegate: SlidingItemArea {
-            id: slidingCardDelegate
-
-            anchors.verticalCenter: parent.verticalCenter
-            height: listCardsView.height
-            width: listCardsView.cardWindowWidth
-
-            slidingTargetItem: cardDelegateContainer
-            slidingAxis: Drag.YAxis
-            minTreshold: 0.2
-            maxTreshold: 0.8
-            slidingEnabled: ListView.isCurrentItem && !!model.cardWindowInstance && model.cardWindowInstance.isWindowCarded()
-            filterChildren: true
-            slideOnRight: false
-
-            onSlidedLeft: {
-                cardDelegateContainer.deleteCardWindowOnDestruction = true;
-                var cardWindowInstance = model.cardWindowInstance;
-                // remove card from model
-                listCardsModel.remove(ListView.view.currentIndex);
-                // remove window
-                windowManagerInstance.removeWindow(cardWindowInstance.windowWrapper);
-            }
-
-            onSliderClicked: {
-                // maximize window
-                windowManagerInstance.maximizedMode()
-            }
-
-            CardWindowDelegate {
-                id: cardDelegateContainer
-
-                anchors.horizontalCenter: parent.horizontalCenter
-                y: slidingCardDelegate.height/2 - cardDelegateContainer.height/2
-                height: listCardsView.cardWindowHeight
-                width: listCardsView.cardWindowWidth
-
-                isCurrent: slidingCardDelegate.ListView.isCurrentItem
-
-                cardWindow: model.cardWindowInstance
-            }
+        onCardRemove: cardViewItem.removeCard(window);
+        onCardSelect: {
+            cardViewItem.state = "maximizedCard";
         }
     }
+
+
+    function removeCard(window) {
+        console.log("CardView.removeCard(" + window +"): calling closeWindowWithId(" + window.winId + ")");
+        compositorInstance.closeWindowWithId(window.winId);
+    }
+
+    function setCurrentCard(window) {
+        if( currentActiveWindow === window ) return;
+
+        // First, put the previously current card into card mode
+        if( currentActiveWindow )
+            __setToCard(currentActiveWindow);
+
+        // Then make the change
+        __setCurrentActiveWindow(window);
+    }
+
+    function setCurrentCardState(windowState) {
+        if( !currentActiveWindow ) return;
+
+        if( windowState === WindowState.Carded ) {
+            state = "cardList";
+        }
+        else if( windowState === WindowState.Maximized ) {
+            state = "maximizedCard";
+        }
+        else if( state === WindowState.Fullscreen ) {
+            state = "fullscreenCard";
+        }
+    }
+
+    function focusApplication(appId) {
+        if (typeof appId === 'undefined' || appId.length === 0)
+            return false;
+
+        /* Focusing the launcher app isn't possible as it's not handled like other
+         * windows so we have to reject this here. One case where this will happen
+         * is when the app menu for the launcher app should be shown but in that case
+         * the launcher app should already have the focus so nothing left to for us */
+        if (appId === "com.palm.launcher")
+            return false;
+
+        var window=null;
+        var i=0;
+        for(i=0; i<cardsModel.count;i++) {
+            window = cardsModel.get(i).window
+            if(window && window.appdId === appId) {
+                setCurrentCard(window);
+                setCurrentCardState(WindowState.Maximized);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function getAppIdForFocusApplication() {
+        if (!currentActiveWindow)
+            return null;
+        return currentActiveWindow.appId;
+    }
+
+    state: "cardList"
+    states: [
+        State {
+            name: "cardList";
+            PropertyChanges { target: cardListViewInstance; interactiveList: true }
+            StateChangeScript {
+                script: {
+                    // we're back to card view so no card should have the focus
+                    // for the keyboard anymore
+                    if( compositorInstance )
+                        compositorInstance.clearKeyboardFocus();
+
+                    if( cardViewItem.currentActiveWindow )
+                        __setToCard(cardViewItem.currentActiveWindow);
+
+                    windowManagerInstance.switchToCardView();
+                }
+            }
+        },
+        State {
+            name: "maximizedCard";
+            PropertyChanges { target: cardListViewInstance; interactiveList: false }
+            StateChangeScript {
+                script: {
+                    if( cardViewItem.currentActiveWindow ) {
+                        __setToMaximized(cardViewItem.currentActiveWindow);
+
+                        windowManagerInstance.switchToMaximize(cardViewItem.currentActiveWindow);
+                    }
+                }
+            }
+        },
+        State {
+            name: "fullscreenCard";
+            PropertyChanges { target: cardListViewInstance; interactiveList: false }
+            StateChangeScript {
+                script: {
+                    if( cardViewItem.currentActiveWindow ) {
+                        __setToFullscreen(cardViewItem.currentActiveWindow);
+
+                        windowManagerInstance.switchToFullscreen(cardViewItem.currentActiveWindow);
+                    }
+                }
+            }
+        }
+    ]
 
     Connections {
         target: windowManagerInstance
         onSwitchToDashboard: {
-            listCardsView.enabled = false;
+            gestureAreaConnections.target = gestureAreaInstance
         }
         onSwitchToMaximize: {
-            listCardsView.enabled = false;
+            gestureAreaConnections.target = gestureAreaInstance
         }
         onSwitchToFullscreen: {
-            listCardsView.enabled = false;
+            gestureAreaConnections.target = gestureAreaInstance
         }
         onSwitchToCardView: {
-            listCardsView.enabled = true;
+            gestureAreaConnections.target = gestureAreaInstance
         }
         onSwitchToLauncherView: {
-            listCardsView.enabled = false;
-        }
-        onActiveWindowChanged: {
-            __switchToCurrentWindow();
+            gestureAreaConnections.target = null
         }
     }
 
-    function __switchToCurrentWindow() {
-        var windowWrapper = windowManagerInstance.currentActiveWindowWrapper;
-
-        if (!windowWrapper || !windowWrapper.wrappedWindow)
-            return;
-
-        var index = listCardsModel.getIndexFromProperty("winId", windowWrapper.wrappedWindow.winId);
-        if (index < 0)
-            return;
-
-        if (listCardsView.currentIndex === index)
-            return;
-
-        listCardsView.positionViewAtIndex(index, ListView.Beginning);
+    ///////// gesture area management ///////////
+    Connections {
+        id: gestureAreaConnections
+        target: gestureAreaInstance
+        onTapGesture: {
+            if( cardViewItem.isCurrentCardActive ) {
+                cardViewItem.setCurrentCardState(WindowState.Carded);
+            }
+            else {
+                cardViewItem.setCurrentCardState(WindowState.Maximized);
+            }
+        }
+        onSwipeUpGesture:{
+            if( cardViewItem.isCurrentCardActive ) {
+                cardViewItem.setCurrentCardState(WindowState.Carded);
+            }
+        }
+        onSwipeLeftGesture:{
+            if( cardViewItem.isCurrentCardActive )
+                cardViewItem.currentActiveWindow.postEvent(EventType.CoreNaviBack);
+        }
+        onSwipeRightGesture:{
+            if( cardViewItem.isCurrentCardActive )
+                cardViewItem.currentActiveWindow.postEvent(EventType.CoreNaviNext);
+        }
     }
 
-    function appendCard(windowWrapper, winId) {
-        // First, instantiate a new card
-        var cardComponent = Qt.createComponent("CardWindow.qml");
-
-        var cardComponentInstance = cardComponent.createObject(listCardsView,
-                           {"view": listCardsView,
-                            "windowWrapper": windowWrapper});
-
-        listCardsModel.append({"cardWindowInstance": cardComponentInstance,"winId":windowWrapper.wrappedWindow.winId});
-        listCardsView.positionViewAtEnd();
+    ///////// private section //////////
+    Connections {
+        target: compositorInstance
+        onWindowAdded: __handleWindowAdded(window)
+        onWindowRemoved: __handleWindowRemoved(window)
     }
 
-    function removeCard(windowWrapper, winId) {
-        // Find the corresponding card
-        var i=0;
-        for(i=0; i<listCardsModel.count;i++) {
-            var cardWindow=listCardsModel.get(i).cardWindowInstance;
-            if(cardWindow && cardWindow.windowWrapper === windowWrapper) {
-                // remove the card instance from the model
-                listCardsModel.remove(i);
-                // actually destroy the card instance. The window wrapper will be destroyed
-                // by the window manager.
-                cardWindow.destroy();
-                break;
+    function __handleWindowAdded(window) {
+        if( window.windowType === WindowType.Card ) {
+            // Create the window container
+            var windowWrapperComponent = Qt.createComponent("CardWindowWrapper.qml");
+            var windowWrapper = windowWrapperComponent.createObject(cardViewItem, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2, "y": gestureAreaInstance.y});
+            windowWrapper.cardView = cardViewItem;
+            windowWrapper.cornerRadius = cornerRadius
+
+            // Bind the container with its app window
+            windowWrapper.setWrappedWindow(window);
+        }
+    }
+
+    function __handleWindowRemoved(window) {
+        if( window.windowType === WindowType.Card ) {
+            var windowWrapper = window.userData;
+            if( !!windowWrapper ) {
+                windowWrapper.setWrappedWindow(null);
+                windowWrapper.destroy();
+            }
+        }
+    }
+
+    function __setToMaximized(window) {
+        // set the card as the active one
+        __setCurrentActiveWindow(window);
+        window.userData.takeFocus();
+
+        // switch the state to maximized
+        window.userData.windowState = WindowState.Maximized;
+        if( !!window )
+            window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
+    }
+    function __setToFullscreen(window) {
+        // set the card as the active one
+        __setCurrentActiveWindow(window);
+        window.userData.takeFocus();
+
+        // switch the state to fullscreen
+        window.userData.windowState = WindowState.Fullscreen;
+        if( !!window )
+            window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height));
+    }
+    function __setToCard(window) {
+        // switch the state to card
+        window.userData.loseFocus();
+        window.userData.windowState = WindowState.Carded;
+    }
+
+    function __setCurrentActiveWindow(window) {
+        if( currentActiveWindow !== window ) {
+            var i;
+            for(i=0; i<cardsModel.count;i++) {
+                var item=cardsModel.get(i);
+                if(item && item.window === window) {
+                    cardListViewInstance.currentCardIndex = i;
+                    break;
+                }
             }
         }
     }
 }
-

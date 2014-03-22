@@ -50,4 +50,16 @@ Item {
             }
         }
     ]
+
+    function setLauncherWindow(window) {
+        window.parent = justTypeLauncher;
+        justTypeLauncher.children = [ window ];
+
+        /* This resizes only the quick item which contains the child surface but
+         * doesn't really resize the client window */
+        window.anchors.fill = justTypeLauncher;
+
+        /* Resize the real client window to have the right size */
+        window.changeSize(Qt.size(justTypeLauncher.width, justTypeLauncher.height));
+    }
 }

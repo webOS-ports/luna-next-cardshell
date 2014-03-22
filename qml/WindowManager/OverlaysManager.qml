@@ -24,12 +24,13 @@ import "../Utils"
 Item {
     id: overlaysManagerItem
 
-    // a backlink to the window manager instance
-    property variant windowManagerInstance
-
-    ExtendedListModel {
-        // This model contains the list of the overlays
+    WindowModel {
         id: listOverlaysModel
+        windowTypeFilter: WindowType.Overlay
+
+        onRowsInserted: {
+            appendOverlayWindow(launcherListModel.get(launcherListModel.count-1).window);
+        }
     }
 
     function dumpObject(object) {
@@ -41,24 +42,10 @@ Item {
     }
 
     function appendOverlayWindow(window) {
-        if( window.windowType === WindowType.Overlay )
-        {
-            listOverlaysModel.append({"overlayWindow": window});
+        console.log("OverlayManager: adding " + window);
 
-            console.log("OverlayManager: adding " + window + " as window " + (listOverlaysModel.count-1));
-
-            window.parent = overlaysManagerItem;
-            window.anchors.bottom = overlaysManagerItem.bottom;
-            window.anchors.horizontalCenter = overlaysManagerItem.horizontalCenter;
-        }
-    }
-
-    function removeOverlayWindow(window) {
-        if( window.windowType === WindowType.Overlay )
-        {
-            var index = listOverlaysModel.getIndexFromProperty("overlayWindow", window);
-            if( index >= 0 )
-                listOverlaysModel.remove(index);
-        }
+        window.parent = overlaysManagerItem;
+        window.anchors.bottom = overlaysManagerItem.bottom;
+        window.anchors.horizontalCenter = overlaysManagerItem.horizontalCenter;
     }
 }
