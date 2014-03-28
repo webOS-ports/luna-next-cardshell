@@ -31,16 +31,9 @@ Item {
     property Item wifiService
 
     Rectangle {
-        id: coloredBackground
-        color: "#2f2f2f"
-        visible: false
-        anchors.fill: parent
-    }
-
-    Image {
         id: background
         anchors.fill: parent
-        source: "../images/statusbar/status-bar-background.png"
+        color: "black"
 
         Item {
             id: title
@@ -81,17 +74,6 @@ Item {
         }
     }
 
-    function switchBackgroundParent(value) {
-        if (value) {
-            coloredBackground.visible = true;
-            background.parent = coloredBackground;
-        }
-        else {
-            coloredBackground.visible = false;
-            background.parent = statusBar;
-        }
-    }
-
     state: "default"
 
     states: [
@@ -106,7 +88,6 @@ Item {
         State {
             name: "application-visible"
             PropertyChanges { target: statusBar; visible: true }
-
         }
     ]
 
@@ -117,19 +98,15 @@ Item {
         }
         onSwitchToMaximize: {
             state = "application-visible";
-            switchBackgroundParent(true);
         }
         onSwitchToFullscreen: {
             state = "hidden";
-            switchBackgroundParent(true);
         }
         onSwitchToCardView: {
             state = "default";
-            switchBackgroundParent(false);
         }
         onSwitchToLauncherView: {
             state = "default";
-            switchBackgroundParent(true);
         }
     }
 }
