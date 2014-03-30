@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import LunaNext 0.1
+import LunaNext.Common 0.1
 
 Item {
     id: batteryService

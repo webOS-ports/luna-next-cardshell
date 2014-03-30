@@ -18,7 +18,8 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
-import LunaNext 0.1
+import LunaNext.Common 0.1
+import LunaNext.Compositor 0.1
 
 Item {
     id: launchBarItem
