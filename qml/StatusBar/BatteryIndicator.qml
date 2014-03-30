@@ -54,7 +54,6 @@ BaseIndicator {
         }
 
         var result = baseName + normalizedLevel + ".png";
-        console.log("battery icon: " + result);
         return result;
     }
 }

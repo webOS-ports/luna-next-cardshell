@@ -53,8 +53,6 @@ Item {
     function handlePowerdServiceStatus(message) {
         var response = JSON.parse(message.payload);
 
-        console.log("powerd status: " + message.payload);
-
         powerdAvailable = response.connected;
         if (!powerdAvailable)
             batteryLevel = -1;
@@ -73,15 +71,11 @@ Item {
         // batteryLevel goes from 0 to 12.
         level = Math.floor((response.percent_ui * 12) / 100);
         percentage = response.percent_ui
-
-        console.log("batteryLevel changed to " + level);
     }
 
     function handlePowerdUsbDockStatus(message) {
         var response = JSON.parse(message.payload);
 
         charging = response.Charging;
-
-        console.log("Charging changed to " + charging);
     }
 }
