@@ -76,6 +76,7 @@ Row {
         }
 
         enabled: wifiService.powered
+        signalBars: wifiService.signalBars
 
         onEnabledChanged: {
             if( enabled ) {

@@ -22,20 +22,18 @@ import LunaNext 0.1
 BaseIndicator {
     id: wifiIndicator
 
-    property int signalLevel: 0
+    property int signalBars: 0
 
     indicatorImage: batteryIcon
 
     Image {
         id: batteryIcon
-
         fillMode: Image.PreserveAspectFit
         smooth: true
-
-        source: __getIconForSignalLevel(signalLevel)
+        source: __getIconForSignalBars(signalBars)
     }
 
-    function __getIconForSignalLevel(level) {
+    function __getIconForSignalBars(level) {
         var baseName = "../images/statusbar/wifi-";
 
         var normalizedLevel = level;

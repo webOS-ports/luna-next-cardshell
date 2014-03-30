@@ -25,10 +25,55 @@ Item {
 
     property bool powered: wifiModel.powered
     property bool connected: wifiModel.connected
-    property int signalLevel: 0
+    property int signalBars: 0
+
+    property QtObject __currentService: null
+
+    function convertStrengthToBars(strength) {
+        if (strength > 0 && strength < 34)
+            return 1;
+        else if (strength >= 34 && strength < 50)
+            return 2;
+        else if (strength >= 50)
+            return 3;
+        return 0;
+    }
+
+    function updateFromCurrentService() {
+        if (__currentService == null) {
+            wifiService.signalBars = 0;
+            return;
+        }
+
+        wifiService.signalBars = convertStrengthToBars(__currentService.strength);
+    }
 
     TechnologyModel {
         id: wifiModel
         name: "wifi"
+
+        function updateCurrentService() {
+            __currentService = null;
+
+            if (!wifiModel.powered || !wifiModel.connected) {
+                updateFromCurrentService();
+                return;
+            }
+
+            for (var n = 0; n < wifiModel.count; n++) {
+                var service = wifiModel.get(n);
+                if (service.state === "ready" || service.state === "online") {
+                    /* we can only have one connected wifi service at the same time */
+                    __currentService = service;
+                    updateFromCurrentService();
+                    __currentService.strengthChanged.connect(updateFromCurrentService);
+                    break;
+                }
+            }
+        }
+
+        onPoweredChanged: updateCurrentService()
+        onScanningChanged: updateCurrentService()
+        onConnectedChanged: updateCurrentService()
     }
 }
