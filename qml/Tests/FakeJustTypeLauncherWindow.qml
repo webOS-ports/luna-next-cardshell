@@ -23,7 +23,7 @@ FakeWindowBase {
 
     appId: "com.palm.launcher"
     property alias scale: windowRectangle.scale
-    windowType: WindowType.Card
+    windowType: WindowType.Launcher
 
     Rectangle {
         id: windowRectangle

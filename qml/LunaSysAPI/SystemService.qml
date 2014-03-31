@@ -22,7 +22,7 @@ Item {
     id: systemService
 
     property variant screenShooter
-    property variant windowManager
+    property Item cardViewInstance
     property QtObject compositorInstance
 
     property variant currentWindow: null
@@ -83,7 +83,7 @@ Item {
         if (typeof request.appId === 'undefined' || request.appId.length === 0)
             return buildErrorResponse("Invalid application id");
 
-        if (!windowManager.focusApplication(request.appId))
+        if (!cardViewInstance.focusApplication(request.appId))
             return buildErrorResponse("Failed to focus application");
 
         return JSON.stringify({"returnValue":true});
@@ -98,12 +98,10 @@ Item {
             subscribed = true;
         }
 
-        if (windowManager.currentActiveWindowWrapper === null ||
-            (windowManager.currentActiveWindowWrapper.windowState !== WindowState.Maximized &&
-             windowManager.currentActiveWindowWrapper.windowState !== WindowState.Fullscreen))
+        var currentWindow = cardViewInstance.currentActiveWindow;
+        if (!currentWindow || !cardViewInstance.isCurrentCardActive)
             return JSON.stringify({"returnValue":true, "subscribed": subscribed});
 
-        var currentWindow = windowManager.currentActiveWindowWrapper.wrappedWindow;
         return JSON.stringify({"returnValue":true,
                                "appId":currentWindow.appId,
                                "processId":currentWindow.processId});
@@ -112,29 +110,25 @@ Item {
     property bool windowHasFocus: false
 
     Connections {
-        target: windowManager
-        onActiveWindowChanged: {
-            var payload = { "returnValue": true };
-            var focusChanged = false;
+        target: cardViewInstance
+        onCurrentActiveWindowChanged: sendFocusWindowChanged(cardViewInstance.currentActiveWindow, cardViewInstance.isCurrentCardActive);
+    }
 
-            if (windowManager.currentActiveWindowWrapper) {
-                var windowState = windowManager.currentActiveWindowWrapper.windowState;
-                if (windowState === WindowState.Maximized || windowState === WindowState.Fullscreen) {
-                    var currentWindow = windowManager.currentActiveWindowWrapper.wrappedWindow;
-                    payload["appId"] = currentWindow.appId;
-                    payload["processId"] = currentWindow.processId;
-                    focusChanged = true;
-                }
-            }
+    function sendFocusWindowChanged(window, hasFocus) {
+        var payload = { "returnValue": true };
 
-            if (!windowHasFocus && !focusChanged)
-                return;
-
-            windowHasFocus = focusChanged;
-
-            systemServicePrivate.replyToSubscribers("/getFocusApplication",
-                                                    JSON.stringify(payload));
+        if(hasFocus && window) {
+            payload["appId"] = window.appId;
+            payload["processId"] = window.processId;
         }
+
+        if( !windowHasFocus && !hasFocus ) // if no change in the focus, don't send any event
+            return;
+
+        windowHasFocus = hasFocus;
+
+        systemServicePrivate.replyToSubscribers("/getFocusApplication",
+                                                JSON.stringify(payload));
     }
 
     function handleSetDisplayState(message) {

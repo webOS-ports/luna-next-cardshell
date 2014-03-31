@@ -29,12 +29,9 @@ import "Utils" as Utils
 import "Alerts"
 import "Connectors"
 
-// The window manager has two roles:
-//  1. it manages the creation/destruction of
-//     window wrappers whenever the compositor (or
-//     eventually the app itself) requests it.
-//  2. it manages the switch between different window modes
-//     (card, maximized, fullscreen)
+// The window manager manages the switch between different window modes
+//     (card, maximized, fullscreen, ...)
+// All the card related management itself is done by the CardView component
 WindowManager {
     id: windowManager
 
@@ -42,20 +39,8 @@ WindowManager {
     property real screenheight: Settings.displayHeight
     property real screenDPI: Settings.dpi
 
-    defaultWindowWidth: Settings.displayWidth
-    defaultWindowHeight: Settings.displayHeight - statusBarInstance.height - gestureAreaInstance.height
-
-    dashboardInstance: dashboardInstance
-    statusBarInstance: statusBarInstance
-    gestureAreaInstance: gestureAreaInstance
-    compositorInstance: compositor
-    launcherInstance: launcherInstance
-
-    cornerRadius: 5
-
     focus: true
-    Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, currentActiveWindowWrapper ]
-
+    Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance ]
 
     //////////  fps counter ///////////
     Loader {
@@ -104,7 +89,7 @@ WindowManager {
     SystemService {
         id: systemService
         screenShooter: screenShooter
-        windowManager: windowManager
+        cardViewInstance: cardViewInstance
         compositorInstance: compositor
     }
 
@@ -164,28 +149,26 @@ WindowManager {
     CardView {
         id: cardViewInstance
 
+        compositorInstance: compositor
+        gestureAreaInstance: gestureAreaInstance
         windowManagerInstance: windowManager
+
+        maximizedCardTopMargin: statusBarInstance.y + statusBarInstance.height
 
         anchors.top: windowManager.top
         anchors.bottom: dashboardInstance.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
-        z: 0
-
-        Connections {
-            target: windowManager
-            onWindowWrapperCreated: {
-                if( windowWrapper.windowType === WindowType.Card ) {
-                    // insert a new card at the end
-                    cardViewInstance.appendCard(windowWrapper, winId);
-                }
+        onStateChanged: {
+            if( cardViewInstance.state === "cardList" ) {
+                cardViewInstance.z = 0;   // cardlist under all the rest
             }
-            onWindowWrapperDestruction: {
-                if( windowWrapper.windowType === WindowType.Card ) {
-                    // remove the corresponding card
-                    cardViewInstance.removeCard(windowWrapper, winId);
-                }
+            else if( cardViewInstance.state === "maximizedCard" ) {
+                cardViewInstance.z = 2;   // active card over justtype and launcher, under dashboard and statusbar
+            }
+            else {
+                cardViewInstance.z = 3;   // active card over everything
             }
         }
     }
@@ -194,7 +177,7 @@ WindowManager {
     Launcher {
         id: launcherInstance
 
-        gestureArea: gestureAreaInstance
+        gestureAreaInstance: gestureAreaInstance
         windowManagerInstance: windowManager
 
         anchors.top: statusBarInstance.bottom
@@ -202,13 +185,11 @@ WindowManager {
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
-        z: 1 // on top of cardview
+        z: 1 // on top of cardview when no card is active
     }
 
     OverlaysManager {
         id: overlaysManagerInstance
-
-        windowManagerInstance: windowManager
 
         anchors.top: statusBarInstance.bottom
         anchors.bottom: dashboardInstance.top // not sure about this one
@@ -216,22 +197,6 @@ WindowManager {
         anchors.right: windowManager.right
 
         z: 4 // on top of everything (including fullscreen)
-
-        Connections {
-            target: windowManager
-            onOverlayWindowAdded: {
-                if( window.windowType === WindowType.Overlay ) {
-                    // insert a new overlay on top of others
-                    overlaysManagerInstance.appendOverlayWindow(window);
-                }
-            }
-            onOverlayWindowRemoval: {
-                if( window.windowType === WindowType.Overlay ) {
-                    // insert a new overlay on top of others
-                    overlaysManagerInstance.removeOverlayWindow(window);
-                }
-            }
-        }
     }
 
     //////////  status bar ///////////
@@ -261,22 +226,6 @@ WindowManager {
         anchors.right: windowManager.right
 
         z: 2 // can only be hidden by a fullscreen or overlay window
-
-        Connections {
-            target: windowManager
-            onWindowWrapperCreated: {
-                if( windowWrapper.windowType === WindowType.Dashboard ) {
-                    // insert a new overlay on top of others
-                    dashboardInstance.appendDashboardWindow(windowWrapper, winId);
-                }
-            }
-            onWindowWrapperDestruction: {
-                if( windowWrapper.windowType === WindowType.Dashboard ) {
-                    // insert a new overlay on top of others
-                    dashboardInstance.removeDashboardWindow(windowWrapper, winId);
-                }
-            }
-        }
     }
 
     //////////  gesture area ///////////

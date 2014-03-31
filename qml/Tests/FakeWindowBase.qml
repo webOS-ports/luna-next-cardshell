@@ -27,6 +27,8 @@ Item {
     property string appId: "org.webosports.tests.fakewindowbase"
     property int windowType: WindowType.Card
 
+    property Item userData
+
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
         name: "org.webosports.luna"
@@ -43,5 +45,8 @@ Item {
         console.log(fakeWindowBase + ": changeSize(" + size + ")");
         width = size.width;
         height = size.height;
+    }
+    function postEvent(event) {
+        console.log(fakeWindowBase + ": postEvent("+event+")");
     }
 }

@@ -38,8 +38,8 @@ Item {
         var appId = "";
         if (launcherInstance.state === "justTypeLauncher")
             appId = "com.palm.launcher";
-        else if (windowManager.currentActiveWindowWrapper)
-            appId = windowManager.getAppIdForFocusApplication();
+        else if (cardViewInstance.isCurrentCardActive)
+            appId = cardViewInstance.getAppIdForFocusApplication();
         return appId;
     }
 

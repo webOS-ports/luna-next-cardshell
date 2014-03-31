@@ -1,5 +1,6 @@
 module LunaNext
 Compositor 0.1 Compositor.qml
+WindowModel 0.1 WindowModel.qml
 Reticle 0.1 Reticle.qml
 LunaService 0.1 LunaService.qml
 StatusBarServicesConnector 0.1 StatusBarServicesConnector.qml
