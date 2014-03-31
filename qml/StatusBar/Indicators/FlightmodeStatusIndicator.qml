@@ -20,30 +20,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 
 BaseIndicator {
-    id: wifiIndicator
+    id: flightmodeStatusIndicator
 
-    property int signalBars: 0
-
-    indicatorImage: batteryIcon
-
-    Image {
-        id: batteryIcon
-        fillMode: Image.PreserveAspectFit
-        smooth: true
-        source: __getIconForSignalBars(signalBars)
-    }
-
-    function __getIconForSignalBars(level) {
-        var baseName = "../images/statusbar/wifi-";
-
-        var normalizedLevel = level;
-        if (level > 3) {
-            normalizedLevel = "3";
-        }
-        else if (level < 0) {
-            normalizedLevel = "connecting";
-        }
-
-        return baseName + normalizedLevel + ".png";
-    }
+    imageSource:  "../../images/statusbar/icon-airplane.png"
 }
