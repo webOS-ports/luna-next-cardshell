@@ -18,7 +18,6 @@ ListModel {
         onWindowRemovedFromListModel: {
             if( window.windowType === windowTypeFilter ) {
                 windowModel.removeValue(window);
-                console.log("Window of type " + windowTypeFilter + " has been removed from a WindowModel.");
             }
         }
     }
@@ -28,6 +27,7 @@ ListModel {
         for(i=0; i<windowModel.count;i++) {
             if(get(i).window === window) {
                 windowModel.remove(i);
+                console.log("Window of type " + windowTypeFilter + " has been removed from a WindowModel.");
                 break;
             }
         }

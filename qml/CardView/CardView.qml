@@ -15,7 +15,7 @@ Item {
     property real defaultWindowHeight: cardViewItem.height - maximizedCardTopMargin
 
     property Item currentActiveWindow: cardListViewInstance.currentCardIndex>=0?cardsModel.get(cardListViewInstance.currentCardIndex).window:null
-    property bool isCurrentCardActive: currentActiveWindow &&
+    property bool isCurrentCardActive: currentActiveWindow && currentActiveWindow.userData &&
                                        currentActiveWindow.userData.windowState !== WindowState.Carded
 
 

@@ -23,7 +23,7 @@ import "../Utils"
 Item {
     id: cardListViewItem
 
-    property ListModel listCardsModel;
+    property alias listCardsModel: listCardsView.model;
     property real maximizedCardTopMargin;
 
     property alias currentCardIndex: listCardsView.currentIndex
@@ -56,53 +56,77 @@ Item {
         smooth: true
         focus: true
 
-        delegate: SlidingItemArea {
-            id: slidingCardDelegate
+        delegate: Loader {
+                id: delegateLoader
+                sourceComponent: slidingCardComponent
 
-            anchors.verticalCenter: parent.verticalCenter
-            height: listCardsView.height
-            width: listCardsView.cardWindowWidth
+                Connections {
+                    target: listCardsModel
+                    onRowsAboutToBeRemoved: {
+                        if( first === index )
+                            sourceComponent = null;
+                    }
+                }
 
-            z: ListView.isCurrentItem ? 1 : 0
+                property bool delegateIsCurrent: ListView.isCurrentItem
 
-            property Item modelWindow: window
+                Component {
+                    id: slidingCardComponent
 
-            slidingTargetItem: cardDelegateContainer
-            slidingAxis: Drag.YAxis
-            minTreshold: 0.2
-            maxTreshold: 0.8
-            slidingEnabled: ListView.isCurrentItem && modelWindow.userData.windowState === WindowState.Carded
-            filterChildren: true
-            slideOnRight: false
+                    SlidingItemArea {
+                        id: slidingCardDelegate
 
-            onSlidedLeft: {
-                // remove window
-                cardListViewItem.cardRemove(slidingCardDelegate.modelWindow);
-            }
+                        property Item modelWindow: window
+                        property bool isCurrentItem: delegateIsCurrent
 
-            onSliderClicked: {
-                // maximize window
-                cardListViewItem.cardSelect(slidingCardDelegate.modelWindow);
-            }
+                        anchors.verticalCenter: delegateLoader.verticalCenter
+                        height: listCardsView.height
+                        width: listCardsView.cardWindowWidth
 
-            CardListWindowDelegate {
-                id: cardDelegateContainer
+                        z: isCurrentItem ? 1 : 0
 
-                anchors.horizontalCenter: slidingCardDelegate.horizontalCenter
+                        slidingTargetItem: cardDelegateContainer
+                        slidingAxis: Drag.YAxis
+                        minTreshold: 0.2
+                        maxTreshold: 0.8
+                        slidingEnabled: isCurrentItem && modelWindow.userData.windowState === WindowState.Carded
+                        filterChildren: true
+                        slideOnRight: false
 
-                window: slidingCardDelegate.modelWindow
+                        onSlidedLeft: {
+                            // remove window
+                            cardListViewItem.cardRemove(modelWindow);
+                        }
 
-                scale:  slidingCardDelegate.ListView.isCurrentItem ? 1.0: 0.9
+                        onSliderClicked: {
+                            // maximize window
+                            cardListViewItem.cardSelect(modelWindow);
+                        }
 
-                cardHeight: listCardsView.cardWindowHeight
-                cardWidth: listCardsView.cardWindowWidth
-                cardY: slidingCardDelegate.height/2 - listCardsView.cardWindowHeight/2
-                maximizedY: cardListViewItem.maximizedCardTopMargin
-                maximizedHeight: cardListViewItem.height - cardListViewItem.maximizedCardTopMargin
-                fullscreenY: 0
-                fullscreenHeight: cardListViewItem.height
-                fullWidth: cardListViewItem.width
-            }
+                        CardListWindowDelegate {
+                            id: cardDelegateContainer
+
+                            anchors.horizontalCenter: slidingCardDelegate.horizontalCenter
+
+                            window: modelWindow
+
+                            scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
+
+                            cardHeight: listCardsView.cardWindowHeight
+                            cardWidth: listCardsView.cardWindowWidth
+                            cardY: slidingCardDelegate.height/2 - listCardsView.cardWindowHeight/2
+                            maximizedY: cardListViewItem.maximizedCardTopMargin
+                            maximizedHeight: cardListViewItem.height - cardListViewItem.maximizedCardTopMargin
+                            fullscreenY: 0
+                            fullscreenHeight: cardListViewItem.height
+                            fullWidth: cardListViewItem.width
+                        }
+
+                        Component.onDestruction: {
+                            console.log("Delegate is being destroyed");
+                        }
+                    }
+                }
         }
     }
 
