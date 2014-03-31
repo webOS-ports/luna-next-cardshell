@@ -14,7 +14,7 @@ Item {
     property real defaultWindowWidth: cardViewItem.width
     property real defaultWindowHeight: cardViewItem.height - maximizedCardTopMargin
 
-    property Item currentActiveWindow: cardListViewInstance.currentCardIndex>=0?cardsModel.get(cardListViewInstance.currentCardIndex).window:null
+    property Item currentActiveWindow: cardListViewInstance.currentCardIndex >= 0 ? cardsModel.getByIndex(cardListViewInstance.currentCardIndex) : null
     property bool isCurrentCardActive: currentActiveWindow && currentActiveWindow.userData &&
                                        currentActiveWindow.userData.windowState !== WindowState.Carded
 
@@ -34,7 +34,6 @@ Item {
         id: cardListViewInstance
 
         anchors.fill: cardViewItem
-        listCardsModel: cardsModel
         maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin
 
         onCardRemove: cardViewItem.removeCard(window);
@@ -258,8 +257,8 @@ Item {
         if( currentActiveWindow !== window ) {
             var i;
             for(i=0; i<cardsModel.count;i++) {
-                var item=cardsModel.get(i);
-                if(item && item.window === window) {
+                var item=cardsModel.getByIndex(i);
+                if(item && item === window) {
                     cardListViewInstance.currentCardIndex = i;
                     break;
                 }

@@ -220,7 +220,7 @@ Item {
         windowTypeFilter: WindowType.Launcher
 
         onRowsInserted: {
-            initJustTypeLauncherApp(launcherListModel.get(launcherListModel.count-1).window);
+            initJustTypeLauncherApp(launcherListModel.getByIndex(launcherListModel.count-1));
         }
     }
 

@@ -29,7 +29,7 @@ Item {
         windowTypeFilter: WindowType.Overlay
 
         onRowsInserted: {
-            appendOverlayWindow(launcherListModel.get(launcherListModel.count-1).window);
+            appendOverlayWindow(listOverlaysModel.getByIndex(listOverlaysModel.count-1));
         }
     }
 

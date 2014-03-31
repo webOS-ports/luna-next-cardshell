@@ -23,7 +23,6 @@ import "../Utils"
 Item {
     id: cardListViewItem
 
-    property alias listCardsModel: listCardsView.model;
     property real maximizedCardTopMargin;
 
     property alias currentCardIndex: listCardsView.currentIndex
@@ -35,6 +34,11 @@ Item {
 
     focus: true
     Keys.forwardTo: listCardsView
+
+    WindowModel {
+        id: listCardsModel
+        windowTypeFilter: WindowType.Card
+    }
 
     ListView {
         id: listCardsView
@@ -136,7 +140,7 @@ Item {
         if (!windowWrapper || !windowWrapper.wrappedWindow)
             return;
 
-        var index = listCardsModel.getIndexFromProperty("winId", windowWrapper.wrappedWindow.winId);
+        var index = listCardsModel.getIndexByWindowId(windowWrapper.wrappedWindow.winId);
         if (index < 0)
             return;
 

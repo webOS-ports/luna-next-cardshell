@@ -4,4 +4,5 @@ Item {
     property string name
     property bool powered: false
     property bool connected: false
+    property bool scanning: false
 }

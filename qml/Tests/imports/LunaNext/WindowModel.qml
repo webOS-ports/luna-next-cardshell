@@ -33,5 +33,9 @@ ListModel {
         }
     }
 
+    function getByIndex(i) {
+        return get(i).window;
+    }
+
     Component.onCompleted: console.log("WindowModel for type " + windowTypeFilter + " created.");
 }
