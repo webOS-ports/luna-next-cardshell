@@ -16,7 +16,7 @@
  */
 
 import QtQuick 2.0
-import LunaNext 0.1
+import LunaNext.Common 0.1
 
 /// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
 /// [-- app menu -- |   --- title ---    |  -- indicators --]
