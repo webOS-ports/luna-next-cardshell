@@ -15,17 +15,13 @@ Item {
     property real defaultWindowWidth: cardViewItem.width
     property real defaultWindowHeight: cardViewItem.height - maximizedCardTopMargin
 
-    property Item currentActiveWindow: cardListViewInstance.currentCardIndex >= 0 ? cardsModel.getByIndex(cardListViewInstance.currentCardIndex) : null
-    property bool isCurrentCardActive: currentActiveWindow && currentActiveWindow.userData &&
-                                       currentActiveWindow.userData.windowState !== WindowState.Carded
-
-
     property real cornerRadius: 20
+
+    signal currentCardChanged(Item currentCard);
 
     focus: true
     Keys.forwardTo: cardListViewInstance
 
-    /* this WindowModel could be moved down to CardListView eventually */
     WindowModel {
         id: cardsModel
         windowTypeFilter: WindowType.Card
@@ -37,12 +33,31 @@ Item {
         anchors.fill: cardViewItem
         maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin
 
+        onCurrentCardIndexChanged: {
+            if( cardListViewInstance.currentCardIndex>=0 ) {
+                currentCardChanged(cardsModel.getByIndex(cardListViewInstance.currentCardIndex))
+            }
+        }
+
         onCardRemove: cardViewItem.removeCard(window);
         onCardSelect: {
             cardViewItem.state = "maximizedCard";
         }
     }
 
+    function currentActiveWindow() {
+        if( cardListViewInstance.currentCardIndex >= 0 )
+            return cardsModel.getByIndex(cardListViewInstance.currentCardIndex)
+
+        return null;
+    }
+
+    function isCurrentCardActive() {
+        var lCurrentActiveWindow = currentActiveWindow();
+
+        return (lCurrentActiveWindow && lCurrentActiveWindow.userData &&
+                lCurrentActiveWindow.userData.windowState !== WindowState.Carded);
+    }
 
     function removeCard(window) {
         console.log("CardView.removeCard(" + window +"): calling closeWindowWithId(" + window.winId + ")");
@@ -50,18 +65,20 @@ Item {
     }
 
     function setCurrentCard(window) {
-        if( currentActiveWindow === window ) return;
+        var lCurrentActiveWindow = currentActiveWindow();
+
+        if( lCurrentActiveWindow === window ) return;
 
         // First, put the previously current card into card mode
-        if( currentActiveWindow )
-            __setToCard(currentActiveWindow);
+        if( lCurrentActiveWindow )
+            __setToCard(lCurrentActiveWindow);
 
         // Then make the change
         __setCurrentActiveWindow(window);
     }
 
     function setCurrentCardState(windowState) {
-        if( !currentActiveWindow ) return;
+        if( !currentActiveWindow() ) return;
 
         if( windowState === WindowState.Carded ) {
             state = "cardList";
@@ -100,9 +117,11 @@ Item {
     }
 
     function getAppIdForFocusApplication() {
-        if (!currentActiveWindow)
+        var lCurrentActiveWindow = currentActiveWindow();
+
+        if (!lCurrentActiveWindow)
             return null;
-        return currentActiveWindow.appId;
+        return lCurrentActiveWindow.appId;
     }
 
     state: "cardList"
@@ -117,8 +136,9 @@ Item {
                     if( compositorInstance )
                         compositorInstance.clearKeyboardFocus();
 
-                    if( cardViewItem.currentActiveWindow )
-                        __setToCard(cardViewItem.currentActiveWindow);
+                    var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
+                    if( lCurrentActiveWindow )
+                        __setToCard(lCurrentActiveWindow);
 
                     windowManagerInstance.switchToCardView();
                 }
@@ -129,10 +149,11 @@ Item {
             PropertyChanges { target: cardListViewInstance; interactiveList: false }
             StateChangeScript {
                 script: {
-                    if( cardViewItem.currentActiveWindow ) {
-                        __setToMaximized(cardViewItem.currentActiveWindow);
+                    var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
+                    if( lCurrentActiveWindow ) {
+                        __setToMaximized(lCurrentActiveWindow);
 
-                        windowManagerInstance.switchToMaximize(cardViewItem.currentActiveWindow);
+                        windowManagerInstance.switchToMaximize(lCurrentActiveWindow);
                     }
                 }
             }
@@ -142,10 +163,11 @@ Item {
             PropertyChanges { target: cardListViewInstance; interactiveList: false }
             StateChangeScript {
                 script: {
-                    if( cardViewItem.currentActiveWindow ) {
-                        __setToFullscreen(cardViewItem.currentActiveWindow);
+                    var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
+                    if( lCurrentActiveWindow ) {
+                        __setToFullscreen(lCurrentActiveWindow);
 
-                        windowManagerInstance.switchToFullscreen(cardViewItem.currentActiveWindow);
+                        windowManagerInstance.switchToFullscreen(lCurrentActiveWindow);
                     }
                 }
             }
@@ -176,7 +198,7 @@ Item {
         id: gestureAreaConnections
         target: gestureAreaInstance
         onTapGesture: {
-            if( cardViewItem.isCurrentCardActive ) {
+            if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.setCurrentCardState(WindowState.Carded);
             }
             else {
@@ -184,17 +206,17 @@ Item {
             }
         }
         onSwipeUpGesture:{
-            if( cardViewItem.isCurrentCardActive ) {
+            if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.setCurrentCardState(WindowState.Carded);
             }
         }
         onSwipeLeftGesture:{
-            if( cardViewItem.isCurrentCardActive )
-                cardViewItem.currentActiveWindow.postEvent(EventType.CoreNaviBack);
+            if( cardViewItem.isCurrentCardActive() )
+                cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviBack);
         }
         onSwipeRightGesture:{
-            if( cardViewItem.isCurrentCardActive )
-                cardViewItem.currentActiveWindow.postEvent(EventType.CoreNaviNext);
+            if( cardViewItem.isCurrentCardActive() )
+                cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviNext);
         }
     }
 
@@ -255,7 +277,7 @@ Item {
     }
 
     function __setCurrentActiveWindow(window) {
-        if( currentActiveWindow !== window ) {
+        if( currentActiveWindow() !== window ) {
             var i;
             for(i=0; i<cardsModel.count;i++) {
                 var item=cardsModel.getByIndex(i);

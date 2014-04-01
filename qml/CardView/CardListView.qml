@@ -73,6 +73,13 @@ Item {
                     }
                 }
 
+                ListView.onAdd: {
+                    if( window && window.userData ) {
+                        window.userData.setAsCurrentWindow();
+                        window.userData.cardView.setCurrentCardState(WindowState.Maximized);
+                    }
+                }
+
                 property bool delegateIsCurrent: ListView.isCurrentItem
 
                 Component {
@@ -133,22 +140,6 @@ Item {
                     }
                 }
         }
-    }
-
-    function __switchToCurrentWindow() {
-        var windowWrapper = windowManagerInstance.currentActiveWindowWrapper;
-
-        if (!windowWrapper || !windowWrapper.wrappedWindow)
-            return;
-
-        var index = listCardsModel.getIndexByWindowId(windowWrapper.wrappedWindow.winId);
-        if (index < 0)
-            return;
-
-        if (listCardsView.currentIndex === index)
-            return;
-
-        listCardsView.positionViewAtIndex(index, ListView.Beginning);
     }
 }
 
