@@ -1,0 +1,6 @@
+module LunaNext.Common
+LunaService 0.1 LunaService.qml
+Settings 0.1 SettingsStub.js
+Units 0.1 UnitsStub.js
+
+typeinfo LunaNext.Common.qmltypes

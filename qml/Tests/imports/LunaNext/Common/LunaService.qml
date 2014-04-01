@@ -70,7 +70,7 @@ QtObject {
         else if( serviceURI === "palm://com.palm.systemservice/getPreferences" && args.subscribe)
         {
             returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
-            returnFct({"payload": JSON.stringify({"wallpaper": { "wallpaperFile": Qt.resolvedUrl("../../../images/background.jpg")}})});
+            returnFct({"payload": JSON.stringify({"wallpaper": { "wallpaperFile": Qt.resolvedUrl("../../../../images/background.jpg")}})});
         }
         else if (serviceURI === "luna://org.webosports.audio/getStatus")
         {
