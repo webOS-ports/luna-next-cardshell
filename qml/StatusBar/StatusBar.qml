@@ -52,7 +52,9 @@ Item {
                 font.family: Settings.fontStatusBar
                 font.pixelSize: parent.height;
                 font.bold: false
-                text: Qt.formatDateTime(new Date(), "dd.MM.yyyy")
+                //FIXME Just showing date in international and time now in 24h format
+                //necessary to adjust based on settings later for date and time. 
+                text: Qt.formatDateTime(new Date(), "dd-MMM-yyyy hh:mm")
             }
         }
 
