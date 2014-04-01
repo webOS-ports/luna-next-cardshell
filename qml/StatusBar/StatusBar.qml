@@ -54,7 +54,7 @@ Item {
                 font.bold: false
                 //FIXME Just showing date in international and time now in 24h format
                 //necessary to adjust based on settings later for date and time. 
-                text: Qt.formatDateTime(new Date(), "dd-MMM-yyyy hh:mm")
+                text: Qt.formatDateTime(new Date(), "dd-MMM-yyyy h:mm")
             }
         }
 
