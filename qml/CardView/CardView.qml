@@ -131,11 +131,6 @@ Item {
             PropertyChanges { target: cardListViewInstance; interactiveList: true }
             StateChangeScript {
                 script: {
-                    // we're back to card view so no card should have the focus
-                    // for the keyboard anymore
-                    if( compositorInstance )
-                        compositorInstance.clearKeyboardFocus();
-
                     var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
                     if( lCurrentActiveWindow )
                         __setToCard(lCurrentActiveWindow);

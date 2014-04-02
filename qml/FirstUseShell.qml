@@ -17,7 +17,7 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LunaNext.Shell 0.1s
+import LunaNext.Shell 0.1
 import LunaNext.Compositor 0.1
 import "Utils"
 
