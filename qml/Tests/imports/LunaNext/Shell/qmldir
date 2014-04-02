@@ -1,0 +1,5 @@
+module LunaNext.Shell
+Reticle 0.1 Reticle.qml
+FpsCounter 0.1 FpsCounter.qml
+
+typeinfo LunaNext.Shell.qmltypes

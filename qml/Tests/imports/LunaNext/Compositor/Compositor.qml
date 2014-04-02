@@ -16,6 +16,7 @@
  */
 
 import QtQuick 2.0
+import "."
 
 Item {
     id: compositor
@@ -73,7 +74,7 @@ Item {
 
     function createFakeWindow(name, options) {
         console.log("createFakeWindow: Creating " + name + " window");
-        var windowComponent = Qt.createComponent("../../" + name + ".qml");
+        var windowComponent = Qt.createComponent("../../../" + name + ".qml");
         var window = windowComponent.createObject(compositor, options);
         window.winId = localProperties.getNextWinId();
 

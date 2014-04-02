@@ -12,7 +12,6 @@ ListModel {
         onWindowAddedInListModel: {
             if( window.windowType === windowTypeFilter ) {
                 windowModel.append({"window": window});
-                console.log("Window of type " + windowTypeFilter + " has been added to a WindowModel.");
             }
         }
         onWindowRemovedFromListModel: {
@@ -27,7 +26,6 @@ ListModel {
         for(i=0; i<windowModel.count;i++) {
             if(get(i).window === window) {
                 windowModel.remove(i);
-                console.log("Window of type " + windowTypeFilter + " has been removed from a WindowModel.");
                 break;
             }
         }
@@ -36,6 +34,4 @@ ListModel {
     function getByIndex(i) {
         return get(i).window;
     }
-
-    Component.onCompleted: console.log("WindowModel for type " + windowTypeFilter + " created.");
 }
