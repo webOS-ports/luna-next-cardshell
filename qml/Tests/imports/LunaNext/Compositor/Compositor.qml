@@ -27,6 +27,7 @@ Item {
     signal windowShown(Item window);
     signal windowHidden(Item window);
 
+    signal windowModelAdded(ListModel newModel);
     signal windowAddedInListModel(Item window);
     signal windowRemovedFromListModel(Item window);
 
@@ -100,6 +101,16 @@ Item {
             compositor.windowRemoved(window); // I do hope this is synchronous ?
 
             window.destroy();
+        }
+    }
+
+    property var _refWindowModelTypes: new Array()
+    function addWindowModel(windowModel) {
+        if(_refWindowModelTypes.indexOf(windowModel.windowTypeFilter)<0) {
+            _refWindowModelTypes.push(windowModel.windowTypeFilter);
+        }
+        else {
+            windowModelAdded(windowModel);
         }
     }
 }
