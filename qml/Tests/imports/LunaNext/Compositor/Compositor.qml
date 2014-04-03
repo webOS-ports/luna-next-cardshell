@@ -78,10 +78,10 @@ Item {
         var window = windowComponent.createObject(compositor, options);
         window.winId = localProperties.getNextWinId();
 
+        compositor.windowAdded(window);
+
         listWindowsModel.append({"window": window, "winId": window.winId});
         compositor.windowAddedInListModel(window);
-
-        compositor.windowAdded(window);
     }
 
     function closeWindowWithId(winId) {
@@ -97,7 +97,7 @@ Item {
             listWindowsModel.remove(indexWindow); // this will delete the userData
             compositor.windowRemovedFromListModel(window);
 
-            windowRemoved(window); // I do hope this is synchronous ?
+            compositor.windowRemoved(window); // I do hope this is synchronous ?
 
             window.destroy();
         }

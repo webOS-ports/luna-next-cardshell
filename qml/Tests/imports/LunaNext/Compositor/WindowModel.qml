@@ -32,6 +32,10 @@ ListModel {
     }
 
     function getByIndex(i) {
+        if( i>=count ) {
+            console.log("index out of range !");
+        }
+
         return get(i).window;
     }
 }
