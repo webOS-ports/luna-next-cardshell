@@ -30,14 +30,9 @@ Item {
     CardListView {
         id: cardListViewInstance
 
+        cardView: cardViewItem
         anchors.fill: cardViewItem
         maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin
-
-        onCurrentCardIndexChanged: {
-            if( cardListViewInstance.currentCardIndex>=0 ) {
-                currentCardChanged(cardsModel.getByIndex(cardListViewInstance.currentCardIndex))
-            }
-        }
 
         onCardRemove: cardViewItem.removeCard(window);
         onCardSelect: {
@@ -46,14 +41,11 @@ Item {
     }
 
     function currentActiveWindow() {
-        if( cardListViewInstance.currentCardIndex >= 0 )
-            return cardsModel.getByIndex(cardListViewInstance.currentCardIndex)
-
-        return null;
+        return cardListViewInstance.currentActiveWindow();
     }
 
     function isCurrentCardActive() {
-        var lCurrentActiveWindow = currentActiveWindow();
+        var lCurrentActiveWindow = cardListViewInstance.currentActiveWindow();
 
         return (lCurrentActiveWindow && lCurrentActiveWindow.userData &&
                 lCurrentActiveWindow.userData.windowState !== WindowState.Carded);
@@ -131,11 +123,6 @@ Item {
             PropertyChanges { target: cardListViewInstance; interactiveList: true }
             StateChangeScript {
                 script: {
-                    // we're back to card view so no card should have the focus
-                    // for the keyboard anymore
-                    if( compositorInstance )
-                        compositorInstance.clearKeyboardFocus();
-
                     var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
                     if( lCurrentActiveWindow )
                         __setToCard(lCurrentActiveWindow);
@@ -277,15 +264,6 @@ Item {
     }
 
     function __setCurrentActiveWindow(window) {
-        if( currentActiveWindow() !== window ) {
-            var i;
-            for(i=0; i<cardsModel.count;i++) {
-                var item=cardsModel.getByIndex(i);
-                if(item && item === window) {
-                    cardListViewInstance.currentCardIndex = i;
-                    break;
-                }
-            }
-        }
+        cardListViewInstance.setCurrentActiveWindow(window);
     }
 }

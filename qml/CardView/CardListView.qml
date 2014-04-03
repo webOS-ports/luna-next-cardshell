@@ -26,7 +26,7 @@ Item {
 
     property real maximizedCardTopMargin;
 
-    property alias currentCardIndex: listCardsView.currentIndex
+    property Item cardView
 
     property alias interactiveList: listCardsView.interactive
 
@@ -39,6 +39,8 @@ Item {
     WindowModel {
         id: listCardsModel
         windowTypeFilter: WindowType.Card
+
+        onRowsAboutToBeInserted: listCardsView.newCardInserted = true;
     }
 
     ListView {
@@ -61,6 +63,25 @@ Item {
         smooth: true
         focus: true
 
+        property bool newCardInserted: false
+        onCountChanged: {
+            if( newCardInserted && count > 0 ) {
+                newCardInserted = false;
+                var lastWindow = listCardsModel.getByIndex(count-1);
+                if( lastWindow ) {
+                    cardView.setCurrentCard(lastWindow);
+                    cardListViewItem.cardSelect(lastWindow);
+                }
+            }
+        }
+
+        function setCurrentCardIndex(newIndex) {
+            listCardsView.currentIndex = newIndex
+            if( cardView && listCardsView.currentIndex>=0 ) {
+                cardView.currentCardChanged(listCardsModel.getByIndex(listCardsView.currentIndex))
+            }
+        }
+
         delegate: Loader {
                 id: delegateLoader
                 sourceComponent: slidingCardComponent
@@ -73,12 +94,7 @@ Item {
                     }
                 }
 
-                ListView.onAdd: {
-                    if( window && window.userData ) {
-                        window.userData.setAsCurrentWindow();
-                        window.userData.cardView.setCurrentCardState(WindowState.Maximized);
-                    }
-                }
+                z: ListView.isCurrentItem ? 1 : 0
 
                 property bool delegateIsCurrent: ListView.isCurrentItem
 
@@ -95,13 +111,11 @@ Item {
                         height: listCardsView.height
                         width: listCardsView.cardWindowWidth
 
-                        z: isCurrentItem ? 1 : 0
-
                         slidingTargetItem: cardDelegateContainer
                         slidingAxis: Drag.YAxis
                         minTreshold: 0.2
                         maxTreshold: 0.8
-                        slidingEnabled: isCurrentItem && modelWindow.userData.windowState === WindowState.Carded
+                        slidingEnabled: isCurrentItem && modelWindow && modelWindow.userData.windowState === WindowState.Carded
                         filterChildren: true
                         slideOnRight: false
 
@@ -139,6 +153,26 @@ Item {
                         }
                     }
                 }
+        }
+    }
+
+    function currentActiveWindow() {
+        if( listCardsView.currentIndex >= 0 )
+            return listCardsModel.getByIndex(listCardsView.currentIndex)
+
+        return null;
+    }
+
+    function setCurrentActiveWindow(window) {
+        if( currentActiveWindow() !== window ) {
+            var i;
+            for(i=0; i<listCardsModel.count;i++) {
+                var item=listCardsModel.getByIndex(i);
+                if(item && item === window) {
+                    listCardsView.setCurrentCardIndex(i);
+                    break;
+                }
+            }
         }
     }
 }

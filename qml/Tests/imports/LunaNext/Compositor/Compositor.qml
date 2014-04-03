@@ -27,6 +27,7 @@ Item {
     signal windowShown(Item window);
     signal windowHidden(Item window);
 
+    signal windowModelAdded(ListModel newModel);
     signal windowAddedInListModel(Item window);
     signal windowRemovedFromListModel(Item window);
 
@@ -78,10 +79,10 @@ Item {
         var window = windowComponent.createObject(compositor, options);
         window.winId = localProperties.getNextWinId();
 
+        compositor.windowAdded(window);
+
         listWindowsModel.append({"window": window, "winId": window.winId});
         compositor.windowAddedInListModel(window);
-
-        compositor.windowAdded(window);
     }
 
     function closeWindowWithId(winId) {
@@ -97,9 +98,19 @@ Item {
             listWindowsModel.remove(indexWindow); // this will delete the userData
             compositor.windowRemovedFromListModel(window);
 
-            windowRemoved(window); // I do hope this is synchronous ?
+            compositor.windowRemoved(window); // I do hope this is synchronous ?
 
             window.destroy();
+        }
+    }
+
+    property var _refWindowModelTypes: new Array()
+    function addWindowModel(windowModel) {
+        if(_refWindowModelTypes.indexOf(windowModel.windowTypeFilter)<0) {
+            _refWindowModelTypes.push(windowModel.windowTypeFilter);
+        }
+        else {
+            windowModelAdded(windowModel);
         }
     }
 }

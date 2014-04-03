@@ -44,6 +44,13 @@ WindowManager {
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance ]
 
+    onSwitchToCardView: {
+        // we're back to card view so no card should have the focus
+        // for the keyboard anymore
+        if( compositor )
+            compositor.clearKeyboardFocus();
+    }
+
     //////////  fps counter ///////////
     Loader {
         anchors.top: background.top
