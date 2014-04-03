@@ -115,7 +115,7 @@ Item {
                         slidingAxis: Drag.YAxis
                         minTreshold: 0.2
                         maxTreshold: 0.8
-                        slidingEnabled: isCurrentItem && modelWindow.userData.windowState === WindowState.Carded
+                        slidingEnabled: isCurrentItem && modelWindow && modelWindow.userData.windowState === WindowState.Carded
                         filterChildren: true
                         slideOnRight: false
 

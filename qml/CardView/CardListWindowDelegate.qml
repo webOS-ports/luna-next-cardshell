@@ -40,7 +40,7 @@ Item {
     property real cornerRadius: 20
 
     Connections {
-        target: window.userData
+        target: window ? window.userData : null
         onStateChanged: {
             if( window.userData.state === "card" )
             {
@@ -133,13 +133,18 @@ Item {
             window.userData.visible = true;
         }
         Component.onDestruction: {
-            if( window.userData )
+            if( window && window.userData )
             {
                 window.userData.visible = false;
                 window.userData.anchors.fill = undefined;
                 window.userData.parent = null;
             }
         }
+    }
+
+    function windowDestroyed() {
+        console.log("Wrapped window has been destroyed, cleaning up delegate" );
+        cardWindowWrapper.children = [];
     }
 
     // Rounded corners (static version)
@@ -157,6 +162,8 @@ Item {
         radius: cardDelegateContainer.cornerRadius
         visible: true
     }
+
+    onWindowChanged: if( !window ) windowDestroyed();
 
     Component.onCompleted: {
         toCardAnimation.start();

@@ -37,7 +37,6 @@ FocusScope {
     //    * Maximized
     //    * Fullscreen
     property int windowState: WindowState.Carded
-    onWindowStateChanged: console.log("windowState is now: " + windowState);
 
     property int windowType: WindowType.Card
     property string appIcon: Qt.resolvedUrl("../images/default-app-icon.png")
