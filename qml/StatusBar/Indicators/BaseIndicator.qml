@@ -23,7 +23,6 @@ Item {
 
     property string imageSource: ""
     property bool enabled: true
-    property string name: "unknown"
 
     width: indicatorImage.width
     clip: true
@@ -48,21 +47,11 @@ Item {
 
     state: enabled ? "visible" : "hidden"
 
-    onStateChanged: {
-        console.log("DEBUG: [" + name + "] changed to " + state);
-        console.log("DEBUG: [" + name + "] width " + indicatorRoot.width);
-        console.log("DEBUG: [" + name + "] image width " + indicatorImage.width);
-    }
-
     Component.onCompleted: {
-        if (state === "visible") {
+        if (state === "visible")
             visible = true;
-        }
-        else if (state === "hidden") {
+        else if (state === "hidden")
             visible = false;
-        }
-
-        console.log("DEBUG: [" + name + "]  state = " + state);
     }
 
     transitions: [

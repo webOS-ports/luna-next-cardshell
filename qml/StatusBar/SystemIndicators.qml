@@ -42,8 +42,6 @@ Row {
     FlightmodeStatusIndicator {
         id: flightmodeStatusIndicator
 
-        name: "flightmode-status"
-
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
@@ -53,7 +51,6 @@ Row {
     WifiIndicator {
         id: wifiIndicator
 
-        name: "wifi"
 
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
@@ -65,8 +62,6 @@ Row {
     WanStatusIndicator {
         id: wanStatusIndicator
 
-        name: "wan-status"
-
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
@@ -77,8 +72,6 @@ Row {
     TelephonySignalIndicator {
         id: telephonySignalIndicator
 
-        name: "telephony-signal"
-
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
@@ -88,8 +81,6 @@ Row {
 
     BatteryIndicator {
         id: batteryIndicator
-
-        name: "battery"
 
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
