@@ -97,7 +97,7 @@ Item {
         var window=null;
         var i=0;
         for(i=0; i<cardsModel.count;i++) {
-            window = cardsModel.get(i).window
+            window = cardsModel.getByIndex(i)
             if(window && window.appdId === appId) {
                 setCurrentCard(window);
                 setCurrentCardState(WindowState.Maximized);
