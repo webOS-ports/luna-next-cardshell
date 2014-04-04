@@ -1,2 +1,3 @@
 module Connman
 TechnologyModel 0.2 TechnologyModel.qml
+NetworkManager 0.2 NetworkManager.qml

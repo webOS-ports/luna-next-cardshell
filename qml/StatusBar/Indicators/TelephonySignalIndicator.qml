@@ -17,23 +17,28 @@
  */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
-Item {
-    id: indicatorRoot
+BaseIndicator {
+    id: telephonySignalIndicator
 
-    property Image indicatorImage;
-    property real originalWidth: indicatorImage.width
-    property bool enabled: true
+    property int strength: 0
 
-    width: enabled ? indicatorImage.width : 0
+    imageSource: __getIconForStrengthValue(strength)
 
-    clip: true
+    function mapStrengthToRssi(value) {
+        return (value * 5) / 100;
+    }
 
-    Component.onCompleted: {
-        indicatorImage.anchors.fill = undefined;
-        indicatorImage.anchors.left = indicatorRoot.left;
-        indicatorImage.anchors.top = indicatorRoot.top;
-        indicatorImage.anchors.bottom = indicatorRoot.bottom;
-        indicatorImage.sourceSize.height = Qt.binding(function() { return indicatorRoot.height*0.8 });
+    function __getIconForStrengthValue(value) {
+        var baseName = "../../images/statusbar/rssi-";
+
+        var normalizedValue = mapStrengthToRssi(value);
+        if (value > 5)
+            normalizedValue = "5";
+        else if (value < 0)
+            normalizedValue = "error";
+
+        return baseName + normalizedValue + ".png";
     }
 }

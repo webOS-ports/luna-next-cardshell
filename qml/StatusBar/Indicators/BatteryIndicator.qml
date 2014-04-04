@@ -25,19 +25,10 @@ BaseIndicator {
     property int level: -1
     property bool charging: false
 
-    indicatorImage: batteryIcon
-
-    Image {
-        id: batteryIcon
-
-        fillMode: Image.PreserveAspectFit
-        smooth: true
-
-        source: __getIconForBatteryLevel(level, charging)
-    }
+    imageSource: __getIconForBatteryLevel(level, charging)
 
     function __getIconForBatteryLevel(level, isCharging) {
-        var baseName = "../images/statusbar/battery-";
+        var baseName = "../../images/statusbar/battery-";
 
         if (level > 11 && !isCharging) level = 11;
         var normalizedLevel = level;

@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
+import LunaNext.Compositor 0.1
 
 Item {
     id: systemService
@@ -136,6 +137,11 @@ Item {
 
         if (!request || !request.state)
             return buildErrorResponse("Invalid parameters.");
+
+        if (compositorInstance.visible && request.state === "on")
+            return buildErrorResponse("Already enabled");
+        else if (!compositorInstance.visible && request.state === "off")
+            return buildErrorResponse("Already disabled");
 
         if (request.state === "on") {
             DisplayController.displayOn();

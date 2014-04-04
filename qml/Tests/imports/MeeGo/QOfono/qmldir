@@ -1,0 +1,5 @@
+module MeeGo.QOfono
+OfonoManager 0.2 OfonoManager.qml
+OfonoModem 0.2 OfonoModem.qml
+OfonoConnMan 0.2 OfonoConnMan.qml
+OfonoNetworkRegistration 0.2 OfonoNetworkRegistration.qml

@@ -19,85 +19,80 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 import "../Connectors"
+import "Indicators"
 
 Row {
     id: indicatorsRow
 
-    spacing: 5
-    anchors.margins: 3
+    anchors.margins: 8
+    spacing: 8
 
-    // Utility animations when an indicator must be hidden or shown
-    SequentialAnimation {
-        id: hideIndicatorAnimation
-
-        ParallelAnimation {
-            NumberAnimation { target: hideIndicatorAnimation.__target; properties: "opacity"; to: 0; duration: 200 }
-            NumberAnimation { target: hideIndicatorAnimation.__target; properties: "width"; to: 0; duration: 400 }
-        }
-        PropertyAction { target: hideIndicatorAnimation.__target; properties: "visible"; value: false }
-
-        function hideItem(itemToHide) {
-            __target = itemToHide;
-            if( __target )
-                start();
-        }
-
-        property Item __target
+    BatteryService {
+        id: batteryService
     }
 
-    SequentialAnimation {
-        id: showIndicatorAnimation
+    TelephonyService {
+        id: telephonyService
+    }
 
-        PropertyAction { target: showIndicatorAnimation.__target; properties: "visible"; value: true }
-        ParallelAnimation {
-            NumberAnimation { target: showIndicatorAnimation.__target; properties: "opacity"; to: 1; duration: 200 }
-            NumberAnimation { target: showIndicatorAnimation.__target; properties: "width"; to: showIndicatorAnimation.__targetWidth; duration: 400 }
-        }
+    WiFiService {
+        id: wifiService
+    }
 
-        function showItem(itemToShow) {
-            __target = itemToShow;
-            __targetWidth = itemToShow.originalWidth;
-            if( __target )
-                start();
-        }
+    FlightmodeStatusIndicator {
+        id: flightmodeStatusIndicator
 
-        property Item __target
-        property real __targetWidth
+        name: "flightmode-status"
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: telephonyService.offlineMode
     }
 
     WifiIndicator {
         id: wifiIndicator
 
+        name: "wifi"
+
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        WiFiService {
-            id: wifiService
-        }
-
         enabled: wifiService.powered
         signalBars: wifiService.signalBars
-
-        onEnabledChanged: {
-            if( enabled ) {
-                showIndicatorAnimation.showItem(wifiIndicator);
-            }
-            else {
-                hideIndicatorAnimation.hideItem(wifiIndicator);
-            }
-        }
     }
 
+    WanStatusIndicator {
+        id: wanStatusIndicator
+
+        name: "wan-status"
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: telephonyService.wanConnected
+        technology: telephonyService.wanTechnology
+    }
+
+    TelephonySignalIndicator {
+        id: telephonySignalIndicator
+
+        name: "telephony-signal"
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: telephonyService.online && !telephonyService.offlineMode
+        strength: telephonyService.strength
+    }
 
     BatteryIndicator {
         id: batteryIndicator
 
+        name: "battery"
+
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
-
-        BatteryService {
-            id: batteryService
-        }
 
         level: batteryService.level
         charging: batteryService.charging
