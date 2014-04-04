@@ -41,6 +41,7 @@ Item {
         windowTypeFilter: WindowType.Card
 
         onRowsAboutToBeInserted: listCardsView.newCardInserted = true;
+        onRowsAboutToBeRemoved: if( listCardsView.currentIndex === last ) cardView.setCurrentCardState(WindowState.Carded);
     }
 
     ListView {
