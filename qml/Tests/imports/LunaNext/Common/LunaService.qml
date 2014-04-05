@@ -52,8 +52,8 @@ QtObject {
 
     function subscribe(serviceURI, jsonArgs, returnFct, handleError) {
         var args = JSON.parse(jsonArgs);
-        if( serviceURI === "palm://com.palm.bus/signal/registerServerStatus" &&
-            args.serviceName === "org.webosports.bootmgr" )
+        if( serviceURI === "palm://com.palm.bus/signal/registerServerStatus" ||
+            serviceURI === "luna://com.palm.bus/signal/registerServerStatus" )
         {
             returnFct({"payload": JSON.stringify({"connected": true})});
         }
