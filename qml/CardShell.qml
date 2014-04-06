@@ -30,8 +30,10 @@ import "Utils"
 import "Alerts"
 import "Connectors"
 
-Item {
+Rectangle {
     id: root
+
+    color: "black"
 
     Loader {
         anchors.top: root.top
@@ -57,28 +59,6 @@ Item {
         }
 
         sourceComponent: Settings.displayFps ? fpsTextComponent : null;
-    }
-
-    ScreenShooter {
-        id: screenShooter
-
-        property int nbScreenshotsTaken: 0
-
-        function takeScreenshot(path) {
-            screenShooter.capture(path);
-        }
-    }
-
-    Connections {
-        target: gestureAreaInstance
-        onSwipeRightGesture: screenShooter.takeScreenshot();
-    }
-
-    SystemService {
-        id: systemService
-        screenShooter: screenShooter
-        cardViewInstance: cardViewInstance
-        compositorInstance: compositor
     }
 
     Preferences {
@@ -107,125 +87,51 @@ Item {
         z: 900
     }
 
-    // The window manager manages the switch between different window modes
-    //     (card, maximized, fullscreen, ...)
-    // All the card related management itself is done by the CardView component
-    WindowManager {
-        id: windowManager
+    VisualItemModel {
+        id: pageModel
 
-        property real screenwidth: Settings.displayWidth
-        property real screenheight: Settings.displayHeight
-        property real screenDPI: Settings.dpi
+        SystemMenuPage {
+            id: systemMenuPage
 
-        focus: true
-        Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance ]
+            height: root.height
+            width: root.width
+        }
 
+        CardsPage {
+            id: cardsPage
+
+            height: root.height
+            width: root.width
+        }
+    }
+
+    ScreenGestureArea {
+        id: screenGestureArea
         anchors.fill: parent
-
-        onSwitchToCardView: {
-            // we're back to card view so no card should have the focus
-            // for the keyboard anymore
-            if( compositor )
-                compositor.clearKeyboardFocus();
-        }
-
-        Item {
-            id: background
-            anchors.top: windowManager.top
-            anchors.bottom: gestureAreaInstance.top
-            anchors.left: windowManager.left
-            anchors.right: windowManager.right
-
-            z: -1; // the background item should always be behind other components
-
-            Image {
-                id: backgroundImage
-
-                anchors.fill: parent
-                fillMode: Image.PreserveAspectCrop
-                source: preferences.wallpaperFile
-                asynchronous: true
-                smooth: true
-                sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
+        boundary: Units.length(24)
+        gestureNeeded: "down"
+        z: 100
+        onGestureFinished: {
+            if (gesture === "down") {
+                pager.currentIndex = 0;
+                gestureNeeded = "up";
+            }
+            else if (gesture === "up") {
+                pager.currentIndex = 1;
+                gestureNeeded = "down";
             }
         }
+    }
 
-        CardView {
-            id: cardViewInstance
-
-            compositorInstance: compositor
-            gestureAreaInstance: gestureAreaInstance
-            windowManagerInstance: windowManager
-
-            maximizedCardTopMargin: statusBarInstance.y + statusBarInstance.height
-
-            anchors.top: windowManager.top
-            anchors.bottom: gestureAreaInstance.top
-            anchors.left: windowManager.left
-            anchors.right: windowManager.right
-
-            onStateChanged: {
-                if( cardViewInstance.state === "cardList" ) {
-                    cardViewInstance.z = 0;   // cardlist under all the rest
-                }
-                else if( cardViewInstance.state === "maximizedCard" ) {
-                    cardViewInstance.z = 2;   // active card over justtype and launcher, under dashboard and statusbar
-                }
-                else {
-                    cardViewInstance.z = 3;   // active card over everything
-                }
-            }
-        }
-
-        Launcher {
-            id: launcherInstance
-
-            gestureAreaInstance: gestureAreaInstance
-            windowManagerInstance: windowManager
-
-            anchors.top: statusBarInstance.bottom
-            anchors.bottom: gestureAreaInstance.top // not sure about this one
-            anchors.left: windowManager.left
-            anchors.right: windowManager.right
-
-            z: 1 // on top of cardview when no card is active
-        }
-
-        OverlaysManager {
-            id: overlaysManagerInstance
-
-            anchors.top: statusBarInstance.bottom
-            anchors.bottom: gestureAreaInstance.top // not sure about this one
-            anchors.left: windowManager.left
-            anchors.right: windowManager.right
-
-            z: 4 // on top of everything (including fullscreen)
-        }
-
-        StatusBar {
-            id: statusBarInstance
-
-        anchors.top: windowManager.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-        height: Units.gu(3);
-
-            z: 2 // can only be hidden by a fullscreen window
-
-            windowManagerInstance: windowManager
-            fullLauncherVisible: launcherInstance.fullLauncherVisible
-            justTypeLauncherActive: launcherInstance.justTypeLauncherActive
-        }
-
-        LunaGestureArea {
-            id: gestureAreaInstance
-
-        anchors.bottom: windowManager.bottom
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-        height: Units.gu(3);
-
-            z: 3 // the gesture area is in front of everything, like the fullscreen window
-        }
+    ListView {
+        id: pager
+        anchors.fill: parent
+        model: pageModel
+        highlightRangeMode: ListView.StrictlyEnforceRange
+        snapMode: ListView.SnapOneItem
+        highlightMoveVelocity: 2000
+        // we always start with the card view
+        currentIndex: 1
+        interactive: false
     }
 }
