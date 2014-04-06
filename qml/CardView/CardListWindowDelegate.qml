@@ -46,6 +46,10 @@ Item {
         }
     }
 
+    y: cardY
+    width: cardWidth
+    height: cardHeight
+
     Connections {
         target: window ? window.userData : null
         onStateChanged: {
@@ -124,7 +128,6 @@ Item {
         border { left: 30; top: 30; right: 30; bottom: 30 }
         horizontalTileMode: BorderImage.Stretch
         verticalTileMode: BorderImage.Stretch
-
     }
 
     Item {
@@ -171,8 +174,4 @@ Item {
     }
 
     onWindowChanged: if( !window ) windowDestroyed();
-
-    Component.onCompleted: {
-        toCardAnimation.start();
-    }
 }
