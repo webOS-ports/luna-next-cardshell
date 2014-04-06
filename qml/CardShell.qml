@@ -30,30 +30,12 @@ import "Utils"
 import "Alerts"
 import "Connectors"
 
-// The window manager manages the switch between different window modes
-//     (card, maximized, fullscreen, ...)
-// All the card related management itself is done by the CardView component
-WindowManager {
-    id: windowManager
+Item {
+    id: root
 
-    property real screenwidth: Settings.displayWidth
-    property real screenheight: Settings.displayHeight
-    property real screenDPI: Settings.dpi
-
-    focus: true
-    Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance ]
-
-    onSwitchToCardView: {
-        // we're back to card view so no card should have the focus
-        // for the keyboard anymore
-        if( compositor )
-            compositor.clearKeyboardFocus();
-    }
-
-    //////////  fps counter ///////////
     Loader {
-        anchors.top: background.top
-        anchors.left: background.left
+        anchors.top: root.top
+        anchors.left: root.left
 
         width: 50
         height: 32
@@ -77,7 +59,6 @@ WindowManager {
         sourceComponent: Settings.displayFps ? fpsTextComponent : null;
     }
 
-    //////////  screenshot component ///////////
     ScreenShooter {
         id: screenShooter
 
@@ -87,12 +68,11 @@ WindowManager {
             screenShooter.capture(path);
         }
     }
+
     Connections {
         target: gestureAreaInstance
         onSwipeRightGesture: screenShooter.takeScreenshot();
     }
-
-    ////////// System Service //////////
 
     SystemService {
         id: systemService
@@ -101,34 +81,22 @@ WindowManager {
         compositorInstance: compositor
     }
 
-    ////////// Preferences /////////////
-
     Preferences {
         id: preferences
     }
 
-    //////////  reticle on clic ///////////
     Loader {
         id: reticleArea
         anchors.fill: parent
         source: Settings.showReticle ? "Utils/ReticleArea.qml" : ""
         z: 1000
-
-        Tweak {
-            id: reticleTweak
-            owner: "luna-next-cardshell"
-            key: "tapRippleSupport"
-            defaultValue: true
-            onValueChanged: reticleArea.visible = reticleTweak.value
-        }
     }
 
     PowerMenu {
         id: powerMenuAlert
         z: 800
 
-        anchors.top: statusBarInstance.bottom
-        anchors.right: launcherInstance.right
+        anchors.top: parent.bottom
         anchors.margins: 20
 
         width: parent.width * 0.6
@@ -139,107 +107,125 @@ WindowManager {
         z: 900
     }
 
-    //////////  background ///////////
-    Item {
-        id: background
-        anchors.top: windowManager.top
-        anchors.bottom: gestureAreaInstance.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
+    // The window manager manages the switch between different window modes
+    //     (card, maximized, fullscreen, ...)
+    // All the card related management itself is done by the CardView component
+    WindowManager {
+        id: windowManager
 
-        z: -1; // the background item should always be behind other components
+        property real screenwidth: Settings.displayWidth
+        property real screenheight: Settings.displayHeight
+        property real screenDPI: Settings.dpi
 
-        Image {
-            id: backgroundImage
+        focus: true
+        Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance ]
 
-            anchors.fill: parent
-            fillMode: Image.PreserveAspectCrop
-            source: preferences.wallpaperFile
-            asynchronous: true
-            smooth: true
-            sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
+        anchors.fill: parent
+
+        onSwitchToCardView: {
+            // we're back to card view so no card should have the focus
+            // for the keyboard anymore
+            if( compositor )
+                compositor.clearKeyboardFocus();
         }
-    }
 
-    //////////  cardview ///////////
-    CardView {
-        id: cardViewInstance
+        Item {
+            id: background
+            anchors.top: windowManager.top
+            anchors.bottom: gestureAreaInstance.top
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
 
-        compositorInstance: compositor
-        gestureAreaInstance: gestureAreaInstance
-        windowManagerInstance: windowManager
+            z: -1; // the background item should always be behind other components
 
-        maximizedCardTopMargin: statusBarInstance.y + statusBarInstance.height
+            Image {
+                id: backgroundImage
 
-        anchors.top: windowManager.top
-        anchors.bottom: gestureAreaInstance.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-
-        onStateChanged: {
-            if( cardViewInstance.state === "cardList" ) {
-                cardViewInstance.z = 0;   // cardlist under all the rest
-            }
-            else if( cardViewInstance.state === "maximizedCard" ) {
-                cardViewInstance.z = 2;   // active card over justtype and launcher, under dashboard and statusbar
-            }
-            else {
-                cardViewInstance.z = 3;   // active card over everything
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectCrop
+                source: preferences.wallpaperFile
+                asynchronous: true
+                smooth: true
+                sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
             }
         }
-    }
 
-    //////////  launcher ///////////
-    Launcher {
-        id: launcherInstance
+        CardView {
+            id: cardViewInstance
 
-        gestureAreaInstance: gestureAreaInstance
-        windowManagerInstance: windowManager
+            compositorInstance: compositor
+            gestureAreaInstance: gestureAreaInstance
+            windowManagerInstance: windowManager
 
-        anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.top // not sure about this one
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
+            maximizedCardTopMargin: statusBarInstance.y + statusBarInstance.height
 
-        z: 1 // on top of cardview when no card is active
-    }
+            anchors.top: windowManager.top
+            anchors.bottom: gestureAreaInstance.top
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
 
-    OverlaysManager {
-        id: overlaysManagerInstance
+            onStateChanged: {
+                if( cardViewInstance.state === "cardList" ) {
+                    cardViewInstance.z = 0;   // cardlist under all the rest
+                }
+                else if( cardViewInstance.state === "maximizedCard" ) {
+                    cardViewInstance.z = 2;   // active card over justtype and launcher, under dashboard and statusbar
+                }
+                else {
+                    cardViewInstance.z = 3;   // active card over everything
+                }
+            }
+        }
 
-        anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.top // not sure about this one
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
+        Launcher {
+            id: launcherInstance
 
-        z: 4 // on top of everything (including fullscreen)
-    }
+            gestureAreaInstance: gestureAreaInstance
+            windowManagerInstance: windowManager
 
-    //////////  status bar ///////////
-    StatusBar {
-        id: statusBarInstance
+            anchors.top: statusBarInstance.bottom
+            anchors.bottom: gestureAreaInstance.top // not sure about this one
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
+
+            z: 1 // on top of cardview when no card is active
+        }
+
+        OverlaysManager {
+            id: overlaysManagerInstance
+
+            anchors.top: statusBarInstance.bottom
+            anchors.bottom: gestureAreaInstance.top // not sure about this one
+            anchors.left: windowManager.left
+            anchors.right: windowManager.right
+
+            z: 4 // on top of everything (including fullscreen)
+        }
+
+        StatusBar {
+            id: statusBarInstance
 
         anchors.top: windowManager.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
         height: Units.gu(3);
 
-        z: 2 // can only be hidden by a fullscreen window
+            z: 2 // can only be hidden by a fullscreen window
 
-        windowManagerInstance: windowManager
-        fullLauncherVisible: launcherInstance.fullLauncherVisible
-        justTypeLauncherActive: launcherInstance.justTypeLauncherActive
-    }
+            windowManagerInstance: windowManager
+            fullLauncherVisible: launcherInstance.fullLauncherVisible
+            justTypeLauncherActive: launcherInstance.justTypeLauncherActive
+        }
 
-    //////////  gesture area ///////////
-    LunaGestureArea {
-        id: gestureAreaInstance
+        LunaGestureArea {
+            id: gestureAreaInstance
 
         anchors.bottom: windowManager.bottom
         anchors.left: windowManager.left
         anchors.right: windowManager.right
         height: Units.gu(3);
 
-        z: 3 // the gesture area is in front of everything, like the fullscreen window
+            z: 3 // the gesture area is in front of everything, like the fullscreen window
+        }
     }
 }
