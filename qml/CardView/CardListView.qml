@@ -36,12 +36,8 @@ Item {
     focus: true
     Keys.forwardTo: listCardsView
 
-    WindowModel {
-        id: listCardsModel
-        windowTypeFilter: WindowType.Card
-
-        onRowsAboutToBeInserted: listCardsView.newCardInserted = true;
-        onRowsAboutToBeRemoved: if( listCardsView.currentIndex === last ) cardView.setCurrentCardState(WindowState.Carded);
+    CardGroupModel {
+        id: listCardGroupsModel
     }
 
     ListView {
@@ -58,17 +54,17 @@ Item {
         highlightRangeMode: ListView.StrictlyEnforceRange
         highlightFollowsCurrentItem: true
 
-        model: listCardsModel
+        model: listCardGroupsModel
         spacing: 0
         orientation: ListView.Horizontal
-        smooth: true
+        smooth: !listCardsView.moving
         focus: true
 
         property bool newCardInserted: false
         onCountChanged: {
             if( newCardInserted && count > 0 ) {
                 newCardInserted = false;
-                var lastWindow = listCardsModel.getByIndex(count-1);
+                var lastWindow = listCardGroupsModel.getByIndex(count-1);
                 if( lastWindow ) {
                     cardView.setCurrentCard(lastWindow);
                     cardListViewItem.cardSelect(lastWindow);
@@ -88,7 +84,7 @@ Item {
                 sourceComponent: slidingCardComponent
 
                 Connections {
-                    target: listCardsModel
+                    target: listCardGroupsModel
                     onRowsAboutToBeRemoved: {
                         if( first === index )
                             sourceComponent = null;
@@ -102,56 +98,15 @@ Item {
                 Component {
                     id: slidingCardComponent
 
-                    SlidingItemArea {
-                        id: slidingCardDelegate
+                    CardGroupDelegate {
+                        listCardsViewInstance: listCardsView
+                        groupModel: windowList
 
-                        property Item modelWindow: window
-                        property bool isCurrentItem: delegateIsCurrent
+                        delegateIsCurrent: delegateLoader.delegateIsCurrent
 
                         anchors.verticalCenter: delegateLoader.verticalCenter
                         height: listCardsView.height
                         width: listCardsView.cardWindowWidth
-
-                        slidingTargetItem: cardDelegateContainer
-                        slidingAxis: Drag.YAxis
-                        minTreshold: 0.4
-                        maxTreshold: 0.6
-                        slidingEnabled: isCurrentItem && modelWindow && modelWindow.userData.windowState === WindowState.Carded
-                        filterChildren: true
-                        slideOnRight: false
-
-                        onSlidedLeft: {
-                            // remove window
-                            cardListViewItem.cardRemove(modelWindow);
-                        }
-
-                        onSliderClicked: {
-                            // maximize window
-                            cardListViewItem.cardSelect(modelWindow);
-                        }
-
-                        CardListWindowDelegate {
-                            id: cardDelegateContainer
-
-                            anchors.horizontalCenter: slidingCardDelegate.horizontalCenter
-
-                            window: modelWindow
-
-                            scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
-
-                            cardHeight: listCardsView.cardWindowHeight
-                            cardWidth: listCardsView.cardWindowWidth
-                            cardY: slidingCardDelegate.height/2 - listCardsView.cardWindowHeight/2
-                            maximizedY: cardListViewItem.maximizedCardTopMargin
-                            maximizedHeight: cardListViewItem.height - cardListViewItem.maximizedCardTopMargin
-                            fullscreenY: 0
-                            fullscreenHeight: cardListViewItem.height
-                            fullWidth: cardListViewItem.width
-                        }
-
-                        Component.onDestruction: {
-                            console.log("Delegate is being destroyed");
-                        }
                     }
                 }
         }

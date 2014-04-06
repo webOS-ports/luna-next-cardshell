@@ -73,7 +73,10 @@ Item {
     SwipeArea {
         id: slidingMouseArea
 
-        anchors.fill: slidingArea
+        anchors.fill: slidingTargetItem
+        rotation: slidingTargetItem.rotation
+        transformOrigin: slidingTargetItem.transformOrigin
+
         drag.target: slidingTargetItem
         drag.axis: slidingAxis
         drag.filterChildren: filterChildren
