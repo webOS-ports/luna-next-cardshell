@@ -24,7 +24,6 @@ import LunaNext.Compositor 0.1
 import "CardView"
 import "StatusBar"
 import "LaunchBar"
-import "Dashboard"
 import "WindowManager"
 import "LunaSysAPI"
 import "Utils"
@@ -173,7 +172,7 @@ WindowManager {
         maximizedCardTopMargin: statusBarInstance.y + statusBarInstance.height
 
         anchors.top: windowManager.top
-        anchors.bottom: dashboardInstance.top
+        anchors.bottom: gestureAreaInstance.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
@@ -198,7 +197,7 @@ WindowManager {
         windowManagerInstance: windowManager
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: dashboardInstance.top // not sure about this one
+        anchors.bottom: gestureAreaInstance.top // not sure about this one
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
@@ -209,7 +208,7 @@ WindowManager {
         id: overlaysManagerInstance
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: dashboardInstance.top // not sure about this one
+        anchors.bottom: gestureAreaInstance.top // not sure about this one
         anchors.left: windowManager.left
         anchors.right: windowManager.right
 
@@ -232,19 +231,6 @@ WindowManager {
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
     }
 
-    //////////  notification area ///////////
-    Dashboard {
-        id: dashboardInstance
-
-        windowManagerInstance: windowManager
-
-        anchors.bottom: gestureAreaInstance.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-
-        z: 2 // can only be hidden by a fullscreen or overlay window
-    }
-
     //////////  gesture area ///////////
     LunaGestureArea {
         id: gestureAreaInstance
@@ -255,9 +241,5 @@ WindowManager {
         height: Units.gu(3);
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
-    }
-
-    function addNotification(notif) {
-        dashboardInstance.addNotification(notif);
     }
 }
