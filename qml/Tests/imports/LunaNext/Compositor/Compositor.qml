@@ -16,7 +16,7 @@
  */
 
 import QtQuick 2.0
-import "."
+import "Singletons"
 
 Item {
     id: compositor
@@ -62,6 +62,8 @@ Item {
     }
 
     Component.onCompleted: {
+        WindowModelSingleton.setCompositor(compositor);
+
         createFakeWindow("FakeJustTypeLauncherWindow", {});
     }
 
@@ -102,16 +104,6 @@ Item {
             compositor.windowRemoved(window); // I do hope this is synchronous ?
 
             window.destroy();
-        }
-    }
-
-    property var _refWindowModelTypes: new Array()
-    function addWindowModel(windowModel) {
-        if(_refWindowModelTypes.indexOf(windowModel.windowTypeFilter)<0) {
-            _refWindowModelTypes.push(windowModel.windowTypeFilter);
-        }
-        else {
-            windowModelAdded(windowModel);
         }
     }
 }
