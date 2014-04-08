@@ -19,11 +19,11 @@ ListModel {
 */
         onRowsAboutToBeRemoved: removeWindow(listCardsModel.getByIndex(last));
         onRowsInserted: {
-            var newWindow = listCardsModel.getByIndex(listCardsModel.count-1);
+            var newWindow = listCardsModel.getByIndex(last);
 
             createNewGroup(newWindow);
-            // DEBUG: move the new window in the previous group, and build groups of 4 windows
-            if( count>1 && count%4 !== 0 )
+            // DEBUG: move the new window in the previous group, and build groups of 3 windows
+            if( last>0 && ((last+1)%4) !== 0 )
                 moveWindowGroup(newWindow, listCardGroupsModel.count-1, listCardGroupsModel.count-2);
         }
     }
