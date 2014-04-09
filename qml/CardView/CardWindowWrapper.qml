@@ -128,10 +128,13 @@ FocusScope {
             wrappedWindow.takeFocus();
     }
 
-    function requestDestruction() {
-        if( !aboutToBeDestroyed ) {
-            aboutToBeDestroyed = true;
-            cardView.removeCard(wrappedWindow)
+    function destroyIfNeeded() {
+        if( !cardWrapperItem.parent && !cardWrapperItem.wrappedWindow ) {
+                                 // we are all alone, commit suicide
+                                 cardWrapperItem.destroy();
         }
     }
+
+    onParentChanged: destroyIfNeeded();
+    onWrappedWindowChanged: destroyIfNeeded();
 }

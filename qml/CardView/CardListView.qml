@@ -79,37 +79,18 @@ Item {
             }
         }
 
-        delegate: Loader {
-                id: delegateLoader
-                sourceComponent: slidingCardComponent
-
-                Connections {
-                    target: listCardGroupsModel
-                    onRowsAboutToBeRemoved: {
-                        if( first === index )
-                            sourceComponent = null;
-                    }
-                }
-
-                z: ListView.isCurrentItem ? 1 : 0
-
-                property bool delegateIsCurrent: ListView.isCurrentItem
-
-                Component {
-                    id: slidingCardComponent
-
-                    CardGroupDelegate {
+        delegate: CardGroupDelegate {
                         listCardsViewInstance: listCardsView
                         groupModel: windowList
 
-                        delegateIsCurrent: delegateLoader.delegateIsCurrent
+                        delegateIsCurrent: ListView.isCurrentItem
 
-                        anchors.verticalCenter: delegateLoader.verticalCenter
+                        anchors.verticalCenter: parent.verticalCenter
                         height: listCardsView.height
                         width: listCardsView.cardWindowWidth
-                    }
+
+                        z: ListView.isCurrentItem ? 1 : 0
                 }
-        }
     }
 
     function currentActiveWindow() {

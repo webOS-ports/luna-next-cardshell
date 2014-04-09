@@ -40,8 +40,8 @@ QtObject {
 
         windowModel.count = Qt.binding(function() { return _referenceModel.count });
         _referenceModel.rowsAboutToBeInserted.connect(rowsAboutToBeInserted);
-        _referenceModel.rowsAboutToBeRemoved.connect(rowsAboutToBeRemoved);
-        _referenceModel.rowsInserted.connect(rowsInserted);
+        _referenceModel.actualRowsAboutToBeRemoved.connect(rowsAboutToBeRemoved);
+        _referenceModel.actualRowsInserted.connect(rowsInserted);
         _referenceModel.rowsRemoved.connect(rowsRemoved);
         _referenceModel.dataChanged.connect(dataChanged);
     }

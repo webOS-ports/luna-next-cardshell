@@ -5,10 +5,22 @@ import QtQuick 2.0
 Item {
     id: windowModelSingleton
 
-    property ListModel cardListModel: ListModel { }
-    property ListModel launcherListModel: ListModel { }
-    property ListModel overlayListModel: ListModel { }
-    property ListModel dashboardListModel: ListModel { }
+    property ListModel cardListModel: ListModel {
+        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
+        signal actualRowsInserted(variant index, int first, int last);
+    }
+    property ListModel launcherListModel: ListModel {
+        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
+        signal actualRowsInserted(variant index, int first, int last);
+    }
+    property ListModel overlayListModel: ListModel {
+        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
+        signal actualRowsInserted(variant index, int first, int last);
+    }
+    property ListModel dashboardListModel: ListModel {
+        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
+        signal actualRowsInserted(variant index, int first, int last);
+    }
 
     property Item _compositor;
 
@@ -17,13 +29,13 @@ Item {
 
         onWindowAddedInListModel: {
             if( window.windowType === 0 )
-                windowModelSingleton.cardListModel.append({"window": window});
+                windowModelSingleton.appendValue(cardListModel, {"window": window});
             else if( window.windowType === 1 )
-                windowModelSingleton.launcherListModel.append({"window": window});
+                windowModelSingleton.appendValue(launcherListModel, {"window": window});
             else if( window.windowType === 2 )
-                windowModelSingleton.dashboardListModel.append({"window": window});
+                windowModelSingleton.appendValue(dashboardListModel, {"window": window});
             else if( window.windowType === 5 )
-                windowModelSingleton.overlayListModel.append({"window": window});
+                windowModelSingleton.appendValue(overlayListModel, {"window": window});
         }
         onWindowRemovedFromListModel: {
             if( window.windowType === 0 )
@@ -37,10 +49,16 @@ Item {
         }
     }
 
+    function appendValue(model, jsonObject) {
+        model.append(jsonObject);
+        model.actualRowsInserted(model, model.count-1, model.count-1);
+    }
+
     function removeValue(model, window) {
         var i=0;
         for(i=0; i<model.count;i++) {
             if(model.get(i).window === window) {
+                model.actualRowsAboutToBeRemoved(model, i, i);
                 model.remove(i);
                 break;
             }

@@ -22,7 +22,7 @@ Item {
             SlidingItemArea {
                 id: slidingCardDelegate
 
-                property Item modelWindow: window
+                property Item windowUserData;
                 property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
 
                 anchors.verticalCenter: cardGroupDelegateItem.verticalCenter
@@ -33,18 +33,18 @@ Item {
                 slidingAxis: Drag.YAxis
                 minTreshold: 0.2
                 maxTreshold: 0.8
-                slidingEnabled: isCurrentItem && modelWindow && modelWindow.userData.windowState === WindowState.Carded
+                slidingEnabled: isCurrentItem && windowUserData && windowUserData.windowState === WindowState.Carded
                 filterChildren: true
                 slideOnRight: false
 
                 onSlidedLeft: {
                     // remove window
-                    cardListViewItem.cardRemove(modelWindow);
+                    cardListViewItem.cardRemove(window);
                 }
 
                 onSliderClicked: {
                     // maximize window
-                    cardListViewItem.cardSelect(modelWindow);
+                    cardListViewItem.cardSelect(window);
                 }
 
                 CardListWindowDelegate {
@@ -52,7 +52,7 @@ Item {
 
                     anchors.horizontalCenter: slidingCardDelegate.horizontalCenter
 
-                    window: slidingCardDelegate.modelWindow
+                    windowUserData: slidingCardDelegate.windowUserData
 
                     scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
 
@@ -68,6 +68,7 @@ Item {
                     fullscreenY: 0
                     fullscreenHeight: cardListViewItem.height
                     fullWidth: cardListViewItem.width
+
                 }
 
                 Component.onDestruction: {
@@ -76,6 +77,8 @@ Item {
 
                 Component.onCompleted: {
                     console.log("CardGroupDelegate instantiated for window " + window );
+                    windowUserData = window.userData; // do not introduce a binding, to avoid
+                                                      // errors if window gets destroyed brutally
                 }
         }
     }
