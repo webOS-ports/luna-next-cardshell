@@ -24,8 +24,8 @@ import "../Utils"
 Item {
     id: cardDelegateContainer
 
-    // this is the card window instance wrapping the window container
-    property Item window
+    // this is the window model wrapping the window
+    property Item windowUserData
 
     // this defines the sizes the card should have, depending on the state of the window
     property real cardHeight
@@ -51,21 +51,21 @@ Item {
     height: cardHeight
 
     Connections {
-        target: window ? window.userData : null
+        target: windowUserData
         onStateChanged: {
-            if( window.userData.state === "card" )
+            if( windowUserData.state === "card" )
             {
                 toMaximizeAnimation.stop();
                 toFullscreenAnimation.stop();
                 toCardAnimation.start();
             }
-            else if( window.userData.state === "maximized" )
+            else if( windowUserData.state === "maximized" )
             {
                 toCardAnimation.stop();
                 toFullscreenAnimation.stop();
                 toMaximizeAnimation.start();
             }
-            else if( window.userData.state === "fullscreen" )
+            else if( windowUserData.state === "fullscreen" )
             {
                 toCardAnimation.stop();
                 toMaximizeAnimation.stop();
@@ -133,28 +133,23 @@ Item {
     Item {
         id: cardWindowWrapper
 
-        children: [ window.userData ]
+        children: [ windowUserData ]
 
         anchors.fill: parent
 
         Component.onCompleted: {
-            window.userData.parent = cardWindowWrapper;
-            window.userData.anchors.fill = cardWindowWrapper;
-            window.userData.visible = true;
+            windowUserData.parent = cardWindowWrapper;
+            windowUserData.anchors.fill = cardWindowWrapper;
+            windowUserData.visible = true;
         }
         Component.onDestruction: {
-            if( window && window.userData )
+            if( windowUserData )
             {
-                window.userData.visible = false;
-                window.userData.anchors.fill = undefined;
-                window.userData.parent = null;
+                windowUserData.visible = false;
+                windowUserData.anchors.fill = undefined;
+                windowUserData.parent = null;
             }
         }
-    }
-
-    function windowDestroyed() {
-        console.log("Wrapped window has been destroyed, cleaning up delegate" );
-        cardWindowWrapper.children = [];
     }
 
     // Rounded corners (static version)
@@ -172,6 +167,4 @@ Item {
         radius: cardDelegateContainer.cornerRadius
         visible: true
     }
-
-    onWindowChanged: if( !window ) windowDestroyed();
 }
