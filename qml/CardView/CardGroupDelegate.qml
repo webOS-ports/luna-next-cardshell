@@ -7,10 +7,14 @@ import "../Utils"
 Item {
     id: cardGroupDelegateItem
 
-    property Item listCardsViewInstance
+    property Item cardGroupListViewInstance
 
     property ListModel groupModel
     property bool delegateIsCurrent
+
+    signal cardRemove(Item window);
+    signal cardSelect(Item window);
+    signal cardDragStart(Item window);
 
     Repeater {
         id: groupRepeater
@@ -26,8 +30,8 @@ Item {
                 property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
 
                 anchors.verticalCenter: cardGroupDelegateItem.verticalCenter
-                height: listCardsViewInstance.height
-                width: listCardsViewInstance.cardWindowWidth
+                height: cardGroupListViewInstance.height
+                width: cardGroupListViewInstance.cardWindowWidth
 
                 slidingTargetItem: cardDelegateContainer
                 slidingAxis: Drag.YAxis
@@ -39,15 +43,20 @@ Item {
 
                 onSlidedLeft: {
                     // remove window
-                    cardListViewItem.cardRemove(window);
+                    cardGroupDelegateItem.cardRemove(window);
                 }
 
-                onSliderClicked: {
+                onClicked: {
                     // maximize window
-                    cardListViewItem.cardSelect(window);
+                    cardGroupDelegateItem.cardSelect(window);
                 }
 
-                CardListWindowDelegate {
+                onPressAndHold: {
+                    // switch to drag'n'drop state
+                    cardGroupDelegateItem.cardDragStart(window);
+                }
+
+                CardWindowDelegate {
                     id: cardDelegateContainer
 
                     anchors.horizontalCenter: slidingCardDelegate.horizontalCenter
@@ -60,14 +69,14 @@ Item {
                     rotation: 5*(index - 0.5*(groupRepeater.count-1))
                     transformOrigin: Item.Bottom
 
-                    cardHeight: listCardsViewInstance.cardWindowHeight
-                    cardWidth: listCardsViewInstance.cardWindowWidth
-                    cardY: slidingCardDelegate.height/2 - listCardsViewInstance.cardWindowHeight/2
-                    maximizedY: cardListViewItem.maximizedCardTopMargin
-                    maximizedHeight: cardListViewItem.height - cardListViewItem.maximizedCardTopMargin
+                    cardHeight: cardGroupListViewInstance.cardWindowHeight
+                    cardWidth: cardGroupListViewInstance.cardWindowWidth
+                    cardY: cardGroupListViewInstance.height/2 - cardGroupListViewInstance.cardWindowHeight/2
+                    maximizedY: cardGroupListViewInstance.maximizedCardTopMargin
+                    maximizedHeight: cardGroupListViewInstance.height - cardGroupListViewInstance.maximizedCardTopMargin
                     fullscreenY: 0
-                    fullscreenHeight: cardListViewItem.height
-                    fullWidth: cardListViewItem.width
+                    fullscreenHeight: cardGroupListViewInstance.height
+                    fullWidth: cardGroupListViewInstance.width
 
                 }
 

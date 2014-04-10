@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import QtGraphicalEffects 1.0
+
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 
@@ -40,9 +40,6 @@ FocusScope {
 
     property int windowType: WindowType.Card
     property string appIcon: Qt.resolvedUrl("../images/default-app-icon.png")
-
-    // that part should be moved to a window manager, or maybe to the card view interface
-    property variant cardViewParent
 
     // this is the radius that should be applied to the corners of this window container
     property real cornerRadius: 20
@@ -75,11 +72,6 @@ FocusScope {
 
     state: windowState === WindowState.Fullscreen ? "fullscreen" : windowState === WindowState.Maximized ? "maximized" : "card"
     states: [
-        State {
-           name: "unintialized"
-           PropertyChanges { target: cardWrapperItem; Keys.forwardTo: [] }
-           StateChangeScript { script: loseFocus() }
-        },
         State {
            name: "card"
            PropertyChanges { target: cardWrapperItem; Keys.forwardTo: [] }
@@ -130,8 +122,8 @@ FocusScope {
 
     function destroyIfNeeded() {
         if( !cardWrapperItem.parent && !cardWrapperItem.wrappedWindow ) {
-                                 // we are all alone, commit suicide
-                                 cardWrapperItem.destroy();
+             // we are all alone, commit suicide
+             cardWrapperItem.destroy();
         }
     }
 
