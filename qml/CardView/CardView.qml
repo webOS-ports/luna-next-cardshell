@@ -20,7 +20,7 @@ Item {
     signal currentCardChanged(Item currentCard);
 
     focus: true
-    Keys.forwardTo: cardListViewInstance
+    Keys.forwardTo: cardGroupListViewInstance
 
     WindowModel {
         id: cardsModel
@@ -29,8 +29,8 @@ Item {
         onRowsAboutToBeRemoved: if( cardsModel.getByIndex(last).userData.windowState !== WindowState.Carded ) cardView.setCurrentCardState(WindowState.Carded);
     }
 
-    CardListView {
-        id: cardListViewInstance
+    CardGroupListView {
+        id: cardGroupListViewInstance
 
         cardView: cardViewItem
         anchors.fill: cardViewItem
@@ -38,16 +38,17 @@ Item {
 
         onCardRemove: cardViewItem.removeCard(window);
         onCardSelect: {
-            cardViewItem.state = "maximizedCard";
+            setCurrentCard(window);
+            setCurrentCardState(WindowState.Maximized);
         }
     }
 
     function currentActiveWindow() {
-        return cardListViewInstance.currentActiveWindow();
+        return cardGroupListViewInstance.currentActiveWindow();
     }
 
     function isCurrentCardActive() {
-        var lCurrentActiveWindow = cardListViewInstance.currentActiveWindow();
+        var lCurrentActiveWindow = cardGroupListViewInstance.currentActiveWindow();
 
         return (lCurrentActiveWindow && lCurrentActiveWindow.userData &&
                 lCurrentActiveWindow.userData.windowState !== WindowState.Carded);
@@ -121,7 +122,7 @@ Item {
     states: [
         State {
             name: "cardList";
-            PropertyChanges { target: cardListViewInstance; interactiveList: true }
+            PropertyChanges { target: cardGroupListViewInstance; interactiveList: true }
             StateChangeScript {
                 script: {
                     var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
@@ -134,7 +135,7 @@ Item {
         },
         State {
             name: "maximizedCard";
-            PropertyChanges { target: cardListViewInstance; interactiveList: false }
+            PropertyChanges { target: cardGroupListViewInstance; interactiveList: false }
             StateChangeScript {
                 script: {
                     var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
@@ -148,7 +149,7 @@ Item {
         },
         State {
             name: "fullscreenCard";
-            PropertyChanges { target: cardListViewInstance; interactiveList: false }
+            PropertyChanges { target: cardGroupListViewInstance; interactiveList: false }
             StateChangeScript {
                 script: {
                     var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
@@ -267,6 +268,6 @@ Item {
     }
 
     function __setCurrentActiveWindow(window) {
-        cardListViewInstance.setCurrentActiveWindow(window);
+        cardGroupListViewInstance.setCurrentActiveWindow(window);
     }
 }

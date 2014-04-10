@@ -14,23 +14,61 @@ ListModel {
 
     property WindowModel listCardsModel: WindowModel {
         windowTypeFilter: WindowType.Card
-/*
-        onRowsAboutToBeInserted: listCardsView.newCardInserted = true;
-*/
+
         onRowsAboutToBeRemoved: removeWindow(listCardsModel.getByIndex(last));
         onRowsInserted: {
             var newWindow = listCardsModel.getByIndex(last);
 
             createNewGroup(newWindow);
             // DEBUG: move the new window in the previous group, and build groups of 3 windows
-            if( last>0 && ((last+1)%4) !== 0 )
-                moveWindowGroup(newWindow, listCardGroupsModel.count-1, listCardGroupsModel.count-2);
+            //if( last>0 && ((last+1)%4) !== 0 )
+            //    moveWindowGroup(newWindow, listCardGroupsModel.count-1, listCardGroupsModel.count-2);
         }
+    }
+
+    function getCurrentCardOfGroup(group) {
+        var windowList = group.windowList;
+        if( group.currentCardInGroup >= 0 && group.currentCardInGroup < windowList.count ) {
+            return windowList.get(group.currentCardInGroup).window;
+        }
+
+        return null;
+    }
+
+    function setCurrentCardInGroup(group, cardIndexInGroup) {
+        group.currentCardInGroup = cardIndexInGroup;
+    }
+
+    function setCurrentCard(window) {
+        var foundGroupIndex = -1;
+
+        var windowFound = false;
+        // First, we have to find which group contains this window
+        var groupIndex = 0;
+        for( groupIndex=0; !windowFound && groupIndex<listCardGroupsModel.count; ++groupIndex ) {
+            var windowList = listCardGroupsModel.get(groupIndex).windowList;
+            var windowIndex=0;
+            for( windowIndex=0; !windowFound && windowIndex<windowList.count; ++windowIndex ) {
+                if( windowList.get(windowIndex).window === window ) {
+                    var currentCardInGroup = listCardGroupsModel.get(groupIndex).currentCardInGroup;
+                    if( windowIndex !== currentCardInGroup )
+                    {
+                        listCardGroupsModel.setCurrentCardInGroup(listCardGroupsModel.get(groupIndex), windowIndex);
+                    }
+
+                    foundGroupIndex = groupIndex;
+
+                    windowFound = true;
+                }
+            }
+        }
+
+        return foundGroupIndex;
     }
 
     function createNewGroup(window) {
         // create a new group with only one window
-        listCardGroupsModel.append({"windowList": [ { "window":window } ]});
+        listCardGroupsModel.append({"windowList": [ { "window":window } ], "currentCardInGroup": 0});
     }
 
     function removeWindow(window) {
@@ -43,6 +81,13 @@ ListModel {
             var windowIndex=0;
             for( windowIndex=0; !windowRemoved && windowIndex<windowList.count; ++windowIndex ) {
                 if( windowList.get(windowIndex).window === window ) {
+                    var currentCardInGroup = listCardGroupsModel.get(groupIndex).currentCardInGroup;
+                    if( windowIndex === currentCardInGroup )
+                    {
+                        // if we are going to remove the current card of the group, then
+                        // select the previous one
+                        listCardGroupsModel.setCurrentCardInGroup(listCardGroupsModel.get(groupIndex), Math.max(currentCardInGroup-1,0));
+                    }
                     windowList.remove(windowIndex);
 
                     // If the group is now empty, remove it

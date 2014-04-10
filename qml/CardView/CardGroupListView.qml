@@ -22,42 +22,45 @@ import LunaNext.Compositor 0.1
 import "../Utils"
 
 Item {
-    id: cardListViewItem
+    id: cardGroupListViewItem
 
     property real maximizedCardTopMargin;
 
+    property real cardScale: 0.6
+    property real cardWindowWidth: width*cardScale
+    property real cardWindowHeight: height*cardScale
+
     property Item cardView
 
-    property alias interactiveList: listCardsView.interactive
+    property alias interactiveList: internalListView.interactive
 
     signal cardRemove(Item window);
     signal cardSelect(Item window);
+    signal cardDragStart(Item window);
 
     focus: true
-    Keys.forwardTo: listCardsView
+    Keys.forwardTo: internalListView
 
     CardGroupModel {
         id: listCardGroupsModel
+
+        //onRowsInserted: internalListView.setCurrentCardIndex(last);
     }
 
     ListView {
-        id: listCardsView
+        id: internalListView
 
         anchors.fill: parent
 
-        property real cardScale: 0.6
-        property real cardWindowWidth: width*cardScale
-        property real cardWindowHeight: height*cardScale
-
-        preferredHighlightBegin: width/2-cardWindowWidth/2
-        preferredHighlightEnd: width/2+cardWindowWidth/2
+        preferredHighlightBegin: width/2-cardGroupListViewItem.cardWindowWidth/2
+        preferredHighlightEnd: width/2+cardGroupListViewItem.cardWindowWidth/2
         highlightRangeMode: ListView.StrictlyEnforceRange
         highlightFollowsCurrentItem: true
 
         model: listCardGroupsModel
         spacing: 0
         orientation: ListView.Horizontal
-        smooth: !listCardsView.moving
+        smooth: !internalListView.moving
         focus: true
 
         property bool newCardInserted: false
@@ -67,49 +70,50 @@ Item {
                 var lastWindow = listCardGroupsModel.getByIndex(count-1);
                 if( lastWindow ) {
                     cardView.setCurrentCard(lastWindow);
-                    cardListViewItem.cardSelect(lastWindow);
+                    cardGroupListViewItem.cardSelect(lastWindow);
                 }
             }
         }
 
         function setCurrentCardIndex(newIndex) {
-            listCardsView.currentIndex = newIndex
-            if( cardView && listCardsView.currentIndex>=0 ) {
-                cardView.currentCardChanged(listCardsModel.getByIndex(listCardsView.currentIndex))
+            internalListView.currentIndex = newIndex
+            if( cardView && internalListView.currentIndex>=0 ) {
+                cardView.currentCardChanged(currentActiveWindow())
             }
         }
 
         delegate: CardGroupDelegate {
-                        listCardsViewInstance: listCardsView
+                        cardGroupListViewInstance: cardGroupListViewItem
                         groupModel: windowList
 
                         delegateIsCurrent: ListView.isCurrentItem
 
                         anchors.verticalCenter: parent.verticalCenter
-                        height: listCardsView.height
-                        width: listCardsView.cardWindowWidth
+                        height: cardGroupListViewItem.height
+                        width: cardGroupListViewItem.cardWindowWidth
 
                         z: ListView.isCurrentItem ? 1 : 0
+
+                        onCardSelect: cardGroupListViewItem.cardSelect(window);
+                        onCardRemove: cardGroupListViewItem.cardRemove(window);
+                        onCardDragStart: {
+                            console.log("drag'n'drop mode !");
+                        }
                 }
     }
 
     function currentActiveWindow() {
-        if( listCardsView.currentIndex >= 0 )
-            return listCardsModel.getByIndex(listCardsView.currentIndex)
+        if( internalListView.currentIndex >= 0 ) {
+            return listCardGroupsModel.getCurrentCardOfGroup(listCardGroupsModel.get(internalListView.currentIndex));
+        }
 
         return null;
     }
 
     function setCurrentActiveWindow(window) {
-        if( currentActiveWindow() !== window ) {
-            var i;
-            for(i=0; i<listCardsModel.count;i++) {
-                var item=listCardsModel.getByIndex(i);
-                if(item && item === window) {
-                    listCardsView.setCurrentCardIndex(i);
-                    break;
-                }
-            }
+        var foundGroupIndex = listCardGroupsModel.setCurrentCard(window);
+        if( foundGroupIndex>=0 ) {
+            internalListView.setCurrentCardIndex(foundGroupIndex);
         }
     }
 }

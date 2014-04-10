@@ -32,7 +32,8 @@ Item {
 
     signal slidedLeft
     signal slidedRight
-    signal sliderClicked
+    signal clicked
+    signal pressAndHold
 
     NumberAnimation {
         id: swipeOutAnimation
@@ -85,7 +86,11 @@ Item {
         z: slidingTargetItem.z + 1
 
         onClicked: {
-            sliderClicked();
+            slidingArea.clicked();
+        }
+
+        onPressAndHold: {
+            slidingArea.pressAndHold();
         }
 
         onPressed: {
