@@ -44,7 +44,7 @@ Item {
     CardGroupModel {
         id: listCardGroupsModel
 
-        //onRowsInserted: internalListView.setCurrentCardIndex(last);
+        onRowsInserted: internalListView.newCardInserted = true;
     }
 
     ListView {
@@ -67,9 +67,8 @@ Item {
         onCountChanged: {
             if( newCardInserted && count > 0 ) {
                 newCardInserted = false;
-                var lastWindow = listCardGroupsModel.getByIndex(count-1);
+                var lastWindow = listCardGroupsModel.getCurrentCardOfGroup(listCardGroupsModel.get(count-1));
                 if( lastWindow ) {
-                    cardView.setCurrentCard(lastWindow);
                     cardGroupListViewItem.cardSelect(lastWindow);
                 }
             }
