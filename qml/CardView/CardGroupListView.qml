@@ -96,6 +96,7 @@ Item {
                         onCardSelect: cardGroupListViewItem.cardSelect(window);
                         onCardRemove: cardGroupListViewItem.cardRemove(window);
                         onCardDragStart: {
+                            internalListView.interactive = false;
                             console.log("drag'n'drop mode !");
                         }
                 }

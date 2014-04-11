@@ -40,6 +40,7 @@ Item {
     property real fullscreenHeight
 
     property bool isCurrentCard
+    property bool dragMode
 
     property real cornerRadius: 20
 
@@ -139,7 +140,7 @@ Item {
 
         children: [ windowUserData ]
 
-        anchors.fill: parent
+        anchors.fill: dragMode?null:parent
 
         Component.onCompleted: {
             windowUserData.parent = cardWindowWrapper;
@@ -155,6 +156,16 @@ Item {
             }
         }
     }
+    MouseArea {
+        anchors.fill: cardWindowWrapper
+        drag.target: cardWindowWrapper
+        enabled: dragMode
+        drag.axis: Drag.XAxis
+        drag.filterChildren: true
+
+        onReleased: dragMode = false
+    }
+    Drag.active: dragMode
 
     // Rounded corners (static version)
     RoundedItem {
@@ -166,10 +177,11 @@ Item {
     // Rounded corners (shader version)
     CornerShader {
         id: cornerShader
-        anchors.fill: cardDelegateContainer
+        anchors.fill: cardWindowWrapper
         sourceItem: cardWindowWrapper
         radius: cardDelegateContainer.cornerRadius
         visible: true
+        opacity: dragMode?0.8:1.0
     }
     /*
     Desaturate {

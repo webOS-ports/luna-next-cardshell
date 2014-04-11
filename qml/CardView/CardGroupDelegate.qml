@@ -37,7 +37,9 @@ Item {
                 slidingAxis: Drag.YAxis
                 minTreshold: 0.2
                 maxTreshold: 0.8
-                slidingEnabled: isCurrentItem && windowUserData && windowUserData.windowState === WindowState.Carded
+                slidingEnabled: isCurrentItem &&
+                                !cardDelegateContainer.dragMode &&
+                                windowUserData && windowUserData.windowState === WindowState.Carded
                 filterChildren: true
                 slideOnRight: false
 
@@ -54,6 +56,7 @@ Item {
                 onPressAndHold: {
                     // switch to drag'n'drop state
                     cardGroupDelegateItem.cardDragStart(window);
+                    cardDelegateContainer.dragMode = true;
                 }
 
                 CardWindowDelegate {
@@ -67,7 +70,7 @@ Item {
 
                     // rotate 5° each card
                     rotation: 5*(index - 0.5*(groupRepeater.count-1))
-                    transformOrigin: Item.Bottom
+                    //transformOrigin: Item.Bottom
 
                     cardHeight: cardGroupListViewInstance.cardWindowHeight
                     cardWidth: cardGroupListViewInstance.cardWindowWidth
