@@ -62,8 +62,7 @@ Item {
         if( lCurrentActiveWindow === window ) return;
 
         // First, put the previously current card into card mode
-        if( lCurrentActiveWindow )
-            __setToCard(lCurrentActiveWindow);
+        setCurrentCardState(WindowState.Carded);
 
         // Then make the change
         __setCurrentActiveWindow(window);
