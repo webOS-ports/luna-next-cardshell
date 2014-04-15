@@ -38,7 +38,7 @@ Item {
                 minTreshold: 0.2
                 maxTreshold: 0.8
                 slidingEnabled: isCurrentItem &&
-                                !cardDelegateContainer.dragMode &&
+                                !windowUserData.dragMode &&
                                 windowUserData && windowUserData.windowState === WindowState.Carded
                 filterChildren: true
                 slideOnRight: false
@@ -56,7 +56,6 @@ Item {
                 onPressAndHold: {
                     // switch to drag'n'drop state
                     cardGroupDelegateItem.cardDragStart(window);
-                    cardDelegateContainer.dragMode = true;
                 }
 
                 CardWindowDelegate {

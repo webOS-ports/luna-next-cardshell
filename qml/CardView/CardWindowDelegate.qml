@@ -27,7 +27,7 @@ Item {
     id: cardDelegateContainer
 
     // this is the window model wrapping the window
-    property Item windowUserData
+    property CardWindowWrapper windowUserData
 
     // this defines the sizes the card should have, depending on the state of the window
     property real cardHeight
@@ -40,7 +40,6 @@ Item {
     property real fullscreenHeight
 
     property bool isCurrentCard
-    property bool dragMode
 
     property real cornerRadius: 20
 
@@ -77,16 +76,20 @@ Item {
                 toFullscreenAnimation.start();
             }
         }
+        onDragModeChanged: {
+            if( windowUserData.dragMode )
+                windowUserData.anchors.fill = undefined;
+            else
+                windowUserData.anchors.fill = cardWindowWrapper;
+        }
     }
 
     SequentialAnimation {
         id: toCardAnimation
         running: false
 
-        onStarted: cornerShader.sourceItem = cardWindowWrapper;
-
-        PropertyAction { targets: [cardShadow,cornerShader]; property: "visible"; value: true }
-        PropertyAction { targets: [cornerStaticMask,cardWindowWrapper]; property: "visible"; value: false }
+        PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: true }
+        PropertyAction { targets: [cardShadow]; property: "visible"; value: true }
         ParallelAnimation {
             PropertyAnimation { target: cardDelegateContainer; property: "y"; to: cardY; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "height"; to: cardHeight; duration: 100 }
@@ -101,10 +104,8 @@ Item {
             PropertyAnimation { target: cardDelegateContainer; property: "height"; to: maximizedHeight; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: 100 }
         }
-        PropertyAction { targets: [cornerStaticMask,cardWindowWrapper]; property: "visible"; value: true }
-        PropertyAction { targets: [cardShadow,cornerShader]; property: "visible"; value: false }
-
-        onStopped: cornerShader.sourceItem = null;
+        PropertyAction { targets: [cardShadow]; property: "visible"; value: false }
+        PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: false }
     }
     SequentialAnimation {
         id: toFullscreenAnimation
@@ -114,10 +115,8 @@ Item {
             PropertyAnimation { target: cardDelegateContainer; property: "height"; to: fullscreenHeight; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: 100 }
         }
-        PropertyAction { targets: [cardShadow,cornerShader]; property: "visible"; value: false }
-        PropertyAction { targets: [cornerStaticMask,cardWindowWrapper]; property: "visible"; value: true }
-
-        onStopped: cornerShader.sourceItem = null;
+        PropertyAction { targets: [cardShadow]; property: "visible"; value: false }
+        PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: false }
     }
 
     Behavior on scale  { NumberAnimation { duration: 100 } }
@@ -140,11 +139,12 @@ Item {
 
         children: [ windowUserData ]
 
-        anchors.fill: dragMode?null:parent
+        anchors.fill: parent
 
         Component.onCompleted: {
             windowUserData.parent = cardWindowWrapper;
-            windowUserData.anchors.fill = cardWindowWrapper;
+            if( !windowUserData.dragMode )
+                windowUserData.anchors.fill = cardWindowWrapper;
             windowUserData.visible = true;
         }
         Component.onDestruction: {
@@ -155,33 +155,6 @@ Item {
                 windowUserData.parent = null;
             }
         }
-    }
-    MouseArea {
-        anchors.fill: cardWindowWrapper
-        drag.target: cardWindowWrapper
-        enabled: dragMode
-        drag.axis: Drag.XAxis
-        drag.filterChildren: true
-
-        onReleased: dragMode = false
-    }
-    Drag.active: dragMode
-
-    // Rounded corners (static version)
-    RoundedItem {
-        id: cornerStaticMask
-        anchors.fill: cardDelegateContainer
-        visible: false
-        cornerRadius: cardDelegateContainer.cornerRadius
-    }
-    // Rounded corners (shader version)
-    CornerShader {
-        id: cornerShader
-        anchors.fill: cardWindowWrapper
-        sourceItem: cardWindowWrapper
-        radius: cardDelegateContainer.cornerRadius
-        visible: true
-        opacity: dragMode?0.8:1.0
     }
     /*
     Desaturate {

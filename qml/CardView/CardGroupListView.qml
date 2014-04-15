@@ -32,7 +32,8 @@ Item {
 
     property Item cardView
 
-    property alias interactiveList: internalListView.interactive
+    property bool dragMode: false
+    property bool interactiveList: true
 
     signal cardRemove(Item window);
     signal cardSelect(Item window);
@@ -62,6 +63,7 @@ Item {
         orientation: ListView.Horizontal
         smooth: !internalListView.moving
         focus: true
+        interactive: cardGroupListViewItem.interactiveList //&& !cardGroupListViewItem.dragMode
 
         property bool newCardInserted: false
         onCountChanged: {
@@ -96,8 +98,22 @@ Item {
                         onCardSelect: cardGroupListViewItem.cardSelect(window);
                         onCardRemove: cardGroupListViewItem.cardRemove(window);
                         onCardDragStart: {
-                            internalListView.interactive = false;
+                            window.userData.dragMode = true;
+                            cardGroupListViewItem.dragMode = true;
                             console.log("drag'n'drop mode !");
+                        }
+
+                        DropArea {
+                            anchors.fill: parent
+
+                            Rectangle {
+                                anchors.fill: parent
+                                opacity: 0.5
+                                color: parent.containsDrag?"green":"grey"
+                            }
+
+                            onEntered: internalListView.currentIndex = index;
+                            onDropped: console.log("dropped on group" + index);
                         }
                 }
     }

@@ -38,13 +38,11 @@ FocusScope {
     //    * Fullscreen
     property int windowState: WindowState.Carded
 
-    property int windowType: WindowType.Card
-    property string appIcon: Qt.resolvedUrl("../images/default-app-icon.png")
-
     // this is the radius that should be applied to the corners of this window container
     property real cornerRadius: 20
+    property bool useShaderCorner: true
 
-    property bool aboutToBeDestroyed: false;
+    property bool dragMode: false
 
     // A simple container, to facilite the wrapping
     Item {
@@ -52,6 +50,7 @@ FocusScope {
         property Item wrappedChild
 
         anchors.fill: parent;
+        visible: !cardWrapperItem.useShaderCorner
 
         function setWrappedChild(window) {
             childWrapper.wrappedChild = window;
@@ -67,6 +66,36 @@ FocusScope {
                 /* Resize the real client window to have the right size */
                 window.changeSize(Qt.size(cardView.defaultWindowWidth, cardView.defaultWindowHeight));
             }
+        }
+    }
+    // Rounded corners (static version)
+    RoundedItem {
+        id: cornerStaticMask
+        anchors.fill: cardWrapperItem
+        visible: !useShaderCorner
+        cornerRadius: cornerRadius
+    }
+    // Rounded corners (shader version)
+    CornerShader {
+        id: cornerShader
+        anchors.fill: childWrapper
+        sourceItem: useShaderCorner ? childWrapper : null
+        radius: cornerRadius
+        visible: useShaderCorner
+    }
+
+    // Drag management
+    Drag.active: dragMode
+    MouseArea {
+        anchors.fill: cardWrapperItem
+        drag.target: cardWrapperItem
+        enabled: dragMode
+        drag.axis: Drag.XAxis
+        drag.filterChildren: true
+
+        onReleased: {
+            cardWrapperItem.Drag.drop();
+            dragMode = false
         }
     }
 
@@ -91,16 +120,8 @@ FocusScope {
 
     function setWrappedWindow(window) {
         childWrapper.setWrappedChild(window);
-
-        if( window )
-        {
-            windowType = window.windowType;
+        if( window ) {
             window.userData = this
-
-            // fallback to Card if the window type isn't managed yes
-            if( windowType === WindowType.BannerAlert ||
-                windowType === WindowType.PopupAlert )
-                windowType = WindowType.Card
         }
     }
 
