@@ -17,27 +17,25 @@
 
 .pragma library
 
-var isTestEnvironment = true;
+Qt.include("UnitsStub.js")
 
-/* A500 alike
-var displayWidth = 1024;
-var displayHeight = 768;
-var dpi = 148;
-/**/
-/*GNex alike*/
-var displayWidth = 768;
-var displayHeight = 1280;
-var dpi = 311;
-/**/
-/* N7 alike
-var displayWidth = 1280;
-var displayHeight = 800;
-var dpi = 216;
-/**/
-var displayFps = true;
-var fontStatusBar = "Prelude"
-var showReticle = false;
+function modularScale(size) {
+    if (size == "xx-small") {
+        return 0.606;
+    } else if (size == "x-small") {
+        return 0.707;
+    } else if (size == "small") {
+        return 0.857;
+    } else if (size == "medium") {
+        return 1.0;
+    } else if (size == "large") {
+        return 1.414;
+    } else if (size == "x-large") {
+        return 2.328;
+    }
+    return 0.0;
+}
 
-var layoutScale = dpi/132;
-
-var gridUnit = 18;
+function sizeToPixels(size) {
+    return modularScale(size) * dp(14);
+}
