@@ -25,3 +25,16 @@ function length(lengthAt132DPI) {
     return (lengthAt132DPI * layoutScale);
 }
 
+var DEFAULT_GRID_UNIT_PX = 8;
+
+function dp(value) {
+    var ratio = gridUnit / DEFAULT_GRID_UNIT_PX;
+    if (value <= 2.0)
+        // for values under 2dp, return only multiples of the value
+        return Math.round(value * Math.floor(ratio));
+    return Math.round(value * ratio);
+}
+
+function gu(value) {
+    return Math.round(value * gridUnit);
+}
