@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
- * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2014 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2014 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,6 +65,66 @@ Item {
             width: powerMenuColumn.width
             height: powerMenuColumn.buttonsHeight
 
+            caption: "Airplane Mode"
+            affirmative: true
+
+            onAction: {
+                root.visible = false;
+                console.log("Airplane Mode requested !")
+                //TODO: Add actual action!
+            }
+        }
+        Item {
+            height: 5
+            width: powerMenuColumn.width
+        }
+
+        ActionButton {
+            width: powerMenuColumn.width
+            height: powerMenuColumn.buttonsHeight
+
+            caption: "Device Restart"
+            alternative: true
+
+            onAction: {
+                root.visible = false;
+                console.log("Reboot requested !")
+                powerKeyService.call("palm://com.palm.power/shutdown/machineReboot",
+                    JSON.stringify({"reason": "User requested reboot"}), undefined, onRebootActionError)
+            }
+
+            function onRebootActionError(message) {
+                console.log("Failed to call machine reboot service: " + message);
+            }
+        }
+        Item {
+            height: 5
+            width: powerMenuColumn.width
+        }
+
+        ActionButton {
+            width: powerMenuColumn.width
+            height: powerMenuColumn.buttonsHeight
+
+            caption: "Luna-Next Restart"
+            //affirmative: true
+            alternative: true
+
+            onAction: {
+                root.visible = false;
+                console.log("Luna-Next restart requested !")
+                Qt.quit();
+            }
+        }
+        Item {
+            height: 5
+            width: powerMenuColumn.width
+        }
+
+        ActionButton {
+            width: powerMenuColumn.width
+            height: powerMenuColumn.buttonsHeight
+
             caption: "Shut Down"
             negative: true
 
@@ -76,29 +137,6 @@ Item {
 
             function onPowerOffActionError(message) {
                 console.log("Failed to call machine poweroff service: " + message);
-            }
-        }
-        Item {
-            height: 5
-            width: powerMenuColumn.width
-        }
-
-        ActionButton {
-            width: powerMenuColumn.width
-            height: powerMenuColumn.buttonsHeight
-
-            caption: "Restart"
-            alternative: true
-
-            onAction: {
-                root.visible = false;
-                console.log("Reboot requested !")
-                powerKeyService.call("palm://com.palm.power/shutdown/machineReboot",
-                    JSON.stringify({"reason": "User requested reboot"}), undefined, onRebootActionError)
-            }
-
-            function onRebootActionError(message) {
-                console.log("Failed to call machine reboot service: " + message);
             }
         }
         Item {
