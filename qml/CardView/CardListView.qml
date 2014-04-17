@@ -114,8 +114,8 @@ Item {
 
                         slidingTargetItem: cardDelegateContainer
                         slidingAxis: Drag.YAxis
-                        minTreshold: 0.2
-                        maxTreshold: 0.8
+                        minTreshold: 0.4
+                        maxTreshold: 0.6
                         slidingEnabled: isCurrentItem && modelWindow && modelWindow.userData.windowState === WindowState.Carded
                         filterChildren: true
                         slideOnRight: false

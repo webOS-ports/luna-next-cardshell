@@ -70,7 +70,7 @@ Item {
 
     // Swipe a card up of down the screen to close the window:
     // use a movable area containing the card window
-    MouseArea {
+    SwipeArea {
         id: slidingMouseArea
 
         anchors.fill: slidingArea
@@ -90,32 +90,55 @@ Item {
             backToVCenterAnimation.stop();
         }
 
-        onReleased: {
+        onSwipeCanceled: {
             if( drag.axis === Drag.XAxis ) {
-                if( slideOnLeft && slidingTargetItem.x < (slidingArea.width*minTreshold - slidingTargetItem.width) ) {
+                backToHCenterAnimation.start();
+            }
+            else if( drag.axis === Drag.YAxis ) {
+                backToVCenterAnimation.start();
+            }
+        }
+
+        onSwipeLeftGesture: {
+            if( drag.axis === Drag.XAxis ) {
+                if( slideOnLeft && slidingTargetItem.x < (slidingArea.width*minTreshold - slidingTargetItem.width/2) ) {
                     // slided to the left
                     swipeOutAnimation.doSwipeOut(-slidingTargetItem.width, slidedLeft);
                 }
-                else if( slideOnRight && slidingTargetItem.x > slidingArea.width*maxTreshold ) {
-                    // slided to the right
-                    swipeOutAnimation.doSwipeOut(slidingArea.width, slidedRight);
-                }
-                else
-                {
+                else {
                     backToHCenterAnimation.start();
                 }
             }
-            else if( drag.axis === Drag.YAxis ) {
-                if( slideOnLeft && slidingTargetItem.y < (slidingArea.height*minTreshold - slidingTargetItem.height) ) {
+        }
+        onSwipeRightGesture: {
+            if( drag.axis === Drag.XAxis ) {
+                if( slideOnRight && slidingTargetItem.x > slidingArea.width*maxTreshold - slidingTargetItem.width/2 ) {
+                    // slided to the right
+                    swipeOutAnimation.doSwipeOut(slidingArea.width, slidedRight);
+                }
+                else {
+                    backToHCenterAnimation.start();
+                }
+            }
+        }
+        onSwipeUpGesture: {
+            if( drag.axis === Drag.YAxis ) {
+                if( slideOnLeft && slidingTargetItem.y < (slidingArea.height*minTreshold - slidingTargetItem.height/2) ) {
                     // slided up
                     swipeOutAnimation.doSwipeOut(-slidingTargetItem.height, slidedLeft);
                 }
-                else if( slideOnRight && slidingTargetItem.y > slidingArea.height*maxTreshold ) {
+                else {
+                    backToVCenterAnimation.start();
+                }
+            }
+        }
+        onSwipeDownGesture: {
+            if( drag.axis === Drag.YAxis ) {
+                if( slideOnRight && slidingTargetItem.y > slidingArea.height*maxTreshold - slidingTargetItem.height/2 ) {
                     // slided down
                     swipeOutAnimation.doSwipeOut(slidingArea.height, slidedRight);
                 }
-                else
-                {
+                else {
                     backToVCenterAnimation.start();
                 }
             }
