@@ -108,7 +108,7 @@ Rectangle {
     ScreenGestureArea {
         id: screenGestureArea
         anchors.fill: parent
-        boundary: Units.length(24)
+        boundary: Units.gu(3)
         gestureNeeded: "down"
         z: 100
         onGestureFinished: {

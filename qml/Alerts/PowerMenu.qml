@@ -76,7 +76,7 @@ Item {
         }
         Item {
             height: Units.gu(1) / 2
-            width: powerMenuColumn.width;
+            width: powerMenuColumn.width
         }
 
         ActionButton {

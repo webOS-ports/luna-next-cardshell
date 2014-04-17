@@ -154,7 +154,7 @@ WindowManager {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: Units.length(24);
+        height: Units.gu(3);
 
         z: 2 // can only be hidden by a fullscreen window
 
@@ -169,7 +169,7 @@ WindowManager {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: Units.length(40);
+        height: Units.gu(4);
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
     }
