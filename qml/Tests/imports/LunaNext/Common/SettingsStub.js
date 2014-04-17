@@ -40,4 +40,4 @@ var showReticle = false;
 
 var layoutScale = dpi/132;
 
-var gridUnit = 18;
+var gridUnit = 8;
