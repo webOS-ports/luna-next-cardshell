@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
- * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2014 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2014 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -64,18 +65,13 @@ Item {
             width: powerMenuColumn.width
             height: powerMenuColumn.buttonsHeight
 
-            caption: "Shut Down"
-            negative: true
+            caption: "Airplane Mode"
+            affirmative: true
 
             onAction: {
                 root.visible = false;
-                console.log("Shutdown requested !")
-                powerKeyService.call("palm://com.palm.power/shutdown/machineOff",
-                    JSON.stringify({"reason": "User requested poweroff"}), undefined, onPowerOffActionError)
-            }
-
-            function onPowerOffActionError(message) {
-                console.log("Failed to call machine poweroff service: " + message);
+                console.log("Airplane Mode requested !")
+                //TODO: Add actual action!
             }
         }
         Item {
@@ -87,7 +83,7 @@ Item {
             width: powerMenuColumn.width
             height: powerMenuColumn.buttonsHeight
 
-            caption: "Restart"
+            caption: "Device Restart"
             alternative: true
 
             onAction: {
@@ -103,6 +99,48 @@ Item {
         }
         Item {
             height: Units.gu(1) / 2
+            width: powerMenuColumn.width
+        }
+
+        ActionButton {
+            width: powerMenuColumn.width
+            height: powerMenuColumn.buttonsHeight
+
+            caption: "Luna-Next Restart"
+            //affirmative: true
+            alternative: true
+
+            onAction: {
+                root.visible = false;
+                console.log("Luna-Next restart requested !")
+                Qt.quit();
+            }
+        }
+        Item {
+            height: 5
+            width: powerMenuColumn.width
+        }
+
+        ActionButton {
+            width: powerMenuColumn.width
+            height: powerMenuColumn.buttonsHeight
+
+            caption: "Shut Down"
+            negative: true
+
+            onAction: {
+                root.visible = false;
+                console.log("Shutdown requested !")
+                powerKeyService.call("palm://com.palm.power/shutdown/machineOff",
+                    JSON.stringify({"reason": "User requested poweroff"}), undefined, onPowerOffActionError)
+            }
+
+            function onPowerOffActionError(message) {
+                console.log("Failed to call machine poweroff service: " + message);
+            }
+        }
+        Item {
+            height: 5
             width: powerMenuColumn.width
         }
 
