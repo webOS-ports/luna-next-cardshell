@@ -109,6 +109,9 @@ Item {
                     backToHCenterAnimation.start();
                 }
             }
+            else {
+                backToVCenterAnimation.start();
+            }
         }
         onSwipeRightGesture: {
             if( drag.axis === Drag.XAxis ) {
@@ -119,6 +122,9 @@ Item {
                 else {
                     backToHCenterAnimation.start();
                 }
+            }
+            else {
+                backToVCenterAnimation.start();
             }
         }
         onSwipeUpGesture: {
@@ -131,6 +137,9 @@ Item {
                     backToVCenterAnimation.start();
                 }
             }
+            else {
+                backToHCenterAnimation.start();
+            }
         }
         onSwipeDownGesture: {
             if( drag.axis === Drag.YAxis ) {
@@ -141,6 +150,9 @@ Item {
                 else {
                     backToVCenterAnimation.start();
                 }
+            }
+            else {
+                backToHCenterAnimation.start();
             }
         }
     }
