@@ -25,7 +25,7 @@ Item {
 
     visible: false
 
-    property real contentMargin: 20
+    property real contentMargin: Units.gu(2)
     height: powerMenuColumn.height + contentMargin
 
     Rectangle {
@@ -55,7 +55,7 @@ Item {
     Column {
         id: powerMenuColumn
 
-        property real buttonsHeight: Units.length(40);
+        property real buttonsHeight: Units.gu(4);
 
         anchors.top: root.top
         width: root.width - contentMargin
@@ -79,7 +79,7 @@ Item {
             }
         }
         Item {
-            height: 5
+            height: Units.gu(1) / 2
             width: powerMenuColumn.width
         }
 
@@ -102,7 +102,7 @@ Item {
             }
         }
         Item {
-            height: 5
+            height: Units.gu(1) / 2
             width: powerMenuColumn.width
         }
 

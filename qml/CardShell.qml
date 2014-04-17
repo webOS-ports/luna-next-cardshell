@@ -66,7 +66,7 @@ WindowManager {
             id: fpsTextComponent
             Text {
                 color: "red"
-                font.pixelSize: 20
+                font.pixelSize: FontUtils.sizeToPixels("medium")
                 text: fpsCounter.fps + " fps"
 
                 FpsCounter {
@@ -215,7 +215,7 @@ WindowManager {
         anchors.top: windowManager.top
         anchors.left: windowManager.left
         anchors.right: windowManager.right
-        height: Units.length(24);
+        height: Units.gu(3);
 
         z: 2 // can only be hidden by a fullscreen window
 
@@ -244,7 +244,7 @@ WindowManager {
         anchors.bottom: windowManager.bottom
         anchors.left: windowManager.left
         anchors.right: windowManager.right
-        height: Units.length(40);
+        height: Units.gu(3);
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
     }
