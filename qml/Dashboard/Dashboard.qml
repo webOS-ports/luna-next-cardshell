@@ -48,7 +48,7 @@ Rectangle {
         id: minimizedListView
 
         x: 0; y: 0; width: parent.width
-        height: notificationsModel.count > 0 ? Units.length(24) : 0;
+        height: notificationsModel.count > 0 ? Units.gu(3) : 0;
         interactive: false
 
         orientation: ListView.Horizontal

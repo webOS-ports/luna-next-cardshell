@@ -21,7 +21,7 @@ import LunaNext.Common 0.1
 Item {
     id: appMenu
 
-    width: Units.length(100)
+    width: Units.gu(10)
     state: "hidden"
     visible: false
 
@@ -79,10 +79,10 @@ Item {
 
     Row {
         anchors.left: parent.left
-        anchors.leftMargin: Units.length(5)
+        anchors.leftMargin: Units.gu(1)
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        spacing: Units.length(3)
+        spacing: Units.gu(1) / 2
 
         Text {
             id: title

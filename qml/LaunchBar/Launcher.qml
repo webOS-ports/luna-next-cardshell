@@ -45,9 +45,9 @@ Item {
         windowManagerInstance: launcherItem.windowManagerInstance
 
         anchors.top: parent.top
-        anchors.topMargin: Units.length(10);
+        anchors.topMargin: Units.gu(1);
         width: parent.width * 0.8
-        height: Units.length(40);
+        height: Units.gu(5);
         anchors.horizontalCenter: parent.horizontalCenter
 
         onShowJustType: {
@@ -61,7 +61,7 @@ Item {
     FullLauncher {
         id: fullLauncherInstance
 
-        iconSize: Units.length(40);
+        iconSize: Units.gu(4);
         bottomMargin: launchBarInstance.height;
 
         anchors.left: parent.left
@@ -72,7 +72,7 @@ Item {
     LaunchBar {
         id: launchBarInstance
 
-        height: Units.length(80);
+        height: Units.gu(8);
         anchors.left: parent.left
         anchors.right: parent.right
 

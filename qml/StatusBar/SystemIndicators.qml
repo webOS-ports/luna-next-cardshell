@@ -24,8 +24,8 @@ import "Indicators"
 Row {
     id: indicatorsRow
 
-    anchors.margins: 8
-    spacing: 8
+    anchors.margins: Units.gu(1) / 2
+    spacing: Units.gu(1) / 2
 
     BatteryService {
         id: batteryService
@@ -50,7 +50,6 @@ Row {
 
     WifiIndicator {
         id: wifiIndicator
-
 
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
