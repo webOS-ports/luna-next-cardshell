@@ -26,7 +26,7 @@ Item {
 
     visible: false
 
-    property real contentMargin: 20
+    property real contentMargin: Units.gu(2)
     height: powerMenuColumn.height + contentMargin
 
     Rectangle {
@@ -56,27 +56,27 @@ Item {
     Column {
         id: powerMenuColumn
 
-        property real buttonsHeight: Units.length(40);
+        property real buttonsHeight: Units.gu(4);
 
         anchors.top: root.top
         width: root.width - contentMargin
 
         ActionButton {
-            width: powerMenuColumn.width
-            height: powerMenuColumn.buttonsHeight
+            width: powerMenuColumn.width;
+            height: powerMenuColumn.buttonsHeight;
 
-            caption: "Airplane Mode"
-            affirmative: true
+            caption: "Airplane Mode";
+            affirmative: true;
 
             onAction: {
                 root.visible = false;
-                console.log("Airplane Mode requested !")
+                console.log("Airplane Mode requested !");
                 //TODO: Add actual action!
             }
         }
         Item {
-            height: 5
-            width: powerMenuColumn.width
+            height: Units.gu(1) / 2
+            width: powerMenuColumn.width;
         }
 
         ActionButton {
@@ -98,27 +98,26 @@ Item {
             }
         }
         Item {
-            height: 5
+            height: Units.gu(1) / 2
             width: powerMenuColumn.width
         }
 
         ActionButton {
-            width: powerMenuColumn.width
-            height: powerMenuColumn.buttonsHeight
+            width: powerMenuColumn.width;
+            height: powerMenuColumn.buttonsHeight;
 
-            caption: "Luna-Next Restart"
-            //affirmative: true
-            alternative: true
+            caption: "Luna-Next Restart";
+            alternative: true;
 
             onAction: {
                 root.visible = false;
-                console.log("Luna-Next restart requested !")
+                console.log("Luna-Next restart requested !");
                 Qt.quit();
             }
         }
         Item {
-            height: 5
-            width: powerMenuColumn.width
+            height: Units.gu(1) / 2
+            width: powerMenuColumn.width;
         }
 
         ActionButton {
@@ -140,7 +139,7 @@ Item {
             }
         }
         Item {
-            height: 5
+            height: Units.gu(1) / 2
             width: powerMenuColumn.width
         }
 
