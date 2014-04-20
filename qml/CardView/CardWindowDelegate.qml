@@ -76,12 +76,6 @@ Item {
                 toFullscreenAnimation.start();
             }
         }
-        onDragModeChanged: {
-            if( windowUserData.dragMode )
-                windowUserData.anchors.fill = undefined;
-            else
-                windowUserData.anchors.fill = cardWindowWrapper;
-        }
     }
 
     SequentialAnimation {
@@ -143,12 +137,11 @@ Item {
 
         Component.onCompleted: {
             windowUserData.parent = cardWindowWrapper;
-            if( !windowUserData.dragMode )
-                windowUserData.anchors.fill = cardWindowWrapper;
+            windowUserData.anchors.fill = cardWindowWrapper;
             windowUserData.visible = true;
         }
         Component.onDestruction: {
-            if( windowUserData )
+            if( windowUserData && windowUserData.parent === cardWindowWrapper )
             {
                 windowUserData.visible = false;
                 windowUserData.anchors.fill = undefined;

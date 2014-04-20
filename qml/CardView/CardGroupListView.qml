@@ -100,22 +100,64 @@ Item {
                         onCardDragStart: {
                             window.userData.dragMode = true;
                             cardGroupListViewItem.dragMode = true;
-                            console.log("drag'n'drop mode !");
+                            containerForDraggedCard.startDrag(window);
+                            listCardGroupsModel.removeWindow(window);
+                            console.log("Entering drag'n'drop mode...");
                         }
 
                         DropArea {
                             anchors.fill: parent
 
-                            Rectangle {
-                                anchors.fill: parent
-                                opacity: 0.5
-                                color: parent.containsDrag?"green":"grey"
-                            }
-
                             onEntered: internalListView.currentIndex = index;
-                            onDropped: console.log("dropped on group" + index);
+                            onDropped: {
+                                var droppedWindowUserData = drag.source;
+                                droppedWindowUserData.dragMode = false;
+                                cardGroupListViewItem.dragMode = false;
+                                windowList.append({"window": droppedWindowUserData.wrappedWindow});
+                                containerForDraggedCard.stopDrag(index);
+                                console.log("Exited drag'n'drop mode.");
+                            }
                         }
                 }
+    }
+
+    // This item is used during a Drag'n'Drop operation, to
+    // temporarily hold the dragged card
+    Item {
+        id: containerForDraggedCard
+
+        visible: false
+        anchors.fill: parent
+
+        Item {
+            id: cardWindowWrapper
+
+            anchors.fill: parent
+
+            function setDraggedWindow(windowUserData) {
+                // convert position of card
+                var newPos = mapFromItem(windowUserData.parent, windowUserData.x, windowUserData.y)
+                // delete old anchors
+                windowUserData.anchors.fill = undefined;
+
+                // reparent
+                cardWindowWrapper.children = [ windowUserData ];
+                windowUserData.parent = cardWindowWrapper;
+
+                // set correct position
+                windowUserData.x = newPos.x;
+                windowUserData.y = newPos.y;
+                windowUserData.visible = true;
+            }
+        }
+
+        function startDrag(window) {
+            cardWindowWrapper.setDraggedWindow(window.userData);
+            containerForDraggedCard.visible = true;
+        }
+        function stopDrag(windw) {
+            containerForDraggedCard.visible = false;
+        }
     }
 
     function currentActiveWindow() {
