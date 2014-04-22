@@ -16,7 +16,6 @@
  */
 
 import QtQuick 2.0
-import QtGraphicalEffects 1.0
 
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
@@ -149,12 +148,4 @@ Item {
             }
         }
     }
-    /*
-    Desaturate {
-        visible: !isCurrentCard
-        anchors.fill: cardDelegateContainer
-        source: cardWindowWrapper
-        desaturation: 1.0
-    }
-    */
 }
