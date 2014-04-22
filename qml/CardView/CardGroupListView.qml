@@ -16,6 +16,8 @@
  */
 
 import QtQuick 2.0
+import QtGraphicalEffects 1.0
+
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 
@@ -98,11 +100,12 @@ Item {
                         onCardSelect: cardGroupListViewItem.cardSelect(window);
                         onCardRemove: cardGroupListViewItem.cardRemove(window);
                         onCardDragStart: {
+                            console.log("Entering drag'n'drop mode...");
                             window.userData.dragMode = true;
                             cardGroupListViewItem.dragMode = true;
                             containerForDraggedCard.startDrag(window);
                             listCardGroupsModel.removeWindow(window);
-                            console.log("Entering drag'n'drop mode...");
+                            internalListView.snapModeChanged();
                         }
 
                         DropArea {
@@ -128,6 +131,7 @@ Item {
 
         visible: false
         anchors.fill: parent
+        opacity: 0.8
 
         Item {
             id: cardWindowWrapper
