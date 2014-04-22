@@ -3,6 +3,7 @@ import QtQuick 2.0
 MouseArea {
     id: swipeArea
 
+    signal clicked()
     signal swipeCanceled()
     signal swipeUpGesture(int modifiers)
     signal swipeDownGesture(int modifiers)
@@ -22,6 +23,9 @@ MouseArea {
         _pressedX = mouse.x;
         _pressedY = mouse.y;
         _timeStamp = Date.now();
+
+        // we manage this event
+        mouse.accepted = true;
     }
     onPositionChanged: {
         var xDiff = mouse.x - _pressedX;
@@ -75,17 +79,13 @@ MouseArea {
                     swipeLeftGesture(mouse.modifiers);
                 }
             }
-
-            // this event has been managed
-            mouse.accepted = true;
         }
         else {
             if( _swipeInitiated ) {
-                // don't propagate a click event
-                mouse.accepted = true;
-
                 swipeCanceled();
             }
+
+            clicked(mouse);
         }
 
         _swipeInitiated = false;
