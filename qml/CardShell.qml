@@ -27,7 +27,7 @@ import "LaunchBar"
 import "Dashboard"
 import "WindowManager"
 import "LunaSysAPI"
-import "Utils" as Utils
+import "Utils"
 import "Alerts"
 import "Connectors"
 
@@ -114,6 +114,14 @@ WindowManager {
         anchors.fill: parent
         source: Settings.showReticle ? "Utils/ReticleArea.qml" : ""
         z: 1000
+
+        Tweak {
+            id: reticleTweak
+            owner: "luna-next-cardshell"
+            key: "tapRippleSupport"
+            defaultValue: true
+            onValueChanged: reticleArea.visible = reticleTweak.value
+        }
     }
 
     PowerMenu {
