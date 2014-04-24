@@ -1,0 +1,17 @@
+[
+    {
+        "category": "luna",
+        "owner": "luna-next-cardshell",
+        "prefs": [
+            {
+                "group": "ui",
+                "restart": "none",
+                "label": "Visual support for tap ripple",
+                "help": "Enable or disable visual tap ripple animation",
+                "key": "tapRippleSupport",
+                "type": "ToggleButton",
+                "value": true
+            }
+        ]
+    }
+]
