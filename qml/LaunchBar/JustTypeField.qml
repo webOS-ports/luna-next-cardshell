@@ -74,7 +74,7 @@ Item {
 
         verticalAlignment: Text.AlignVCenter
         font.pixelSize: bgCenter.height * 0.4;
-        text: "Just type."
+        text: "Just type..."
         color: "white"
         font.family: Settings.fontStatusBar
     }
