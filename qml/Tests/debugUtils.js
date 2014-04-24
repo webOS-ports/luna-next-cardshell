@@ -31,6 +31,14 @@ function pad(n) {
     return out;
 }
 
+function dumpObject(object) {
+    console.log("-> Dump of " + object);
+    var _property
+    for (_property in object) {
+      console.log( "---> " + _property + ': ' + object[_property]+'; ' );
+    }
+}
+
 function itemName(item) {
     if (item.toString().indexOf("QDeclarativeLoader") == 0 ||item.toString().indexOf("QDeclarativeImage") == 0) {
         var src = item.source.toString()
