@@ -74,7 +74,15 @@ Item {
     SwipeArea {
         id: slidingMouseArea
 
-        anchors.fill: slidingTargetItem
+        //anchors.fill: slidingArea
+        //anchors.fill: slidingTargetItem
+        height: slidingTargetItem.height
+        width: slidingTargetItem.width
+        Component.onCompleted: {
+            x = slidingTargetItem.x;
+            y = slidingTargetItem.y;
+        }
+
         rotation: slidingTargetItem.rotation
         transformOrigin: slidingTargetItem.transformOrigin
 
