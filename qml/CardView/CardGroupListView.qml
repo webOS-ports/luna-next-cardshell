@@ -26,6 +26,8 @@ import "../Utils"
 Item {
     id: cardGroupListViewItem
 
+    property bool enableDragnDrop: false
+
     property real maximizedCardTopMargin;
 
     property real cardScale: 0.6
@@ -100,12 +102,16 @@ Item {
                         onCardSelect: cardGroupListViewItem.cardSelect(window);
                         onCardRemove: cardGroupListViewItem.cardRemove(window);
                         onCardDragStart: {
-                            console.log("Entering drag'n'drop mode...");
-                            window.userData.dragMode = true;
-                            cardGroupListViewItem.dragMode = true;
-                            containerForDraggedCard.startDrag(window);
-                            listCardGroupsModel.removeWindow(window);
-                            internalListView.snapModeChanged();
+                            if( !enableDragnDrop ) {
+                                console.log("Drag'n'drop is currently disabled.");
+                            }
+                            else {
+                                console.log("Entering drag'n'drop mode...");
+                                window.userData.dragMode = true;
+                                cardGroupListViewItem.dragMode = true;
+                                containerForDraggedCard.startDrag(window);
+                                listCardGroupsModel.removeWindow(window);
+                            }
                         }
 
                         DropArea {
