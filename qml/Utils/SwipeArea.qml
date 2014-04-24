@@ -12,8 +12,8 @@ MouseArea {
 
     property real swipeVelocityThreshold: 0.2  /* pixels per ms */
 
-    property int _pressedX: 0
-    property int _pressedY: 0
+    property real _pressedX: 0
+    property real _pressedY: 0
     property real _velocityX: 0
     property real _velocityY: 0
     property var _timeStamp
@@ -84,8 +84,9 @@ MouseArea {
             if( _swipeInitiated ) {
                 swipeCanceled();
             }
-
-            clicked(mouse);
+            else {
+                clicked(mouse);
+            }
         }
 
         _swipeInitiated = false;
