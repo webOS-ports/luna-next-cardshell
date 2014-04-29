@@ -22,7 +22,7 @@ import LunaNext.Common 0.1
 import "../Utils"
 
 /// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
-/// [-- app menu -- |   --- title ---    |  -- indicators --]
+/// [-- app menu -- / -- (custom) carrier name -- |   --- title ---    |  -- indicators --]
 
 Item {
     id: statusBar
@@ -54,7 +54,7 @@ Item {
                 color: "white"
                 font.family: Settings.fontStatusBar
                 font.pixelSize: parent.height;
-                font.bold: false
+                font.bold: true
                 //FIXME Still necessary to adjust based on regional settings later for date and time.
                 Tweak {
                     id: dateTimeTweak
@@ -81,6 +81,39 @@ Item {
                 }
             }
         }
+		
+        Item {
+            id: carrierString
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.topMargin: parent.height * 0.2
+            anchors.bottomMargin: parent.height * 0.2
+            implicitWidth: carrierText.contentWidth
+            visible: true
+
+            Text {
+                id: carrierText
+                anchors.fill: parent
+                horizontalAlignment: Text.AlignHLeft
+                color: "white"
+                font.family: Settings.fontStatusBar
+                font.pixelSize: parent.height;
+                font.bold: true
+                Tweak {
+                    id: customCarrierString
+                    owner: "luna-next-cardshell"
+                    key: "carrierString"
+                    defaultValue: "WebOS Ports"
+                    onValueChanged: updateCarrierString();
+
+                    function updateCarrierString()
+                    {
+                        carrierText.text = customCarrierString.value;
+                    }
+                }
+            }
+        }
 
         AppMenu {
             id: appMenu
@@ -89,7 +122,8 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-            state: statusBar.state === "application-visible" || launcherInstance.state === "justTypeLauncher" ? "visible" : "hidden"
+            state: statusBar.state === "application-visible" ? "visible" : "hidden"
+
         }
 
         SystemIndicators {
@@ -114,6 +148,7 @@ Item {
         State {
             name: "application-visible"
             PropertyChanges { target: statusBar; visible: true }
+            PropertyChanges { target: carrierString; visible: false }
         }
     ]
 
