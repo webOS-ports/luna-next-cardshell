@@ -5,12 +5,36 @@
         "prefs": [
             {
                 "group": "ui",
-                "restart": "none",
+                "restart": "luna",
                 "label": "Visual support for tap ripple",
                 "help": "Enable or disable visual tap ripple animation",
                 "key": "tapRippleSupport",
                 "type": "ToggleButton",
                 "value": true
+            },
+			{
+                "group": "ui",
+                "restart": "luna",
+                "label": "Display date, time or both",
+                "help": "Show Date, Time or Date & Time in Statusbar",
+                "key": "showDateTime",
+                "type": "ListSelector",
+                "value": "timeOnly",
+				"choices": 
+				[ 
+					{
+						"label": "Date Only",
+						"value": "dateOnly"
+					}, 
+					{
+						"label": "Time Only",
+						"value": "timeOnly"
+					}, 
+					{
+						"label": "Date & Time",
+						"value": "dateTime"
+					} 	
+				]
             }
         ]
     }
