@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2014 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,6 +18,8 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
+
+import "../Utils"
 
 /// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
 /// [-- app menu -- |   --- title ---    |  -- indicators --]
@@ -52,9 +55,30 @@ Item {
                 font.family: Settings.fontStatusBar
                 font.pixelSize: parent.height;
                 font.bold: false
-                //FIXME Just showing date in international and time now in 24h format
-                //necessary to adjust based on settings later for date and time. 
-                text: Qt.formatDateTime(new Date(), "dd-MMM-yyyy h:mm")
+                //FIXME Still necessary to adjust based on regional settings later for date and time.
+                Tweak {
+                    id: dateTimeTweak
+                    owner: "luna-next-cardshell"
+                    key: "showDateTime"
+                    defaultValue: timeOnly
+                    onValueChanged: updateDateTime();
+
+                    function updateDateTime()
+                    {
+                        if (dateTimeTweak.value === "dateTime")
+                        {
+                            titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy h:mm");
+                        }
+                        else if (dateTimeTweak.value === "timeOnly")
+                        {
+                            titleText.text = Qt.formatDateTime(new Date(), "h:mm");
+                        }
+                        else if (dateTimeTweak.value === "dateOnly")
+                        {
+                            titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy");
+                        }
+                    }
+                }
             }
         }
 
