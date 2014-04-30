@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2013-2014 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,9 @@ Item {
     property Item batteryService
     property Item wifiService
 
+    //FIXME We need to add the actual carrier string once we have oFono stuff working
+    property string myCarrierText: "WebOS Ports"
+
     Rectangle {
         id: background
         anchors.fill: parent
@@ -55,6 +58,8 @@ Item {
                 font.family: Settings.fontStatusBar
                 font.pixelSize: parent.height;
                 font.bold: true
+                //Set the default to Time in case no Tweaks option has been set yet.
+                text: Qt.formatDateTime(new Date(), "h:mm");
                 //FIXME Still necessary to adjust based on regional settings later for date and time.
                 Tweak {
                     id: dateTimeTweak
@@ -100,16 +105,48 @@ Item {
                 font.family: Settings.fontStatusBar
                 font.pixelSize: parent.height;
                 font.bold: true
+                //Set the default carrier text in case no Tweaks option has been set yet
+                text: myCarrierText
+                Tweak {
+                    id: enableCustomCarrierString
+                    owner: "luna-next-cardshell"
+                    key: "useCustomCarrierString"
+                    defaultValue: "false"
+                    onValueChanged: updateCustomCarrierString();
+
+                    function updateCustomCarrierString()
+                    {
+                        if (enableCustomCarrierString.value === true)
+                        {
+                            //Only show custom carrier text in case we have the option enabled in Tweaks
+                            carrierText.text = customCarrierString.value;
+                        }
+                        else
+                        {
+                            //Otherwise show the regular "Carrier"
+                            carrierText.text = myCarrierText
+                        }
+                    }
+                }
                 Tweak {
                     id: customCarrierString
                     owner: "luna-next-cardshell"
                     key: "carrierString"
-                    defaultValue: "WebOS Ports"
+                    defaultValue: "Custom Carrier String"
                     onValueChanged: updateCarrierString();
 
                     function updateCarrierString()
                     {
-                        carrierText.text = customCarrierString.value;
+                        if (enableCustomCarrierString.value === true)
+                        {
+                            //Only show custom carrier text in case we have the option enabled in Tweaks
+                            carrierText.text = customCarrierString.value;
+                        }
+                        else
+                        {
+                            //Otherwise show the regular "Carrier"
+                            carrierText.text = myCarrierText;
+                        }
                     }
                 }
             }
