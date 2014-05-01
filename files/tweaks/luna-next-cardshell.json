@@ -16,7 +16,7 @@
                 "group": "ui",
                 "restart": "luna",
                 "label": "Display date, time or both",
-                "help": "Show Date, Time or Date & Time in Statusbar",
+                "help": "Show Date, Time or Date & Time in Status Bar",
                 "key": "showDateTime",
                 "type": "ListSelector",
                 "value": "timeOnly",
@@ -37,10 +37,39 @@
 				]
             },
 			{
-                "group": "ui",
+                "group": "Status Bar",
+                "restart": "luna",
+                "label": "Show battery icon, percentage or both",
+                "help": "Show Battery Icon, Battery Percentage or Both",
+                "key": "showBatteryPercentage",
+                "type": "ListSelector",
+                "value": "iconOnly",
+				"choices": 
+				[ 
+					{
+						"label": "Battery Icon Only",
+						"value": "iconOnly"
+					}, 
+					{
+						"label": "Battery Percentage Only",
+						"value": "percentageOnly"
+					} 	
+				]
+            },
+			{
+                "group": "Status Bar",
+                "restart": "luna",
+                "label": "Use Custom Carrier String",
+                "help": "Enables the use of your own text as the carrier string.",
+                "key": "useCustomCarrierString",
+                "type": "ToggleButton",
+                "value": false
+            },
+			{
+                "group": "Status Bar",
                 "restart": "luna",
                 "label": "Carrier String",
-                "help": "Enter the text you'd like displayed as the carrier string.",
+                "help": "The text used as your custom carrier string.",
                 "key": "carrierString",
                 "type": "TextField",
                 "value": "WebOS Ports",
