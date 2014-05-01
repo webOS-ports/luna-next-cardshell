@@ -24,9 +24,10 @@ Item {
 
     property string imageSource: ""
     property bool enabled: true
-    property int myPixelSizeDivider: 1
+    property int pixelSizeDivider: 1
     property string textValue: ""
-    property int myLeftMargin: 0
+    property string textColor: "white"
+    property int leftMargin: 0
     property int textRotation: 0
 
     property bool imageVisible: true
@@ -75,10 +76,10 @@ Item {
 
     Text {
         id: indicatorText
-        color: "white"
+        color: textColor
         font.family: Settings.fontStatusBar
-        font.pixelSize: (parent.height / myPixelSizeDivider) * 0.95
-        font.bold: {if(myPixelSizeDivider === 1) true; else false}
+        font.pixelSize: (parent.height / pixelSizeDivider) * 0.95
+        font.bold: {if(pixelSizeDivider === 1) true; else false}
         text: textValue
         transform: Rotation {
                    angle: textRotation
