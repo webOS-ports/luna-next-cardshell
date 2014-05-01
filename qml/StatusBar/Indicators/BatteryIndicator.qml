@@ -53,15 +53,53 @@ BaseIndicator {
                 batteryIndicator.imageSource = ""
                 batteryIndicator.textValue = percentage + "%"
                 batteryIndicator.textRotation = 0
-                batteryIndicator.myPixelSizeDivider = 1
+                batteryIndicator.pixelSizeDivider = 1
                 batteryIndicator.textVisible = true
                 batteryIndicator.imageVisible = false
-                batteryIndicator.myLeftMargin = 0
+                batteryIndicator.leftMargin = 0
             }
 
         }
     }
 
+    Tweak {
+        id: batteryPercentageColorOptions
+        owner: "luna-next-cardshell"
+        key: "batteryPercentageColor"
+        defaultValue: "white"
+        onValueChanged: updateBatteryPercentageColor();
+
+        function updateBatteryPercentageColor()
+        {
+            if (batteryPercentageColorOptions.value === "white")
+            {
+                //Show white color
+                batteryIndicator.textColor = "white";
+            }
+            else
+            {
+                //Get the color for the level
+                batteryIndicator.textColor = __getColorForBatteryLevel(level);
+            }
+        }
+    }
+
+    function __getColorForBatteryLevel(level) {
+        var result = ""
+        if (level >= 11 )
+        result = "lime"
+
+        else if (level > 1 && level <= 10) {
+            result = "lightgray"
+        }
+        else if (level <= 0) {
+            result = "red"
+        }
+        else if (level === 1) {
+            result = "orange"
+        }
+        return result;
+    }
 
     function __getIconForBatteryLevel(level, isCharging) {
         var baseName = "../../images/statusbar/battery-";
