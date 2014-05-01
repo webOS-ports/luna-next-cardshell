@@ -34,9 +34,9 @@ Item {
     property bool textVisible: false
 
 
-    width: getIndicatorWidth()
+    width: getIndicatorWidth(imageVisible, textVisible, indicatorImage.width, indicatorText.width)
 
-    function getIndicatorWidth()
+    function getIndicatorWidth(imageVisible, textVisible, indicatorImageWidth, indicatorTextWidth)
     {
     //Check if we show the image
         if (imageVisible)
@@ -45,18 +45,18 @@ Item {
             if (textVisible)
             {
                 //return the max width for image or text
-                return Math.max(indicatorImage.width, indicatorText.width)
+                return Math.max(indicatorImageWidth, indicatorTextWidth)
             }
             else
             {
                 //When we only have image, we'll return it's width
-                return indicatorImage.width;
+                return indicatorImageWidth;
             }
         }
         else if (textVisible)
         {
             //We only have text so we return it's width
-            return indicatorText.width;
+            return indicatorTextWidth;
         }
     }
 
