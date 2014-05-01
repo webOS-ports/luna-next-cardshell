@@ -59,6 +59,26 @@
 			{
                 "group": "Status Bar",
                 "restart": "luna",
+                "label": "Battery Percentage Color Option",
+                "help": "Show Battery Percentage in white or in color",
+                "key": "batteryPercentageColor",
+                "type": "ListSelector",
+                "value": "white",
+				"choices": 
+				[ 
+					{
+						"label": "White",
+						"value": "white"
+					}, 
+					{
+						"label": "Color",
+						"value": "color"
+					} 	
+				]
+            },
+			{
+                "group": "Status Bar",
+                "restart": "luna",
                 "label": "Use Custom Carrier String",
                 "help": "Enables the use of your own text as the carrier string.",
                 "key": "useCustomCarrierString",
