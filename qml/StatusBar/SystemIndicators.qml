@@ -87,6 +87,6 @@ Row {
 
         level: batteryService.level
         charging: batteryService.charging
-		percentage: batteryService.percentage
+        percentage: batteryService.percentage
     }
 }
