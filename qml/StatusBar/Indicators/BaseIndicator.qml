@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
- * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2013-2014 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2013-2014 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2013-2014 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +24,41 @@ Item {
 
     property string imageSource: ""
     property bool enabled: true
+    property int myPixelSizeDivider: 1
+    property string textValue: ""
+    property int myLeftMargin: 0
+    property int textRotation: 0
 
-    width: indicatorImage.width
+    property bool imageVisible: true
+    property bool textVisible: false
+
+
+    width: getIndicatorWidth()
+
+    function getIndicatorWidth()
+    {
+    //Check if we show the image
+        if (imageVisible)
+        {
+            //Check if we also show the text
+            if (textVisible)
+            {
+                //return the max width for image or text
+                return Math.max(indicatorImage.width, indicatorImage.width)
+            }
+            else
+            {
+                //When we only have image, we'll return it's width
+                return indicatorImage.width;
+            }
+        }
+        else if (textVisible)
+        {
+            //We only have text so we return it's width
+            return indicatorText.width;
+        }
+    }
+
     clip: true
     visible: true
 
@@ -36,7 +70,23 @@ Item {
         anchors.left: indicatorRoot.left
         anchors.top: indicatorRoot.top
         anchors.bottom: indicatorRoot.bottom
+        visible: imageVisible
     }
+
+    Text {
+        id: indicatorText
+        color: "white"
+        font.family: Settings.fontStatusBar
+        font.pixelSize: (parent.height / myPixelSizeDivider) * 0.95
+        font.bold: {if(myPixelSizeDivider === 1) true; else false}
+        text: textValue
+        transform: Rotation {
+                   angle: textRotation
+               }
+        visible: textVisible
+
+    }
+
 
     states: [
         State {
