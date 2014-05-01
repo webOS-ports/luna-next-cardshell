@@ -45,7 +45,7 @@ Item {
             if (textVisible)
             {
                 //return the max width for image or text
-                return Math.max(indicatorImage.width, indicatorImage.width)
+                return Math.max(indicatorImage.width, indicatorText.width)
             }
             else
             {
