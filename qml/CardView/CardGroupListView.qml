@@ -36,7 +36,6 @@ Item {
 
     property Item cardView
 
-    property bool dragMode: false
     property bool interactiveList: true
 
     signal cardRemove(Item window);
@@ -63,11 +62,11 @@ Item {
         highlightFollowsCurrentItem: true
 
         model: listCardGroupsModel
-        spacing: 0
+        spacing: 10
         orientation: ListView.Horizontal
         smooth: !internalListView.moving
         focus: true
-        interactive: cardGroupListViewItem.interactiveList //&& !cardGroupListViewItem.dragMode
+        interactive: cardGroupListViewItem.interactiveList
 
         property bool newCardInserted: false
         onCountChanged: {
@@ -108,12 +107,13 @@ Item {
                             else {
                                 console.log("Entering drag'n'drop mode...");
                                 window.userData.dragMode = true;
-                                cardGroupListViewItem.dragMode = true;
                                 containerForDraggedCard.startDrag(window);
                                 listCardGroupsModel.removeWindow(window);
                             }
                         }
 
+                        // The drop area components hereunder should be moved into a separate component,
+                        // for a clearer understanding.
                         DropArea {
                             anchors.fill: parent
 
@@ -121,10 +121,74 @@ Item {
                             onDropped: {
                                 var droppedWindowUserData = drag.source;
                                 droppedWindowUserData.dragMode = false;
-                                cardGroupListViewItem.dragMode = false;
                                 windowList.append({"window": droppedWindowUserData.wrappedWindow});
-                                containerForDraggedCard.stopDrag(index);
+                                containerForDraggedCard.stopDrag();
                                 console.log("Exited drag'n'drop mode.");
+                            }
+                        }
+                        // This is the drop area where we drop the card between other cards
+                        // So we create two drop areas on the side of each cardgroup delegate,
+                        // overlapping the spacing done by the ListView.
+                        Item {
+                            anchors.left: parent.right
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: internalListView.spacing * 0.5
+                            Rectangle {
+                                id: dropRectRight
+                                anchors.fill: parent;
+                                color: "blue"
+                                opacity: 0.4
+                                visible: false
+                            }
+                            DropArea {
+                                anchors.fill: parent
+                                onEntered: {
+                                    dropRectRight.visible = true;
+                                }
+                                onExited: {
+                                    dropRectRight.visible = false;
+                                }
+                                onDropped: {
+                                    var droppedWindowUserData = drag.source;
+                                    droppedWindowUserData.dragMode = false;
+                                    listCardGroupsModel.createNewGroup(droppedWindowUserData.wrappedWindow, index+1);
+                                    internalListView.newCardInserted = false;
+                                    containerForDraggedCard.stopDrag();
+                                    dropRectRight.visible = false;
+                                    console.log("Exited drag'n'drop mode.");
+                                }
+                            }
+                        }
+                        Item {
+                            anchors.right: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: internalListView.spacing * 0.5
+                            Rectangle {
+                                id: dropRectLeft
+                                anchors.fill: parent;
+                                color: "green"
+                                opacity: 0.4
+                                visible: false
+                            }
+                            DropArea {
+                                anchors.fill: parent
+                                onEntered: {
+                                    dropRectLeft.visible = true;
+                                }
+                                onExited: {
+                                    dropRectLeft.visible = false;
+                                }
+                                onDropped: {
+                                    var droppedWindowUserData = drag.source;
+                                    droppedWindowUserData.dragMode = false;
+                                    listCardGroupsModel.createNewGroup(droppedWindowUserData.wrappedWindow, index);
+                                    internalListView.newCardInserted = false;
+                                    containerForDraggedCard.stopDrag();
+                                    dropRectLeft.visible = false;
+                                    console.log("Exited drag'n'drop mode.");
+                                }
                             }
                         }
                 }
@@ -135,8 +199,8 @@ Item {
     Item {
         id: containerForDraggedCard
 
-        visible: false
-        anchors.fill: parent
+        visible: true
+        anchors.fill: internalListView
         opacity: 0.8
 
         Item {
@@ -165,7 +229,7 @@ Item {
             cardWindowWrapper.setDraggedWindow(window.userData);
             containerForDraggedCard.visible = true;
         }
-        function stopDrag(windw) {
+        function stopDrag() {
             containerForDraggedCard.visible = false;
         }
     }
