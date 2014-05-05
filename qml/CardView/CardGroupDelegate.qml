@@ -53,7 +53,7 @@ Item {
                     cardGroupDelegateItem.cardSelect(window);
                 }
 
-                onPressAndHold: {
+                onLongPress: {
                     // switch to drag'n'drop state
                     cardGroupDelegateItem.cardDragStart(window);
                 }

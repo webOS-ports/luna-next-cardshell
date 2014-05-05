@@ -30,10 +30,10 @@ Item {
     property bool slideOnLeft: true
     property bool slideOnRight: true
 
-    signal slidedLeft
-    signal slidedRight
-    signal clicked
-    signal pressAndHold
+    signal slidedLeft()
+    signal slidedRight()
+    signal clicked()
+    signal longPress()
 
     NumberAnimation {
         id: swipeOutAnimation
@@ -97,8 +97,8 @@ Item {
             slidingArea.clicked();
         }
 
-        onPressAndHold: {
-            slidingArea.pressAndHold();
+        onLongPress: {
+            slidingArea.longPress();
         }
 
         onPressed: {
