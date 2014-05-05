@@ -65,7 +65,7 @@ Item {
                     id: dateTimeTweak
                     owner: "luna-next-cardshell"
                     key: "showDateTime"
-                    defaultValue: timeOnly
+                    defaultValue: "timeOnly"
                     onValueChanged: updateDateTime();
 
                     function updateDateTime()
