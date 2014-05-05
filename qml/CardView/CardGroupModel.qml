@@ -19,7 +19,7 @@ ListModel {
         onRowsInserted: {
             var newWindow = listCardsModel.getByIndex(last);
 
-            createNewGroup(newWindow);
+            createNewGroup(newWindow, listCardGroupsModel.count);
             // DEBUG: move the new window in the previous group, and build groups of 3 windows
             //if( last>0 && ((last+1)%4) !== 0 )
             //    moveWindowGroup(newWindow, listCardGroupsModel.count-1, listCardGroupsModel.count-2);
@@ -66,9 +66,9 @@ ListModel {
         return foundGroupIndex;
     }
 
-    function createNewGroup(window) {
+    function createNewGroup(window, insertAt) {
         // create a new group with only one window
-        listCardGroupsModel.append({"windowList": [ { "window":window } ], "currentCardInGroup": 0});
+        listCardGroupsModel.insert(insertAt, {"windowList": [ { "window":window } ], "currentCardInGroup": 0});
     }
 
     function removeWindow(window) {
