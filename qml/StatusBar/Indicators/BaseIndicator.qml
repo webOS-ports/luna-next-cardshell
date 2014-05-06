@@ -1,6 +1,7 @@
 /*
- * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
- * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2013-2014 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2013-2014 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,14 +18,41 @@
  */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Item {
     id: indicatorRoot
 
     property string imageSource: ""
     property bool enabled: true
+    property int pixelSizeDivider: 1
+    property string textValue: ""
+    property string textColor: "white"
+    property int leftMargin: 0
+    property int textRotation: 0
 
-    width: indicatorImage.width
+    property bool imageVisible: true
+    property bool textVisible: false
+
+
+    width: getIndicatorWidth(imageVisible, textVisible, indicatorImage.width, indicatorText.contentWidth)
+
+    function getIndicatorWidth(imageVisible, textVisible, indicatorImageWidth, indicatorTextWidth)
+    {
+        if (imageVisible){
+            if (textVisible){
+                return Math.max(indicatorImageWidth, indicatorTextWidth)
+            }
+            else {
+                return indicatorImageWidth;
+            }
+        }
+        else if (textVisible) {
+            return indicatorTextWidth;
+        }
+		return 0;
+    }
+
     clip: true
     visible: true
 
@@ -36,22 +64,39 @@ Item {
         anchors.left: indicatorRoot.left
         anchors.top: indicatorRoot.top
         anchors.bottom: indicatorRoot.bottom
+        visible: imageVisible
     }
+
+    Text {
+        id: indicatorText
+        color: textColor
+        font.family: Settings.fontStatusBar
+        font.pixelSize: (parent.height / pixelSizeDivider) * 0.95
+        font.bold: {if(pixelSizeDivider === 1) true; else false}
+        text: textValue
+        rotation: textRotation
+        anchors.left: indicatorRoot.left
+        anchors.top: indicatorRoot.top
+        anchors.bottom: indicatorRoot.bottom
+        visible: textVisible
+
+    }
+
 
     states: [
         State {
             name: "visible"
+            when: enabled
         },
-        State { name: "hidden" }
+        State {
+            name: "hidden"
+            when: !enabled
+        }
     ]
 
-    state: enabled ? "visible" : "hidden"
-
     Component.onCompleted: {
-        if (state === "visible")
-            visible = true;
-        else if (state === "hidden")
-            visible = false;
+        // initialize the visible property directly without doing any transition animation
+        visible = enabled ? true : false;
     }
 
     transitions: [
@@ -61,6 +106,7 @@ Item {
             SequentialAnimation {
                 ParallelAnimation {
                     NumberAnimation { target: indicatorImage; properties: "opacity"; from: 1.0; to: 0.0; duration: 200 }
+                    NumberAnimation { target: indicatorText; properties: "opacity"; from: 1.0; to: 0.0; duration: 200 }
                     NumberAnimation { target: indicatorRoot; properties: "width"; from: indicatorImage.width; to: 0; duration: 400 }
                 }
                 PropertyAction { target: indicatorRoot; properties: "visible"; value: false }
@@ -73,6 +119,7 @@ Item {
                 PropertyAction { target: indicatorRoot; properties: "visible"; value: true }
                 ParallelAnimation {
                     NumberAnimation { target: indicatorImage; properties: "opacity"; from: 0.0; to: 1.0; duration: 200 }
+                    NumberAnimation { target: indicatorText; properties: "opacity"; from: 0.0; to: 1.0; duration: 200 }
                     NumberAnimation { target: indicatorRoot; properties: "width"; from: 0; to: indicatorImage.width; duration: 400 }
                 }
             }
