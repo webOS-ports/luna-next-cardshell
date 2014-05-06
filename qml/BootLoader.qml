@@ -81,18 +81,14 @@ Item {
         Image {
             id: logoNormal
             anchors.centerIn: parent
-            source: "images/webosports-logo-normal.png"
-            width: parent.width/2
-            height: parent.height/2
+            source: "images/lune-os-bootscreen-idle-alpha.png"
             fillMode: Image.PreserveAspectFit
         }
 
         Image {
             id: logoGlow
             anchors.centerIn: logoNormal
-            source: "images/webosports-logo-glow.png"
-            width: logoNormal.width
-            height: logoNormal.height
+            source: "images/lune-os-bootscreen-glowing-alpha.png"
             fillMode: Image.PreserveAspectFit
             opacity: 0.1
         }

@@ -92,7 +92,7 @@
                 "help": "The text used as your custom carrier string.",
                 "key": "carrierString",
                 "type": "TextField",
-                "value": "WebOS Ports",
+                "value": "Lune OS",
 				"input": "text"
             }
         ]
