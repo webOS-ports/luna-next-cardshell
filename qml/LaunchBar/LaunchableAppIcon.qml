@@ -18,7 +18,7 @@
 
 import QtQuick 2.0
 
-Column {
+Item {
     id: launchableAppIcon
 
     property string appIcon
@@ -31,33 +31,41 @@ Column {
 
     signal startLaunchApplication(string appId, string appParams)
 
-    Image {
-        width: iconSize
-        height: iconSize
-        anchors.horizontalCenter: parent.horizontalCenter
+    height: appIconColumn.height
 
-        fillMode: Image.PreserveAspectFit
+    Column {
+        id: appIconColumn
 
-        sourceSize.height: height
-        sourceSize.width: width
-        source: launchableAppIcon.appIcon
+        width: parent.width
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked:  startLaunchApplication(launchableAppIcon.appId, launchableAppIcon.appParams);
+        Image {
+            width: iconSize
+            height: iconSize
+            anchors.horizontalCenter: parent.horizontalCenter
+
+            fillMode: Image.PreserveAspectFit
+
+            sourceSize.height: height
+            sourceSize.width: width
+            source: launchableAppIcon.appIcon
+        }
+        Text {
+            width: parent.width
+            visible: launchableAppIcon.showTitle
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: "white"
+            text: launchableAppIcon.appTitle
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+            font.pixelSize: iconSize*0.3
+            font.bold: true
+            maximumLineCount: 2
+            elide: Text.ElideRight
         }
     }
-    Text {
-        width: parent.width
-        visible: launchableAppIcon.showTitle
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: "white"
-        text: launchableAppIcon.appTitle
-        horizontalAlignment: Text.AlignHCenter
-        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-        font.pixelSize: iconSize*0.3
-        font.bold: true
-        maximumLineCount: 2
-        elide: Text.ElideRight
+
+    MouseArea {
+        anchors.fill: appIconColumn
+        onClicked:  startLaunchApplication(launchableAppIcon.appId, launchableAppIcon.appParams);
     }
 }
