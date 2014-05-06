@@ -30,6 +30,9 @@ BaseIndicator {
     property bool charging: false
 
     imageSource: __getIconForBatteryLevel(level, charging)
+	textValue: percentage + "%"
+	textColor: __getColorForBatteryLevel(level)
+
 
     Tweak {
         id: batteryIndicatorType
@@ -42,21 +45,14 @@ BaseIndicator {
         {
             if (batteryIndicatorType.value === "iconOnly")
             {
-                batteryIndicator.rotation = 0
-                batteryIndicator.imageSource =  __getIconForBatteryLevel(level, charging)
                 batteryIndicator.textVisible = false
                 batteryIndicator.imageVisible = true
 
             }
             else if (batteryIndicatorType.value === "percentageOnly")
             {
-                batteryIndicator.imageSource = ""
-                batteryIndicator.textValue = percentage + "%"
-                batteryIndicator.textRotation = 0
-                batteryIndicator.pixelSizeDivider = 1
                 batteryIndicator.textVisible = true
                 batteryIndicator.imageVisible = false
-                batteryIndicator.leftMargin = 0
             }
 
         }
@@ -66,7 +62,7 @@ BaseIndicator {
         id: batteryPercentageColorOptions
         owner: "luna-next-cardshell"
         key: "batteryPercentageColor"
-        defaultValue: "white"
+        defaultValue: String("white"); // without this cast, it would become a "color" type
         onValueChanged: updateBatteryPercentageColor();
 
         function updateBatteryPercentageColor()
@@ -78,8 +74,10 @@ BaseIndicator {
             }
             else
             {
-                //Get the color for the level
-                batteryIndicator.textColor = __getColorForBatteryLevel(level);
+                //Get the color for the level, keeping property binding
+                batteryIndicator.textColor = Qt.binding(function() {
+                    return batteryIndicator.__getColorForBatteryLevel(level);
+                } );
             }
         }
     }
