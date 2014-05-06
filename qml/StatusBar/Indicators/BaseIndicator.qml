@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2013-2014 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013-2014 Simon Busch <morphis@gravedo.de>
- * Copyright (C) 2013-2014 Herman van Hazendonk <github.com@herrie.org>
+ * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,22 +40,18 @@ Item {
     function getIndicatorWidth(imageVisible, textVisible, indicatorImageWidth, indicatorTextWidth)
     {
     //Check if we show the image
-        if (imageVisible)
-        {
+        if (imageVisible){
             //Check if we also show the text
-            if (textVisible)
-            {
+            if (textVisible){
                 //return the max width for image or text
                 return Math.max(indicatorImageWidth, indicatorTextWidth)
             }
-            else
-            {
+            else {
                 //When we only have image, we'll return it's width
                 return indicatorImageWidth;
             }
         }
-        else if (textVisible)
-        {
+        else if (textVisible) {
             //We only have text so we return it's width
             return indicatorTextWidth;
         }
@@ -95,7 +91,7 @@ Item {
     states: [
         State {
             name: "visible"
-			when: enabled
+            when: enabled
         },
         State {
             name: "hidden"
@@ -116,7 +112,7 @@ Item {
                 ParallelAnimation {
                     NumberAnimation { target: indicatorImage; properties: "opacity"; from: 1.0; to: 0.0; duration: 200 }
                     NumberAnimation { target: indicatorText; properties: "opacity"; from: 1.0; to: 0.0; duration: 200 }
-					NumberAnimation { target: indicatorRoot; properties: "width"; from: indicatorImage.width; to: 0; duration: 400 }
+                    NumberAnimation { target: indicatorRoot; properties: "width"; from: indicatorImage.width; to: 0; duration: 400 }
                 }
                 PropertyAction { target: indicatorRoot; properties: "visible"; value: false }
             }
@@ -129,7 +125,7 @@ Item {
                 ParallelAnimation {
                     NumberAnimation { target: indicatorImage; properties: "opacity"; from: 0.0; to: 1.0; duration: 200 }
                     NumberAnimation { target: indicatorText; properties: "opacity"; from: 0.0; to: 1.0; duration: 200 }
-					NumberAnimation { target: indicatorRoot; properties: "width"; from: 0; to: indicatorImage.width; duration: 400 }
+                    NumberAnimation { target: indicatorRoot; properties: "width"; from: 0; to: indicatorImage.width; duration: 400 }
                 }
             }
         }
