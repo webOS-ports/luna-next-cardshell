@@ -141,7 +141,7 @@ Item {
     Component.onCompleted: {
         // fill the listModel statically
         if( !Settings.isTestEnvironment ) {
-            launcherListModel.append({"appId": "com.palm.app.calendar", "icon": "/usr/palm/applications/com.palm.app.calendar/images/icon-256x256.png"});
+            launcherListModel.append({"appId": "org.webosports.app.phone", "icon": "/usr/palm/applications/org.webosports.app.phone/icon.png"});
             launcherListModel.append({"appId": "com.palm.app.email", "icon": "/usr/palm/applications/com.palm.app.email/icon.png"});
             launcherListModel.append({"appId": "org.webosinternals.preware", "icon": "/usr/palm/applications/org.webosinternals.preware/icon.png"});
             launcherListModel.append({"appId": "org.webosports.app.memos", "icon": "/usr/palm/applications/org.webosports.app.memos/icon.png"});
