@@ -43,7 +43,7 @@
                 "help": "Enter the text you'd like displayed as the carrier string.",
                 "key": "carrierString",
                 "type": "TextField",
-                "value": "WebOS Ports",
+                "value": "Lune OS",
 				"input": "text"
             }
         ]
