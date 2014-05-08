@@ -25,11 +25,8 @@ Item {
 
     property string imageSource: ""
     property bool enabled: true
-    property int pixelSizeDivider: 1
     property string textValue: ""
     property string textColor: "white"
-    property int leftMargin: 0
-    property int textRotation: 0
 
     property bool imageVisible: true
     property bool textVisible: false
@@ -58,12 +55,17 @@ Item {
 
     Image {
         id: indicatorImage
-        fillMode: Image.PreserveAspectFit
+        fillMode: textVisible ? Image.Stretch : Image.PreserveAspectFit;
+        width: textVisible ? indicatorRoot.width : "100%"
         smooth: true
         source: imageSource
         anchors.left: indicatorRoot.left
-        anchors.top: indicatorRoot.top
         anchors.bottom: indicatorRoot.bottom
+        height: indicatorRoot.height
+        transform: [
+            Rotation { angle: textVisible?270:0; origin.x: indicatorImage.width/2; origin.y: indicatorImage.height/2 },
+            Scale { xScale: 1; yScale: textVisible?0.5:1; origin.x: indicatorImage.width/2; origin.y: indicatorImage.height }
+        ]
         visible: imageVisible
     }
 
@@ -71,13 +73,13 @@ Item {
         id: indicatorText
         color: textColor
         font.family: Settings.fontStatusBar
-        font.pixelSize: (parent.height / pixelSizeDivider) * 0.95
-        font.bold: {if(pixelSizeDivider === 1) true; else false}
+        font.bold: !imageVisible
         text: textValue
-        rotation: textRotation
-        anchors.left: indicatorRoot.left
-        anchors.top: indicatorRoot.top
-        anchors.bottom: indicatorRoot.bottom
+        font.pixelSize: imageVisible?((parent.height/2)*0.95):(parent.height*0.95);
+        anchors.fill: indicatorRoot
+        transform: [
+            Rotation { origin.x: indicatorImage.width/2; origin.y: indicatorImage.height/2 }
+        ]
         visible: textVisible
 
     }

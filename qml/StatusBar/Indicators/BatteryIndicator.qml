@@ -46,6 +46,10 @@ BaseIndicator {
             if (batteryIndicatorType.value === "iconOnly"){
                 batteryIndicator.textVisible = false
                 batteryIndicator.imageVisible = true
+            }
+            else if (batteryIndicatorType.value === "iconPercentage"){
+                batteryIndicator.textVisible = true
+                batteryIndicator.imageVisible = true
 
             }
             else if (batteryIndicatorType.value === "percentageOnly"){
@@ -97,10 +101,10 @@ BaseIndicator {
 
     function __getIconForBatteryLevel(level, isCharging) {
         var baseName = "../../images/statusbar/battery-";
-
+        var normalizedLevel = 0;
         if (level > 11 && !isCharging) {
             level = 11;
-            var normalizedLevel = level;
+            normalizedLevel = level;
         }
 
         if (level > 11 && isCharging) {
@@ -112,6 +116,7 @@ BaseIndicator {
         else {
             if (isCharging) {
                 baseName += "charging-";
+                normalizedLevel = level;
             }
         }
 
