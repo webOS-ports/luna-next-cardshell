@@ -30,6 +30,7 @@ BaseIndicator {
     property bool charging: false
 
     imageSource: __getIconForBatteryLevel(level, charging)
+
     textValue: percentage + "%"
     textColor: __getColorForBatteryLevel(level)
 
@@ -45,6 +46,10 @@ BaseIndicator {
         {
             if (batteryIndicatorType.value === "iconOnly"){
                 batteryIndicator.textVisible = false
+                batteryIndicator.imageVisible = true
+            }
+            else if (batteryIndicatorType.value === "iconPercentage"){
+                batteryIndicator.textVisible = true
                 batteryIndicator.imageVisible = true
 
             }
@@ -97,10 +102,11 @@ BaseIndicator {
 
     function __getIconForBatteryLevel(level, isCharging) {
         var baseName = "../../images/statusbar/battery-";
-
+        var normalizedLevel = 0;
+        console.log("Herrie level: "+level)
         if (level > 11 && !isCharging) {
             level = 11;
-            var normalizedLevel = level;
+            normalizedLevel = level;
         }
 
         if (level > 11 && isCharging) {
@@ -112,6 +118,7 @@ BaseIndicator {
         else {
             if (isCharging) {
                 baseName += "charging-";
+                normalizedLevel = level;
             }
         }
 
