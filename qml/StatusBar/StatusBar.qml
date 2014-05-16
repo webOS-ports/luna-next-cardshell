@@ -34,7 +34,7 @@ Item {
     property Item wifiService
 
     //FIXME We need to add the actual carrier string once we have oFono stuff working
-    property string myCarrierText: "WebOS Ports"
+    property string myCarrierText: "LuneOS"
 
     Rectangle {
         id: background
