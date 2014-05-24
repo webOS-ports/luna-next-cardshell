@@ -104,7 +104,7 @@ Rectangle {
             width: root.width
         }
     }
-
+/*
     ScreenGestureArea {
         id: screenGestureArea
         anchors.fill: parent
@@ -122,7 +122,7 @@ Rectangle {
             }
         }
     }
-
+    */
     ListView {
         id: pager
         anchors.fill: parent
@@ -133,5 +133,24 @@ Rectangle {
         // we always start with the card view
         currentIndex: 1
         interactive: false
+
+        onCurrentIndexChanged: console.log("currentIndex = " + currentIndex);
+    }
+
+    FlickableHandleArea {
+        flickable: pager
+        anchors.left: pager.left
+        anchors.right: pager.right
+        y: 0
+        height: Units.length(24)
+
+        onHandleReleased: {
+            if( dy > pager.height/2 ) {
+                y = pager.height - Units.length(24);
+            }
+            else if( dy < -pager.height/2 ) {
+                y = 0;
+            }
+        }
     }
 }
