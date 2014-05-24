@@ -1,28 +1,31 @@
 import QtQuick 2.0;
 
 Item {
+    id: flickableHandleArea
+
     property Flickable flickable
     property real contentOffset
-    property bool flicking: false;
 
-    signal handleReleased(real dy)
+    property alias handleHeight: handleItem.height;
+    property alias handleWidth: handleItem.width;
+    property alias handleItemOffset: handleItem.y;
+
+    signal handleReleased()
 
     Binding {
         target: flickable
         property: "contentY"
         value: contentOffset - handleItem.y
-        when: flicking
-    }
-
-    Connections {
-        target: flickable
-        onContentYChanged: console.log("contentY = " + flickable.contentY);
+        when: !!contentOffset
     }
 
     Item {
         id: handleItem
         y: 0; x: 0
-        width: parent.width; height: parent.height
+
+        Behavior on y {
+            SmoothedAnimation { duration: 300; velocity: 200; easing.type: Easing.OutQuad }
+        }
     }
 
     MouseArea {
@@ -31,22 +34,13 @@ Item {
             target: handleItem;
             axis: Drag.YAxis;
         }
-        anchors { fill: parent; }
+        anchors { fill: handleItem; }
+
         onPressed: {
-            contentOffset = flickable.contentY;
-            flicking = true;
+            contentOffset = flickable.contentY + handleItem.y; // disable the binding
         }
         onReleased: {
-            //flickable.flick(0,0);
-            flicking = false;
-            handleReleased(handleItem.y);
-        }
-
-        drag.onActiveChanged: {
-            if( !drag.active ) handleItem.y = 0;
-            var tmp = flickable.currentIndex;
-            flickable.currentIndex = -1;
-            flickable.currentIndex = tmp; // trigger the event
+            handleReleased();
         }
     }
 }

@@ -104,25 +104,7 @@ Rectangle {
             width: root.width
         }
     }
-/*
-    ScreenGestureArea {
-        id: screenGestureArea
-        anchors.fill: parent
-        boundary: Units.gu(3)
-        gestureNeeded: "down"
-        z: 100
-        onGestureFinished: {
-            if (gesture === "down") {
-                pager.currentIndex = 0;
-                gestureNeeded = "up";
-            }
-            else if (gesture === "up") {
-                pager.currentIndex = 1;
-                gestureNeeded = "down";
-            }
-        }
-    }
-    */
+
     ListView {
         id: pager
         anchors.fill: parent
@@ -133,23 +115,22 @@ Rectangle {
         // we always start with the card view
         currentIndex: 1
         interactive: false
-
-        onCurrentIndexChanged: console.log("currentIndex = " + currentIndex);
     }
 
     FlickableHandleArea {
         flickable: pager
-        anchors.left: pager.left
-        anchors.right: pager.right
-        y: 0
-        height: Units.length(24)
+        anchors.fill: pager
+
+        handleItemOffset: -Units.length(24);
+        handleHeight: 2*Units.length(24)
+        handleWidth: width
 
         onHandleReleased: {
-            if( dy > pager.height/2 ) {
-                y = pager.height - Units.length(24);
+            if( handleItemOffset > pager.height/2 ) {
+                handleItemOffset = pager.height - Units.length(24);
             }
-            else if( dy < -pager.height/2 ) {
-                y = 0;
+            else {
+                handleItemOffset = -Units.length(24);
             }
         }
     }
