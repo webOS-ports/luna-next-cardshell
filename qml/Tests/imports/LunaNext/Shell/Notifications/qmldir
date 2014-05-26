@@ -1,0 +1,4 @@
+module LunaNext.Shell.Notifications
+NotificationListModel 0.1 NotificationsListModel.qml
+
+typeinfo LunaNext.Shell.Notifications.qmltypes
