@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
+import LunaNext.Shell.Notifications 0.1
 
 Rectangle {
     id: systemMenuPage
@@ -43,35 +44,8 @@ Rectangle {
     Q_PROPERTY(QString category READ category NOTIFY categoryChanged)
     Q_PROPERTY(bool userRemovable READ isUserRemovable NOTIFY userRemovableChanged)
     */
-
-    ListModel {
+    NotificationListModel {
         id: notificationModel
-
-        ListElement {
-            appName: "org.webosports.app.email"
-            appIcon: ""
-            summary1: "10 new emails available"
-            body1: "New webOS ports update ready"
-            timestamp: "12-04-2014"
-        }
-
-
-        ListElement {
-            appName: "org.webosports.app.email"
-            appIcon: ""
-            summary1: "10 new emails available"
-            body1: "New webOS ports update ready"
-            timestamp: "12-04-2014"
-        }
-
-
-        ListElement {
-            appName: "org.webosports.app.email"
-            appIcon: ""
-            summary1: "10 new emails available"
-            body1: "New webOS ports update ready"
-            timestamp: "12-04-2014"
-        }
     }
 
     ListView {
@@ -83,8 +57,8 @@ Rectangle {
         delegate: NotificationItem {
             width: systemMenuPage.width - Units.gu(1) * 2
             height: Units.gu(6)
-            summary: summary1
-            body: body1
+            summary: object.summary
+            body: object.body
         }
     }
 }
