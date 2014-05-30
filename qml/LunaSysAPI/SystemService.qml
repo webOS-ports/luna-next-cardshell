@@ -18,6 +18,7 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
+import LunaNext.Shell.Notifications 0.1
 
 Item {
     id: systemService
@@ -27,6 +28,10 @@ Item {
     property QtObject compositorInstance
 
     property variant currentWindow: null
+
+    NotificationManager {
+        id: notificationManager
+    }
 
     LunaService {
         id: systemServicePrivate
@@ -45,6 +50,7 @@ Item {
         name: "org.webosports.luna"
         onInitialized: {
             systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+            systemServicePublic.registerMethod("/", "createNotification", handleCreateNotification);
         }
     }
 
@@ -70,7 +76,24 @@ Item {
         if (typeof request.file !== 'undefined')
             filename = request.file;
 
-        screenShooter.takeScreenshot(filename);
+        return JSON.stringify({"returnValue":true});
+    }
+
+    function handleCreateNotification(message) {
+        var request = JSON.parse(message.payload);
+
+        if (request === null)
+            return buildErrorResponse("Invalid parameters.");
+
+        var appName       = request.appName ? request.appName : ""; // string
+        var replacesId    = request.replacesId ? request.replacesId : 0;  // uint
+        var appIcon       = request.appIcon ? request.appIcon : ""; // string
+        var summary       = request.summary ? request.summary : ""; // string
+        var body          = request.body ? request.body : "";    // string
+        var actions       = request.actions ? request.actions : null;  // list<string>
+        var hints         = request.hints ? request.hints : null;      // dict<string,variant>
+        var expireTimeout = request.expireTimeout ? request.expireTimeout : 10000; // int
+        notificationManager.notify(appName, replacesId, appIcon, summary, body, actions, hints, expireTimeout);
 
         return JSON.stringify({"returnValue":true});
     }
