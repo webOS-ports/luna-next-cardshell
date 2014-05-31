@@ -24,37 +24,20 @@ import LunaNext.Compositor 0.1
 import "CardView"
 import "StatusBar"
 import "LaunchBar"
-import "Dashboard"
 import "WindowManager"
 import "LunaSysAPI"
 import "Utils"
 import "Alerts"
 import "Connectors"
 
-// The window manager manages the switch between different window modes
-//     (card, maximized, fullscreen, ...)
-// All the card related management itself is done by the CardView component
-WindowManager {
-    id: windowManager
+Rectangle {
+    id: root
 
-    property real screenwidth: Settings.displayWidth
-    property real screenheight: Settings.displayHeight
-    property real screenDPI: Settings.dpi
+    color: "black"
 
-    focus: true
-    Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance ]
-
-    onSwitchToCardView: {
-        // we're back to card view so no card should have the focus
-        // for the keyboard anymore
-        if( compositor )
-            compositor.clearKeyboardFocus();
-    }
-
-    //////////  fps counter ///////////
     Loader {
-        anchors.top: background.top
-        anchors.left: background.left
+        anchors.top: root.top
+        anchors.left: root.left
 
         width: 50
         height: 32
@@ -78,58 +61,22 @@ WindowManager {
         sourceComponent: Settings.displayFps ? fpsTextComponent : null;
     }
 
-    //////////  screenshot component ///////////
-    ScreenShooter {
-        id: screenShooter
-
-        property int nbScreenshotsTaken: 0
-
-        function takeScreenshot(path) {
-            screenShooter.capture(path);
-        }
-    }
-    Connections {
-        target: gestureAreaInstance
-        onSwipeRightGesture: screenShooter.takeScreenshot();
-    }
-
-    ////////// System Service //////////
-
-    SystemService {
-        id: systemService
-        screenShooter: screenShooter
-        cardViewInstance: cardViewInstance
-        compositorInstance: compositor
-    }
-
-    ////////// Preferences /////////////
-
     Preferences {
         id: preferences
     }
 
-    //////////  reticle on clic ///////////
     Loader {
         id: reticleArea
         anchors.fill: parent
         source: Settings.showReticle ? "Utils/ReticleArea.qml" : ""
         z: 1000
-
-        Tweak {
-            id: reticleTweak
-            owner: "luna-next-cardshell"
-            key: "tapRippleSupport"
-            defaultValue: true
-            onValueChanged: reticleArea.visible = reticleTweak.value
-        }
     }
 
     PowerMenu {
         id: powerMenuAlert
         z: 800
 
-        anchors.top: statusBarInstance.bottom
-        anchors.right: launcherInstance.right
+        anchors.top: parent.bottom
         anchors.margins: 20
 
         width: parent.width * 0.6
@@ -140,124 +87,69 @@ WindowManager {
         z: 900
     }
 
-    //////////  background ///////////
-    Item {
-        id: background
-        anchors.top: windowManager.top
-        anchors.bottom: gestureAreaInstance.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
+    VisualItemModel {
+        id: pageModel
 
-        z: -1; // the background item should always be behind other components
+        SystemMenuPage {
+            id: systemMenuPage
 
-        Image {
-            id: backgroundImage
+            height: root.height
+            width: root.width
+        }
 
-            anchors.fill: parent
-            fillMode: Image.PreserveAspectCrop
-            source: preferences.wallpaperFile
-            asynchronous: true
-            smooth: true
-            sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
+        CardsPage {
+            id: cardsPage
+
+            height: root.height
+            width: root.width
+
+            Connections {
+                target: systemMenuPage
+                onLaunchApplication: {
+                    pagerFlicker.switchToPage(1); // switch to cards page
+                }
+            }
         }
     }
 
-    //////////  cardview ///////////
-    CardView {
-        id: cardViewInstance
+    ListView {
+        id: pager
+        anchors.fill: parent
+        model: pageModel
+        highlightRangeMode: ListView.StrictlyEnforceRange
+        snapMode: ListView.SnapOneItem
+        highlightMoveVelocity: 2000
+        // we always start with the card view
+        currentIndex: 1
+        interactive: false
+    }
 
-        compositorInstance: compositor
-        gestureAreaInstance: gestureAreaInstance
-        windowManagerInstance: windowManager
+    FlickableHandleArea {
+        id: pagerFlicker
 
-        maximizedCardTopMargin: statusBarInstance.y + statusBarInstance.height
+        flickable: pager
+        anchors.fill: pager
 
-        anchors.top: windowManager.top
-        anchors.bottom: dashboardInstance.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
+        handleItemOffset: -Units.length(24);
+        handleHeight: 2*Units.length(24)
+        handleWidth: width
 
-        onStateChanged: {
-            if( cardViewInstance.state === "cardList" ) {
-                cardViewInstance.z = 0;   // cardlist under all the rest
-            }
-            else if( cardViewInstance.state === "maximizedCard" ) {
-                cardViewInstance.z = 2;   // active card over justtype and launcher, under dashboard and statusbar
+        onHandleReleased: {
+            if( handleItemOffset > pager.height/2 ) {
+                switchToPage(0);
             }
             else {
-                cardViewInstance.z = 3;   // active card over everything
+                switchToPage(1);
             }
         }
-    }
 
-    //////////  launcher ///////////
-    Launcher {
-        id: launcherInstance
-
-        gestureAreaInstance: gestureAreaInstance
-        windowManagerInstance: windowManager
-
-        anchors.top: statusBarInstance.bottom
-        anchors.bottom: dashboardInstance.top // not sure about this one
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-
-        z: 1 // on top of cardview when no card is active
-    }
-
-    OverlaysManager {
-        id: overlaysManagerInstance
-
-        anchors.top: statusBarInstance.bottom
-        anchors.bottom: dashboardInstance.top // not sure about this one
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-
-        z: 4 // on top of everything (including fullscreen)
-    }
-
-    //////////  status bar ///////////
-    StatusBar {
-        id: statusBarInstance
-
-        anchors.top: windowManager.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-        height: Units.gu(3);
-
-        z: 2 // can only be hidden by a fullscreen window
-
-        windowManagerInstance: windowManager
-        fullLauncherVisible: launcherInstance.fullLauncherVisible
-        justTypeLauncherActive: launcherInstance.justTypeLauncherActive
-    }
-
-    //////////  notification area ///////////
-    Dashboard {
-        id: dashboardInstance
-
-        windowManagerInstance: windowManager
-
-        anchors.bottom: gestureAreaInstance.top
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-
-        z: 2 // can only be hidden by a fullscreen or overlay window
-    }
-
-    //////////  gesture area ///////////
-    LunaGestureArea {
-        id: gestureAreaInstance
-
-        anchors.bottom: windowManager.bottom
-        anchors.left: windowManager.left
-        anchors.right: windowManager.right
-        height: Units.gu(3);
-
-        z: 3 // the gesture area is in front of everything, like the fullscreen window
-    }
-
-    function addNotification(notif) {
-        dashboardInstance.addNotification(notif);
+        function switchToPage(page) {
+            if( page === 0 ) {
+                handleItemOffset = pager.height - Units.length(24);
+            }
+            else if( page === 1 ) {
+                handleItemOffset = -Units.length(24);
+            }
+        }
     }
 }
