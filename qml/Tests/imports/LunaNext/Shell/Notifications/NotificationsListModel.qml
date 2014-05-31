@@ -6,28 +6,28 @@ ListModel {
     Component.onCompleted: {
         notificationModel.append({
                                      object: {
-                                         appName: "org.webosports.app.email",
+                                         appName: "org.webosports.tests.dummyWindow",
                                          appIcon: "",
-                                         summary: "10 new emails available",
+                                         summary: "Updates are available",
                                          body: "New webOS ports update ready",
                                          timestamp: "12-04-2014"
                                      }
                                  });
         notificationModel.append({
                                      object: {
-                                         appName: "org.webosports.app.email",
+                                         appName: "org.webosports.tests.dummyWindow",
                                          appIcon: "",
-                                         summary: "10 new emails available",
-                                         body: "New webOS ports update ready",
+                                         summary: "You've got mail!",
+                                         body: "10 new emails available",
                                          timestamp: "12-04-2014"
                                      }
                                  });
         notificationModel.append({
                                      object: {
-                                         appName: "org.webosports.app.email",
+                                         appName: "org.webosports.tests.dummyWindow",
                                          appIcon: "",
-                                         summary: "10 new emails available",
-                                         body: "New webOS ports update ready",
+                                         summary: "3 other notifications",
+                                         body: "What's in that box?",
                                          timestamp: "12-04-2014"
                                      }
                                  });
