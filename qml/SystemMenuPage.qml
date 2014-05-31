@@ -20,10 +20,17 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Shell.Notifications 0.1
 
+import "Utils"
+
 Rectangle {
     id: systemMenuPage
 
     color: "black"
+
+    signal launchApplication(string appId, string appParams);
+    onLaunchApplication: {
+        systemMenuPage.__launchApplication(appId, appParams);
+    }
 
     /*
     Q_PROPERTY(QString appName READ appName)
@@ -54,11 +61,44 @@ Rectangle {
         spacing: Units.gu(1) / 2
         anchors.margins: Units.gu(1)
         model: notificationModel
-        delegate: NotificationItem {
-            width: systemMenuPage.width - Units.gu(1) * 2
-            height: Units.gu(6)
-            summary: object.summary
-            body: object.body
-        }
+        delegate:
+            SlidingItemArea {
+                id: slidingNotificationArea
+                slidingTargetItem: notificationItem
+
+                height: notificationItem.height
+                width: notificationItem.width
+
+                NotificationItem {
+                    id: notificationItem
+
+                    anchors.verticalCenter: slidingNotificationArea.verticalCenter
+                    width: systemMenuPage.width - Units.gu(1) * 2
+                    height: Units.gu(6)
+                    summary: object.summary
+                    body: object.body
+                }
+
+                onSliderClicked:systemMenuPage.launchApplication(object.appName, "{}");
+                onSlidedLeft: notificationModel.remove(index);
+                onSlidedRight: notificationModel.remove(index);
+            }
+    }
+
+    /////// private //////
+
+    property QtObject __lunaNextLS2Service: LunaService {
+        id: lunaNextLS2Service
+        name: "org.webosports.luna"
+        usePrivateBus: true
+    }
+
+    function __launchApplication(id, params) {
+        console.log("launching app " + id + " with params " + params);
+        lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",
+            JSON.stringify({"id": id, "params": params}), undefined, __handleLaunchAppError)
+    }
+    function __handleLaunchAppError(message) {
+        console.log("Could not start application : " + message);
     }
 }

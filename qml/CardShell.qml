@@ -102,6 +102,13 @@ Rectangle {
 
             height: root.height
             width: root.width
+
+            Connections {
+                target: systemMenuPage
+                onLaunchApplication: {
+                    pagerFlicker.switchToPage(1); // switch to cards page
+                }
+            }
         }
     }
 
@@ -118,6 +125,8 @@ Rectangle {
     }
 
     FlickableHandleArea {
+        id: pagerFlicker
+
         flickable: pager
         anchors.fill: pager
 
@@ -127,9 +136,18 @@ Rectangle {
 
         onHandleReleased: {
             if( handleItemOffset > pager.height/2 ) {
-                handleItemOffset = pager.height - Units.length(24);
+                switchToPage(0);
             }
             else {
+                switchToPage(1);
+            }
+        }
+
+        function switchToPage(page) {
+            if( page === 0 ) {
+                handleItemOffset = pager.height - Units.length(24);
+            }
+            else if( page === 1 ) {
                 handleItemOffset = -Units.length(24);
             }
         }
