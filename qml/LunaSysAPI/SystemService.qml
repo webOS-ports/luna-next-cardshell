@@ -93,9 +93,10 @@ Item {
         var actions       = request.actions ? request.actions : null;  // list<string>
         var hints         = request.hints ? request.hints : null;      // dict<string,variant>
         var expireTimeout = request.expireTimeout ? request.expireTimeout : 10000; // int
-        notificationManager.notify(appName, replacesId, appIcon, summary, body, actions, hints, expireTimeout);
 
-        return JSON.stringify({"returnValue":true});
+        var id = notificationManager.notify(appName, replacesId, appIcon, summary, body, actions, hints, expireTimeout);
+
+        return JSON.stringify({"returnValue":true, "id": id});
     }
 
     function handleFocusApplication(message) {
