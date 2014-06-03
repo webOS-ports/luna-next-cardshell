@@ -87,69 +87,8 @@ Rectangle {
         z: 900
     }
 
-    VisualItemModel {
-        id: pageModel
-
-        SystemMenuPage {
-            id: systemMenuPage
-
-            height: root.height
-            width: root.width
-        }
-
-        CardsPage {
-            id: cardsPage
-
-            height: root.height
-            width: root.width
-
-            Connections {
-                target: systemMenuPage
-                onLaunchApplication: {
-                    pagerFlicker.switchToPage(1); // switch to cards page
-                }
-            }
-        }
-    }
-
-    ListView {
-        id: pager
+    CardsPage {
+        id: cardsPage
         anchors.fill: parent
-        model: pageModel
-        highlightRangeMode: ListView.StrictlyEnforceRange
-        snapMode: ListView.SnapOneItem
-        highlightMoveVelocity: 2000
-        // we always start with the card view
-        currentIndex: 1
-        interactive: false
-    }
-
-    FlickableHandleArea {
-        id: pagerFlicker
-
-        flickable: pager
-        anchors.fill: pager
-
-        handleItemOffset: -Units.length(24);
-        handleHeight: 2*Units.length(24)
-        handleWidth: width
-
-        onHandleReleased: {
-            if( handleItemOffset > pager.height/2 ) {
-                switchToPage(0);
-            }
-            else {
-                switchToPage(1);
-            }
-        }
-
-        function switchToPage(page) {
-            if( page === 0 ) {
-                handleItemOffset = pager.height - Units.length(24);
-            }
-            else if( page === 1 ) {
-                handleItemOffset = -Units.length(24);
-            }
-        }
     }
 }

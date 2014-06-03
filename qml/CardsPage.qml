@@ -104,7 +104,7 @@ WindowManager {
         maximizedCardTopMargin: statusBarInstance.y + statusBarInstance.height
 
         anchors.top: parent.top
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -128,11 +128,19 @@ WindowManager {
         windowManagerInstance: parent
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.top // not sure about this one
+        anchors.bottom: notificationAreaInstance.top // not sure about this one
         anchors.left: parent.left
         anchors.right: parent.right
 
         z: 1 // on top of cardview when no card is active
+    }
+
+    NotificationArea {
+        id: notificationAreaInstance
+
+        anchors.bottom: gestureAreaInstance.top // not sure about this one
+        anchors.left: parent.left
+        anchors.right: parent.right
     }
 
     OverlaysManager {
