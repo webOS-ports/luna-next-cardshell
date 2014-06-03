@@ -56,7 +56,7 @@ Item {
     Image {
         id: indicatorImage
         fillMode: textVisible ? Image.Stretch : Image.PreserveAspectFit;
-        width: textVisible ? indicatorRoot.width : "100%"
+        width: textVisible ? indicatorRoot.width : undefined
         smooth: true
         source: imageSource
         anchors.left: indicatorRoot.left
