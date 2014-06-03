@@ -96,6 +96,10 @@ WindowManager {
         compositorInstance: compositor
     }
 
+    NotificationService {
+        id: notificationService
+    }
+
     CardView {
         id: cardViewInstance
 
