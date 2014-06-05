@@ -76,17 +76,11 @@ WindowManager {
 
     ScreenShooter {
         id: screenShooter
-
-        property int nbScreenshotsTaken: 0
-
-        function takeScreenshot(path) {
-            screenShooter.capture(path);
-        }
     }
 
     Connections {
         target: gestureAreaInstance
-        onSwipeRightGesture: screenShooter.takeScreenshot();
+        onSwipeRightGesture: screenShooter.capture();
     }
 
     SystemService {
@@ -94,6 +88,10 @@ WindowManager {
         screenShooter: screenShooter
         cardViewInstance: cardViewInstance
         compositorInstance: compositor
+    }
+
+    NotificationService {
+        id: notificationService
     }
 
     CardView {

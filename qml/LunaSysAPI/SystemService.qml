@@ -50,7 +50,6 @@ Item {
         name: "org.webosports.luna"
         onInitialized: {
             systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
-            systemServicePublic.registerMethod("/", "createNotification", handleCreateNotification);
         }
     }
 
@@ -72,30 +71,9 @@ Item {
         if (systemService.screenShooter === null)
             return buildErrorResponse("Internal error.");
 
-        var filename = "";
-        if (typeof request.file !== 'undefined')
-            filename = request.file;
+        var path = systemService.screenShooter.capture();
 
-        return JSON.stringify({"returnValue":true});
-    }
-
-    function handleCreateNotification(message) {
-        var request = JSON.parse(message.payload);
-
-        if (request === null)
-            return buildErrorResponse("Invalid parameters.");
-
-        var appName       = request.appName ? request.appName : ""; // string
-        var replacesId    = request.replacesId ? request.replacesId : 0;  // uint
-        var appIcon       = request.appIcon ? request.appIcon : ""; // string
-        var summary       = request.summary ? request.summary : ""; // string
-        var body          = request.body ? request.body : "";    // string
-        var actions       = request.actions ? request.actions : null;  // list<string>
-        var hints         = request.hints ? request.hints : null;      // dict<string,variant>
-        var expireTimeout = request.expireTimeout ? request.expireTimeout : 10000; // int
-        notificationManager.notify(appName, replacesId, appIcon, summary, body, actions, hints, expireTimeout);
-
-        return JSON.stringify({"returnValue":true});
+        return JSON.stringify({"returnValue":true, "path": path});
     }
 
     function handleFocusApplication(message) {
