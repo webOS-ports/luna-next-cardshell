@@ -71,11 +71,9 @@ Item {
         if (systemService.screenShooter === null)
             return buildErrorResponse("Internal error.");
 
-        var filename = "";
-        if (typeof request.file !== 'undefined')
-            filename = request.file;
+        var path = systemService.screenShooter.capture();
 
-        return JSON.stringify({"returnValue":true});
+        return JSON.stringify({"returnValue":true, "path": path});
     }
 
     function handleFocusApplication(message) {

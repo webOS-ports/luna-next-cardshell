@@ -76,17 +76,11 @@ WindowManager {
 
     ScreenShooter {
         id: screenShooter
-
-        property int nbScreenshotsTaken: 0
-
-        function takeScreenshot(path) {
-            screenShooter.capture(path);
-        }
     }
 
     Connections {
         target: gestureAreaInstance
-        onSwipeRightGesture: screenShooter.takeScreenshot();
+        onSwipeRightGesture: screenShooter.capture();
     }
 
     SystemService {
