@@ -39,6 +39,13 @@ Item {
 
     property real cornerRadius: 20
 
+    onMaximizedHeightChanged: {
+        if( window && window.userData.state === "maximized" )
+        {
+            cardDelegateContainer.height = maximizedHeight;
+        }
+    }
+
     Connections {
         target: window ? window.userData : null
         onStateChanged: {

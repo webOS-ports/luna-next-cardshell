@@ -75,9 +75,9 @@ Item {
         if (request === null || typeof request.id === 'undefined')
             return buildErrorResponse("Invalid parameters");
 
-        var notificationId = response.id;
+        var notificationId = request.id;
 
-        var notification = notificationManager.getById(id);
+        var notification = notificationManager.getById(notificationId);
         if (notification === null)
             return buildErrorResponse("Invalid notification id provided");
 
@@ -85,7 +85,7 @@ Item {
         if (message.applicationId !== notification.appName)
             return buildErrorResponse("Not allowed to close a not owned notification")
 
-        notificationManager.closeById(id);
+        notificationManager.closeById(notificationId);
 
         return JSON.stringify({"returnValue":true});
     }

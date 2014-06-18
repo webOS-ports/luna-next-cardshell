@@ -39,14 +39,15 @@ QtObject {
         else if( serviceURI === "luna://com.palm.applicationManager/launch" ) {
             launchApp_call(args, returnFct, handleError);
         }
-        else if( serviceURI === "luna://com.palm.applicationManager/createNotification" ) {
-            createNotification_call(args, returnFct, handleError);
-        }
         else if( serviceURI === "palm://com.palm.applicationManager/getAppInfo" ) {
             giveFakeAppInfo_call(args, returnFct, handleError);
         }
-        else if( !(LSRegisteredMethods.executeMethod(serviceURI, jsonArgs)) ) {
-            handleError("unrecognized call: " + serviceURI);
+        else {
+            // Embed the jsonArgs into a payload message
+            var message = { applicationId: "org.webosports.tests.dummyWindow", payload: jsonArgs };
+            if( !(LSRegisteredMethods.executeMethod(serviceURI, message)) ) {
+                handleError("unrecognized call: " + serviceURI);
+            }
         }
     }
 
@@ -87,9 +88,9 @@ QtObject {
         /* do nothing */
     }
 
-    function replyToSubscribers(path, jsonArgs) {
+    function replyToSubscribers(path, callerAppId, jsonArgs) {
         console.log("replyToSubscribers " + "luna://" + name + path);
-        LSRegisteredMethods.executeMethod("luna://" + name + path, {"payload": jsonArgs});
+        LSRegisteredMethods.executeMethod("luna://" + name + path, {"applicationId": callerAppId, "payload": jsonArgs});
     }
 
     function listLaunchPoints_call(jsonArgs, returnFct, handleError) {
@@ -141,12 +142,11 @@ QtObject {
     }
 
     function createNotification_call(jsonArgs, returnFct, handleError) {
-        // The JSON params can contain "id" (string) and "params" (object)
-        if( jsonArgs.type === "dashboard" ) {
-            // start a FakeDashboardWindow
 
-            // Simulate the attachement of a new dashboard window to the stub Wayland compositor
-            compositor.createFakeWindow("FakeDashboardWindow", jsonArgs);
+        if( jsonArgs ) {
+            var callerAppId = "org.webosports.tests.dummyWindow"; // hard-coded
+
+            replyToSubscribers("/createNotification", callerAppId, jsonArgs);
         }
         else {
             handleError("Error: parameter 'id' not specified");
