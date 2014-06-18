@@ -37,7 +37,7 @@ FakeWindowBase {
         anchors.fill: parent
         gradient: Gradient {
             GradientStop { position: 0.0; color: "grey" }
-            GradientStop { position: 1.0; color: "black" }
+            GradientStop { position: 1.0; color: "blue" }
         }
     }
 
@@ -91,10 +91,9 @@ FakeWindowBase {
                 height: 50
 
                 onAction: {
-                    lunaNextLS2Service.call("luna://com.palm.applicationManager/createNotification",
-                                            JSON.stringify({"type": "dashboard",
-                                                            "appId": "org.webosports.tests.fakeJustTypeLauncher",
-                                                            "appIcon": "../images/glow.png"}),
+                    lunaNextLS2Service.call("luna://org.webosports.notifications/createNotification",
+                                            JSON.stringify({"summary": "Test notification",
+                                                            "appIcon": Qt.resolvedUrl("../images/default-app-icon.png")}),
                                             undefined, undefined)
                 }
             }

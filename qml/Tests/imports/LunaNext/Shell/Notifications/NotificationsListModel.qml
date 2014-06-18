@@ -1,10 +1,14 @@
 import QtQuick 2.0
+import "globalVars.js" as NotificationsVars
 
 ListModel {
     id: notificationModel
 
     Component.onCompleted: {
+        NotificationsVars.__listModel = notificationModel;
+
         notificationModel.append({
+                                     notificationId: 1001,
                                      object: {
                                          appName: "org.webosports.tests.dummyWindow",
                                          appIcon: "",
@@ -14,6 +18,7 @@ ListModel {
                                      }
                                  });
         notificationModel.append({
+                                     notificationId: 1002,
                                      object: {
                                          appName: "org.webosports.tests.dummyWindow",
                                          appIcon: "",
@@ -23,6 +28,7 @@ ListModel {
                                      }
                                  });
         notificationModel.append({
+                                     notificationId: 1003,
                                      object: {
                                          appName: "org.webosports.tests.dummyWindow",
                                          appIcon: "",
