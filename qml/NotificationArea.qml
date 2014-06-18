@@ -39,12 +39,27 @@ Rectangle {
 
     NotificationListModel {
         id: notificationModel
+
+        onCountChanged: {
+            if( count === 0 ) {
+                notificationArea.state = "hidden";
+            }
+            else if( notificationArea.state === "hidden" ){
+                notificationArea.state = "minimized";
+            }
+        }
     }
 
     Row {
         id: minimizedListView
 
-        x: 0; y: 0; width: parent.width
+        anchors {
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+            margins: Units.gu(1)
+        }
+
         height: notificationModel.count > 0 ? Units.gu(3) : 0;
 
         layoutDirection: Qt.RightToLeft
@@ -74,8 +89,7 @@ Rectangle {
             bottom: parent.bottom
             left: parent.left
             right: parent.right
-            leftMargin: Units.gu(1)
-            rightMargin: Units.gu(1)
+            margins: Units.gu(1)
         }
         visible: false
         spacing: Units.gu(1) / 2
@@ -101,7 +115,7 @@ Rectangle {
                         body: object.body
                     }
 
-                    onSliderClicked:notificationArea.launchApplication(object.appName, "{}");
+                    onSliderClicked: notificationArea.launchApplication(object.appName, "{}");
                     onSlidedLeft: notificationModel.remove(index);
                     onSlidedRight: notificationModel.remove(index);
                 }
@@ -114,16 +128,22 @@ Rectangle {
 
     states: [
         State {
+            name: "hidden"
+            PropertyChanges { target: minimizedListView; visible: false }
+            PropertyChanges { target: openListView; visible: false }
+            PropertyChanges { target: notificationArea; height: 0 }
+        },
+        State {
             name: "minimized"
             PropertyChanges { target: minimizedListView; visible: true }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationArea; height: minimizedListView.height }
+            PropertyChanges { target: notificationArea; height: minimizedListView.height+Units.gu(2) }
         },
         State {
             name: "open"
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: true }
-            PropertyChanges { target: notificationArea; height: openListView.height }
+            PropertyChanges { target: notificationArea; height: openListView.height+Units.gu(2) }
         }
     ]
 }
