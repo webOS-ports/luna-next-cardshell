@@ -128,7 +128,7 @@ WindowManager {
         windowManagerInstance: parent
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: notificationAreaInstance.top // not sure about this one
+        anchors.bottom: notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -138,16 +138,26 @@ WindowManager {
     NotificationArea {
         id: notificationAreaInstance
 
-        anchors.bottom: gestureAreaInstance.top // not sure about this one
+        anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
+    }
+
+    DashboardArea {
+        id: dashboardAreaInstance
+
+        anchors.bottom: gestureAreaInstance.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        z: 4 // just under the keyboard, but over everything else
     }
 
     OverlaysManager {
         id: overlaysManagerInstance
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.top // not sure about this one
+        anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
