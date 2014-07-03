@@ -23,7 +23,7 @@ import LunaNext.Shell.Notifications 0.1
 import "Utils"
 
 // The notification area can take three states:
-//  - closed: nothing is shown
+//  - hidden: nothing is shown
 //  - minimized: only notification icons are shown
 //  - open: all notifications with their content are shown
 
@@ -33,18 +33,17 @@ Rectangle {
     property Item windowManagerInstance
 
     height: 0
-
     color: "black"
-    state: "minimized"
+    /* hidden by default as long as we don't any notifications */
+    state: "hidden"
 
     NotificationListModel {
         id: notificationModel
-
-        onCountChanged: {
-            if( count === 0 ) {
+        onItemCountChanged: {
+            if (itemCount === 0) {
                 notificationArea.state = "hidden";
             }
-            else if( notificationArea.state === "hidden" ){
+            else if (notificationArea.state === "hidden"){
                 notificationArea.state = "minimized";
             }
         }
@@ -74,6 +73,7 @@ Rectangle {
                 }
         }
     }
+
     MouseArea {
         anchors.fill: minimizedListView
         enabled: minimizedListView.visible
