@@ -28,6 +28,8 @@ Item {
     property string appId: "org.webosports.tests.fakewindowbase"
     property int windowType: WindowType.Card
 
+    property variant compositor
+
     property Item userData
 
     property QtObject lunaNextLS2Service: LunaService {
@@ -50,4 +52,6 @@ Item {
     function postEvent(event) {
         console.log(fakeWindowBase + ": postEvent("+event+")");
     }
+
+    Component.onDestruction: compositor.closeWindowWithId(winId);
 }

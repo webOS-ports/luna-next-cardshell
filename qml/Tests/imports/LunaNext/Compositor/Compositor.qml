@@ -78,6 +78,7 @@ Item {
         var windowComponent = Qt.createComponent("../../../" + name + ".qml");
         var window = windowComponent.createObject(compositor, options);
         window.winId = localProperties.getNextWinId();
+        window.compositor = compositor;
 
         compositor.windowAdded(window);
 
