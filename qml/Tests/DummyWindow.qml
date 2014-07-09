@@ -99,6 +99,18 @@ FakeWindowBase {
             }
             ActionButton {
                 anchors.horizontalCenter: parent.horizontalCenter
+                caption: "Show power menu"
+                width: parent.width / 2
+                height: 50
+
+                onAction: {
+                    lunaNextLS2Service.call("palm://org.webosports.luna/com/palm/display/powerKeyPressed",
+                                            JSON.stringify({"showDialog": true}),
+                                            undefined, undefined)
+                }
+            }
+            ActionButton {
+                anchors.horizontalCenter: parent.horizontalCenter
                 caption: "Create another window"
                 width: parent.width / 2
                 height: 50

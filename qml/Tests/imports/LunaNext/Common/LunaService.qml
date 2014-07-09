@@ -77,6 +77,11 @@ QtObject {
         {
             returnFct({"payload": JSON.stringify({"volume":54,"mute":false})});
         }
+        else if (serviceURI === "palm://com.palm.bus/signal/addmatch" )
+        {
+            LSRegisteredMethods.addRegisteredMethod("palm://" + name + args.category + "/" + args.name, returnFct);
+            returnFct({"payload": JSON.stringify({"subscribed": true})}); // simulate subscription answer
+        }
     }
 
     function registerMethod(category, fct, callback) {

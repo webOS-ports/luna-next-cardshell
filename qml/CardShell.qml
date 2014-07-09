@@ -76,8 +76,10 @@ Rectangle {
         id: powerMenuAlert
         z: 800
 
-        anchors.top: parent.bottom
-        anchors.margins: 20
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: Units.gu(5);
+        anchors.rightMargin: Units.gu(1);
 
         width: parent.width * 0.6
     }
