@@ -68,18 +68,14 @@ Item {
     function handlePowerdBatteryEvent(message) {
         var response = JSON.parse(message.payload);
 
-        if( response.percent_ui ) {
-            // batteryLevel goes from 0 to 12.
-            level = Math.floor((response.percent_ui * 12) / 100);
-            percentage = response.percent_ui
-        }
+        // batteryLevel goes from 0 to 12.
+        level = Math.floor((response.percent_ui * 12) / 100);
+        percentage = response.percent_ui
     }
 
     function handlePowerdUsbDockStatus(message) {
         var response = JSON.parse(message.payload);
 
-        if( response.Charging ) {
-            charging = response.Charging;
-        }
+        charging = response.Charging;
     }
 }
