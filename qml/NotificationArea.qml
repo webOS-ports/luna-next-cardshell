@@ -37,6 +37,10 @@ Rectangle {
     /* hidden by default as long as we don't any notifications */
     state: "hidden"
 
+    NotificationManager {
+        id: notificationMgr
+    }
+
     NotificationListModel {
         id: notificationModel
         onItemCountChanged: {
@@ -56,7 +60,7 @@ Rectangle {
             bottom: parent.bottom
             left: parent.left
             right: parent.right
-            margins: Units.gu(1)
+            margins: Units.gu(1)/2
         }
 
         height: notificationModel.itemCount > 0 ? Units.gu(3) : 0;
@@ -89,7 +93,7 @@ Rectangle {
             bottom: parent.bottom
             left: parent.left
             right: parent.right
-            margins: Units.gu(1)
+            margins: Units.gu(1)/2
         }
         visible: false
         spacing: Units.gu(1) / 2
@@ -109,15 +113,15 @@ Rectangle {
                         id: notificationItem
 
                         anchors.verticalCenter: slidingNotificationArea.verticalCenter
-                        width: notificationArea.width - Units.gu(1) * 2
+                        width: notificationArea.width - Units.gu(1)
                         height: Units.gu(6)
                         summary: object.summary
                         body: object.body
                     }
 
                     onSliderClicked: notificationArea.launchApplication(object.appName, "{}");
-                    onSlidedLeft: notificationModel.get(index).destroy();
-                    onSlidedRight: notificationModel.get(index).destroy();
+                    onSlidedLeft: notificationMgr.closeById(object.replacesId);
+                    onSlidedRight: notificationMgr.closeById(object.replacesId);
                 }
         }
     }
@@ -137,13 +141,13 @@ Rectangle {
             name: "minimized"
             PropertyChanges { target: minimizedListView; visible: true }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationArea; height: minimizedListView.height+Units.gu(2) }
+            PropertyChanges { target: notificationArea; height: minimizedListView.height+Units.gu(1) }
         },
         State {
             name: "open"
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: true }
-            PropertyChanges { target: notificationArea; height: openListView.height+Units.gu(2) }
+            PropertyChanges { target: notificationArea; height: openListView.height+Units.gu(1) }
         }
     ]
 }
