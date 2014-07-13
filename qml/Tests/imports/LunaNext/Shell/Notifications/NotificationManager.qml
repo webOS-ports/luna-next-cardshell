@@ -7,22 +7,32 @@ QtObject {
     function notify(appName, replacesId, appIcon, summary, body, actions, hints, expireTimeout) {
         __nextId++;
         NotificationsVars.__listModel.append({
-                           notificationId: __nextId,
                            object: {
                                appName: appName,
                                appIcon: appIcon,
                                summary: summary,
                                body: body,
-                               timestamp: "12-04-2014"
+                               timestamp: "12-04-2014",
+                               replacesId: __nextId
                            }
                        });
         return __nextId;
     }
 
     function getById(id) {
-        return { appName: "org.webosports.app.settings 1456", summary: "Test Notification", body: "Body of Test notifiation", appIcon: "" };
+        for( var i = 0; i < NotificationsVars.__listModel.count; ++i ) {
+            if( NotificationsVars.__listModel.get(i).object.replacesId === id ) {
+                return NotificationsVars.__listModel.get(i).object
+            }
+        }
     }
 
     function closeById(id, reason) {
+        for( var i = 0; i < NotificationsVars.__listModel.count; ++i ) {
+            if( NotificationsVars.__listModel.get(i).object.replacesId === id ) {
+                NotificationsVars.__listModel.remove(i);
+                break;
+            }
+        }
     }
 }

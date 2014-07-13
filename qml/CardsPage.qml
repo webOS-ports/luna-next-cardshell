@@ -141,12 +141,14 @@ WindowManager {
         anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
+
+        z: 2 // on top of cardview when no card is active
     }
 
     DashboardArea {
         id: dashboardAreaInstance
 
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
