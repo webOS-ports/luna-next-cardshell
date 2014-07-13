@@ -59,7 +59,7 @@ Rectangle {
             margins: Units.gu(1)
         }
 
-        height: notificationModel.count > 0 ? Units.gu(3) : 0;
+        height: notificationModel.itemCount > 0 ? Units.gu(3) : 0;
 
         layoutDirection: Qt.RightToLeft
 
@@ -116,8 +116,8 @@ Rectangle {
                     }
 
                     onSliderClicked: notificationArea.launchApplication(object.appName, "{}");
-                    onSlidedLeft: notificationModel.remove(index);
-                    onSlidedRight: notificationModel.remove(index);
+                    onSlidedLeft: notificationModel.get(index).destroy();
+                    onSlidedRight: notificationModel.get(index).destroy();
                 }
         }
     }
