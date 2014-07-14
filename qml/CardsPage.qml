@@ -152,7 +152,17 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        z: 4 // just under the keyboard, but over everything else
+        z: 4 // just under the keyboard
+    }
+
+    AlertWindowsArea {
+        id: alertWindowsAreaInstance
+
+        anchors.bottom: gestureAreaInstance.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        z: 4 // just under the keyboard
     }
 
     OverlaysManager {
