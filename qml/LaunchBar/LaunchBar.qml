@@ -149,8 +149,8 @@ Item {
         else
         {
             launcherListModel.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.append({"appId": "org.webosports.tests.fakeOverlayWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
             launcherListModel.append({"appId": "org.webosports.tests.fakeDashboardWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.append({"appId": "org.webosports.tests.fakePopupAlertWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
             launcherListModel.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
         }
         launcherRow.visible = true;
