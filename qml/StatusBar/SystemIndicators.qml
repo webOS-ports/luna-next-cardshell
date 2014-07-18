@@ -89,4 +89,10 @@ Row {
         charging: batteryService.charging
         percentage: batteryService.percentage
     }
+
+    Image {
+        id: systemMenuArrow
+        source: "../images/statusbar/menu-arrow.png"
+        anchors.verticalCenter: parent.verticalCenter
+    }
 }

@@ -21,6 +21,8 @@ import LunaNext.Common 0.1
 
 import "../Utils"
 
+import "SystemMenu"
+
 /// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
 /// [-- app menu -- / -- (custom) carrier name -- |   --- title ---    |  -- indicators --]
 
@@ -152,7 +154,6 @@ Item {
                 }
             }
         }
-
         AppMenu {
             id: appMenu
             anchors.top: parent.top
@@ -169,6 +170,21 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
+        }
+
+        MouseArea {
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+            width: 100
+            onClicked: systemMenu.toggleState()
+        }
+
+        SystemMenu {
+            id: systemMenu
+            anchors.top: parent.bottom
+            visible: false
+            x: parent.width - systemMenu.width + systemMenu.edgeOffset
         }
     }
 
