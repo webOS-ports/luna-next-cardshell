@@ -3,7 +3,7 @@ import QtQuick 2.0
 import "WindowTypeStub.js" as WindowType
 import "Singletons"
 
-QtObject {
+ListModel {
     id: windowModel
 
     property int windowTypeFilter: 0;
@@ -35,6 +35,10 @@ QtObject {
             _referenceModel = WindowModelSingleton.launcherListModel;
         else if( windowTypeFilter === WindowType.Dashboard )
             _referenceModel = WindowModelSingleton.dashboardListModel;
+        else if( windowTypeFilter === WindowType.PopupAlert )
+            _referenceModel = WindowModelSingleton.popupAlertListModel;
+        else if( windowTypeFilter === WindowType.BannerAlert )
+            _referenceModel = WindowModelSingleton.bannerAlertListModel;
         else if( windowTypeFilter === WindowType.Overlay )
             _referenceModel = WindowModelSingleton.overlayListModel;
 

@@ -21,6 +21,14 @@ Item {
         signal actualRowsAboutToBeRemoved(variant index, int first, int last);
         signal actualRowsInserted(variant index, int first, int last);
     }
+    property ListModel popupAlertListModel: ListModel {
+        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
+        signal actualRowsInserted(variant index, int first, int last);
+    }
+    property ListModel bannerAlertListModel: ListModel {
+        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
+        signal actualRowsInserted(variant index, int first, int last);
+    }
 
     property Item _compositor;
 
@@ -34,6 +42,10 @@ Item {
                 windowModelSingleton.appendValue(launcherListModel, {"window": window});
             else if( window.windowType === 2 )
                 windowModelSingleton.appendValue(dashboardListModel, {"window": window});
+            else if( window.windowType === 3 )
+                windowModelSingleton.appendValue(popupAlertListModel, {"window": window});
+            else if( window.windowType === 4 )
+                windowModelSingleton.appendValue(bannerAlertListModel, {"window": window});
             else if( window.windowType === 5 )
                 windowModelSingleton.appendValue(overlayListModel, {"window": window});
         }
@@ -44,6 +56,10 @@ Item {
                 windowModelSingleton.removeValue(launcherListModel,window);
             else if( window.windowType === 2 )
                 windowModelSingleton.removeValue(dashboardListModel,window);
+            else if( window.windowType === 3 )
+                windowModelSingleton.removeValue(popupAlertListModel,window);
+            else if( window.windowType === 4 )
+                windowModelSingleton.removeValue(bannerAlertListModel,window);
             else if( window.windowType === 5 )
                 windowModelSingleton.removeValue(overlayListModel,window);
         }
