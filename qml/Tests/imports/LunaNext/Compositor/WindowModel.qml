@@ -13,9 +13,8 @@ ListModel {
     signal rowsAboutToBeRemoved(variant index, int first, int last)
     signal rowsInserted(variant index, int first, int last)
     signal rowsRemoved(variant index, int first, int last)
-    signal dataChanged(variant index, int first, int last)
+    signal dataChanged(variant topLeft, variant bottomRight, variant roles)
 
-    property int count;
     function get(index) {
         return _referenceModel.get(index);
     }
@@ -26,6 +25,13 @@ ListModel {
         }
 
         return get(i).window;
+    }
+
+    onRowsInserted: {
+        windowModel.append( _referenceModel.get(last) );
+    }
+    onRowsRemoved: {
+        windowModel.remove( last );
     }
 
     Component.onCompleted: {
@@ -42,11 +48,12 @@ ListModel {
         else if( windowTypeFilter === WindowType.Overlay )
             _referenceModel = WindowModelSingleton.overlayListModel;
 
-        windowModel.count = Qt.binding(function() { return _referenceModel.count });
+        // windowModel.count = Qt.binding(function() { return _referenceModel.count });
         _referenceModel.rowsAboutToBeInserted.connect(rowsAboutToBeInserted);
         _referenceModel.actualRowsAboutToBeRemoved.connect(rowsAboutToBeRemoved);
         _referenceModel.actualRowsInserted.connect(rowsInserted);
         _referenceModel.rowsRemoved.connect(rowsRemoved);
         _referenceModel.dataChanged.connect(dataChanged);
+        // _referenceModel.countChanged.connect(updateCount);
     }
 }
