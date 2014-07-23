@@ -59,6 +59,26 @@ Item {
                 font.pixelSize: parent.height;
                 font.bold: true
                 //Set the default to Time in case no Tweaks option has been set yet.
+
+                Timer {
+                    id: clockTimer
+                    interval: 100
+                    running: true
+                    repeat: true
+                    onTriggered: titleText.updateClock()
+                }
+
+                function updateClock() {
+                    console.log("Updating clock (tweak " + dateTimeTweak.value + ") ...");
+
+                    if (dateTimeTweak.value === "dateTime")
+                        titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy h:mm");
+                    else if (dateTimeTweak.value === "timeOnly")
+                        titleText.text = Qt.formatDateTime(new Date(), "h:mm");
+                    else if (dateTimeTweak.value === "dateOnly")
+                        titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy");
+                }
+
                 text: Qt.formatDateTime(new Date(), "h:mm");
                 //FIXME Still necessary to adjust based on regional settings later for date and time.
                 Tweak {
@@ -66,27 +86,10 @@ Item {
                     owner: "luna-next-cardshell"
                     key: "showDateTime"
                     defaultValue: "timeOnly"
-                    onValueChanged: updateDateTime();
-
-                    function updateDateTime()
-                    {
-                        if (dateTimeTweak.value === "dateTime")
-                        {
-                            titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy h:mm");
-                        }
-                        else if (dateTimeTweak.value === "timeOnly")
-                        {
-                            titleText.text = Qt.formatDateTime(new Date(), "h:mm");
-                        }
-                        else if (dateTimeTweak.value === "dateOnly")
-                        {
-                            titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy");
-                        }
-                    }
                 }
             }
         }
-		
+
         Item {
             id: carrierString
             anchors.top: parent.top
