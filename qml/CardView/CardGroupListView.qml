@@ -104,7 +104,7 @@ Item {
                             if( !enableDragnDrop ) {
                                 console.log("Drag'n'drop is currently disabled.");
                             }
-                            else {
+                            else if( ListView.view.count >= 2 ) {
                                 console.log("Entering drag'n'drop mode...");
                                 window.userData.dragMode = true;
                                 containerForDraggedCard.startDrag(window);
