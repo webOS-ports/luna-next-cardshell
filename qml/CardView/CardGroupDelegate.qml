@@ -67,8 +67,8 @@ Item {
 
                     scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
 
-                    // rotate 5° each card
-                    rotation: 5*(index - 0.5*(groupRepeater.count-1))
+                    // rotate 3° each card
+                    rotation: windowUserData.state === "card" ? 3*(index - 0.5*(groupRepeater.count-1)) : 0
                     //transformOrigin: Item.Bottom
 
                     cardHeight: cardGroupListViewInstance.cardWindowHeight
