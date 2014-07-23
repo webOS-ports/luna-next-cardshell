@@ -38,12 +38,14 @@ Item {
 
         function handleResult(message) {
             var response = JSON.parse(message.payload);
-            tweak.value = response[tweak.key];
+            if (response[tweak.key] !== undefined)
+                tweak.value = response[tweak.key];
         }
 
         function handleError(message) {
             tweak.value = tweak.defaultValue;
         }
     }
+
     Component.onCompleted: value = defaultValue;
 }
