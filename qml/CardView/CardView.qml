@@ -26,7 +26,7 @@ Item {
         id: cardsModel
         windowTypeFilter: WindowType.Card
 
-        onRowsAboutToBeRemoved: if( cardsModel.getByIndex(last).userData.windowState !== WindowState.Carded ) cardView.setCurrentCardState(WindowState.Carded);
+        onRowsAboutToBeRemoved: if( cardsModel.getByIndex(last).userData.windowState !== WindowState.Carded ) cardViewItem.setCurrentCardState(WindowState.Carded);
     }
 
     CardGroupListView {
