@@ -56,23 +56,29 @@ Item {
         }
     }
 
+    function setDefaultAppMenuTitle() {
+        title.text = defaultAppMenuTitle;
+    }
+
     function handleGetAppInfoResponse(message) {
         var response = JSON.parse(message.payload);
         if (response.returnValue && response.appInfo && response.appInfo.appmenu)
             title.text = response.appInfo.appmenu;
         else
-            title.text = defaultAppMenuTitle;
+            setDefaultAppMenuTitle()
     }
 
     function handleGetAppInfoError(error) {
         console.log("Could not retrieve information about current application: " + error);
-        title.text = defaultAppMenuTitle;
+        setDefaultAppMenuTitle();
     }
 
     function updateAfterAppChange() {
         var activeWindowAppId = determineActiveWindowAppId();
-        if (activeWindowAppId.length === 0)
+        if (activeWindowAppId.length === 0) {
+            setDefaultAppMenuTitle();
             return;
+        }
         service.call("palm://com.palm.applicationManager/getAppInfo",
                      JSON.stringify({"appId":activeWindowAppId}),
                      handleGetAppInfoResponse, handleGetAppInfoError);
