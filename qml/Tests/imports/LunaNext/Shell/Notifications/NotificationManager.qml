@@ -35,4 +35,12 @@ QtObject {
             }
         }
     }
+
+    function closeAllByAppName(appName) {
+        for( var i = 0; i < NotificationsVars.__listModel.count; ++i ) {
+            if( NotificationsVars.__listModel.get(i).object.appName === appName ) {
+                NotificationsVars.__listModel.remove(i);
+            }
+        }
+    }
 }

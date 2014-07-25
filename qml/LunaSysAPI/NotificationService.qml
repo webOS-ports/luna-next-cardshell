@@ -33,6 +33,7 @@ Item {
         onInitialized: {
             systemServicePublic.registerMethod("/", "createNotification", handleCreateNotification);
             systemServicePublic.registerMethod("/", "closeNotification", handleCloseNotification);
+            systemServicePublic.registerMethod("/", "closeAllNotifications", handleCloseAllNotifications);
         }
     }
 
@@ -51,6 +52,8 @@ Item {
         if (request === null)
             return buildErrorResponse("Invalid parameters.");
 
+        if (message.applicationId === '')
+            return buildErrorResponse("No application id set which is required");
 
         /* we have to take the application id here from the message as that is what the
          * app can't influence. */
@@ -86,6 +89,22 @@ Item {
             return buildErrorResponse("Not allowed to close a not owned notification")
 
         notificationManager.closeById(notificationId);
+
+        return JSON.stringify({"returnValue":true});
+    }
+
+    function handleCloseAllNotifications(message) {
+        var request = JSON.parse(message.payload);
+
+        if (request === null)
+            return buildErrorResponse("Invalid parameters");
+
+        if (message.applicationId === '')
+            return buildErrorResponse("No application id set which is required");
+
+        var appName = message.applicationId;
+
+        notificationManager.closeAllByAppName(appName);
 
         return JSON.stringify({"returnValue":true});
     }
