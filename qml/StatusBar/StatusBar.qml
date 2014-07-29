@@ -69,8 +69,6 @@ Item {
                 }
 
                 function updateClock() {
-                    console.log("Updating clock (tweak " + dateTimeTweak.value + ") ...");
-
                     if (dateTimeTweak.value === "dateTime")
                         titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy h:mm");
                     else if (dateTimeTweak.value === "timeOnly")

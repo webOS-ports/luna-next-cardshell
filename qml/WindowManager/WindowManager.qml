@@ -26,6 +26,8 @@ import "WindowManagerServices.js" as WindowManagerServices
 Item {
     id: windowManager
 
+    property Item gestureAreaInstance
+
     signal switchToDashboard
     signal switchToCardView
     signal switchToMaximize(Item window)
@@ -47,5 +49,14 @@ Item {
 
     function doNextTapAction() {
         return WindowManagerServices.doNextTapAction();
+    }
+
+    ///////// gesture area management ///////////
+    Connections {
+        id: gestureAreaConnections
+        target: gestureAreaInstance
+        onTapGesture: {
+            doNextTapAction();
+        }
     }
 }

@@ -184,11 +184,13 @@ Item {
         id: gestureAreaConnections
         target: gestureAreaInstance
         onTapGesture: {
-            if( cardViewItem.isCurrentCardActive() ) {
-                cardViewItem.setCurrentCardState(WindowState.Carded);
-            }
-            else {
-                cardViewItem.setCurrentCardState(WindowState.Maximized);
+            if( 0 === windowManagerInstance.nbRegisteredTapActions() ) {
+                if( cardViewItem.isCurrentCardActive() ) {
+                    cardViewItem.setCurrentCardState(WindowState.Carded);
+                }
+                else {
+                    cardViewItem.setCurrentCardState(WindowState.Maximized);
+                }
             }
         }
         onSwipeUpGesture:{

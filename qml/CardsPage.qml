@@ -40,6 +40,8 @@ WindowManager {
     property real screenheight: Settings.displayHeight
     property real screenDPI: Settings.dpi
 
+    gestureAreaInstance: gestureAreaInstance
+
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance ]
 
@@ -137,6 +139,8 @@ WindowManager {
 
     NotificationArea {
         id: notificationAreaInstance
+
+        windowManagerInstance: parent
 
         anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left

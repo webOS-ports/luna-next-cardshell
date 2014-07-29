@@ -45,6 +45,7 @@ Rectangle {
         id: notificationModel
         onItemCountChanged: {
             if (itemCount === 0) {
+                windowManagerInstance.removeTapAction("minimizeNotificationArea"); // just in case it was open
                 notificationArea.state = "hidden";
             }
             else if (notificationArea.state === "hidden"){
@@ -78,11 +79,17 @@ Rectangle {
         }
     }
 
+    function minimizeNotificationArea() {
+        if( notificationArea.state === "open" )
+            notificationArea.state = "minimized";
+    }
+
     MouseArea {
         anchors.fill: minimizedListView
         enabled: minimizedListView.visible
         onClicked: {
             notificationArea.state = "open";
+            windowManagerInstance.addTapAction("minimizeNotificationArea", minimizeNotificationArea, null)
         }
     }
 
