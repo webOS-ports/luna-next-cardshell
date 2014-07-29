@@ -16,7 +16,7 @@
  */
 
 import QtQuick 2.0
-import "."
+import "Singletons"
 
 Item {
     id: compositor
@@ -62,6 +62,8 @@ Item {
     }
 
     Component.onCompleted: {
+        WindowModelSingleton.setCompositor(compositor);
+
         createFakeWindow("FakeJustTypeLauncherWindow", {});
     }
 
@@ -90,28 +92,19 @@ Item {
         console.log("Compositor: closeWindowWithId (winId:" + winId + ")");
 
         var indexWindow = listWindowsModel.getIndexFromProperty("winId", winId);
-        var window = listWindowsModel.get(indexWindow).window;
+        if( indexWindow >= 0 ) {
+            var window = listWindowsModel.get(indexWindow).window;
+            if( window )
+            {
+                console.log("About to destroy window: " + window);
 
-        if( window )
-        {
-            console.log("About to destroy window: " + window);
+                listWindowsModel.remove(indexWindow); // this will delete the userData
+                compositor.windowRemovedFromListModel(window);
 
-            listWindowsModel.remove(indexWindow); // this will delete the userData
-            compositor.windowRemovedFromListModel(window);
+                compositor.windowRemoved(window); // I do hope this is synchronous ?
 
-            compositor.windowRemoved(window); // I do hope this is synchronous ?
-
-            window.destroy();
-        }
-    }
-
-    property var _refWindowModelTypes: new Array()
-    function addWindowModel(windowModel) {
-        if(_refWindowModelTypes.indexOf(windowModel.windowTypeFilter)<0) {
-            _refWindowModelTypes.push(windowModel.windowTypeFilter);
-        }
-        else {
-            windowModelAdded(windowModel);
+                window.destroy();
+            }
         }
     }
 }
