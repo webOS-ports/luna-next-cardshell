@@ -107,6 +107,9 @@ Item {
                             if( !enableDragnDrop ) {
                                 console.log("Drag'n'drop is currently disabled.");
                             }
+                            else if( containerForDraggedCard.visible ) {
+                                console.log("A Drag'n'drop transaction is already ongoing. Please drop the dragged window somewhere valid.");
+                            }
                             else if( ListView.view.count >= 2 ) {
                                 console.log("Entering drag'n'drop mode...");
                                 window.userData.dragMode = true;
@@ -205,7 +208,7 @@ Item {
     Item {
         id: containerForDraggedCard
 
-        visible: true
+        visible: false
         anchors.fill: internalListView
         opacity: 0.8
 
