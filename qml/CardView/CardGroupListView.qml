@@ -98,7 +98,10 @@ Item {
 
                         z: ListView.isCurrentItem ? 1 : 0
 
-                        onCardSelect: cardGroupListViewItem.cardSelect(window);
+                        onCardSelect: {
+                            listCardGroupsModel.setWindowInFront(window, index)
+                            cardGroupListViewItem.cardSelect(window);
+                        }
                         onCardRemove: cardGroupListViewItem.cardRemove(window);
                         onCardDragStart: {
                             if( !enableDragnDrop ) {
@@ -123,6 +126,7 @@ Item {
                                 droppedWindowUserData.dragMode = false;
                                 windowList.append({"window": droppedWindowUserData.wrappedWindow});
                                 containerForDraggedCard.stopDrag();
+                                droppedWindowUserData.dragMode = false;
                                 console.log("Exited drag'n'drop mode.");
                             }
                         }
@@ -156,6 +160,7 @@ Item {
                                     internalListView.newCardInserted = false;
                                     containerForDraggedCard.stopDrag();
                                     dropRectRight.visible = false;
+                                    droppedWindowUserData.dragMode = false;
                                     console.log("Exited drag'n'drop mode.");
                                 }
                             }
@@ -187,6 +192,7 @@ Item {
                                     internalListView.newCardInserted = false;
                                     containerForDraggedCard.stopDrag();
                                     dropRectLeft.visible = false;
+                                    droppedWindowUserData.dragMode = false;
                                     console.log("Exited drag'n'drop mode.");
                                 }
                             }

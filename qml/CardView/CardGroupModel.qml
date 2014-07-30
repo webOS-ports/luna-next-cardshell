@@ -66,6 +66,18 @@ ListModel {
         return foundGroupIndex;
     }
 
+    function setWindowInFront(window, groupIndex) {
+        // first, remove the window from the origin group
+        var windowList = listCardGroupsModel.get(groupIndex).windowList;
+        var i=0;
+        for( i=0; i<windowList.count; ++i ) {
+            if( windowList.get(i).window === window ) {
+                windowList.move(i,windowList.count-1,1);
+                break;
+            }
+        }
+    }
+
     function createNewGroup(window, insertAt) {
         // create a new group with only one window
         listCardGroupsModel.insert(insertAt, {"windowList": [ { "window":window } ], "currentCardInGroup": 0});

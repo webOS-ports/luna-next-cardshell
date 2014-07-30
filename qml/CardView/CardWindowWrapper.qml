@@ -85,18 +85,16 @@ FocusScope {
     }
 
     // Drag management
-    Drag.active: dragMode
+    Drag.active: dragMouseArea.drag.active
     MouseArea {
+        id: dragMouseArea
         anchors.fill: cardWrapperItem
         drag.target: cardWrapperItem
         enabled: dragMode
         drag.axis: Drag.XAxis
         drag.filterChildren: true
 
-        onReleased: {
-            cardWrapperItem.Drag.drop();
-            dragMode = false
-        }
+        onReleased: cardWrapperItem.Drag.drop();
     }
 
     state: windowState === WindowState.Fullscreen ? "fullscreen" : windowState === WindowState.Maximized ? "maximized" : "card"
