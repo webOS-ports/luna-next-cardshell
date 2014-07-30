@@ -62,6 +62,25 @@ Item {
         }
     }
 
+    Tweak {
+        id: dragNDropTweak
+        owner: "luna-next-cardshell"
+        key: "stackedCardSupport"
+        defaultValue: "false"
+        onValueChanged: updateDragNDropTweak();
+
+        function updateDragNDropTweak()
+        {
+            if (dragNDropTweak.value === true){
+               enableDragnDrop = true
+            }
+            else {
+                enableDragnDrop = false
+            }
+        }
+    }
+    
+
     CardGroupModel {
         id: listCardGroupsModel
 
