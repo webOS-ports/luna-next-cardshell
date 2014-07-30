@@ -94,7 +94,7 @@ FocusScope {
         drag.axis: Drag.XAxis
         drag.filterChildren: true
         drag.minimumX: 0 - cardWrapperItem.width + 10
-        drag.maximumX: cardView.width - 10
+        drag.maximumX: cardView ? cardView.width - 10 : 0
 
         onReleased: cardWrapperItem.Drag.drop();
     }

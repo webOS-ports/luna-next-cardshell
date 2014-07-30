@@ -27,6 +27,8 @@ ListModel {
     }
 
     function getCurrentCardOfGroup(group) {
+        if( !group ) return null;
+
         var windowList = group.windowList;
         if( group.currentCardInGroup >= 0 && group.currentCardInGroup < windowList.count ) {
             return windowList.get(group.currentCardInGroup).window;
