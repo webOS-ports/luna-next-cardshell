@@ -12,6 +12,16 @@
                 "type": "ToggleButton",
                 "value": true
             },
+            {
+                "group": "ui (experimental)",
+                "restart": "luna",
+                "label": "Enable stacked cards",
+                "help": "Enable or disable stacked cards",
+                "key": "stackedCardSupport",
+                "type": "ToggleButton",
+                "value": false
+            },
+            
 			{
                 "group": "ui",
                 "restart": "luna",
