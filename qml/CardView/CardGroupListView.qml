@@ -109,7 +109,7 @@ Item {
 
                         delegateIsCurrent: ListView.isCurrentItem
 
-                        anchors.verticalCenter: parent.verticalCenter
+                        y: 0
                         height: cardGroupListViewItem.height
                         width: cardGroupListViewItem.cardWindowWidth
 

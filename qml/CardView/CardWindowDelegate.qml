@@ -48,10 +48,12 @@ Item {
             cardDelegateContainer.height = maximizedHeight;
         }
     }
-
-    y: cardY
-    width: cardWidth
-    height: cardHeight
+    onFullscreenHeightChanged: {
+        if( window && window.userData.state === "fullscreen" )
+        {
+            cardDelegateContainer.height = fullscreenHeight;
+        }
+    }
 
     Connections {
         target: windowUserData
@@ -93,7 +95,7 @@ Item {
         id: toMaximizeAnimation
         running: false
         ParallelAnimation {
-            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: cardDelegateContainer.maximizedY; duration: 100 }
+            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: maximizedY; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "height"; to: maximizedHeight; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: 100 }
         }

@@ -20,7 +20,7 @@ Item {
         id: groupRepeater
         model: groupModel
 
-        anchors.centerIn: parent
+        anchors.fill: parent
 
         delegate:
             SlidingItemArea {
@@ -29,7 +29,7 @@ Item {
                 property Item windowUserData;
                 property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
 
-                anchors.verticalCenter: cardGroupDelegateItem.verticalCenter
+                anchors.verticalCenter: parent.verticalCenter
                 height: cardGroupListViewInstance.height
                 width: cardGroupListViewInstance.cardWindowWidth
 
@@ -79,7 +79,6 @@ Item {
                     fullscreenY: 0
                     fullscreenHeight: cardGroupListViewInstance.height
                     fullWidth: cardGroupListViewInstance.width
-
                 }
 
                 Component.onDestruction: {
