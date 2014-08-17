@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import QtGraphicalEffects 1.0
+
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 
@@ -38,16 +38,11 @@ FocusScope {
     //    * Fullscreen
     property int windowState: WindowState.Carded
 
-    property int windowType: WindowType.Card
-    property string appIcon: Qt.resolvedUrl("../images/default-app-icon.png")
-
-    // that part should be moved to a window manager, or maybe to the card view interface
-    property variant cardViewParent
-
     // this is the radius that should be applied to the corners of this window container
     property real cornerRadius: 20
+    property bool useShaderCorner: true
 
-    property bool aboutToBeDestroyed: false;
+    property bool dragMode: false
 
     // A simple container, to facilite the wrapping
     Item {
@@ -55,6 +50,7 @@ FocusScope {
         property Item wrappedChild
 
         anchors.fill: parent;
+        visible: !cardWrapperItem.useShaderCorner
 
         function setWrappedChild(window) {
             childWrapper.wrappedChild = window;
@@ -72,14 +68,39 @@ FocusScope {
             }
         }
     }
+    // Rounded corners (static version)
+    RoundedItem {
+        id: cornerStaticMask
+        anchors.fill: cardWrapperItem
+        visible: !useShaderCorner
+        cornerRadius: cornerRadius
+    }
+    // Rounded corners (shader version)
+    CornerShader {
+        id: cornerShader
+        anchors.fill: childWrapper
+        sourceItem: useShaderCorner ? childWrapper : null
+        radius: cornerRadius
+        visible: useShaderCorner
+    }
+
+    // Drag management
+    Drag.active: dragMouseArea.drag.active
+    MouseArea {
+        id: dragMouseArea
+        anchors.fill: cardWrapperItem
+        drag.target: cardWrapperItem
+        enabled: dragMode
+        drag.axis: Drag.XAxis
+        drag.filterChildren: true
+        drag.minimumX: 0 - cardWrapperItem.width + 10
+        drag.maximumX: cardView ? cardView.width - 10 : 0
+
+        onReleased: cardWrapperItem.Drag.drop();
+    }
 
     state: windowState === WindowState.Fullscreen ? "fullscreen" : windowState === WindowState.Maximized ? "maximized" : "card"
     states: [
-        State {
-           name: "unintialized"
-           PropertyChanges { target: cardWrapperItem; Keys.forwardTo: [] }
-           StateChangeScript { script: loseFocus() }
-        },
         State {
            name: "card"
            PropertyChanges { target: cardWrapperItem; Keys.forwardTo: [] }
@@ -99,16 +120,8 @@ FocusScope {
 
     function setWrappedWindow(window) {
         childWrapper.setWrappedChild(window);
-
-        if( window )
-        {
-            windowType = window.windowType;
+        if( window ) {
             window.userData = this
-
-            // fallback to Card if the window type isn't managed yes
-            if( windowType === WindowType.BannerAlert ||
-                windowType === WindowType.PopupAlert )
-                windowType = WindowType.Card
         }
     }
 
@@ -128,10 +141,13 @@ FocusScope {
             wrappedWindow.takeFocus();
     }
 
-    function requestDestruction() {
-        if( !aboutToBeDestroyed ) {
-            aboutToBeDestroyed = true;
-            cardView.removeCard(wrappedWindow)
+    function destroyIfNeeded() {
+        if( !cardWrapperItem.parent && !cardWrapperItem.wrappedWindow ) {
+             // we are all alone, commit suicide
+             cardWrapperItem.destroy();
         }
     }
+
+    onParentChanged: destroyIfNeeded();
+    onWrappedWindowChanged: destroyIfNeeded();
 }

@@ -34,14 +34,6 @@ Item {
         }
     }
 
-    function dumpObject(object) {
-        console.log("-> Dump of " + object);
-        var _property
-        for (_property in object) {
-          console.log( "---> " + _property + ': ' + object[_property]+'; ' );
-        }
-    }
-
     function appendOverlayWindow(window) {
         console.log("OverlayManager: adding " + window);
 

@@ -30,9 +30,10 @@ Item {
     property bool slideOnLeft: true
     property bool slideOnRight: true
 
-    signal slidedLeft
-    signal slidedRight
-    signal sliderClicked
+    signal slidedLeft()
+    signal slidedRight()
+    signal clicked()
+    signal longPress()
 
     NumberAnimation {
         id: swipeOutAnimation
@@ -73,7 +74,18 @@ Item {
     SwipeArea {
         id: slidingMouseArea
 
-        anchors.fill: slidingArea
+        //anchors.fill: slidingArea
+        //anchors.fill: slidingTargetItem
+        height: slidingTargetItem.height
+        width: slidingTargetItem.width
+        Component.onCompleted: {
+            x = slidingTargetItem.x;
+            y = slidingTargetItem.y;
+        }
+
+        rotation: slidingTargetItem.rotation
+        transformOrigin: slidingTargetItem.transformOrigin
+
         drag.target: slidingTargetItem
         drag.axis: slidingAxis
         drag.filterChildren: filterChildren
@@ -82,7 +94,11 @@ Item {
         z: slidingTargetItem.z + 1
 
         onClicked: {
-            sliderClicked();
+            slidingArea.clicked();
+        }
+
+        onLongPress: {
+            slidingArea.longPress();
         }
 
         onPressed: {

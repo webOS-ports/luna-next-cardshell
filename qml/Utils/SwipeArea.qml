@@ -4,6 +4,7 @@ MouseArea {
     id: swipeArea
 
     signal clicked()
+    signal longPress()
     signal swipeCanceled()
     signal swipeUpGesture(int modifiers)
     signal swipeDownGesture(int modifiers)
@@ -12,8 +13,8 @@ MouseArea {
 
     property real swipeVelocityThreshold: 0.2  /* pixels per ms */
 
-    property int _pressedX: 0
-    property int _pressedY: 0
+    property real _pressedX: 0
+    property real _pressedY: 0
     property real _velocityX: 0
     property real _velocityY: 0
     property var _timeStamp
@@ -27,6 +28,11 @@ MouseArea {
         // we manage this event
         mouse.accepted = true;
     }
+
+    onPressAndHold: {
+        // just defining the function, so that mouse.wasHeld is true
+    }
+
     onPositionChanged: {
         var xDiff = mouse.x - _pressedX;
         var yDiff = mouse.y - _pressedY;
@@ -84,8 +90,12 @@ MouseArea {
             if( _swipeInitiated ) {
                 swipeCanceled();
             }
-
-            clicked(mouse);
+            else if( mouse.wasHeld ) {
+                longPress(mouse);
+            }
+            else {
+                clicked(mouse);
+            }
         }
 
         _swipeInitiated = false;

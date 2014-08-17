@@ -126,7 +126,7 @@ Rectangle {
                         body: object.body
                     }
 
-                    onSliderClicked: notificationArea.launchApplication(object.appName, "{}");
+                    onClicked: notificationArea.launchApplication(object.appName, "{}");
                     onSlidedLeft: notificationMgr.closeById(object.replacesId);
                     onSlidedRight: notificationMgr.closeById(object.replacesId);
                 }

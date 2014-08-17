@@ -16,6 +16,7 @@
  */
 
 import QtQuick 2.0
+
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 
@@ -24,8 +25,8 @@ import "../Utils"
 Item {
     id: cardDelegateContainer
 
-    // this is the card window instance wrapping the window container
-    property Item window
+    // this is the window model wrapping the window
+    property CardWindowWrapper windowUserData
 
     // this defines the sizes the card should have, depending on the state of the window
     property real cardHeight
@@ -37,6 +38,8 @@ Item {
     property real fullscreenY
     property real fullscreenHeight
 
+    property bool isCurrentCard
+
     property real cornerRadius: 20
 
     onMaximizedHeightChanged: {
@@ -45,23 +48,29 @@ Item {
             cardDelegateContainer.height = maximizedHeight;
         }
     }
+    onFullscreenHeightChanged: {
+        if( window && window.userData.state === "fullscreen" )
+        {
+            cardDelegateContainer.height = fullscreenHeight;
+        }
+    }
 
     Connections {
-        target: window ? window.userData : null
+        target: windowUserData
         onStateChanged: {
-            if( window.userData.state === "card" )
+            if( windowUserData.state === "card" )
             {
                 toMaximizeAnimation.stop();
                 toFullscreenAnimation.stop();
                 toCardAnimation.start();
             }
-            else if( window.userData.state === "maximized" )
+            else if( windowUserData.state === "maximized" )
             {
                 toCardAnimation.stop();
                 toFullscreenAnimation.stop();
                 toMaximizeAnimation.start();
             }
-            else if( window.userData.state === "fullscreen" )
+            else if( windowUserData.state === "fullscreen" )
             {
                 toCardAnimation.stop();
                 toMaximizeAnimation.stop();
@@ -74,10 +83,8 @@ Item {
         id: toCardAnimation
         running: false
 
-        onStarted: cornerShader.sourceItem = cardWindowWrapper;
-
-        PropertyAction { targets: [cardShadow,cornerShader]; property: "visible"; value: true }
-        PropertyAction { targets: [cornerStaticMask,cardWindowWrapper]; property: "visible"; value: false }
+        PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: true }
+        PropertyAction { targets: [cardShadow]; property: "visible"; value: true }
         ParallelAnimation {
             PropertyAnimation { target: cardDelegateContainer; property: "y"; to: cardY; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "height"; to: cardHeight; duration: 100 }
@@ -88,14 +95,12 @@ Item {
         id: toMaximizeAnimation
         running: false
         ParallelAnimation {
-            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: cardDelegateContainer.maximizedY; duration: 100 }
+            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: maximizedY; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "height"; to: maximizedHeight; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: 100 }
         }
-        PropertyAction { targets: [cornerStaticMask,cardWindowWrapper]; property: "visible"; value: true }
-        PropertyAction { targets: [cardShadow,cornerShader]; property: "visible"; value: false }
-
-        onStopped: cornerShader.sourceItem = null;
+        PropertyAction { targets: [cardShadow]; property: "visible"; value: false }
+        PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: false }
     }
     SequentialAnimation {
         id: toFullscreenAnimation
@@ -105,10 +110,8 @@ Item {
             PropertyAnimation { target: cardDelegateContainer; property: "height"; to: fullscreenHeight; duration: 100 }
             PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: 100 }
         }
-        PropertyAction { targets: [cardShadow,cornerShader]; property: "visible"; value: false }
-        PropertyAction { targets: [cornerStaticMask,cardWindowWrapper]; property: "visible"; value: true }
-
-        onStopped: cornerShader.sourceItem = null;
+        PropertyAction { targets: [cardShadow]; property: "visible"; value: false }
+        PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: false }
     }
 
     Behavior on scale  { NumberAnimation { duration: 100 } }
@@ -124,55 +127,27 @@ Item {
         border { left: 30; top: 30; right: 30; bottom: 30 }
         horizontalTileMode: BorderImage.Stretch
         verticalTileMode: BorderImage.Stretch
-
     }
 
     Item {
         id: cardWindowWrapper
 
-        children: [ window.userData ]
+        children: [ windowUserData ]
 
         anchors.fill: parent
 
         Component.onCompleted: {
-            window.userData.parent = cardWindowWrapper;
-            window.userData.anchors.fill = cardWindowWrapper;
-            window.userData.visible = true;
+            windowUserData.parent = cardWindowWrapper;
+            windowUserData.anchors.fill = cardWindowWrapper;
+            windowUserData.visible = true;
         }
         Component.onDestruction: {
-            if( window && window.userData )
+            if( windowUserData && windowUserData.parent === cardWindowWrapper )
             {
-                window.userData.visible = false;
-                window.userData.anchors.fill = undefined;
-                window.userData.parent = null;
+                windowUserData.visible = false;
+                windowUserData.anchors.fill = undefined;
+                windowUserData.parent = null;
             }
         }
-    }
-
-    function windowDestroyed() {
-        console.log("Wrapped window has been destroyed, cleaning up delegate" );
-        cardWindowWrapper.children = [];
-    }
-
-    // Rounded corners (static version)
-    RoundedItem {
-        id: cornerStaticMask
-        anchors.fill: cardDelegateContainer
-        visible: false
-        cornerRadius: cardDelegateContainer.cornerRadius
-    }
-    // Rounded corners (shader version)
-    CornerShader {
-        id: cornerShader
-        anchors.fill: cardDelegateContainer
-        sourceItem: cardWindowWrapper
-        radius: cardDelegateContainer.cornerRadius
-        visible: true
-    }
-
-    onWindowChanged: if( !window ) windowDestroyed();
-
-    Component.onCompleted: {
-        toCardAnimation.start();
     }
 }
