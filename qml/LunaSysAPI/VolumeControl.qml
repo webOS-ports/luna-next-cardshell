@@ -17,16 +17,14 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
+import LunaNext.Shell 0.1
 
 Item {
     id: volumeControl
 
-    Keys.onVolumeUpPressed: {
-        volumeControl.volumeUp();
-    }
-
-    Keys.onVolumeDownPressed: {
-        volumeControl.volumeDown();
+    DeviceKeyHandler {
+        onVolumeUpPressed: volumeUp()
+        onVolumeDownPressed: volumeDown()
     }
 
     function volumeUp() {
