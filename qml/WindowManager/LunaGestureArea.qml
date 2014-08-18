@@ -17,6 +17,7 @@
  */
 
 import QtQuick 2.0
+import LunaNext.Shell 0.1
 
 import "../Utils"
 
@@ -71,20 +72,17 @@ Item {
         PropertyAction { target: glowImageMask; property: "visible"; value: false }
     }
 
-    Keys.onPressed: {
-        if (event.key === Qt.Key_End) {
-            console.log("Key: End");
-            event.accepted = true;
-            swipeUpGesture(0);
-        }
-        else if(event.key === Qt.Key_Home) {
+    DeviceKeyHandler {
+        onHomePressed: {
             console.log("Key: Home");
-            event.accepted = true;
             tapGesture();
         }
-        else if(event.key === Qt.Key_Escape) {
+        onEndPressed: {
+            console.log("Key: End");
+            swipeUpGesture(0);
+        }
+        onEscapePressed: {
             console.log("Key: Escape");
-            event.accepted = true;
             swipeLeftGesture(0);
         }
     }
