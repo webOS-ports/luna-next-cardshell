@@ -43,7 +43,7 @@ WindowManager {
     gestureAreaInstance: gestureAreaInstance
 
     focus: true
-    Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance ]
+    Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, volumeControl ]
 
     height: root.height
     width: root.width
@@ -74,6 +74,10 @@ WindowManager {
             smooth: true
             sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
         }
+    }
+
+    VolumeControl {
+        id: volumeControl
     }
 
     ScreenShooter {
