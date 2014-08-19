@@ -29,6 +29,7 @@ import "LunaSysAPI"
 import "Utils"
 import "Alerts"
 import "Connectors"
+import "LockScreen"
 
 // The window manager manages the switch between different window modes
 //     (card, maximized, fullscreen, ...)
@@ -58,7 +59,7 @@ WindowManager {
     Item {
         id: background
         anchors.top: parent.top
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -125,6 +126,8 @@ WindowManager {
                 cardViewInstance.z = 3;   // active card over everything
             }
         }
+
+        visible: !lockScreen.visible
     }
 
     Launcher {
@@ -138,6 +141,8 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        visible: !lockScreen.visible
+
         z: 1 // on top of cardview when no card is active
     }
 
@@ -150,6 +155,8 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        visible: !lockScreen.visible
+
         z: 2 // on top of cardview when no card is active
     }
 
@@ -159,6 +166,8 @@ WindowManager {
         anchors.bottom: notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
+
+        visible: !lockScreen.visible
 
         z: 4 // just under the keyboard
     }
@@ -170,6 +179,8 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        visible: !lockScreen.visible
+
         z: 4 // just under the keyboard
     }
 
@@ -180,6 +191,8 @@ WindowManager {
         anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
+
+        visible: !lockScreen.visible
 
         z: 4 // on top of everything (including fullscreen)
     }
@@ -199,6 +212,17 @@ WindowManager {
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
     }
 
+    LockScreen {
+        id: lockScreen
+
+        z: 700
+
+        anchors.top: statusBarInstance.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+
     LunaGestureArea {
         id: gestureAreaInstance
 
@@ -206,6 +230,8 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
         height: Units.gu(4);
+
+        visible: !lockScreen.visible
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
     }

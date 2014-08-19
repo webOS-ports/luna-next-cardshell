@@ -46,7 +46,8 @@ QtObject {
             // Embed the jsonArgs into a payload message
             var message = { applicationId: "org.webosports.tests.dummyWindow", payload: jsonArgs };
             if( !(LSRegisteredMethods.executeMethod(serviceURI, message)) ) {
-                handleError("unrecognized call: " + serviceURI);
+                if (handleError)
+                    handleError("unrecognized call: " + serviceURI);
             }
         }
     }
