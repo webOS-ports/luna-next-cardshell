@@ -27,24 +27,7 @@ Item {
         imagePath: Settings.lunaSystemResourcesPath + "/penindicator-ripple.png"
     }
 
-    MouseArea {
-        enabled: Settings.showReticle
-        propagateComposedEvents: true
-
-        anchors.fill: parent
-
-        onPressed: {
-            reticle.startAt(Qt.point(mouseX, mouseY));
-            mouse.accepted = false;
-        }
-
-        /* We need to forward all not needed mouse events to the object lower in the
-         * visual stack */
-        onClicked: mouse.accepted = false
-        onExited: mouse.accepted = false
-        onPositionChanged: mouse.accepted = false
-        onPressAndHold: mouse.accepted = false
-        onReleased: mouse.accepted = false
-        onWheel: mouse.accepted = false
+    ReticleHandler {
+        onReticleEvent: reticle.startAt(pos);
     }
 }
