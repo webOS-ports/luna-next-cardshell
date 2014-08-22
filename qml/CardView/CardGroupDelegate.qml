@@ -29,7 +29,7 @@ Item {
                 property Item windowUserData;
                 property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
 
-                anchors.verticalCenter: parent.verticalCenter
+                y: 0
                 height: cardGroupListViewInstance.height
                 width: cardGroupListViewInstance.cardWindowWidth
 

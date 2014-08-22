@@ -78,10 +78,8 @@ Item {
         //anchors.fill: slidingTargetItem
         height: slidingTargetItem.height
         width: slidingTargetItem.width
-        Component.onCompleted: {
-            x = slidingTargetItem.x;
-            y = slidingTargetItem.y;
-        }
+        x: slidingTargetItem.x
+        y: slidingTargetItem.y
 
         rotation: slidingTargetItem.rotation
         transformOrigin: slidingTargetItem.transformOrigin
