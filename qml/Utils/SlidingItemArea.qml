@@ -78,8 +78,8 @@ Item {
         //anchors.fill: slidingTargetItem
         height: slidingTargetItem.height
         width: slidingTargetItem.width
-        x: slidingTargetItem.x
-        y: slidingTargetItem.y
+        x: slidingArea.width/2 - slidingTargetItem.width/2
+        y: slidingArea.height/2 - slidingTargetItem.height/2
 
         rotation: slidingTargetItem.rotation
         transformOrigin: slidingTargetItem.transformOrigin
