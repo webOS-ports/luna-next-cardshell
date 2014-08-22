@@ -42,6 +42,10 @@ Item {
 
     property real cornerRadius: 20
 
+    y: cardY
+    height: cardHeight
+    width: cardWidth
+
     onMaximizedHeightChanged: {
         if( window && window.userData.state === "maximized" )
         {
