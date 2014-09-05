@@ -17,6 +17,7 @@
  */
 
 import QtQuick 2.0
+import QtGraphicalEffects 1.0
 
 Item {
     id: launchableAppIcon
@@ -28,6 +29,7 @@ Item {
     property bool showTitle: false
 
     property real iconSize: 64
+    property bool glow: false
 
     signal startLaunchApplication(string appId, string appParams)
 
@@ -39,6 +41,7 @@ Item {
         width: parent.width
 
         Image {
+            id: appIconImage
             width: iconSize
             height: iconSize
             anchors.horizontalCenter: parent.horizontalCenter
@@ -48,7 +51,35 @@ Item {
             sourceSize.height: height
             sourceSize.width: width
             source: launchableAppIcon.appIcon
+
+            visible: !glow
         }
+        Glow {
+            id: glowingIcon
+            width: iconSize
+            height: iconSize
+            anchors.horizontalCenter: parent.horizontalCenter
+            visible: glow
+            fast: true
+            radius: 4
+            samples: 16
+            color: "white"
+            transparentBorder: true
+            source: appIconImage
+
+            SequentialAnimation on radius {
+                loops: Animation.Infinite
+                NumberAnimation {
+                    from: 4; to: 20
+                    duration: 500
+                }
+                NumberAnimation {
+                    from: 20; to: 4
+                    duration: 500
+                }
+            }
+        }
+
         Text {
             width: parent.width
             visible: launchableAppIcon.showTitle

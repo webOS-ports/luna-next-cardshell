@@ -117,6 +117,8 @@ Item {
                     Drag.hotSpot.x: width / 2
                     Drag.hotSpot.y: height / 2
 
+                    glow: dragArea.held
+
                     onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, "");
 
                     states: State {
