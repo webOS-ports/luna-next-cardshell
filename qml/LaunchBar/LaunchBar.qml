@@ -32,11 +32,6 @@ Item {
 
     property real launcherBarIconSize: launchBarItem.height * 0.7;
 
-    // list of icons
-    ListModel {
-        id: launcherListModel
-    }
-
     states: [
         State {
             name: "hidden"
@@ -85,6 +80,83 @@ Item {
         }
     }
 
+    // list of icons
+    VisualDataModel {
+        id: launcherListModel
+        model: ListModel {
+        }
+        delegate:
+            Item {
+                id: launcherIconDelegate
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: launchBarItem.launcherBarIconSize
+                Layout.preferredWidth: launchBarItem.launcherBarIconSize
+
+                anchors.top: parent.top; anchors.bottom: parent.bottom
+                width: launcherIcon.width
+
+                LaunchableAppIcon {
+                    id: launcherIcon
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+
+                    appIcon: model.icon
+                    appId: model.appId
+
+                    iconSize: launchBarItem.launcherBarIconSize
+
+                    height: launchBarItem.launcherBarIconSize
+                    width: launchBarItem.launcherBarIconSize
+
+                    Drag.active: dragArea.held
+                    Drag.source: launcherIconDelegate
+                    Drag.hotSpot.x: width / 2
+                    Drag.hotSpot.y: height / 2
+
+                    onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, "");
+
+                    states: State {
+                        when: dragArea.held
+                        ParentChange { target: launcherIcon; parent: launchBarItem }
+                        AnchorChanges {
+                            target: launcherIcon
+                            anchors { horizontalCenter: undefined; verticalCenter: undefined }
+                        }
+                    }
+                }
+
+                MouseArea {
+                    id: dragArea
+                    anchors { fill: parent }
+
+                    drag.target: held ? launcherIcon : undefined
+                    drag.axis: Drag.XAxis
+
+                    property bool held: false
+
+                    propagateComposedEvents: true
+                    onPressAndHold: held = true;
+                    onReleased: held = false;
+                }
+
+                DropArea {
+                    anchors { fill: parent; margins: 10 }
+
+                    onEntered: {
+                        if( drag.source !== launcherIconDelegate ) {
+                            launcherListModel.items.move(
+                                    drag.source.VisualDataModel.itemsIndex,
+                                    launcherIconDelegate.VisualDataModel.itemsIndex);
+                        }
+                    }
+                }
+            }
+    }
+
     RowLayout {
         id: launcherRow
 
@@ -92,26 +164,19 @@ Item {
         anchors.fill: launchBarItem
         spacing: 0
 
-        Repeater {
+        ListView {
+            Layout.fillWidth: true
+            Layout.preferredHeight: launchBarItem.height
+            Layout.preferredWidth: launchBarItem.width
+
+            spacing: (width - launchBarItem.launcherBarIconSize*count) / count
+
+            orientation: ListView.Horizontal
+            interactive: false
             model: launcherListModel
 
-            LaunchableAppIcon {
-                id: launcherIcon
-
-                Layout.fillWidth: true
-                Layout.preferredHeight: launchBarItem.launcherBarIconSize
-                Layout.preferredWidth: launchBarItem.launcherBarIconSize
-
-                appIcon: model.icon
-                appId: model.appId
-
-                iconSize: launchBarItem.launcherBarIconSize
-
-                //anchors.verticalCenter: launcherRow.verticalCenter
-                height: launchBarItem.launcherBarIconSize
-                width: launchBarItem.launcherBarIconSize
-
-                onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, "");
+            moveDisplaced: Transition {
+                NumberAnimation { properties: "x"; duration: 200 }
             }
         }
 
@@ -141,17 +206,17 @@ Item {
     Component.onCompleted: {
         // fill the listModel statically
         if( !Settings.isTestEnvironment ) {
-            launcherListModel.append({"appId": "org.webosports.app.phone", "icon": "/usr/palm/applications/org.webosports.app.phone/icon.png"});
-            launcherListModel.append({"appId": "com.palm.app.email", "icon": "/usr/palm/applications/com.palm.app.email/icon.png"});
-            launcherListModel.append({"appId": "org.webosinternals.preware", "icon": "/usr/palm/applications/org.webosinternals.preware/icon.png"});
-            launcherListModel.append({"appId": "org.webosports.app.memos", "icon": "/usr/palm/applications/org.webosports.app.memos/icon.png"});
+            launcherListModel.model.append({"appId": "org.webosports.app.phone", "icon": "/usr/palm/applications/org.webosports.app.phone/icon.png"});
+            launcherListModel.model.append({"appId": "com.palm.app.email", "icon": "/usr/palm/applications/com.palm.app.email/icon.png"});
+            launcherListModel.model.append({"appId": "org.webosinternals.preware", "icon": "/usr/palm/applications/org.webosinternals.preware/icon.png"});
+            launcherListModel.model.append({"appId": "org.webosports.app.memos", "icon": "/usr/palm/applications/org.webosports.app.memos/icon.png"});
         }
         else
         {
-            launcherListModel.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.append({"appId": "org.webosports.tests.fakeDashboardWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.append({"appId": "org.webosports.tests.fakePopupAlertWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({"appId": "org.webosports.tests.fakeDashboardWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({"appId": "org.webosports.tests.fakePopupAlertWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
         }
         launcherRow.visible = true;
     }
