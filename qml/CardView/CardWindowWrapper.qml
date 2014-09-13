@@ -42,7 +42,13 @@ FocusScope {
     property real cornerRadius: 20
     property bool useShaderCorner: true
 
-    property bool dragMode: false
+    signal clicked();
+    signal startDrag();
+    signal stopDrag();
+
+    // Drag management
+    Drag.active: dragMouseArea.held
+    Drag.source: cardWrapperItem
 
     // A simple container, to facilite the wrapping
     Item {
@@ -84,19 +90,44 @@ FocusScope {
         visible: useShaderCorner
     }
 
-    // Drag management
-    Drag.active: dragMouseArea.drag.active
     MouseArea {
         id: dragMouseArea
         anchors.fill: cardWrapperItem
-        drag.target: cardWrapperItem
-        enabled: dragMode
-        drag.axis: Drag.XAxis
-        drag.filterChildren: true
-        drag.minimumX: 0 - cardWrapperItem.width + 10
-        drag.maximumX: cardView ? cardView.width - 10 : 0
 
-        onReleased: cardWrapperItem.Drag.drop();
+        enabled: windowState === WindowState.Carded
+        /*
+        enabled: slidingCardDelegate.isCurrentItem &&
+                 slidingCardDelegate.windowUserData && slidingCardDelegate.windowUserData.windowState === WindowState.Carded
+        */
+        property bool held: false;
+
+        drag.target: held ? cardWrapperItem : undefined
+        drag.axis: Drag.XAndYAxis
+        drag.filterChildren: true
+
+        onClicked: {
+            cardWrapperItem.clicked();
+        }
+
+        onPressAndHold: {
+            // switch to drag'n'drop state
+            console.log("press and hold");
+
+            mouse.accepted = true;
+            cardWrapperItem.Drag.hotSpot.x = mouse.x
+            cardWrapperItem.Drag.hotSpot.y = mouse.y
+            held = true;
+            cardWrapperItem.startDrag();
+        }
+        onReleased: {
+            // stop the drag'n'drop
+            console.log("released");
+            if( held ) {
+                cardWrapperItem.Drag.drop();
+                held = false;
+                cardWrapperItem.stopDrag();
+            }
+        }
     }
 
     state: windowState === WindowState.Fullscreen ? "fullscreen" : windowState === WindowState.Maximized ? "maximized" : "card"

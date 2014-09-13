@@ -4,7 +4,6 @@ MouseArea {
     id: swipeArea
 
     signal clicked()
-    signal longPress()
     signal swipeCanceled()
     signal swipeUpGesture(int modifiers)
     signal swipeDownGesture(int modifiers)
@@ -26,14 +25,17 @@ MouseArea {
         _timeStamp = Date.now();
 
         // we manage this event
-        mouse.accepted = true;
+        // mouse.accepted = true;
     }
 
     onPressAndHold: {
         // just defining the function, so that mouse.wasHeld is true
+        mouse.accepted = false;
     }
 
     onPositionChanged: {
+        if (mouse.wasHeld) return;  // if the intent is a long press, ignore the movements
+
         var xDiff = mouse.x - _pressedX;
         var yDiff = mouse.y - _pressedY;
 
@@ -56,6 +58,8 @@ MouseArea {
     }
 
     onReleased: {
+        if (mouse.wasHeld) return; // don't interfere with long press events
+
         // Evaluate how much time has passed since the last call to onPositionChanged
         var newTimeStamp = Date.now();
         var diffTime = newTimeStamp - _timeStamp; /* in milliseconds here */
@@ -90,10 +94,7 @@ MouseArea {
             if( _swipeInitiated ) {
                 swipeCanceled();
             }
-            else if( mouse.wasHeld ) {
-                longPress(mouse);
-            }
-            else {
+            else if( !mouse.wasHeld ) {
                 clicked(mouse);
             }
         }

@@ -9,67 +9,56 @@ Item {
 
     property Item cardGroupListViewInstance
 
+    property CardGroupModel cardGroupModel
     property ListModel groupModel
     property bool delegateIsCurrent
+
+    property alias visualGroupDataModel: groupDataModel
 
     signal cardRemove(Item window);
     signal cardSelect(Item window);
     signal cardDragStart(Item window);
+    signal cardDragStop();
 
-    Repeater {
-        id: groupRepeater
+    VisualDataModel {
+        id: groupDataModel
+
         model: groupModel
-
-        anchors.fill: parent
-
         delegate:
-            SlidingItemArea {
+            SwipeableCard {
                 id: slidingCardDelegate
-
-                property Item windowUserData;
-                property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
-
-                y: 0
                 height: cardGroupListViewInstance.height
                 width: cardGroupListViewInstance.cardWindowWidth
 
-                slidingTargetItem: cardDelegateContainer
-                slidingAxis: Drag.YAxis
-                minTreshold: 0.4
-                maxTreshold: 0.6
-                slidingEnabled: isCurrentItem &&
-                                !windowUserData.dragMode &&
-                                windowUserData && windowUserData.windowState === WindowState.Carded
-                filterChildren: true
-                slideOnRight: false
+                z: PathView.z
+                rotation: slidingCardDelegate.PathView.angle
+                scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
 
-                onSlidedLeft: {
+                property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
+                property CardWindowWrapper windowUserData: window.userData
+
+                interactive: isCurrentItem &&
+                             !windowUserData.Drag.active &&
+                             windowUserData && windowUserData.windowState === WindowState.Carded
+
+                property Item myWindow: window
+                onMyWindowChanged: {
+                    console.assert(!!window, "window is now null !");
+                }
+
+                onRequestDestruction: {
                     // remove window
                     cardGroupDelegateItem.cardRemove(window);
                 }
 
-                onClicked: {
-                    // maximize window
-                    cardGroupDelegateItem.cardSelect(window);
-                }
-
-                onLongPress: {
-                    // switch to drag'n'drop state
-                    cardGroupDelegateItem.cardDragStart(window);
-                }
-
-                CardWindowDelegate {
+                cardComponent: CardWindowDelegate {
                     id: cardDelegateContainer
 
-                    anchors.horizontalCenter: slidingCardDelegate.horizontalCenter
-
                     windowUserData: slidingCardDelegate.windowUserData
-
-                    scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
+                    anchorWindowUserData: !slidingCardDelegate.VisualDataModel.isUnresolved
 
                     // rotate 3° each card
-                    rotation: windowUserData.state === "card" ? 3*(index - 0.5*(groupRepeater.count-1)) : 0
-                    //transformOrigin: Item.Bottom
+                    //rotation: windowUserData.state === "card" ? 3*(index - 0.5*(groupDataModel.count-1)) : 0
 
                     cardHeight: cardGroupListViewInstance.cardWindowHeight
                     cardWidth: cardGroupListViewInstance.cardWindowWidth
@@ -79,17 +68,78 @@ Item {
                     fullscreenY: 0
                     fullscreenHeight: cardGroupListViewInstance.height
                     fullWidth: cardGroupListViewInstance.width
+
+                    Connections {
+                        target: windowUserData
+                        onClicked: {
+                            // maximize window
+                            cardGroupDelegateItem.cardSelect(window);
+                        }
+                        onStartDrag: {
+                            console.log("startDrag with window " + window);
+                            cardGroupDelegateItem.cardDragStart(window);
+                        }
+                    }
                 }
 
                 Component.onDestruction: {
-                    console.log("Delegate is being destroyed");
+                    console.log("Delegate " + slidingCardDelegate + " is being destroyed for window " + window);
                 }
 
                 Component.onCompleted: {
-                    console.log("CardGroupDelegate instantiated for window " + window );
+                    console.log("Delegate " + slidingCardDelegate + " instantiated for window " + window);
                     windowUserData = window.userData; // do not introduce a binding, to avoid
                                                       // errors if window gets destroyed brutally
                 }
+            }
+    }
+
+    function cardAt(x,y) {
+        return groupPathViewGroupCards.itemAt(x, y);
+    }
+
+/*
+    Repeater {
+        id: groupPathViewGroupCards
+        model: groupDataModel
+        anchors.fill: parent
+    }
+*/
+
+    property real itemSize: cardGroupListViewInstance.cardWindowWidth
+    property real itemAngle: 1*(groupDataModel.count-1)
+    property real spread: (groupDataModel.count-1)*cardGroupListViewInstance.cardWindowWidth*0.05
+
+    // with the PathView, the maximized card doesn't fill the screen
+    PathView {
+        id: groupPathViewGroupCards
+        model: groupDataModel
+        interactive: false
+        anchors.fill: parent
+        pathItemCount: undefined
+        currentIndex: groupDataModel.count/2
+
+        path: Path {
+            startX: groupPathViewGroupCards.width/2 + spread; startY: groupPathViewGroupCards.height / 2
+            PathAttribute { name: "z"; value: 50 }
+            PathAttribute { name: "angle"; value: itemAngle }
+            PathLine { relativeX: -spread*2-5; relativeY: 0  }
+            PathAttribute { name: "z"; value: 0 }
+            PathAttribute { name: "angle"; value: -itemAngle }
+        }
+
+        PinchArea {
+            anchors.fill: parent
+            onPinchFinished: {
+                log.text += "PinchArea onPinchFinished" + "\n"
+            }
+            onPinchStarted: {
+                log.text += "PinchArea onPinchStarted" + "\n"
+            }
+            onPinchUpdated: {
+                log.text += "PinchArea onPinchUpdated" + "\n"
+            }
         }
     }
+
 }

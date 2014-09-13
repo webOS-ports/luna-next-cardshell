@@ -27,6 +27,7 @@ Item {
 
     // this is the window model wrapping the window
     property CardWindowWrapper windowUserData
+    property bool anchorWindowUserData: true
 
     // this defines the sizes the card should have, depending on the state of the window
     property real cardHeight
@@ -56,6 +57,13 @@ Item {
         if( window && window.userData.state === "fullscreen" )
         {
             cardDelegateContainer.height = fullscreenHeight;
+        }
+    }
+    onAnchorWindowUserDataChanged: {
+        if( anchorWindowUserData ) {
+            windowUserData.parent = cardWindowWrapper;
+            windowUserData.anchors.fill = cardWindowWrapper;
+            windowUserData.visible = true;
         }
     }
 
@@ -136,21 +144,21 @@ Item {
     Item {
         id: cardWindowWrapper
 
-        children: [ windowUserData ]
-
         anchors.fill: parent
 
         Component.onCompleted: {
-            windowUserData.parent = cardWindowWrapper;
-            windowUserData.anchors.fill = cardWindowWrapper;
-            windowUserData.visible = true;
+            if( anchorWindowUserData ) {
+                windowUserData.parent = cardWindowWrapper;
+                windowUserData.anchors.fill = cardWindowWrapper;
+                windowUserData.visible = true;
+            }
         }
         Component.onDestruction: {
             if( windowUserData && windowUserData.parent === cardWindowWrapper )
             {
+                windowUserData.parent = null;
                 windowUserData.visible = false;
                 windowUserData.anchors.fill = undefined;
-                windowUserData.parent = null;
             }
         }
     }

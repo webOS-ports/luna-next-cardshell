@@ -33,7 +33,8 @@ Item {
     signal slidedLeft()
     signal slidedRight()
     signal clicked()
-    signal longPress()
+    signal pressAndHold()
+    signal released()
 
     NumberAnimation {
         id: swipeOutAnimation
@@ -95,13 +96,16 @@ Item {
             slidingArea.clicked();
         }
 
-        onLongPress: {
-            slidingArea.longPress();
+        onPressAndHold: {
+            slidingArea.pressAndHold();
         }
 
         onPressed: {
             backToHCenterAnimation.stop();
             backToVCenterAnimation.stop();
+        }
+        onReleased: {
+            slidingArea.released();
         }
 
         onSwipeCanceled: {
