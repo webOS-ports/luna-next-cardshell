@@ -4,15 +4,20 @@ import "globalVars.js" as NotificationsVars
 QtObject {
     property int __nextId: 0
 
-    function notify(appName, replacesId, appIcon, summary, body, actions, hints, expireTimeout) {
+    function notify(ownerId, replacesId, launchId, launchParams, title, body, iconUrl, priority, expireTimeout) {
         __nextId++;
         NotificationsVars.__listModel.append({
                            object: {
-                               appName: appName,
-                               appIcon: appIcon,
-                               summary: summary,
+                               ownerId: ownerId,
+                               launchId: launchId,
+                               launchParams: launchParams,
+                               title: title,
                                body: body,
-                               timestamp: "12-04-2014",
+                               iconUrl: iconUrl,
+                               priority: priority,
+                               expireTimeout: expireTimeout,
+                               body: body,
+                               timestamp: "2014-09-05T17:17:45.359Z", // (new Date()).toISOString(),
                                replacesId: __nextId
                            }
                        });

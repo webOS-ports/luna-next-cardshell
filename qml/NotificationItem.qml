@@ -4,8 +4,9 @@ import LunaNext.Common 0.1
 Item {
     id: notification
 
-    property string summary: "Test"
-    property string body: "Test"
+    property string title: "(no title)"
+    property string body: "(no summary)"
+    property url iconUrl: Qt.resolvedUrl("images/default-app-icon.png");
 
     Rectangle {
         id: iconBox
@@ -40,7 +41,7 @@ Item {
             font.bold: true
             font.pixelSize: FontUtils.sizeToPixels("medium")
             color: "white"
-            text: notification.summary
+            text: notification.title
             anchors.top: parent.top
             anchors.left: parent.left
             anchors.topMargin: 3

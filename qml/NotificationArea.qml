@@ -122,11 +122,12 @@ Rectangle {
                         anchors.verticalCenter: slidingNotificationArea.verticalCenter
                         width: notificationArea.width - Units.gu(1)
                         height: Units.gu(6)
-                        summary: object.summary
+                        title: object.title
                         body: object.body
+                        iconUrl: object.iconUrl
                     }
 
-                    onClicked: notificationArea.launchApplication(object.appName, "{}");
+                    onClicked: notificationArea.launchApplication(object.launchId, object.launchParams);
                     onSlidedLeft: notificationMgr.closeById(object.replacesId);
                     onSlidedRight: notificationMgr.closeById(object.replacesId);
                 }

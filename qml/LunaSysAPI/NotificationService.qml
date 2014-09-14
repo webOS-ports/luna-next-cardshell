@@ -52,22 +52,44 @@ Item {
         if (request === null)
             return buildErrorResponse("Invalid parameters.");
 
-        if (message.applicationId === '')
-            return buildErrorResponse("No application id set which is required");
+/* Expected API:
+createNotification {
+   "ownerId": "", // taken automatically from received message, either applicationId or serviceId
+   "launchId": "", // for apps this can default to ownerId, but allow to freely set in general for services and apps
+   "launchParams": "", // parameters supplied to app when (re-)launched because user clicked on the notification
+   "title": "", // no markup
+   "message": "", // should use some markup
+   "iconUrl: "", // only local urls (file://) are allowed
+   "replacesId": <int>, // if the notification should be replaced with a new one. Allow only to replace notifications with same ownerId.
+   "priority": <int>,
+   "expiresTimeout": <int>, // in seconds
+}
+*/
 
-        /* we have to take the application id here from the message as that is what the
+        /* we have to take the application/service id here from the message as that is what the
          * app can't influence. */
-        var appName       = message.applicationId;
+        var ownerId = "";
+        if (message.applicationId && message.applicationId !== '') {
+            ownerId = message.applicationId;
+        }
+        else if (message.serviceId && message.serviceId !== '') {
+            ownerId = message.serviceId;
+        }
+        else {
+            return buildErrorResponse("Error: an application id or a service id must be set on the notification message.");
+        }
 
+        var launchId      = request.launchId ? request.launchId : "";  // string
+        var launchParams  = request.launchParams ? request.launchParams : "";  // string
+
+        var title         = request.title ? request.title : "";  // string (no markup)
+        var body          = request.body ? request.body : ""; // string (with eventual markup)
+        var iconUrl       = request.iconUrl ? request.iconUrl : ""; // local url
         var replacesId    = request.replacesId ? request.replacesId : 0;  // uint
-        var appIcon       = request.appIcon ? request.appIcon : ""; // string
-        var summary       = request.summary ? request.summary : ""; // string
-        var body          = request.body ? request.body : "";    // string
-        var actions       = request.actions ? request.actions : null;  // list<string>
-        var hints         = request.hints ? request.hints : null;      // dict<string,variant>
+        var priority      = request.priority ? request.priority : 0;  // uint
         var expireTimeout = request.expireTimeout ? request.expireTimeout : 10000; // int
 
-        var id = notificationManager.notify(appName, replacesId, appIcon, summary, body, actions, hints, expireTimeout);
+        var id = notificationManager.notify(ownerId, replacesId, launchId, launchParams, title, body, iconUrl, priority, expireTimeout);
 
         return JSON.stringify({"returnValue":true, "id": id});
     }
@@ -102,9 +124,7 @@ Item {
         if (message.applicationId === '')
             return buildErrorResponse("No application id set which is required");
 
-        var appName = message.applicationId;
-
-        notificationManager.closeAllByAppName(appName);
+        notificationManager.closeAllByOwner(message.applicationId);
 
         return JSON.stringify({"returnValue":true});
     }
