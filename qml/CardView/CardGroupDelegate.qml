@@ -7,6 +7,12 @@ import "../Utils"
 Item {
     id: cardGroupDelegateItem
 
+    height: cardGroupListViewInstance.height
+    width: cardGroupListViewInstance.cardWindowWidth * (1.0+cardSpread*(groupPathViewGroupCards.count-1))
+
+    property real cardSpread: 0.1 // what proportion of the card is visible when behind a stack of cards
+    property real angleInStack: cardSpread*10 // in degrees, angle between two consecutive cards in a stack
+
     property Item cardGroupListViewInstance
 
     property CardGroupModel cardGroupModel
@@ -30,16 +36,28 @@ Item {
                 height: cardGroupListViewInstance.height
                 width: cardGroupListViewInstance.cardWindowWidth
 
-                z: PathView.z
-                rotation: slidingCardDelegate.PathView.angle
+                z: isCarded ? (groupPathViewGroupCards.count-index) : (groupPathViewGroupCards.count+1)
+
+                transform: [
+                    Translate {
+                        x: isCarded ? cardGroupDelegateItem.cardSpread*cardGroupListViewInstance.cardWindowWidth*(groupPathViewGroupCards.count-1 - index) : 0
+                    },
+                    Rotation {
+                        origin.x: slidingCardDelegate.width/2
+                        origin.y: (slidingCardDelegate.height + cardGroupListViewInstance.cardWindowHeight)/2
+                        angle: isCarded ? cardGroupDelegateItem.angleInStack*(0.5*(groupPathViewGroupCards.count-1)-index) : 0
+                    }
+                ]
+
                 scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
 
                 property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
+                property bool isCarded: windowUserData && windowUserData.windowState === WindowState.Carded
                 property CardWindowWrapper windowUserData: window.userData
 
                 interactive: isCurrentItem &&
                              !windowUserData.Drag.active &&
-                             windowUserData && windowUserData.windowState === WindowState.Carded
+                             isCarded
 
                 property Item myWindow: window
                 onMyWindowChanged: {
@@ -57,9 +75,6 @@ Item {
                     windowUserData: slidingCardDelegate.windowUserData
                     anchorWindowUserData: !slidingCardDelegate.VisualDataModel.isUnresolved
 
-                    // rotate 3° each card
-                    //rotation: windowUserData.state === "card" ? 3*(index - 0.5*(groupDataModel.count-1)) : 0
-
                     cardHeight: cardGroupListViewInstance.cardWindowHeight
                     cardWidth: cardGroupListViewInstance.cardWindowWidth
                     cardY: cardGroupListViewInstance.height/2 - cardGroupListViewInstance.cardWindowHeight/2
@@ -72,8 +87,10 @@ Item {
                     Connections {
                         target: windowUserData
                         onClicked: {
-                            // maximize window
-                            cardGroupDelegateItem.cardSelect(window);
+                            // maximize window (only if the group if the active one)
+                            if( isCurrentItem ) {
+                                cardGroupDelegateItem.cardSelect(window);
+                            }
                         }
                         onStartDrag: {
                             console.log("startDrag with window " + window);
@@ -95,38 +112,12 @@ Item {
     }
 
     function cardAt(x,y) {
-        return groupPathViewGroupCards.itemAt(x, y);
+        return cardGroupDelegateItem.childAt(x, y);
     }
 
-/*
     Repeater {
         id: groupPathViewGroupCards
         model: groupDataModel
-        anchors.fill: parent
-    }
-*/
-
-    property real itemSize: cardGroupListViewInstance.cardWindowWidth
-    property real itemAngle: 1*(groupDataModel.count-1)
-    property real spread: (groupDataModel.count-1)*cardGroupListViewInstance.cardWindowWidth*0.05
-
-    // with the PathView, the maximized card doesn't fill the screen
-    PathView {
-        id: groupPathViewGroupCards
-        model: groupDataModel
-        interactive: false
-        anchors.fill: parent
-        pathItemCount: undefined
-        currentIndex: groupDataModel.count/2
-
-        path: Path {
-            startX: groupPathViewGroupCards.width/2 + spread; startY: groupPathViewGroupCards.height / 2
-            PathAttribute { name: "z"; value: 50 }
-            PathAttribute { name: "angle"; value: itemAngle }
-            PathLine { relativeX: -spread*2-5; relativeY: 0  }
-            PathAttribute { name: "z"; value: 0 }
-            PathAttribute { name: "angle"; value: -itemAngle }
-        }
 
         PinchArea {
             anchors.fill: parent
@@ -141,5 +132,4 @@ Item {
             }
         }
     }
-
 }

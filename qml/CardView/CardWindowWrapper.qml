@@ -111,7 +111,7 @@ FocusScope {
 
         onPressAndHold: {
             // switch to drag'n'drop state
-            console.log("press and hold");
+            console.log("Card wrapper: press and hold");
 
             mouse.accepted = true;
             cardWrapperItem.Drag.hotSpot.x = mouse.x
@@ -121,8 +121,8 @@ FocusScope {
         }
         onReleased: {
             // stop the drag'n'drop
-            console.log("released");
             if( held ) {
+                console.log("Card wrapper: released drag");
                 cardWrapperItem.Drag.drop();
                 held = false;
                 cardWrapperItem.stopDrag();

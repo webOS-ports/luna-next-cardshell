@@ -48,7 +48,7 @@ Item {
         id: dragNDropTweak
         owner: "luna-next-cardshell"
         key: "stackedCardSupport"
-        defaultValue: "false"
+        defaultValue: "true"
         onValueChanged: updateDragNDropTweak();
 
         function updateDragNDropTweak()
@@ -85,8 +85,6 @@ Item {
                 delegateIsCurrent: ListView.isCurrentItem
 
                 y: 0
-                height: cardGroupListViewItem.height
-                width: cardGroupListViewItem.cardWindowWidth * (0.9+0.1*windowList.count)
 
                 z: ListView.isCurrentItem ? 1 : 0
 
@@ -197,20 +195,20 @@ Item {
             property var _temporaryUnresolvedCard
             property ListModel _tmpEmptyListModel: ListModel {}
 
-            function insertUnresolvedCard(group, card, xRatio) {
+            function insertUnresolvedCard(group, card, xRatio, wrappedWindow) {
                 // If we are on the border of the group, insert a new temporary group before/after that group
-                if( xRatio < 0.02 || xRatio > 0.98 ) {
-                    console.log("CASE 1 : temporary group");
-                    var destIndex = xRatio < 0.02 ? group.VisualDataModel.itemsIndex : group.VisualDataModel.itemsIndex+1;
-                    // insert temporary group on the left of "group"
-                    if( _temporaryUnresolvedGroup ) {
-                        // we already have a temporary group ? just move the it.
-                        if( _temporaryUnresolvedGroup.itemsIndex !== destIndex ) {
-                            console.log("we already have a temporary group ? just move the it");
-                            groupsDataModel.items.move(_temporaryUnresolvedGroup.itemsIndex, destIndex, 1);
-                        }
+                var destIndexTmp, destIndex;
+                if( !card ) { // if we are not on top of any card, then we say we are on the border of a group
+                    xRatio = xRatio > 0.5 ? 1.0 : 0;
+                }
+                if( xRatio < 0.02 || xRatio > 0.98 ) { // CASE 1: insert temporary group on the left (or on the right) of "group"
+                    destIndexTmp = xRatio < 0.02 ? group.VisualDataModel.itemsIndex-1 : group.VisualDataModel.itemsIndex+1;
+                    if( _temporaryUnresolvedGroup && _temporaryUnresolvedGroup.itemsIndex !== destIndexTmp ) {
+                        // we already have a temporary group ? remove it. (move doesn't work so well...)
+                        groupsDataModel.items.remove(_temporaryUnresolvedGroup.itemsIndex,1);
+                        _temporaryUnresolvedGroup = null;
                     }
-                    else
+                    if( !_temporaryUnresolvedGroup )
                     {
                         if( _temporaryUnresolvedCard && _groupForUnresolvedCard ) {
                             // remove the temporary card
@@ -219,39 +217,32 @@ Item {
                             _groupForUnresolvedCard = null;
                         }
                         // insert a new temporary group
-                        console.log("insert a new temporary group");
+                        destIndex = xRatio < 0.02 ? group.VisualDataModel.itemsIndex : group.VisualDataModel.itemsIndex+1;
                         groupsDataModel.items.insert(destIndex, {"windowList": _tmpEmptyListModel, "currentCardInGroup": 0});
                         _temporaryUnresolvedGroup = groupsDataModel.items.get(destIndex);
                     }
                 }
-                else if( !card.VisualDataModel.isUnresolved ) {
-                    console.log("CASE 2 : temporary card");
+                else if( !card.VisualDataModel.isUnresolved ) { // CASE 2: temporary card
                     if( _temporaryUnresolvedGroup ) {
                         // remove the temporary group
-                        console.log("remove the temporary group");
                         groupsDataModel.items.remove(_temporaryUnresolvedGroup.itemsIndex,1);
                         _temporaryUnresolvedGroup = null;
                     }
-                    if( _groupForUnresolvedCard && _groupForUnresolvedCard !== group ) {
+                    destIndexTmp = card.VisualDataModel.itemsIndex-1;
+                    // If we have to move the card, remove it first, because the "move" operation on delegate lists is bugged.
+                    if( _groupForUnresolvedCard && _temporaryUnresolvedCard &&
+                        ( _temporaryUnresolvedCard.itemsIndex !== destIndexTmp || _groupForUnresolvedCard !== group ) ) {
                         // remove the temporary card
-                        console.log("remove the temporary card");
                         _groupForUnresolvedCard.visualGroupDataModel.items.remove(_temporaryUnresolvedCard.itemsIndex,1);
                         _temporaryUnresolvedCard = null;
                         _groupForUnresolvedCard = null;
                     }
-                    if( _groupForUnresolvedCard && _groupForUnresolvedCard === group ) {
-                        // same group => just move the temporary card
-                        if( _temporaryUnresolvedCard.itemsIndex !== card.VisualDataModel.itemsIndex+1 ) {
-                            console.log("same group => just move the temporary card from " + _temporaryUnresolvedCard.itemsIndex + " to " + (card.VisualDataModel.itemsIndex+1));
-                            _groupForUnresolvedCard.visualGroupDataModel.items.move(_temporaryUnresolvedCard.itemsIndex, card.VisualDataModel.itemsIndex+1, 1);
-                        }
-                    }
                     if( !_groupForUnresolvedCard ) {
                         // no temporary card yet, insert a new temporary card above "card"
-                        console.log("no temporary card yet, insert a new temporary card above 'card'");
-                        group.visualGroupDataModel.items.insert(card.VisualDataModel.itemsIndex+1, {"window": drag.source.wrappedWindow});
+                        destIndex = card.VisualDataModel.itemsIndex;
+                        group.visualGroupDataModel.items.insert(destIndex, {"window": wrappedWindow});
                         _groupForUnresolvedCard = group;
-                        _temporaryUnresolvedCard = group.visualGroupDataModel.items.get(card.VisualDataModel.itemsIndex+1);
+                        _temporaryUnresolvedCard = group.visualGroupDataModel.items.get(destIndex);
                     }
                 }
             }
@@ -266,12 +257,8 @@ Item {
                 if( groupForDrop && !groupForDrop.VisualDataModel.isUnresolved ) {
                     var cardCoords = mapToItem(groupForDrop, drag.x, drag.y);
                     var slidingCardDelegate = groupForDrop.cardAt(cardCoords.x, cardCoords.y);
-                    //console.log(slidingCardDelegate.x+"|"+slidingCardDelegate.width + "|" + cardCoords.x + "," + cardCoords.y + ":" + slidingCardDelegate);
-                    if( slidingCardDelegate ) {
-                        var xRatio = cardCoords.x/slidingCardDelegate.width;
-
-                        insertUnresolvedCard(groupForDrop, slidingCardDelegate, xRatio);
-                    }
+                    var xRatio = cardCoords.x/groupForDrop.width;
+                    insertUnresolvedCard(groupForDrop, slidingCardDelegate, xRatio, drag.source.wrappedWindow);
                 }
             }
             onExited: {
@@ -279,41 +266,41 @@ Item {
                 if( _temporaryUnresolvedCard && _groupForUnresolvedCard ) {
                     // remove the temporary card if any
                     _groupForUnresolvedCard.visualGroupDataModel.items.remove(_temporaryUnresolvedCard.itemsIndex, 1);
-                    _temporaryUnresolvedCard = null;
-                    _groupForUnresolvedCard = null;
                 }
                 else if( _temporaryUnresolvedGroup ) {
                     // remove the temporary group if any
                     groupsDataModel.items.remove(_temporaryUnresolvedGroup.itemsIndex, 1);
-                    _temporaryUnresolvedGroup = null;
                 }
+                _temporaryUnresolvedCard = null;
+                _groupForUnresolvedCard = null;
+                _temporaryUnresolvedGroup = null;
             }
             onDropped: {
                 if( _temporaryUnresolvedCard && _groupForUnresolvedCard ) {
                     // resolve the temporary card
                     var unresolvedCardIndex = _temporaryUnresolvedCard.itemsIndex;
-                    console.log("unresolvedCardIndex="+unresolvedCardIndex);
+                    _groupForUnresolvedCard.visualGroupDataModel.items.remove(_temporaryUnresolvedCard.itemsIndex, 1);
                     _groupForUnresolvedCard.groupModel.insert(unresolvedCardIndex, {"window": drag.source.wrappedWindow});
-                    _groupForUnresolvedCard.visualGroupDataModel.items.resolve(_temporaryUnresolvedCard.itemsIndex, unresolvedCardIndex);
-                    //_groupForUnresolvedCard.visualGroupDataModel.items.remove(_temporaryUnresolvedCard.itemsIndex, 1);
 
                     _groupForUnresolvedCard.cardDragStop();
-
-                    _temporaryUnresolvedCard = null;
-                    _groupForUnresolvedCard = null;
                 }
                 else if( _temporaryUnresolvedGroup ) {
                     // resolve the temporary group
                     var unresolvedGroupIndex = _temporaryUnresolvedGroup.itemsIndex;
-                    listCardGroupsModel.createNewGroup(drag.source.wrappedWindow, unresolvedGroupIndex);
-                    //groupsDataModel.items.resolve(unresolvedGroupIndex+1, unresolvedGroupIndex);
                     groupsDataModel.items.remove(_temporaryUnresolvedGroup.itemsIndex, 1);
+                    listCardGroupsModel.createNewGroup(drag.source.wrappedWindow, unresolvedGroupIndex);
 
                     cardGroupListViewItem.interactiveList = true;
                     containerForDraggedCard.stopDrag();
-
-                    _temporaryUnresolvedGroup = null;
                 }
+                else {
+                    // last-chance fallback
+                    listCardGroupsModel.createNewGroup(drag.source.wrappedWindow, 0);
+                }
+
+                _temporaryUnresolvedCard = null;
+                _groupForUnresolvedCard = null;
+                _temporaryUnresolvedGroup = null;
 
                 console.log("Exited drag'n'drop mode.");
             }
