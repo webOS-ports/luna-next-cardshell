@@ -7,69 +7,73 @@ import "../Utils"
 Item {
     id: cardGroupDelegateItem
 
+    height: cardGroupListViewInstance.height
+    width: cardGroupListViewInstance.cardWindowWidth * (1.0+cardSpread*(groupPathViewGroupCards.count-1))
+
+    property real cardSpread: 0.1 // what proportion of the card is visible when behind a stack of cards
+    property real angleInStack: cardSpread*10 // in degrees, angle between two consecutive cards in a stack
+
     property Item cardGroupListViewInstance
 
+    property CardGroupModel cardGroupModel
     property ListModel groupModel
     property bool delegateIsCurrent
+
+    property alias visualGroupDataModel: groupDataModel
 
     signal cardRemove(Item window);
     signal cardSelect(Item window);
     signal cardDragStart(Item window);
+    signal cardDragStop();
 
-    Repeater {
-        id: groupRepeater
+    VisualDataModel {
+        id: groupDataModel
+
         model: groupModel
-
-        anchors.fill: parent
-
         delegate:
-            SlidingItemArea {
+            SwipeableCard {
                 id: slidingCardDelegate
-
-                property Item windowUserData;
-                property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
-
-                y: 0
                 height: cardGroupListViewInstance.height
                 width: cardGroupListViewInstance.cardWindowWidth
 
-                slidingTargetItem: cardDelegateContainer
-                slidingAxis: Drag.YAxis
-                minTreshold: 0.4
-                maxTreshold: 0.6
-                slidingEnabled: isCurrentItem &&
-                                !windowUserData.dragMode &&
-                                windowUserData && windowUserData.windowState === WindowState.Carded
-                filterChildren: true
-                slideOnRight: false
+                z: isCarded ? 0 : 1
 
-                onSlidedLeft: {
+                property real shiftX: isCarded ? cardGroupDelegateItem.cardSpread*cardGroupListViewInstance.cardWindowWidth*index : 0
+                property real shiftAngle: isCarded ? cardGroupDelegateItem.angleInStack*(index-0.5*(groupPathViewGroupCards.count-1)) : 0
+
+                transform: [
+                    Translate {
+                        x: slidingCardDelegate.shiftX
+                    },
+                    Rotation {
+                        origin.x: slidingCardDelegate.width/2
+                        origin.y: (slidingCardDelegate.height + cardGroupListViewInstance.cardWindowHeight)/2
+                        angle: slidingCardDelegate.shiftAngle
+                    }
+                ]
+
+                Behavior on shiftAngle { SmoothedAnimation { duration: 1000 } }
+                Behavior on shiftX { SmoothedAnimation { duration: 1000 } }
+
+                scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
+
+                property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
+                property bool isCarded: windowUserData && windowUserData.windowState === WindowState.Carded
+                property CardWindowWrapper windowUserData: window.userData
+
+                interactive: isCurrentItem &&
+                             !windowUserData.Drag.active &&
+                             isCarded
+
+                onRequestDestruction: {
                     // remove window
                     cardGroupDelegateItem.cardRemove(window);
                 }
 
-                onClicked: {
-                    // maximize window
-                    cardGroupDelegateItem.cardSelect(window);
-                }
-
-                onLongPress: {
-                    // switch to drag'n'drop state
-                    cardGroupDelegateItem.cardDragStart(window);
-                }
-
-                CardWindowDelegate {
+                cardComponent: CardWindowDelegate {
                     id: cardDelegateContainer
 
-                    anchors.horizontalCenter: slidingCardDelegate.horizontalCenter
-
                     windowUserData: slidingCardDelegate.windowUserData
-
-                    scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
-
-                    // rotate 3° each card
-                    rotation: windowUserData.state === "card" ? 3*(index - 0.5*(groupRepeater.count-1)) : 0
-                    //transformOrigin: Item.Bottom
 
                     cardHeight: cardGroupListViewInstance.cardWindowHeight
                     cardWidth: cardGroupListViewInstance.cardWindowWidth
@@ -79,17 +83,53 @@ Item {
                     fullscreenY: 0
                     fullscreenHeight: cardGroupListViewInstance.height
                     fullWidth: cardGroupListViewInstance.width
+
+                    Connections {
+                        target: windowUserData
+                        onClicked: {
+                            // maximize window (only if the group if the active one)
+                            if( isCurrentItem ) {
+                                cardGroupDelegateItem.cardSelect(window);
+                            }
+                        }
+                        onStartDrag: {
+                            console.log("startDrag with window " + window);
+                            cardGroupDelegateItem.cardDragStart(window);
+                        }
+                    }
                 }
 
                 Component.onDestruction: {
-                    console.log("Delegate is being destroyed");
+                    console.log("Delegate " + slidingCardDelegate + " is being destroyed for window " + window);
                 }
 
                 Component.onCompleted: {
-                    console.log("CardGroupDelegate instantiated for window " + window );
+                    console.log("Delegate " + slidingCardDelegate + " instantiated for window " + window);
                     windowUserData = window.userData; // do not introduce a binding, to avoid
                                                       // errors if window gets destroyed brutally
                 }
+            }
+    }
+
+    function cardAt(x,y) {
+        return cardGroupDelegateItem.childAt(x, y);
+    }
+
+    Repeater {
+        id: groupPathViewGroupCards
+        model: groupDataModel
+
+        PinchArea {
+            anchors.fill: parent
+            onPinchFinished: {
+                log.text += "PinchArea onPinchFinished" + "\n"
+            }
+            onPinchStarted: {
+                log.text += "PinchArea onPinchStarted" + "\n"
+            }
+            onPinchUpdated: {
+                log.text += "PinchArea onPinchUpdated" + "\n"
+            }
         }
     }
 }
