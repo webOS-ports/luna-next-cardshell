@@ -27,7 +27,7 @@ Item {
 
     // this is the window model wrapping the window
     property CardWindowWrapper windowUserData
-    property bool anchorWindowUserData: true
+    property bool anchorWindowUserData: windowUserData && !windowUserData.Drag.active
 
     // this defines the sizes the card should have, depending on the state of the window
     property real cardHeight

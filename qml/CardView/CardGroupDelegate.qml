@@ -36,18 +36,24 @@ Item {
                 height: cardGroupListViewInstance.height
                 width: cardGroupListViewInstance.cardWindowWidth
 
-                z: isCarded ? (groupPathViewGroupCards.count-index) : (groupPathViewGroupCards.count+1)
+                z: isCarded ? 0 : 1
+
+                property real shiftX: isCarded ? cardGroupDelegateItem.cardSpread*cardGroupListViewInstance.cardWindowWidth*index : 0
+                property real shiftAngle: isCarded ? cardGroupDelegateItem.angleInStack*(index-0.5*(groupPathViewGroupCards.count-1)) : 0
 
                 transform: [
                     Translate {
-                        x: isCarded ? cardGroupDelegateItem.cardSpread*cardGroupListViewInstance.cardWindowWidth*(groupPathViewGroupCards.count-1 - index) : 0
+                        x: slidingCardDelegate.shiftX
                     },
                     Rotation {
                         origin.x: slidingCardDelegate.width/2
                         origin.y: (slidingCardDelegate.height + cardGroupListViewInstance.cardWindowHeight)/2
-                        angle: isCarded ? cardGroupDelegateItem.angleInStack*(0.5*(groupPathViewGroupCards.count-1)-index) : 0
+                        angle: slidingCardDelegate.shiftAngle
                     }
                 ]
+
+                Behavior on shiftAngle { SmoothedAnimation { duration: 1000 } }
+                Behavior on shiftX { SmoothedAnimation { duration: 1000 } }
 
                 scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
 
@@ -59,11 +65,6 @@ Item {
                              !windowUserData.Drag.active &&
                              isCarded
 
-                property Item myWindow: window
-                onMyWindowChanged: {
-                    console.assert(!!window, "window is now null !");
-                }
-
                 onRequestDestruction: {
                     // remove window
                     cardGroupDelegateItem.cardRemove(window);
@@ -73,7 +74,6 @@ Item {
                     id: cardDelegateContainer
 
                     windowUserData: slidingCardDelegate.windowUserData
-                    anchorWindowUserData: !slidingCardDelegate.VisualDataModel.isUnresolved
 
                     cardHeight: cardGroupListViewInstance.cardWindowHeight
                     cardWidth: cardGroupListViewInstance.cardWindowWidth

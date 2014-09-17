@@ -74,7 +74,7 @@ ListModel {
         var i=0;
         for( i=0; i<windowList.count; ++i ) {
             if( windowList.get(i).window === window ) {
-                windowList.move(i,0,1);
+                windowList.move(i,windowList.count-1,1);
                 break;
             }
         }
