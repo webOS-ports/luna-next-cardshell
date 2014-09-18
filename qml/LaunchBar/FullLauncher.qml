@@ -16,6 +16,7 @@
  */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 import "../LunaSysAPI" as LunaSysAPI
 
@@ -63,10 +64,85 @@ Image {
         id: appsModel
     }
 
+
+    // list of icons
+    VisualDataModel {
+        id: appsVisualDataModel
+        model: appsModel
+        delegate:
+            Item {
+                id: launcherIconDelegate
+
+                height: launcherIcon.height
+                width: launcherIcon.width
+
+                LaunchableAppIcon {
+                    id: launcherIcon
+
+                    anchors {
+                        horizontalCenter: parent.horizontalCenter
+                        verticalCenter: parent.verticalCenter
+                    }
+                    width: gridview.appIconWidth
+                    iconSize: fullLauncher.iconSize
+
+                    appTitle: model.title
+                    appIcon: model.icon
+                    appId: model.id
+                    appParams: model.params === undefined ? "{}" : model.params
+                    showTitle: true
+
+                    Drag.active: dragArea.held
+                    Drag.source: launcherIconDelegate
+                    Drag.hotSpot.x: width / 2
+                    Drag.hotSpot.y: height / 2
+
+                    glow: dragArea.held
+
+                    onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
+
+                    states: State {
+                        when: dragArea.held
+                        ParentChange { target: launcherIcon; parent: fullLauncher }
+                        AnchorChanges {
+                            target: launcherIcon
+                            anchors { horizontalCenter: undefined; verticalCenter: undefined }
+                        }
+                    }
+                }
+
+                MouseArea {
+                    id: dragArea
+                    anchors { fill: parent }
+
+                    drag.target: held ? launcherIcon : undefined
+                    drag.axis: Drag.XAndYAxis
+
+                    property bool held: false
+
+                    propagateComposedEvents: true
+                    onPressAndHold: held = true;
+                    onReleased: held = false;
+                }
+
+                DropArea {
+                    anchors { fill: parent; margins: 10 }
+
+                    onEntered: {
+                        if( drag.source !== launcherIconDelegate ) {
+                            appsVisualDataModel.items.move(
+                                    drag.source.VisualDataModel.itemsIndex,
+                                    launcherIconDelegate.VisualDataModel.itemsIndex);
+                        }
+                    }
+                }
+            }
+    }
+
     GridView {
         id: gridview
 
-        model: appsModel
+        model: appsVisualDataModel
 
         function calculateAppIconHMargin(parent, appIconWidth) {
             var nbCellsPerLine = Math.floor(parent.width / (appIconWidth + 10));
@@ -87,21 +163,11 @@ Image {
         anchors.bottomMargin: fullLauncher.bottomMargin
         clip: true
 
-        header: Item { height: 30 }
-        footer: Item { height: 20 }
+        moveDisplaced: Transition {
+            NumberAnimation { properties: "x, y"; duration: 200 }
+        }
 
-        delegate: LaunchableAppIcon {
-                width: gridview.appIconWidth
-
-                appTitle: model.title
-                appIcon: model.icon
-                appId: model.id
-                appParams: model.params === undefined ? "{}" : model.params
-                showTitle: true
-
-                iconSize: fullLauncher.iconSize
-
-                onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
-            }
+        header: Item { height: Units.gu(2) }
+        footer: Item { height: Units.gu(2) }
     }
 }
