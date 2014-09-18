@@ -89,11 +89,8 @@ Item {
             Item {
                 id: launcherIconDelegate
 
-                Layout.fillWidth: true
-                Layout.preferredHeight: launchBarItem.launcherBarIconSize
-                Layout.preferredWidth: launchBarItem.launcherBarIconSize
-
-                anchors.top: parent.top; anchors.bottom: parent.bottom
+                anchors.verticalCenter: parent.verticalCenter
+                height: launcherIcon.height
                 width: launcherIcon.width
 
                 LaunchableAppIcon {
@@ -108,8 +105,6 @@ Item {
                     appId: model.appId
 
                     iconSize: launchBarItem.launcherBarIconSize
-
-                    height: launchBarItem.launcherBarIconSize
                     width: launchBarItem.launcherBarIconSize
 
                     Drag.active: dragArea.held
@@ -165,35 +160,47 @@ Item {
         visible: false
         anchors.fill: launchBarItem
         spacing: 0
-
+/*
+        Item {
+            Layout.fillWidth: false
+            Layout.minimumWidth: launchBarListView.spacing/2
+            Layout.preferredHeight: launchBarItem.launcherBarIconSize
+            width: launchBarListView.spacing/2
+            onWidthChanged: console.log("width = " + width);
+        }
+*/
         ListView {
+            id: launchBarListView
             Layout.fillWidth: true
             Layout.preferredHeight: launchBarItem.height
             Layout.preferredWidth: launchBarItem.width
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
 
             spacing: (width - launchBarItem.launcherBarIconSize*count) / count
+            onSpacingChanged: console.log("spacing = " + spacing);
 
             orientation: ListView.Horizontal
             interactive: false
             model: launcherListModel
 
+            header: Item {
+                width: launchBarListView.spacing/2
+            }
             moveDisplaced: Transition {
                 NumberAnimation { properties: "x"; duration: 200 }
             }
         }
 
         Item {
-            Layout.fillWidth: true
+            Layout.fillWidth: false
             Layout.preferredHeight: launchBarItem.launcherBarIconSize
-            Layout.preferredWidth: launchBarItem.launcherBarIconSize
+            Layout.minimumWidth: launchBarItem.launcherBarIconSize
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
 
             Image {
                 id: appsIcon
 
-                anchors.right: parent.right
-
-                height: launchBarItem.launcherBarIconSize
-                width: launchBarItem.launcherBarIconSize
+                anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
                 source: "../images/empty-launcher.png"
 
