@@ -24,6 +24,9 @@ QtObject {
     property string method
     property bool usePrivateBus: false
 
+    property var lockStatusSubscriber
+    property string currentLockStatus: "locked"
+
     signal initialized
 
     Component.onCompleted: {
@@ -41,6 +44,9 @@ QtObject {
         }
         else if( serviceURI === "palm://com.palm.applicationManager/getAppInfo" ) {
             giveFakeAppInfo_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "luna://com.palm.display/control/setLockStatus") {
+            setLockStatus_call(args, returnFct, handleError);
         }
         else {
             // Embed the jsonArgs into a payload message
@@ -77,6 +83,10 @@ QtObject {
         else if (serviceURI === "luna://org.webosports.audio/getStatus")
         {
             returnFct({"payload": JSON.stringify({"volume":54,"mute":false})});
+        }
+        else if (serviceURI === "luna://com.palm.display/control/lockStatus") {
+            lockStatusSubscriber =  {func: returnFct};
+            returnFct({payload: "{\"lockState\":\"" + currentLockStatus + "\"}"});
         }
         else if (serviceURI === "palm://com.palm.bus/signal/addmatch" )
         {
@@ -161,6 +171,15 @@ QtObject {
         }
         else {
             handleError("Error: parameter 'id' not specified");
+        }
+    }
+
+
+    function setLockStatus_call(args, returnFct, handleError) {
+        console.log("setLockStatus_call: arg.status = " + args.status + " currentLockStatus = " + currentLockStatus);
+        if (args.status === "unlock" && currentLockStatus === "locked") {
+            currentLockStatus = "unlocked";
+            lockStatusSubscriber.func({payload: "{\"lockState\":\"" + currentLockStatus + "\"}"});
         }
     }
 }
