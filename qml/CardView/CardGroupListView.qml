@@ -48,12 +48,12 @@ Item {
         id: dragNDropTweak
         owner: "luna-next-cardshell"
         key: "stackedCardSupport"
-        defaultValue: "false"
+        defaultValue: false
         onValueChanged: updateDragNDropTweak();
 
         function updateDragNDropTweak()
         {
-            if (dragNDropTweak.value === "true"){
+            if (dragNDropTweak.value === true){
                 console.log("INFO: Enabling Drag'n'Drop...");
                 enableDragnDrop = true;
             }
@@ -255,7 +255,9 @@ Item {
                 var groupForDrop = internalListView.itemAt(internalListViewCoords.x+internalListView.contentX, internalListViewCoords.y+internalListView.contentY);
                 if( !groupForDrop ) {
                     groupForDrop = internalListView.itemAt(internalListView.width/2+internalListView.contentX, internalListView.height/2+internalListView.contentY);
-                    insertUnresolvedGroup(groupForDrop, internalListViewCoords.x < internalListView.width/2, drag.source.wrappedWindow);
+                    if( groupForDrop ) {
+                        insertUnresolvedGroup(groupForDrop, internalListViewCoords.x < internalListView.width/2, drag.source.wrappedWindow);
+                    }
                 }
                 else if( !_temporaryUnresolvedGroup || _temporaryUnresolvedGroup.itemsIndex !== groupForDrop.VisualDataModel.itemsIndex ) {
                     //We have the group, but ignore the temporary one if any
