@@ -48,12 +48,12 @@ Item {
         id: dragNDropTweak
         owner: "luna-next-cardshell"
         key: "stackedCardSupport"
-        defaultValue: "false"
+        defaultValue: false
         onValueChanged: updateDragNDropTweak();
 
         function updateDragNDropTweak()
         {
-            if (dragNDropTweak.value === "true"){
+            if (dragNDropTweak.value === true){
                 console.log("INFO: Enabling Drag'n'Drop...");
                 enableDragnDrop = true;
             }
