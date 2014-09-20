@@ -160,15 +160,7 @@ Item {
         visible: false
         anchors.fill: launchBarItem
         spacing: 0
-/*
-        Item {
-            Layout.fillWidth: false
-            Layout.minimumWidth: launchBarListView.spacing/2
-            Layout.preferredHeight: launchBarItem.launcherBarIconSize
-            width: launchBarListView.spacing/2
-            onWidthChanged: console.log("width = " + width);
-        }
-*/
+
         ListView {
             id: launchBarListView
             Layout.fillWidth: true
@@ -177,7 +169,6 @@ Item {
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
 
             spacing: (width - launchBarItem.launcherBarIconSize*count) / count
-            onSpacingChanged: console.log("spacing = " + spacing);
 
             orientation: ListView.Horizontal
             interactive: false
