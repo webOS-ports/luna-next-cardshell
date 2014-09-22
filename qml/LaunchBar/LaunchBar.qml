@@ -137,7 +137,12 @@ Item {
 
                     propagateComposedEvents: true
                     onPressAndHold: held = true;
-                    onReleased: held = false;
+                    onReleased: {
+                        held = false;
+
+                        // save that layout in DB
+                        saveCurrentLayout();
+                    }
                 }
 
                 DropArea {
@@ -203,20 +208,75 @@ Item {
         }
     }
 
+    property QtObject lunaNextLS2Service: LunaService {
+        id: lunaNextLS2Service
+        name: "org.webosports.luna"
+        usePrivateBus: true
+    }
+    function __handleDBError(message) {
+        console.log("Could not fulfill DB operation : " + message)
+    }
+    function __queryDB(action, params, handleResultFct) {
+        lunaNextLS2Service.call("luna://com.palm.db/" + action, JSON.stringify(params),
+                  handleResultFct, __handleDBError)
+    }
+
+    function __quickLaunchBarDBResult(message) {
+        var result = message.payload;
+        if( result && result.results && result.results.length ) {
+            for( var i=0; i<result.results.length; ++i ) {
+                var obj = result.results[i];
+                launcherListModel.model.append({appId: obj.appId, icon: obj.icon});
+            }
+        }
+        else {
+            // fallback to static filling
+            launcherListModel.model.append({appId: "org.webosports.app.phone",   icon: "/usr/palm/applications/org.webosports.app.phone/icon.png"});
+            launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
+            launcherListModel.model.append({appId: "org.webosinternals.preware", icon: "/usr/palm/applications/org.webosinternals.preware/icon.png"});
+            launcherListModel.model.append({appId: "org.webosports.app.memos",   icon: "/usr/palm/applications/org.webosports.app.memos/icon.png"});
+        }
+    }
+    function saveCurrentLayout() {
+        if( Settings.isTestEnvironment ) return;
+
+        // first, clean up the DB
+        __queryDB("del",
+                  {query:{from:"org.webosports.lunalauncher:1",
+                          where:[{prop:"quicklaunchbar",op:"=",val:1}]}},
+                  function (message) {});
+
+        // then build up the object to save
+        var data = [];
+        for( var i=0; i<launcherListModel.items.count; ++i ) {
+            var obj = launcherListModel.items.get(i);
+            data.push({_kind: "org.webosports.lunalauncher:1",
+                       quicklaunchbar: 1,
+                       pos: obj.itemsIndex,
+                       appId: obj.model.appId,
+                       icon: obj.model.icon});
+        }
+
+        // and put it in the DB
+         __queryDB("put", {objects: data}, function (message) {});
+    }
+
     Component.onCompleted: {
         // fill the listModel statically
         if( !Settings.isTestEnvironment ) {
-            launcherListModel.model.append({"appId": "org.webosports.app.phone", "icon": "/usr/palm/applications/org.webosports.app.phone/icon.png"});
-            launcherListModel.model.append({"appId": "com.palm.app.email", "icon": "/usr/palm/applications/com.palm.app.email/icon.png"});
-            launcherListModel.model.append({"appId": "org.webosinternals.preware", "icon": "/usr/palm/applications/org.webosinternals.preware/icon.png"});
-            launcherListModel.model.append({"appId": "org.webosports.app.memos", "icon": "/usr/palm/applications/org.webosports.app.memos/icon.png"});
+            __queryDB("find",
+                      {query:{from:"org.webosports.lunalauncher:1",
+                              where:[{prop:"quicklaunchbar",op:"=",val:1}],
+                              limit:8,
+                              orderBy: "pos", desc: false}},
+                      __quickLaunchBarDBResult);
         }
         else
         {
-            launcherListModel.model.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.model.append({"appId": "org.webosports.tests.fakeDashboardWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.model.append({"appId": "org.webosports.tests.fakePopupAlertWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.model.append({"appId": "org.webosports.tests.dummyWindow", "icon": Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({appId: "org.webosports.tests.dummyWindow",          icon: Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({appId: "org.webosports.tests.fakeDashboardWindow",  icon: Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({appId: "org.webosports.tests.fakePopupAlertWindow", icon: Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({appId: "org.webosports.tests.dummyWindow",          icon: Qt.resolvedUrl("../images/default-app-icon.png")});
         }
         launcherRow.visible = true;
     }
