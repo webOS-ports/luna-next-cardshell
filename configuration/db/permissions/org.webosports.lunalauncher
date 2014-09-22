@@ -1,0 +1,12 @@
+[	
+	{	"type"		: "db.kind"
+	,	"object"	: "org.webosports.lunalauncher:1"
+	,	"caller"	: "org.webosports.luna"
+	,	"operations":
+		{	"create": "allow"
+		,	"read"	: "allow"
+		,	"update": "allow"
+		,	"delete": "allow"
+		}
+	}
+]
