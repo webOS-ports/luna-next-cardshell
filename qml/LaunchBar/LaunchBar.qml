@@ -173,7 +173,7 @@ Item {
             Layout.preferredWidth: launchBarItem.width
             Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
 
-            spacing: (width - launchBarItem.launcherBarIconSize*count) / count
+            spacing: count > 0 ? (width - launchBarItem.launcherBarIconSize*count) / count : 0
 
             orientation: ListView.Horizontal
             interactive: false
@@ -222,7 +222,7 @@ Item {
     }
 
     function __quickLaunchBarDBResult(message) {
-        var result = message.payload;
+        var result = JSON.parse(message.payload);
         if( result && result.results && result.results.length ) {
             for( var i=0; i<result.results.length; ++i ) {
                 var obj = result.results[i];
@@ -242,8 +242,7 @@ Item {
 
         // first, clean up the DB
         __queryDB("del",
-                  {query:{from:"org.webosports.lunalauncher:1",
-                          where:[{prop:"quicklaunchbar",op:"=",val:1}]}},
+                  {query:{from:"org.webosports.lunalauncher:1"}},
                   function (message) {});
 
         // then build up the object to save
@@ -251,7 +250,6 @@ Item {
         for( var i=0; i<launcherListModel.items.count; ++i ) {
             var obj = launcherListModel.items.get(i);
             data.push({_kind: "org.webosports.lunalauncher:1",
-                       quicklaunchbar: 1,
                        pos: obj.itemsIndex,
                        appId: obj.model.appId,
                        icon: obj.model.icon});
@@ -266,7 +264,6 @@ Item {
         if( !Settings.isTestEnvironment ) {
             __queryDB("find",
                       {query:{from:"org.webosports.lunalauncher:1",
-                              where:[{prop:"quicklaunchbar",op:"=",val:1}],
                               limit:8,
                               orderBy: "pos", desc: false}},
                       __quickLaunchBarDBResult);

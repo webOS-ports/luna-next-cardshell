@@ -2,7 +2,6 @@
 	"id":"org.webosports.lunalauncher:1",
 	"owner":"org.webosports.luna",
 	"indexes":[	{"name":"rev","props":[{"name":"_rev"}]},
-				{"name": "quicklaunchbar", "props": [{"name": "quicklaunchbar"}] },
 				{"name": "pos", "props": [{"name": "pos"}] },
 				{"name": "appId", "props": [{"name": "appId"}] },
 				{"name": "icon", "props": [{"name": "icon"}] }],
