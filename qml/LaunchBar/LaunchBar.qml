@@ -288,7 +288,7 @@ Item {
     }
 
     Component.onCompleted: {
-		// fill the listModel statically
+        // fill the listModel statically
         if( !Settings.isTestEnvironment ) {
             __queryDB("find",
                       {query:{from:"org.webosports.lunalauncher:1",
