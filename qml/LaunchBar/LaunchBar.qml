@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -216,6 +217,33 @@ Item {
     function __handleDBError(message) {
         console.log("Could not fulfill DB operation : " + message)
     }
+
+    function __getAppManager(action, params, handleResultAM) {
+        lunaNextLS2Service.call("luna://com.palm.applicationManager/" + action, JSON.stringify(params),
+                   handleResultAM, __handleAppMgrError)
+    }
+
+    function __phoneAppStatusResult(message) {
+        var result = JSON.parse(message.payload)
+        //In case returnvalue is true, phone app is installed, otherwise we use the browser instead
+        if(result.returnValue)
+        {
+            launcherListModel.model.append({appId: "org.webosports.app.phone",   icon: "/usr/palm/applications/org.webosports.app.phone/icon.png"});
+        }
+        else
+        {
+            launcherListModel.model.append({appId: "org.webosports.app.browser",   icon: "/usr/palm/applications/org.webosports.app.browser/icon.png"});
+        }
+        launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
+        launcherListModel.model.append({appId: "org.webosinternals.preware", icon: "/usr/palm/applications/org.webosinternals.preware/icon.png"});
+        launcherListModel.model.append({appId: "org.webosports.app.memos",   icon: "/usr/palm/applications/org.webosports.app.memos/icon.png"});
+    }
+
+    function __handleAppMgrError(message) {
+        console.log("Unable to query Application Manager, error message is: "+JSON.stringify(message.payload))
+    }
+
+
     function __queryDB(action, params, handleResultFct) {
         lunaNextLS2Service.call("luna://com.palm.db/" + action, JSON.stringify(params),
                   handleResultFct, __handleDBError)
@@ -223,6 +251,7 @@ Item {
 
     function __quickLaunchBarDBResult(message) {
         var result = JSON.parse(message.payload);
+
         if( result && result.results && result.results.length ) {
             for( var i=0; i<result.results.length; ++i ) {
                 var obj = result.results[i];
@@ -230,11 +259,10 @@ Item {
             }
         }
         else {
-            // fallback to static filling
-            launcherListModel.model.append({appId: "org.webosports.app.phone",   icon: "/usr/palm/applications/org.webosports.app.phone/icon.png"});
-            launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
-            launcherListModel.model.append({appId: "org.webosinternals.preware", icon: "/usr/palm/applications/org.webosinternals.preware/icon.png"});
-            launcherListModel.model.append({appId: "org.webosports.app.memos",   icon: "/usr/palm/applications/org.webosports.app.memos/icon.png"});
+            //fallback to static filling
+            //First icon is depending on availability of phone app, which we check and we'll populate the list accordingly
+            __getAppManager("getAppInfo", {appId: "org.webosports.app.phone"},__phoneAppStatusResult);
+
         }
     }
     function saveCurrentLayout() {
