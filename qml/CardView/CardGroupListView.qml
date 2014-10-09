@@ -126,7 +126,7 @@ Item {
         highlightFollowsCurrentItem: true
 
         model: groupsDataModel
-        spacing: 0
+        spacing: Units.gu(2)
         orientation: ListView.Horizontal
         smooth: !internalListView.moving
         focus: true

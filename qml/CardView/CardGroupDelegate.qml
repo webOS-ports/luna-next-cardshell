@@ -55,11 +55,12 @@ Item {
                 Behavior on shiftAngle { SmoothedAnimation { duration: 1000 } }
                 Behavior on shiftX { SmoothedAnimation { duration: 1000 } }
 
-                scale:  slidingCardDelegate.isCurrentItem ? 1.0: 0.9
-
                 property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
                 property bool isCarded: windowUserData && windowUserData.windowState === WindowState.Carded
                 property CardWindowWrapper windowUserData: window.userData
+
+                scale: slidingCardDelegate.isCurrentItem ? 1.0 : 0.95
+                Behavior on scale { NumberAnimation { duration: 300 } }
 
                 interactive: isCurrentItem &&
                              !windowUserData.Drag.active &&
