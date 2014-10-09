@@ -76,43 +76,44 @@ Item {
                 }
             }
         }
+
         delegate: CardGroupDelegate {
-                id: cardGroupDelegateItem
-                cardGroupListViewInstance: cardGroupListViewItem
-                cardGroupModel: listCardGroupsModel
-                groupModel: windowList
+            id: cardGroupDelegateItem
+            cardGroupListViewInstance: cardGroupListViewItem
+            cardGroupModel: listCardGroupsModel
+            groupModel: windowList
 
-                delegateIsCurrent: ListView.isCurrentItem
+            delegateIsCurrent: ListView.isCurrentItem
 
-                y: 0
+            y: 0
 
-                z: ListView.isCurrentItem ? 1 : 0
+            z: ListView.isCurrentItem ? 1 : 0
 
-                onCardSelect: {
-                    listCardGroupsModel.setWindowInFront(window, index)
-                    cardGroupListViewItem.cardSelect(window);
+            onCardSelect: {
+                listCardGroupsModel.setWindowInFront(window, index)
+                cardGroupListViewItem.cardSelect(window);
+            }
+            onCardRemove: cardGroupListViewItem.cardRemove(window);
+            onCardDragStart: {
+                if( !enableDragnDrop ) {
+                    console.log("Drag'n'drop is currently disabled.");
                 }
-                onCardRemove: cardGroupListViewItem.cardRemove(window);
-                onCardDragStart: {
-                    if( !enableDragnDrop ) {
-                        console.log("Drag'n'drop is currently disabled.");
-                    }
-                    else if( containerForDraggedCard.visible ) {
-                        console.log("A Drag'n'drop transaction is already ongoing. Please drop the dragged window somewhere valid.");
-                    }
-                    else if( listCardGroupsModel.listCardsModel.count >= 2 ) {
-                        console.log("Entering drag'n'drop mode...");
-                        cardGroupListViewItem.interactiveList = false;
-                        containerForDraggedCard.startDrag(window);
-                        listCardGroupsModel.removeWindow(window);
-                    }
+                else if( containerForDraggedCard.visible ) {
+                    console.log("A Drag'n'drop transaction is already ongoing. Please drop the dragged window somewhere valid.");
                 }
-                onCardDragStop: {
-                    cardGroupListViewItem.interactiveList = true;
-                    containerForDraggedCard.stopDrag();
+                else if( listCardGroupsModel.listCardsModel.count >= 2 ) {
+                    console.log("Entering drag'n'drop mode...");
+                    cardGroupListViewItem.interactiveList = false;
+                    containerForDraggedCard.startDrag(window);
+                    listCardGroupsModel.removeWindow(window);
                 }
             }
+            onCardDragStop: {
+                cardGroupListViewItem.interactiveList = true;
+                containerForDraggedCard.stopDrag();
+            }
         }
+    }
 
     ListView {
         id: internalListView
