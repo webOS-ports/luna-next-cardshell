@@ -89,8 +89,8 @@ Rectangle {
         z: 900
     }
 
-    CardsPage {
-        id: cardsPage
+    CardsArea {
+        id: cardsArea
         anchors.fill: parent
     }
 }
