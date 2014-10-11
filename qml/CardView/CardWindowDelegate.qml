@@ -42,6 +42,7 @@ Item {
     property bool isCurrentCard
 
     property real cornerRadius: 20
+    property real animationDuration: 100
 
     y: cardY
     height: cardHeight
@@ -98,18 +99,18 @@ Item {
         PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: true }
         PropertyAction { targets: [cardShadow]; property: "visible"; value: true }
         ParallelAnimation {
-            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: cardY; duration: 100 }
-            PropertyAnimation { target: cardDelegateContainer; property: "height"; to: cardHeight; duration: 100 }
-            PropertyAnimation { target: cardDelegateContainer; property: "width"; to: cardWidth; duration: 100 }
+            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: cardY; duration: animationDuration }
+            PropertyAnimation { target: cardDelegateContainer; property: "height"; to: cardHeight; duration: animationDuration }
+            PropertyAnimation { target: cardDelegateContainer; property: "width"; to: cardWidth; duration: animationDuration }
         }
     }
     SequentialAnimation {
         id: toMaximizeAnimation
         running: false
         ParallelAnimation {
-            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: maximizedY; duration: 100 }
-            PropertyAnimation { target: cardDelegateContainer; property: "height"; to: maximizedHeight; duration: 100 }
-            PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: 100 }
+            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: maximizedY; duration: animationDuration }
+            PropertyAnimation { target: cardDelegateContainer; property: "height"; to: maximizedHeight; duration: animationDuration }
+            PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: animationDuration }
         }
         PropertyAction { targets: [cardShadow]; property: "visible"; value: false }
         PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: false }
@@ -118,15 +119,16 @@ Item {
         id: toFullscreenAnimation
         running: false
         SequentialAnimation {
-            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: fullscreenY; duration: 100 }
-            PropertyAnimation { target: cardDelegateContainer; property: "height"; to: fullscreenHeight; duration: 100 }
-            PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: 100 }
+            PropertyAnimation { target: cardDelegateContainer; property: "y"; to: fullscreenY; duration: animationDuration }
+            PropertyAnimation { target: cardDelegateContainer; property: "height"; to: fullscreenHeight; duration: animationDuration }
+            PropertyAnimation { target: cardDelegateContainer; property: "width"; to: fullWidth; duration: animationDuration }
         }
         PropertyAction { targets: [cardShadow]; property: "visible"; value: false }
         PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: false }
     }
 
     Behavior on scale  { NumberAnimation { duration: 100 } }
+
 
     BorderImage {
         id: cardShadow
