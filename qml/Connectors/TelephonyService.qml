@@ -44,17 +44,17 @@ Item {
 
     OfonoModem {
         id: modem
-        modemPath: manager.modems[0]
+        modemPath: manager.modems.count? manager.modems[0] : ""
     }
 
     OfonoConnMan {
         id: connectionManager
-        modemPath: manager.modems[0]
+        modemPath: manager.modems.count? manager.modems[0] : ""
     }
 
     OfonoNetworkRegistration {
         id: netreg
-        modemPath: manager.modems[0]
+        modemPath: manager.modems.count? manager.modems[0] : ""
         onStrengthChanged: console.log("Strength changed to " + netreg.strength)
     }
 }
