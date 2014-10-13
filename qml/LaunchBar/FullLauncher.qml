@@ -16,15 +16,30 @@
  */
 
 import QtQuick 2.0
+import QtQuick.Controls 1.1
+import QtQuick.Controls.Styles 1.1
 import LunaNext.Common 0.1
 
 import "../LunaSysAPI" as LunaSysAPI
+
 
 Image {
     id: fullLauncher
 
     property real iconSize: 64
     property real bottomMargin: 80
+
+    function calculateAppIconHMargin(_parent, appIconWidth) {
+        var nbCellsPerLine = Math.floor(_parent.width / (appIconWidth + 10));
+        var remainingHSpace = _parent.width - nbCellsPerLine * appIconWidth;
+        return Math.floor(remainingHSpace / nbCellsPerLine);
+    }
+
+    property real appIconWidth: iconSize*1.5
+    property real appIconHMargin: calculateAppIconHMargin(fullLauncher, appIconWidth)
+
+    property real cellWidth: appIconWidth + appIconHMargin
+    property real cellHeight: iconSize + iconSize*0.4*2 // we give margin for two lines of text
 
     signal startLaunchApplication(string appId, string appParams)
 
@@ -60,114 +75,105 @@ Image {
         }
     ]
 
-    LunaSysAPI.ApplicationModel {
-        id: appsModel
-    }
+    ListView {
+        id: tabRowList
+        anchors.top: parent.top
+        width: parent.width
+        height: Units.gu(4)        
+        orientation: ListView.Horizontal
+        onCurrentIndexChanged: tabContentList.currentIndex = currentIndex
+        delegate: Button {
+            id: tabRowDelegate
+            width: Units.gu(20)
+            height: tabRowList.height
+            checked: tabRowDelegate.ListView.isCurrentItem
+            style: ButtonStyle {
+                id: tabButtonStyle
+                property string neutralButtonImage: Qt.resolvedUrl("../images/systemui/palm-notification-button.png");
+                property string neutralButtonImagePressed: Qt.resolvedUrl("../images/systemui/palm-notification-button-press.png");
 
-
-    // list of icons
-    VisualDataModel {
-        id: appsVisualDataModel
-        model: appsModel
-        delegate:
-            Item {
-                id: launcherIconDelegate
-
-                height: launcherIcon.height
-                width: launcherIcon.width
-
-                LaunchableAppIcon {
-                    id: launcherIcon
-
-                    anchors {
-                        horizontalCenter: parent.horizontalCenter
-                        verticalCenter: parent.verticalCenter
-                    }
-                    width: gridview.appIconWidth
-                    iconSize: fullLauncher.iconSize
-
-                    appTitle: model.title
-                    appIcon: model.icon
-                    appId: model.id
-                    appParams: model.params === undefined ? "{}" : model.params
-                    showTitle: true
-
-                    Drag.active: dragArea.held
-                    Drag.source: launcherIconDelegate
-                    Drag.hotSpot.x: width / 2
-                    Drag.hotSpot.y: height / 2
-
-                    glow: dragArea.held
-
-                    onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
-
-                    states: State {
-                        when: dragArea.held
-                        ParentChange { target: launcherIcon; parent: fullLauncher }
-                        AnchorChanges {
-                            target: launcherIcon
-                            anchors { horizontalCenter: undefined; verticalCenter: undefined }
-                        }
-                    }
+                background: Image {
+                    source: tabButtonStyle.control.checked ? neutralButtonImagePressed: neutralButtonImage;
+                    fillMode: Image.Stretch
                 }
-
-                MouseArea {
-                    id: dragArea
-                    anchors { fill: parent }
-
-                    drag.target: held ? launcherIcon : undefined
-                    drag.axis: Drag.XAndYAxis
-
-                    property bool held: false
-
-                    propagateComposedEvents: true
-                    onPressAndHold: held = true;
-                    onReleased: held = false;
-                }
-
-                DropArea {
-                    anchors { fill: parent; margins: 10 }
-
-                    onEntered: {
-                        if( drag.source !== launcherIconDelegate ) {
-                            appsVisualDataModel.items.move(
-                                    drag.source.VisualDataModel.itemsIndex,
-                                    launcherIconDelegate.VisualDataModel.itemsIndex);
-                        }
-                    }
+                label: Text {
+                    color: "white"
+                    text: tabButtonStyle.control.text
+                    font.family: Settings.fontStatusBar
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
                 }
             }
+            onClicked: {
+                tabRowDelegate.ListView.view.currentIndex = index;
+            }
+            text: model.text
+        }
+        model: ListModel {
+            ListElement { text: "Apps"; color: "green" }
+            ListElement { text: "Downloads"; color: "red" }
+            ListElement { text: "Favorites"; color: "green" }
+            ListElement { text: "Settings"; color: "red" }
+        }
     }
 
-    GridView {
-        id: gridview
-
-        model: appsVisualDataModel
-
-        function calculateAppIconHMargin(parent, appIconWidth) {
-            var nbCellsPerLine = Math.floor(parent.width / (appIconWidth + 10));
-            var remainingHSpace = parent.width - nbCellsPerLine * appIconWidth;
-            return Math.floor(remainingHSpace / nbCellsPerLine);
-        }
-
-        property real appIconWidth: iconSize*1.5
-        property real appIconHMargin: calculateAppIconHMargin(parent, appIconWidth)
-
-        cellWidth: appIconWidth + appIconHMargin
-        cellHeight: iconSize + iconSize*0.4*2 // we give margin for two lines of text
-
-        width: Math.floor(parent.width / cellWidth) * cellWidth
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.top: parent.top
+    ListView {
+        id: tabContentList
+        anchors.top: tabRowList.bottom
         anchors.bottom: parent.bottom
         anchors.bottomMargin: fullLauncher.bottomMargin
+        width: fullLauncher.width
         clip: true
+        orientation: ListView.Horizontal
+        cacheBuffer: fullLauncher.width*tabRowList.model.count // don't destroy the delegates
 
-        moveDisplaced: Transition {
-            NumberAnimation { properties: "x, y"; duration: 200 }
+        snapMode: ListView.SnapOneItem
+
+        preferredHighlightBegin: 0
+        preferredHighlightEnd: width
+        highlightRangeMode: ListView.StrictlyEnforceRange
+        highlightFollowsCurrentItem: true
+        highlightMoveDuration: 300
+        onCurrentIndexChanged: tabRowList.currentIndex = currentIndex
+
+        model: tabRowList.model
+
+        delegate: Item {
+            id: tabContentItem
+            width: ListView.view.width
+            height: ListView.view.height
+
+            property string tabId: model.text
+
+            GridView {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                width: Math.floor(fullLauncher.width / fullLauncher.cellWidth) * fullLauncher.cellWidth
+                height: parent.height
+
+                model: DraggableAppIconDelegateModel {
+                        // list of icons, filtered on that tab
+                        model: LunaSysAPI.ApplicationModel {
+                            filter: { "launcherTab": tabContentItem.tabId }
+                            includeAppsWithMissingProperty: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
+                        }
+
+                        dragParent: fullLauncher
+                        dragAxis: Drag.XAndYAxis
+                        iconWidth: fullLauncher.appIconWidth
+                        iconSize: fullLauncher.iconSize
+
+                        onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
+                }
+
+
+                cellWidth: fullLauncher.cellWidth
+                cellHeight: fullLauncher.cellHeight
+
+                moveDisplaced: Transition {
+                    NumberAnimation { properties: "x, y"; duration: 200 }
+                }
+            }
         }
-
-        header: Item { height: Units.gu(2) }
-        footer: Item { height: Units.gu(2) }
     }
 }
