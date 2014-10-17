@@ -28,7 +28,7 @@ QtObject {
     property string currentLockStatus: "locked"
 
     property var deviceLockModeSubscriber
-    property string deviceLockMode: "pin"
+    property string deviceLockMode: "password"
     property string polcyState: "none"
     property int retriesLeft: 3
     property string configuredPasscode: "4242"
@@ -211,7 +211,7 @@ QtObject {
     }
 
     function matchDevicePasscode_call(args, returnFct, handleError) {
-        var success = (args.passcode === configuredPasscode);
+        var success = (args.passCode === configuredPasscode);
 
         if (retriesLeft == 0)
             success = false;

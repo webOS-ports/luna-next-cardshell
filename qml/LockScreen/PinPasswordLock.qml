@@ -35,8 +35,11 @@ Item {
     signal unlock
 
     signal requestFocusChange(bool focusRequest);
-
     signal passwordSubmitted(string password, bool isPIN);
+
+    onCanceled: {
+        passwordField.clearAll();
+    }
 
     function setupDialog(isPIN, title, hintMessage, enforceLength, minLen) {
         isPINEntry = isPIN;
@@ -165,7 +168,7 @@ Item {
 
     function submitPassword(password, isPin) {
         service.call("luna://com.palm.systemmanager/matchDevicePasscode",
-                     JSON.stringify({"passcode": password}),
+                     JSON.stringify({"passCode": password}),
                      handlePasscodeResult,
                      handleServiceError);
     }
@@ -177,6 +180,7 @@ Item {
 
         if (response.returnValue) {
             pinPasswordLock.unlock();
+            passwordField.clearAll();
         }
         else {
             var title = "";

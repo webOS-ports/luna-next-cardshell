@@ -43,18 +43,18 @@ Item {
         rows: 4
         spacing: 0
 
-        PinButton {caption: "1"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {caption: "2"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {caption: "3"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {caption: "4"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {caption: "5"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {caption: "6"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {caption: "7"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {caption: "8"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {caption: "9"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        Rectangle {color: "transparent"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows;}
-        PinButton {caption: "0"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-        PinButton {imgSource: "../images/pin/icon-delete.png"; caption: "\b"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "1"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "2"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "3"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "4"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "5"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "6"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "7"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "8"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { caption: "9"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        Rectangle { color: "transparent"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows;}
+        PinButton { caption: "0"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+        PinButton { imgSource: "../images/pin/icon-delete.png"; caption: "\b"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
     }
 
     signal keyAction(string keyText);

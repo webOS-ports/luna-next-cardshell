@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Item {
     property bool isPIN: false;
@@ -26,8 +27,7 @@ Item {
 
     signal textFieldClicked();
 
-    width: 320;
-    height: isPIN ? inputField.height + 12: 50;
+    height: isPIN ? inputField.height + 12 : 50
 
     function keyInput(keyText, isNumber) {
         if(inputField.text.length < (isPIN ? maxPINLength : maxPassLength)) {
