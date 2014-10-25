@@ -1,0 +1,6 @@
+module LunaNext.Performance
+PerformanceOverlay 0.1 PerformanceOverlay.qml
+
+typeinfo LunaNext.Performance.qmltypes
+
+typeinfo LunaNext.Performance.qmltypes

@@ -26,6 +26,11 @@ Item {
     property variant screenShooter
     property Item cardViewInstance
     property QtObject compositorInstance
+    property bool performanceUIVisible: false
+    property bool fpsVisible: false
+
+    onPerformanceUIVisibleChanged: sendStatusToSubscribers()
+    onFpsVisibleChanged: sendStatusToSubscribers()
 
     property variant currentWindow: null
 
@@ -42,6 +47,9 @@ Item {
             systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);
             systemServicePrivate.registerMethod("/", "getFocusApplication", handleGetFocusApplication);
             systemServicePrivate.registerMethod("/", "setDisplayState", handleSetDisplayState);
+            systemServicePrivate.registerMethod("/", "showPerformanceUI", handleShowPerformanceUI);
+            systemServicePrivate.registerMethod("/", "showFps", handleShowFps)
+            systemServicePrivate.registerMethod("/", "getStatus", handleGetStatus);
         }
     }
 
@@ -54,7 +62,7 @@ Item {
     }
 
     function buildErrorResponse(message, subscribed) {
-        var response = { "returnValue": false, "errorMessage": message };
+        var response = { "returnValue": false, "errorMessage": message, "errorCode": -1};
 
         if (typeof subscribed !== 'undefined')
             response["subscribed"] = false;
@@ -156,5 +164,71 @@ Item {
             return buildErrorResponse("Invalid parameters");
 
         return JSON.stringify({"returnValue":true});
+    }
+
+    function handleShowFps(message) {
+        var request = JSON.parse(message.payload);
+
+        if (!request || typeof request.visible === "unknown")
+            return buildErrorResponse("Invalid parameters.");
+
+        if (fpsVisible && request.visible)
+            return buildErrorResponse("Already visible");
+        else if (!fpsVisible && !request.visible)
+            return buildErrorResponse("Already hidden");
+
+        fpsVisible = request.visible;
+
+        console.log("FPS counter is now" + fpsVisible ? "visible" : "not visible");
+
+        return JSON.stringify({"returnValue":true});
+    }
+
+    function handleShowPerformanceUI(message) {
+        var request = JSON.parse(message.payload);
+
+        if (!request || typeof request.visible === "unknown")
+            return buildErrorResponse("Invalid parameters.");
+
+        if (performanceUIVisible && request.visible)
+            return buildErrorResponse("Already visible");
+        else if (!performanceUIVisible && !request.visible)
+            return buildErrorResponse("Already hidden");
+
+        performanceUIVisible = request.visible;
+
+        console.log("Performance UI is now" + performanceUIVisible ? "visible" : "not visible");
+
+        return JSON.stringify({"returnValue":true});
+    }
+
+    function handleGetStatus(message) {
+        var request = JSON.parse(message.payload);
+        var subscribed = false;
+
+        if (request.subscribe) {
+            systemServicePrivate.addSubscription("/getStatus", message);
+            subscribed = true;
+        }
+
+        var response = {
+            "performanceUI": performanceUIVisible,
+            "fps": fpsVisible,
+            "subscribed": subscribed,
+            "returnValue": true
+        };
+
+        return JSON.stringify(response);
+    }
+
+    function sendStatusToSubscribers() {
+        var response = {
+            "performanceUI": performanceUIVisible,
+            "fps": fpsVisible,
+            "returnValue": true
+        };
+
+        systemServicePrivate.replyToSubscribers("/getStatus",
+                                                JSON.stringify(response));
     }
 }
