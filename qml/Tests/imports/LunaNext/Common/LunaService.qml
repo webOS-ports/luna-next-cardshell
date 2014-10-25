@@ -127,7 +127,7 @@ QtObject {
 
     function launchApp_call(jsonArgs, returnFct, handleError) {
         // The JSON params can contain "id" (string) and "params" (object)
-        if( jsonArgs.id === "org.webosports.tests.dummyWindow" ) {
+        if( jsonArgs.id === "org.webosports.tests.dummyWindow" || jsonArgs.id === "org.webosports.tests.dummyWindow2" ) {
             // start a DummyWindow
             // Simulate the attachement of a new window to the stub Wayland compositor
             compositor.createFakeWindow("DummyWindow", jsonArgs);

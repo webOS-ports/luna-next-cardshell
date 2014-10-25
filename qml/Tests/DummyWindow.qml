@@ -58,8 +58,8 @@ FakeWindowBase {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "Test Window App " + winId
-                font.pointSize: 20
+                text: "Test Window App " + winId + " (" + appId + ")"
+                font.pointSize: 16
                 color: "white"
             }
 
@@ -94,6 +94,18 @@ FakeWindowBase {
                     lunaNextLS2Service.call("luna://org.webosports.notifications/createNotification",
                                             JSON.stringify({"title": "Test title", "body": "Test notification",
                                                             "iconUrl": Qt.resolvedUrl("../images/default-app-icon.png")}),
+                                            undefined, undefined)
+                }
+            }
+            ActionButton {
+                anchors.horizontalCenter: parent.horizontalCenter
+                caption: "Focus a dummyWindow2 app"
+                width: parent.width / 2
+                height: 50
+
+                onAction: {
+                    lunaNextLS2Service.call("luna://org.webosports.luna/focusApplication",
+                                            JSON.stringify({"appId": "org.webosports.tests.dummyWindow2"}),
                                             undefined, undefined)
                 }
             }

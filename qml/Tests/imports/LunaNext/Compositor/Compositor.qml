@@ -78,6 +78,7 @@ Item {
     function createFakeWindow(name, options) {
         console.log("createFakeWindow: Creating " + name + " window");
         var windowComponent = Qt.createComponent("../../../" + name + ".qml");
+        options.appId = options.id;
         var window = windowComponent.createObject(compositor, options);
         window.winId = localProperties.getNextWinId();
         window.compositor = compositor;
