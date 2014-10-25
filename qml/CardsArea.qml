@@ -85,9 +85,9 @@ WindowManager {
 
     /* Component already uses an Loader internally so need to do that again here */
     PerformanceOverlay {
+        id: performanceOverlay
         z: 1000
-        active: systemService.performanceUIVisible
-
+        active: false
         onActiveChanged: {
             /* User can disable performance UI by clicking on it */
             if (active !== systemService.performanceUIVisible)
@@ -135,6 +135,10 @@ WindowManager {
         screenShooter: screenShooter
         cardViewInstance: cardViewInstance
         compositorInstance: compositor
+
+        onPerformanceUIVisibleChanged: {
+            performanceOverlay.active = performanceUIVisible;
+        }
     }
 
     NotificationService {
