@@ -20,6 +20,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 import LunaNext.Compositor 0.1
+import LunaNext.Performance 0.1
 
 import "CardView"
 import "StatusBar"
@@ -55,6 +56,45 @@ WindowManager {
         if( compositor )
             compositor.clearKeyboardFocus();
     }
+
+    Loader {
+        anchors.top: root.top
+        anchors.left: root.left
+
+        width: 50
+        height: 32
+
+        // always on top of everything else!
+        z: 1000
+
+        Component {
+            id: fpsTextComponent
+            Text {
+                color: "red"
+                font.pixelSize: FontUtils.sizeToPixels("medium")
+                text: fpsCounter.fps + " fps"
+
+                FpsCounter {
+                    id: fpsCounter
+                }
+            }
+        }
+
+        sourceComponent: systemService.fpsVisible ? fpsTextComponent : null;
+    }
+
+    /* Component already uses an Loader internally so need to do that again here */
+    PerformanceOverlay {
+        z: 1000
+        active: systemService.performanceUIVisible
+
+        onActiveChanged: {
+            /* User can disable performance UI by clicking on it */
+            if (active !== systemService.performanceUIVisible)
+                systemService.performanceUIVisible = active;
+        }
+    }
+
 
     Item {
         id: background

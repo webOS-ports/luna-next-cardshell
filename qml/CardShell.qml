@@ -35,32 +35,6 @@ Rectangle {
 
     color: "black"
 
-    Loader {
-        anchors.top: root.top
-        anchors.left: root.left
-
-        width: 50
-        height: 32
-
-        // always on top of everything else!
-        z: 1000
-
-        Component {
-            id: fpsTextComponent
-            Text {
-                color: "red"
-                font.pixelSize: FontUtils.sizeToPixels("medium")
-                text: fpsCounter.fps + " fps"
-
-                FpsCounter {
-                    id: fpsCounter
-                }
-            }
-        }
-
-        sourceComponent: Settings.displayFps ? fpsTextComponent : null;
-    }
-
     Preferences {
         id: preferences
     }
