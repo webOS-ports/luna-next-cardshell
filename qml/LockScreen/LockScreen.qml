@@ -23,8 +23,26 @@ Item {
 
     visible: false
 
-    function unlock() {
+    property string deviceLockMode: "none"
+
+    function lockDisplay() {
+        service.call("luna://com.palm.display/control/setLockStatus", "{\"status\":\"lock\"}", null, null);
+    }
+
+    function unlockDisplay() {
         service.call("luna://com.palm.display/control/setLockStatus", "{\"status\":\"unlock\"}", null, null);
+    }
+
+    function padUnlock() {
+        // if we don't have a lock mode set directly unlock the display
+        if (deviceLockMode === "none")
+            unlockDisplay()
+        else if (deviceLockMode === "pin" || deviceLockMode === "password")
+            lockScreen.state = "pin-password";
+        else {
+            console.log("Invalid device lock mode '" + deviceLockMode + "'");
+            lockDisplay();
+        }
     }
 
     LunaService {
@@ -32,6 +50,7 @@ Item {
         name: "org.webosports.luna"
         usePrivateBus: true
         onInitialized: {
+            service.subscribe("luna://com.palm.systemmanager/getDeviceLockMode", "{\"subscribe\":true}", handleDeviceLockMode, handleError);
             service.subscribe("luna://com.palm.display/control/lockStatus", "{\"subscribe\":true}", handleLockStatus, handleError);
         }
 
@@ -40,9 +59,16 @@ Item {
             var response = JSON.parse(message.payload);
 
             if (response.lockState === "locked")
-                lockScreen.visible = true;
+                lockScreen.state = "pad";
             else if (response.lockState === "unlocked")
-                lockScreen.visible = false;
+                lockScreen.state = "none";
+        }
+
+        function handleDeviceLockMode(message) {
+            console.log("Got device lock mode " + message.payload);
+
+            var response = JSON.parse(message.payload);
+            lockScreen.deviceLockMode = response.lockMode;
         }
 
         function handleError(message) {
@@ -50,64 +76,42 @@ Item {
         }
     }
 
-    Image {
-        id: targetScrim
-        source: "../images/screen-lock-target-scrim.png"
-        anchors.bottom: parent.bottom
+    state: "none"
+    states: [
+        State {
+            name: "none"
+            PropertyChanges { target: lockScreen; visible: false }
+        },
+        State {
+            name: "pad"
+            PropertyChanges { target: lockScreen; visible: true }
+        },
+        State {
+            name: "pin-password"
+            PropertyChanges { target: lockScreen; visible: true }
+        }
+    ]
+
+    PadLock {
+        id: padLock
+
+        visible: lockScreen.state === "pad"
+
+        onUnlock: padUnlock()
+    }
+
+    PinPasswordLock {
+        id: pinPasswordLock
+
+        isPINEntry: deviceLockMode == "pin"
+
+        visible: lockScreen.state === "pin-password"
         anchors.horizontalCenter: parent.horizontalCenter
-        visible: pad.moving
-    }
+        anchors.verticalCenter: parent.verticalCenter
 
-    DropArea {
-        x: 75; y: 75
-        width: 50; height: 50
-
-        Rectangle {
-            anchors.fill: parent
-            color: "green"
-
-            visible: parent.containsDrag
-        }
-    }
-
-    Image {
-        id: pad
-        source: pad.on ? "../images/screen-lock-padlock-on.png" : "../images/screen-lock-padlock-off.png"
-
-        property bool on: false
-
-        property int _basePositionX: parent.width / 2 - (pad.sourceSize.width / 2)
-        property int _basePositionY: parent.height - pad.sourceSize.height - Units.gu(1)
-
-        x: _basePositionX
-        y: _basePositionY
-
-        function resetPosition() {
-            pad.x = _basePositionX;
-            pad.y = _basePositionY;
-        }
-
-        function checkForUnlockPosition() {
-            if ((pad.x < targetScrim.x || pad.x > targetScrim.x + targetScrim.width) ||
-                (pad.y < targetScrim.y || pad.y > targetScrim.y + targetScrim.height))
-                lockScreen.unlock();
-        }
-
-        property bool moving: padDragArea.drag.active
-
-        Drag.active: padDragArea.drag.active
-        Drag.hotSpot.x: 10
-        Drag.hotSpot.y: 10
-
-        MouseArea {
-            id: padDragArea
-            anchors.fill: parent
-            drag.target: parent
-
-            onReleased: {
-                pad.checkForUnlockPosition();
-                pad.resetPosition();
-            }
+        onUnlock: unlockDisplay()
+        onCanceled: {
+            lockScreen.state = "pad";
         }
     }
 }

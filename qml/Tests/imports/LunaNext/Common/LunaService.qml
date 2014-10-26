@@ -24,6 +24,15 @@ QtObject {
     property string method
     property bool usePrivateBus: false
 
+    property var lockStatusSubscriber
+    property string currentLockStatus: "locked"
+
+    property var deviceLockModeSubscriber
+    property string deviceLockMode: "password"
+    property string polcyState: "none"
+    property int retriesLeft: 3
+    property string configuredPasscode: "4242"
+
     signal initialized
 
     Component.onCompleted: {
@@ -41,6 +50,15 @@ QtObject {
         }
         else if( serviceURI === "palm://com.palm.applicationManager/getAppInfo" ) {
             giveFakeAppInfo_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "luna://com.palm.display/control/setLockStatus") {
+            setLockStatus_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "luna://com.palm.systemmanager/getDeviceLockMode") {
+            getDeviceLockMode_call(args, returnFct, handleError);
+        }
+        else if (serviceURI === "luna://com.palm.systemmanager/matchDevicePasscode") {
+            matchDevicePasscode_call(args, returnFct, handleError);
         }
         else {
             // Embed the jsonArgs into a payload message
@@ -77,6 +95,14 @@ QtObject {
         else if (serviceURI === "luna://org.webosports.audio/getStatus")
         {
             returnFct({"payload": JSON.stringify({"volume":54,"mute":false})});
+        }
+        else if (serviceURI === "luna://com.palm.display/control/lockStatus") {
+            lockStatusSubscriber =  {func: returnFct};
+            returnFct({payload: "{\"lockState\":\"" + currentLockStatus + "\"}"});
+        }
+        else if (serviceURI === "luna://com.palm.systemmanager/getDeviceLockMode") {
+            deviceLockModeSubscriber = {func: returnFct};
+            getDeviceLockMode_call(jsonArgs, returnFct, handleError);
         }
         else if (serviceURI === "palm://com.palm.bus/signal/addmatch" )
         {
@@ -162,5 +188,48 @@ QtObject {
         else {
             handleError("Error: parameter 'id' not specified");
         }
+    }
+
+
+    function setLockStatus_call(args, returnFct, handleError) {
+        console.log("setLockStatus_call: arg.status = " + args.status + " currentLockStatus = " + currentLockStatus);
+        if (args.status === "unlock" && currentLockStatus === "locked") {
+            currentLockStatus = "unlocked";
+            lockStatusSubscriber.func({payload: "{\"lockState\":\"" + currentLockStatus + "\"}"});
+        }
+    }
+
+    function getDeviceLockMode_call(args, returnFct, handleError) {
+        var message = {
+            "returnValue": true,
+            "lockMode": deviceLockMode,
+            "policyState": polcyState,
+            "retriesLeft": retriesLeft
+        };
+
+        returnFct({payload: JSON.stringify(message)});
+    }
+
+    function matchDevicePasscode_call(args, returnFct, handleError) {
+        var success = (args.passCode === configuredPasscode);
+
+        if (retriesLeft == 0)
+            success = false;
+
+        if (!success) {
+            if (retriesLeft == 0) {
+                /* FIXME */
+            }
+            else
+                retriesLeft = retriesLeft - 1;
+        }
+
+        var message = {
+            returnValue: success,
+            retriesLeft: retriesLeft,
+            lockedOut: false
+        };
+
+        returnFct({payload: JSON.stringify(message)});
     }
 }
