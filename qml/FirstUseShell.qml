@@ -20,19 +20,12 @@ import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 import LunaNext.Compositor 0.1
 import "Utils"
+import "WindowManager"
 
 Item {
-    property QtObject compositorInstance:compositor
-
-    // it looks like this QML Item will never be really destroyed when we change the
-    // source of the parent Loader. Therefore, to avoid having conflicts when creating or
-    // removing windows, we just disable the signal handler when the first use app is finished.
-    property bool ignoreSignals: false
-
-    Connections {
-        target: ignoreSignals?null:compositorInstance
-        onWindowAdded: __handleWindowAdded(window)
-        onWindowRemoved: __handleWindowRemoved(window)
+    WindowModel {
+        id: listCardsModel
+        windowTypeFilter: WindowType.Card
     }
 
     Rectangle {
@@ -41,21 +34,20 @@ Item {
         color: "black"
     }
 
-    FocusScope {
-        id: childWrapperFocus
+    Repeater {
+        anchors.fill: parent
+        model: listCardsModel
 
-        property Item childWrapper: childWrapper
-        anchors.fill: parent;
+        delegate: FocusScope {
+            id: childWrapperFocus
+            anchors.fill: parent
 
-        // A simple container, to facilite the wrapping of the first use app
-        Item {
-            id: childWrapper
-            property Item wrappedChild
+            Item {
+                id: childWrapper
+                anchors.fill: parent
+            }
 
-            anchors.fill: parent;
-
-            function setWrappedChild(window) {
-                childWrapper.wrappedChild = window;
+            Component.onCompleted: {
                 if( window ) {
                     window.parent = childWrapper;
                     childWrapper.children = [ window ];
@@ -69,10 +61,6 @@ Item {
 
                     childWrapperFocus.focus = true;
                 }
-                else {
-                    childWrapper.children = [];
-                    childWrapperFocus.focus = false;
-                }
             }
         }
     }
@@ -85,13 +73,9 @@ Item {
         cornerRadius: 20
     }
 
-    function __handleWindowAdded(window) {
-        // Bind the container with its app window
-        childWrapperFocus.childWrapper.setWrappedChild(window);
-    }
-
-    function __handleWindowRemoved(window) {
-        childWrapperFocus.childWrapper.setWrappedChild(null);
-        ignoreSignals = true;
+    OverlaysManager {
+        id: overlaysManagerInstance
+        anchors.fill: parent
+        z: 4 // on top of everything (including fullscreen)
     }
 }
