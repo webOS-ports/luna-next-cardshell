@@ -23,6 +23,10 @@ import "Utils"
 import "WindowManager"
 
 Item {
+    id: firstuseShell
+
+    focus: true
+
     WindowModel {
         id: listCardsModel
         windowTypeFilter: WindowType.Card
@@ -60,6 +64,8 @@ Item {
                     window.changeSize(Qt.size(childWrapper.width, childWrapper.height));
 
                     childWrapperFocus.focus = true;
+
+                    window.takeFocus();
                 }
             }
         }
