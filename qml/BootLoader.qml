@@ -21,6 +21,8 @@ import LunaNext.Common 0.1
 Item {
     property Loader shellLoader
 
+    property bool wentThroughFirstUse: false
+
     LunaService {
         id: systemService
         name: "org.webosports.luna"
@@ -50,9 +52,21 @@ Item {
             if( response.hasOwnProperty("state") ) {
                 if( response.state === "firstuse" ) {
                     bootScreenItem.opacity = 0;
+                    wentThroughFirstUse = true;
                     shellLoader.source = "FirstUseShell.qml";
                 }
                 else if ( response.state === "normal" ) {
+                    // WORKAROUND: If we went through first use before we have to
+                    // restart the whole process here as otherwise currently all
+                    // windows will end up be managed by the firstuse shell rather
+                    // than the cardshell. To escape from this until we have a
+                    // better solution we just restart everything.
+                    if (wentThroughFirstUse) {
+                        bootScreenItem.opacity = 1;
+                        Qt.quit();
+                        return;
+                    }
+
                     bootScreenItem.opacity = 0;
                     shellLoader.source = "CardShell.qml";
                 }
