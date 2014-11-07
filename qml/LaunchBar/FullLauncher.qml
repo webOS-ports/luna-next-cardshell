@@ -109,6 +109,15 @@ Image {
                 tabRowDelegate.ListView.view.currentIndex = index;
             }
             text: model.text
+
+            // the separator on the left should only be visible if is not adjacent to a selected tab
+            Image {
+                anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                source: Qt.resolvedUrl("../images/launcher/tab-divider.png");
+                visible: !tabRowDelegate.ListView.isCurrentItem &&
+                         tabRowDelegate.ListView.view.currentIndex !== index - 1 &&
+                         index !== 0
+            }
         }
         model: ListModel {
             ListElement { text: "Apps" }
