@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
+import LunaNext.Shell 0.1
 
 Item {
     id: systemMenu
@@ -330,6 +331,14 @@ Item {
         Behavior on opacity { NumberAnimation{ duration: 70} }
     }
 
+    InverseMouseArea {
+        anchors.fill: parent
+        sensingArea: root
+        onClicked: {
+            resetMenu()
+            toggleState()
+        }
+    }
 
     Timer{
         id      : closeMenuTimer
@@ -379,7 +388,7 @@ Item {
             from: "visible"
             to: "hidden"
             NumberAnimation { target: systemMenu; property: "opacity"; from: 1; to: 0; duration: 300 }
-            ScriptAction { script: systemMenu.visible = true }
+            ScriptAction { script: systemMenu.visible = false }
         }
     ]
 }
