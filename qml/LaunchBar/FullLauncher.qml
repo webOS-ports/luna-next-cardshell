@@ -162,6 +162,7 @@ Image {
             GridView {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
+                anchors.topMargin: Units.gu(1)
                 width: Math.floor(fullLauncher.width / fullLauncher.cellWidth) * fullLauncher.cellWidth
                 height: parent.height
 
