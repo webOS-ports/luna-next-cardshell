@@ -89,12 +89,13 @@ Image {
             checked: tabRowDelegate.ListView.isCurrentItem
             style: ButtonStyle {
                 id: tabButtonStyle
-                property string neutralButtonImage: Qt.resolvedUrl("../images/systemui/palm-notification-button.png");
-                property string neutralButtonImagePressed: Qt.resolvedUrl("../images/systemui/palm-notification-button-press.png");
+                property string neutralButtonImage: Qt.resolvedUrl("../images/launcher/tab-bg.png");
+                property string neutralButtonImagePressed: Qt.resolvedUrl("../images/launcher/tab-selected-bg.png");
 
-                background: Image {
+                background: BorderImage {
+                    property int borderSize: tabButtonStyle.control.checked ? 20 : 4
+                    border { top: 20; bottom: 20; left: borderSize; right: borderSize }
                     source: tabButtonStyle.control.checked ? neutralButtonImagePressed: neutralButtonImage;
-                    fillMode: Image.Stretch
                 }
                 label: Text {
                     color: "white"
