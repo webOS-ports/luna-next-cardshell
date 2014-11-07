@@ -30,12 +30,17 @@ ListModel {
                 var fullDefaultConfig = JSON.parse(xhr.responseText);
                 _defaultTabConfig = [];
 
+                var iItem;
                 for( var iTab in fullDefaultConfig ) {
                     if( fullDefaultConfig[iTab].title === launcherTab.toLowerCase() ) {
-                        for( var iItem in fullDefaultConfig[iTab].items ) {
+                        for( iItem in fullDefaultConfig[iTab].items ) {
                             _defaultTabConfig.push( fullDefaultConfig[iTab].items[iItem] );
                         }
-                        break;
+                    }
+                    else {
+                        for( iItem in fullDefaultConfig[iTab].items ) {
+                            _defaultTabExclConfig.push( fullDefaultConfig[iTab].items[iItem] );
+                        }
                     }
                 }
                 refreshConfig();
@@ -70,6 +75,7 @@ ListModel {
     }
 
     property var _defaultTabConfig: []
+    property var _defaultTabExclConfig: []
     property var _dbTabConfig: []
 
     // refreshes the tab configuration
@@ -86,7 +92,7 @@ ListModel {
             if( posInTab < 0 ) {
                 posInTab = _defaultTabConfig.indexOf(appObj.id + "_default");
             }
-            if( posInTab >= 0 || isDefaultTab ) {
+            if( posInTab >= 0 || (isDefaultTab && _defaultTabExclConfig.indexOf(appObj.id + "_default")<0) ) {
                 tabAppsModel.append( appObj );
             }
         }
