@@ -24,14 +24,33 @@ MenuListEntry {
     property int ident: 0
     property string batteryText: "100%"
 
-    Connections {
-        target: statusBarServicesConnector
-        onSignalBatteryLevelUpdated: {
-            console.log("Battery level was updated " + percentage);
-            if (percentage >= 0 && percentage <= 100)
-                batteryText = percentage + "%"
-            else
-                batteryText = "Not available";
+//    Connections {
+//        target: statusBarServicesConnector
+//        onSignalBatteryLevelUpdated: {
+//            console.log("Battery level was updated " + percentage);
+//            if (percentage >= 0 && percentage <= 100)
+//                batteryText = percentage + "%"
+//            else
+//                batteryText = "Not available";
+//        }
+//    }
+
+    function updateBatteryStatus(message) {
+        var response = JSON.parse(message.payload);
+        batteryText = response.percent_ui + "%";
+    }
+
+    LunaService {
+        id: service
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        onInitialized: {
+            service.subscribe("luna://com.palm.power/com/palm/power/batteryStatusQuery",
+                              {},
+                              updateBatteryStatus,
+                              function(error) {
+                                  console.log("Could not retrieve status: " + error);
+                              });
         }
     }
 
