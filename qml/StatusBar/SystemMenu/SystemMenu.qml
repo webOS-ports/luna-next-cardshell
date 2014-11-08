@@ -78,7 +78,7 @@ Item {
         airplane.airplaneOn = ((state == 2) || (state == 3));
         airplaneModeInProgress = ((state == 1) || (state == 2));
 
-        if(inProgress) {
+        if(airplaneModeInProgress) {
             wifi.close();
             vpn.close();
             bluetooth.close();
@@ -241,6 +241,15 @@ Item {
                     selectable: !airplaneModeInProgress;
 
                     onAction: {
+
+                        if (airplaneOn) {
+                            setAirplaneModeStatus("Turn on Airplane Mode", 0);
+                            preferences.airplaneMode = false;
+                        } else {
+                            setAirplaneModeStatus("Turn off Airplane Mode", 3);
+                            preferences.airplaneMode = true;
+                        }
+
                         airplaneModeTriggered()
 
                         closeMenuTimer.interval = 250;
@@ -257,6 +266,15 @@ Item {
 
                     onAction: {
                         rotation.delayUpdate = true;
+
+                        if (rotation.locked) {
+                            setRotationLockText("Turn on Rotation Lock", false);
+                            preferences.rotationLock = false;
+                        } else {
+                            setRotationLockText("Turn off Rotation Lock", true);
+                            preferences.rotationLock = true;
+                        }
+
                         rotationLockTriggered(rotation.locked)
 
                         closeMenuTimer.interval = 250;
@@ -274,6 +292,15 @@ Item {
 
                     onAction: {
                         muteControl.delayUpdate = true;
+
+                        if (muteControl.mute) {
+                            setMuteControlText("Mute Sound", false);
+                            volumeControl.setMute(false);
+                        } else {
+                            setMuteControlText("Unmute Sound", true);
+                            volumeControl.setMute(true);
+                        }
+
                         muteToggleTriggered(muteControl.mute)
 
                         closeMenuTimer.interval = 250;

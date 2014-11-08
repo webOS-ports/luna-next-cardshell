@@ -35,6 +35,10 @@ Item {
         audioService.call("luna://org.webosports.audio/volumeDown", "{}", null, null);
     }
 
+    function setMute(mute) {
+        audioService.call("luna://org.webosports.audio/setMute", JSON.stringify({"mute":mute}), null, null);
+    }
+
     LunaService {
         id: audioService
         name: "org.webosports.luna"

@@ -185,6 +185,8 @@ Item {
             anchors.top: parent.bottom
             visible: false
             x: parent.width - systemMenu.width + systemMenu.edgeOffset
+
+            onCloseSystemMenu: systemMenu.toggleState();
         }
     }
 
