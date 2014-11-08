@@ -167,11 +167,15 @@ Item {
                 WiFiElement {
                     id: wifi
                     objectName: "wifiMenu"
-                    visible: false
+                    visible: true
                     ident: headerIdent;
                     internalIdent: subItemIdent;
                     active: !airplaneModeInProgress;
                     maxViewHeight : maxHeight - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin;
+
+                    onPrefsTriggered: {
+                        launcherInstance.launchApplication("org.webosports.app.settings",{"page":"WiFi"});
+                    }
 
                     onMenuCloseRequest: {
                         closeMenuTimer.interval = delayMs;
@@ -180,8 +184,8 @@ Item {
 
                     onRequestViewAdjustment: {
                         // this is not working correctly in QML right now.
-//                        viewAnimation.to = flickableArea.contentItem.y - offset;
-//                        viewAnimation.start();
+                        viewAnimation.to = flickableArea.contentItem.y - offset;
+                        viewAnimation.start();
                     }
                 }
 

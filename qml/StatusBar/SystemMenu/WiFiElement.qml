@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Drawer {
     id: wifiMenu
@@ -142,6 +143,69 @@ Drawer {
     }
     */
 
+    function enableWifi(enable) {
+        service.call("luna://com.palm.wifi/setstate",
+                     JSON.stringify({"state":enable ? "enabled" : "disabled"}),
+                     function(message) {
+                         //var response = JSON.parse(message.payload);
+                         //setWifiState(enable, enable ? "ON" : "OFF");
+                         updateWifiStatus();
+                     },
+                     function(error) {
+                         console.log("Could not switch wifi state: " + error);
+                     });
+    }
+
+    function findWifiNetworks() {
+        clearWifiList();
+        service.call("luna://com.palm.wifi/findnetworks",
+                     JSON.stringify({}),
+                     function(message) {
+                         var response = JSON.parse(message.payload);
+                         for (var i = 0; i < response.foundNetworks.length; i++) {
+                             var name = response.foundNetworks[i].networkInfo.ssid;
+                             var profId = response.foundNetworks[i].networkInfo.profileId;
+                             var sigBars = response.foundNetworks[i].networkInfo.signalBars;
+                             var secType = response.foundNetworks[i].networkInfo.availableSecurityTypes[0];
+                             var connectionStatus = response.foundNetworks[i].networkInfo.connectState;
+                             var isConnected = connectionStatus === "ipConfigured";
+                             addWifiNetworkEntry(name, profId, sigBars, secType, connectionStatus, isConnected);
+                         }
+                         wifiSpinner.on = false;
+                     },
+                     function(error) {
+                         console.log("Could not find networks: " + error);
+                     });
+    }
+
+    function updateWifiStatus() {
+        service.call("luna://com.palm.wifi/getstatus",
+                     JSON.stringify({}),
+                     function(message) {
+                         var response = JSON.parse(message.payload);
+                         switch(response.status) {
+                         case "connectionStateChanged":
+                             setWifiState(true, response.networkInfo.ssid);
+                             break;
+                         case "serviceEnabled":
+                             setWifiState(true, "ON");
+                             break;
+                         case "serviceDisabled":
+                             setWifiState(false, "OFF");
+                         }
+                     },
+                     function(error) {
+                         console.log("Could not retrieve mute status: " + error);
+                     });
+    }
+
+    LunaService {
+        id: service
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        onInitialized: updateWifiStatus()
+    }
+
     // ------------------------------------------------------------
 
 
@@ -220,8 +284,10 @@ Drawer {
                 onOffTriggered()
                 wifiSpinner.on = !isWifiOn;
                 if(isWifiOn) {
+                    enableWifi(false);
                     menuCloseRequest(300);
                 } else {
+                    enableWifi(true);
                     coloseOnConnect = true;
                 }
             }
@@ -312,6 +378,8 @@ Drawer {
         coloseOnConnect = false;
         if(isWifiOn) {
             wifiSpinner.on = true
+            updateWifiStatus()
+            findWifiNetworks();
         }
     }
 

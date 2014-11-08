@@ -63,6 +63,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
 
         source: "../../images/statusbar/wifi-" + signalBars + ".png"
+        height: 24
+        width: 24
     }
 
     Image {
