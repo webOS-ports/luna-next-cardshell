@@ -40,17 +40,22 @@ MenuListEntry {
         batteryText = response.percent_ui + "%";
     }
 
+    function handleError(error) {
+        console.log("Could not get power status: " + error);
+    }
+
     LunaService {
         id: service
         name: "org.webosports.luna"
         usePrivateBus: true
         onInitialized: {
-            service.subscribe("luna://com.palm.power/com/palm/power/batteryStatusQuery",
+            service.subscribe("palm://com.palm.bus/signal/addmatch",
+                                  JSON.stringify({"category":"/com/palm/power","method":"batteryStatus"}),
+                                  updateBatteryStatus, handleError);
+            service.call("luna://com.palm.power/com/palm/power/batteryStatusQuery",
                               {},
                               updateBatteryStatus,
-                              function(error) {
-                                  console.log("Could not retrieve status: " + error);
-                              });
+                              handleError);
         }
     }
 
