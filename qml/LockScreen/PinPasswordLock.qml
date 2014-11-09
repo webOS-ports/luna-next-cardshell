@@ -98,6 +98,7 @@ Item {
         onTextFieldClicked: {
             if(!pinPasswordLock.isPINEntry) {
                 requestFocusChange(true);
+                focus = true;
             } else {
                 focus = true;
             }
