@@ -363,7 +363,8 @@ Item {
     }
 
     InverseMouseArea {
-        anchors.fill: parent
+        width: mainMenu.width;
+        height: Math.min(systemMenu.height - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin, mainMenu.height);
         sensingArea: root
         onClicked: {
             resetMenu()
