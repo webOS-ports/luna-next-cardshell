@@ -16,32 +16,10 @@
  */
 
 import QtQuick 2.0
-import LunaNext.Common 0.1
-import LunaNext.Shell 0.1
 
-Item {
-    id: volumeControl
-
-    DeviceKeyHandler {
-        onVolumeUpPressed: volumeUp()
-        onVolumeDownPressed: volumeDown()
-    }
-
-    function volumeUp() {
-        audioService.call("luna://org.webosports.audio/volumeUp", "{}", null, null);
-    }
-
-    function volumeDown() {
-        audioService.call("luna://org.webosports.audio/volumeDown", "{}", null, null);
-    }
-
-    function setMute(mute) {
-        audioService.call("luna://org.webosports.audio/setMute", JSON.stringify({"mute":mute}), null, null);
-    }
-
-    LunaService {
-        id: audioService
-        name: "org.webosports.luna"
-        usePrivateBus: true
-    }
+Image {
+    height: parent.height
+    width: 2
+    anchors.verticalCenter: parent.verticalCenter
+    source: "../images/statusbar/status-bar-separator.png"
 }

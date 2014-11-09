@@ -75,8 +75,10 @@ Item {
         }
 
         function setPreference(key, value) {
-            systemservice.call("palm://com.palm.systemservice/setPreferences",
-                                    JSON.stringify({key:value}),
+            var params = {};
+            params[key] = value;
+            systemService.call("palm://com.palm.systemservice/setPreferences",
+                                    JSON.stringify(params),
                                     function (message) { },
                                     handleError);
         }
