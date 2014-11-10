@@ -48,8 +48,8 @@ MenuListEntry {
                 id: airplaneIndicatorOn
                 visible: !airplaneOn
                 x: parent.width - width - iconSpacing - rightMarging
-				width: Units.gu(3.2)
-				height: Units.gu(3.2)
+                width: Units.gu(3.2)
+                height: Units.gu(3.2)
                 anchors.verticalCenter: parent.verticalCenter
                 opacity: selectable ? 1.0 : 0.65;
                 source: "../../images/statusbar/icon-airplane.png"
@@ -59,8 +59,8 @@ MenuListEntry {
                 id: airplaneIndicatorOff
                 visible: airplaneOn
                 x: parent.width - width - iconSpacing - rightMarging
-				width: Units.gu(3.2)
-				height: Units.gu(3.2)
+                width: Units.gu(3.2)
+                height: Units.gu(3.2)
                 anchors.verticalCenter: parent.verticalCenter
                 opacity: selectable ? 1.0 : 0.65;
                 source: "../../images/statusbar/icon-airplane-off.png"

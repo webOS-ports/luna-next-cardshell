@@ -52,7 +52,7 @@ MenuListEntry {
                 visible: !locked
                 width: Units.gu(3.2)
                 height: Units.gu(3.2)
-				x: parent.width - width - iconSpacing - rightMarging
+                x: parent.width - width - iconSpacing - rightMarging
                 anchors.verticalCenter: parent.verticalCenter
 
                 source: "../../images/statusbar/icon-rotation-lock.png"
