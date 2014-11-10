@@ -51,7 +51,7 @@ MenuListEntry {
                 id: lockIndicatorOn
                 visible: !locked
                 width: Units.gu(3.2)
-				height: Units.gu(3.2)
+                height: Units.gu(3.2)
 				x: parent.width - width - iconSpacing - rightMarging
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -61,8 +61,8 @@ MenuListEntry {
             Image {
                 id: lockIndicatorOff
                 visible: locked
-				width: Units.gu(3.2)
-				height: Units.gu(3.2)
+                width: Units.gu(3.2)
+                height: Units.gu(3.2)
                 x: parent.width - width - iconSpacing - rightMarging
                 anchors.verticalCenter: parent.verticalCenter
 

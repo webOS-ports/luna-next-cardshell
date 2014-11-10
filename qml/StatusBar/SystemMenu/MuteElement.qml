@@ -50,8 +50,8 @@ MenuListEntry {
             Image {
                 id: muteIndicatorOn
                 visible: !mute
-				width: Units.gu(3.2)
-				height: Units.gu(3.2)
+                width: Units.gu(3.2)
+                height: Units.gu(3.2)
                 x: parent.width - width - iconSpacing - rightMarging
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -61,8 +61,8 @@ MenuListEntry {
             Image {
                 id: muteIndicatorOff
                 visible: mute
-				width: Units.gu(3.2)
-				height: Units.gu(3.2)
+                width: Units.gu(3.2)
+                height: Units.gu(3.2)
                 x: parent.width - width - iconSpacing - rightMarging
                 anchors.verticalCenter: parent.verticalCenter
 

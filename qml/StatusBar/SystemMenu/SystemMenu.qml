@@ -106,7 +106,7 @@ Item {
         source: "../../images/menu-dropdown-bg.png"
         width: parent.width;
         height: Math.min(systemMenu.height,  (mainMenu.height + clipRect.anchors.topMargin + clipRect.anchors.bottomMargin));
-		border { left: 30; top: 10; right: 30; bottom: 30 }
+        border { left: 30; top: 10; right: 30; bottom: 30 }
     }
 
     Rectangle { // clipping rect inside the menu border
@@ -194,7 +194,7 @@ Item {
                 VpnElement {
                     id: vpn
                     objectName: "vpnMenu"
-					visible: false
+                    visible: false
                     ident:         headerIdent;
                     internalIdent: subItemIdent;
                     active: !airplaneModeInProgress;
@@ -217,7 +217,7 @@ Item {
                 BluetoothElement {
                     id: bluetooth
                     objectName: "bluetoothMenu"
-					visible: false
+                    visible: false
                     ident:         headerIdent;
                     internalIdent: subItemIdent;
                     active: !airplaneModeInProgress;
@@ -327,7 +327,7 @@ Item {
         BorderImage {
             width: parent.width
             source: "../../images/menu-dropdown-scrollfade-top.png"
-			border { left: 20; top: 0; right: 20; bottom: 0 }
+            border { left: 20; top: 0; right: 20; bottom: 0 }
         }
 
         Image {
@@ -350,7 +350,7 @@ Item {
         BorderImage {
             width: parent.width
             source: "../../images/menu-dropdown-scrollfade-bottom.png"
-			border { left: 20; top: 0; right: 20; bottom: 0 }
+            border { left: 20; top: 0; right: 20; bottom: 0 }
         }
 
         Image {

@@ -72,16 +72,16 @@ MenuListEntry {
                 id: imgLess
                 source: "../../images/statusbar/brightness-less.png"
                 width: Units.gu(3.2)
-				height: Units.gu(3.2)
-				x: margin
+                height: Units.gu(3.2)
+                x: margin
                 y: brightnessElement.height/2 - height/2
             }
 
             Image {
                 id: imgMore
                 source: "../../images/statusbar/brightness-more.png"
-				width: Units.gu(3.2)
-				height: Units.gu(3.2)
+                width: Units.gu(3.2)
+                height: Units.gu(3.2)
                 x: brightnessContent.width - width - margin
                 y: brightnessElement.height/2 - height/2
             }

@@ -238,10 +238,10 @@ Drawer {
 
                     Spinner {
                         id: wifiSpinner
-						width: Units.gu(3.2)
-						height: Units.gu(3.2)
+                        width: Units.gu(3.2)
+                        height: Units.gu(3.2)
                         x: wifiTitle.width + Units.gu(1.8); 
-						anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenter: parent.verticalCenter
                         on:false
                     }
 
@@ -314,7 +314,7 @@ Drawer {
                 //text: runtime.getLocalizedString("Wi-Fi Preferences")
                 text: "Wi-Fi Preferences"
                 color: "#FFF"; font.bold: false; font.pixelSize: FontUtils.sizeToPixels("medium"); font.family: "Prelude"}
-				//color: "#FFF"; font.bold: false; font.pixelSize: 18; font.family: "Prelude"}
+                //color: "#FFF"; font.bold: false; font.pixelSize: 18; font.family: "Prelude"}
             onAction: {
                 clearWifiList()
                 prefsTriggered()
