@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 MenuListEntry {
     id: muteElement
@@ -27,8 +28,8 @@ MenuListEntry {
     property string newText:       ""
     property bool   newMuteStatus: false
 
-    property int iconSpacing : 4
-    property int rightMarging: 8
+    property int iconSpacing : Units.gu(0.4)
+    property int rightMarging: Units.gu(0.8)
 
     content:
         Item {
@@ -42,13 +43,15 @@ MenuListEntry {
                 text: "Mute Sound"
                 color: "#FFF";
                 font.bold: false;
-                font.pixelSize: 18
+                font.pixelSize: FontUtils.sizeToPixels("medium") //18
                 font.family: "Prelude"
             }
 
             Image {
                 id: muteIndicatorOn
                 visible: !mute
+				width: Units.gu(3.2)
+				height: Units.gu(3.2)
                 x: parent.width - width - iconSpacing - rightMarging
                 anchors.verticalCenter: parent.verticalCenter
 
@@ -58,6 +61,8 @@ MenuListEntry {
             Image {
                 id: muteIndicatorOff
                 visible: mute
+				width: Units.gu(3.2)
+				height: Units.gu(3.2)
                 x: parent.width - width - iconSpacing - rightMarging
                 anchors.verticalCenter: parent.verticalCenter
 

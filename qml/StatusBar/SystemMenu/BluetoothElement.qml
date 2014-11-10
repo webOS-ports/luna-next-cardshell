@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Drawer {
     id: bluetoothMenu
@@ -167,27 +168,27 @@ Drawer {
                         text: "Bluetooth";
                         color: bluetoothMenu.active ? "#FFF" : "#AAA";
                         font.bold: false;
-                        font.pixelSize: 18
+                        font.pixelSize: FontUtils.sizeToPixels("medium") //18
                         font.family: "Prelude"
                     }
 
                     Spinner {
                         id: bluetoothSpinner
-                        x: bluetoothTitle.width + 20;
-                        y:-17
+                        x: bluetoothTitle.width + Units.gu(2); 
+                        y: Units.gu(-1.7) 
                         on: btTurningOn && bluetoothMenu.isOpen();
                     }
 
                     Text {
                         id: bluetoothTitleState
-                        x: bluetoothMenu.width - width - 14;
-                        width: bluetoothMenu.width - bluetoothTitle.width - 35
+                        x: bluetoothMenu.width - width - Units.gu(1.4); 
+                        width: bluetoothMenu.width - bluetoothTitle.width - Units.gu(3.5)
                         horizontalAlignment: Text.AlignRight
                         elide: Text.ElideRight;
                         anchors.verticalCenter: parent.verticalCenter
                         text: "init";
                         color: "#AAA";
-                        font.pixelSize: 13
+                        font.pixelSize: FontUtils.sizeToPixels("small") //13
                         font.family: "Prelude"
                         font.capitalization: Font.AllUppercase
                     }
@@ -210,7 +211,7 @@ Drawer {
                          text: "Turn off Bluetooth";
                          color: "#FFF";
                          font.bold: false;
-                         font.pixelSize: 18;
+                         font.pixelSize: FontUtils.sizeToPixels("medium"); //18;
                          font.family: "Prelude"
                      }
             onAction: {
@@ -226,7 +227,7 @@ Drawer {
         ListView {
 	    id: bluetoothListView
             width: parent.width
-	    height: 1
+	    height: Units.gu(0.1)
             interactive: false
             spacing: 0
             model: bluetoothList
@@ -240,7 +241,7 @@ Drawer {
         text: "Bluetooth Preferences";
 		color: "#FFF";
 	        font.bold: false;
-		font.pixelSize: 18; 
+		font.pixelSize: FontUtils.sizeToPixels("medium"); //18; 
 		font.family: "Prelude";
 	    }
             onAction: {

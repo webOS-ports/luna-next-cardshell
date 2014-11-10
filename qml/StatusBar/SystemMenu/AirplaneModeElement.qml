@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 MenuListEntry {
     id: airplaneModeElement
@@ -24,8 +25,8 @@ MenuListEntry {
     property alias modeText:     airplaneMode.text
     property bool  airplaneOn:   false
 
-    property int iconSpacing : 4
-    property int rightMarging: 8
+    property int iconSpacing : Units.gu(0.4) 
+    property int rightMarging: Units.gu(0.8) 
 
     content:
         Item {
@@ -39,7 +40,7 @@ MenuListEntry {
                 text: "Turn on Airplane Mode"
                 color: selectable ? "#FFF" : "#AAA";
                 font.bold: false;
-                font.pixelSize: 18
+                font.pixelSize: FontUtils.sizeToPixels("medium") //18
                 font.family: "Prelude"
             }
 
@@ -47,6 +48,8 @@ MenuListEntry {
                 id: airplaneIndicatorOn
                 visible: !airplaneOn
                 x: parent.width - width - iconSpacing - rightMarging
+				width: Units.gu(3.2)
+				height: Units.gu(3.2)
                 anchors.verticalCenter: parent.verticalCenter
                 opacity: selectable ? 1.0 : 0.65;
                 source: "../../images/statusbar/icon-airplane.png"
@@ -56,6 +59,8 @@ MenuListEntry {
                 id: airplaneIndicatorOff
                 visible: airplaneOn
                 x: parent.width - width - iconSpacing - rightMarging
+				width: Units.gu(3.2)
+				height: Units.gu(3.2)
                 anchors.verticalCenter: parent.verticalCenter
                 opacity: selectable ? 1.0 : 0.65;
                 source: "../../images/statusbar/icon-airplane-off.png"

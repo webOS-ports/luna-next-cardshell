@@ -28,7 +28,7 @@ MenuListEntry {
     selectable: false
 
     property int margin: 0
-    property int spacing: 5
+    property int spacing: Units.gu(0.5)
 
     // Right now com.palm.display has no subscription support for the maximumBrightness
     // property and therefor our only way to update it when it changes for example through
@@ -64,20 +64,24 @@ MenuListEntry {
     content:
         Item {
             id: brightnessContent
-            x: 4
-            width: brightnessElement.width - 8
+            x: 4 
+            width: brightnessElement.width - 8 
             height: brightnessElement.height
 
             Image {
                 id: imgLess
                 source: "../../images/statusbar/brightness-less.png"
-                x: margin
+                width: Units.gu(3.2)
+				height: Units.gu(3.2)
+				x: margin
                 y: brightnessElement.height/2 - height/2
             }
 
             Image {
                 id: imgMore
                 source: "../../images/statusbar/brightness-more.png"
+				width: Units.gu(3.2)
+				height: Units.gu(3.2)
                 x: brightnessContent.width - width - margin
                 y: brightnessElement.height/2 - height/2
             }

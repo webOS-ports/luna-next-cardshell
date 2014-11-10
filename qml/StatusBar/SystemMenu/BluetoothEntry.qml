@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Item {
     property string name
@@ -26,8 +27,8 @@ Item {
     property string connStatus:     ""
     property string status:         ""
 
-    property int iconSpacing : 4
-    property int rightMarging: 8
+    property int iconSpacing : Units.gu(0.4)
+    property int rightMarging: Units.gu(0.8)
 
     Item {
         anchors.fill: parent
@@ -36,11 +37,11 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             text: name;
             horizontalAlignment: Text.AlignLeft
-            width: parent.width - check.width - rightMarging - iconSpacing - 5
+            width: parent.width - check.width - rightMarging - iconSpacing - Units.gu(0.5) 
             elide: Text.ElideRight;
             color: "#FFF";
             font.bold: false;
-            font.pixelSize: 16
+            font.pixelSize: FontUtils.sizeToPixels("medium") //16
             font.family: "Prelude"
         }
 
@@ -50,7 +51,7 @@ Item {
             y: mainText.y + mainText.baselineOffset + 1
             text: status;
             color: "#AAA";
-            font.pixelSize: 10
+            font.pixelSize: FontUtils.sizeToPixels("x-small") //10
             font.family: "Prelude"
             font.capitalization: Font.AllUppercase
         }

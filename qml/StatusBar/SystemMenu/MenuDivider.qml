@@ -17,9 +17,10 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Image {
-    property int widthOffset: 7
+    property int widthOffset: Units.gu(0.7)
     width: parent.width - widthOffset
     anchors.horizontalCenter: parent.horizontalCenter
     source: "../../images/menu-divider.png"
