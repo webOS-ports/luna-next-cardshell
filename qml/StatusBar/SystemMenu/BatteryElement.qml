@@ -67,14 +67,14 @@ MenuListEntry {
             Text {
                 text: "Battery: "
                 color: "#AAA";
-                font.pixelSize: 18
+                font.pixelSize: FontUtils.sizeToPixels("medium"); //18
                 font.family: "Prelude"
             }
 
             Text {
                 text: batteryText;
                 color: "#AAA";
-                font.pixelSize: 18;
+                font.pixelSize: FontUtils.sizeToPixels("medium"); //18;
                 font.family: "Prelude"
             }
         }

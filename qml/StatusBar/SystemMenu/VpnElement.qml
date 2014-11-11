@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Drawer {
     id: vpnMenu
@@ -61,7 +62,7 @@ Drawer {
 
     function clearVpnList() {
         vpnList.clear()
-	vpnListView.height = 1
+	vpnListView.height = Units.gu(0.1)
     }
 
     function forceDisconnectAllProfiles() {
@@ -97,20 +98,20 @@ Drawer {
                         anchors.verticalCenter: parent.verticalCenter
                         color: vpnMenu.active ? "#FFF" : "#AAA";
                         font.bold: false;
-                        font.pixelSize: 18
+                        font.pixelSize: FontUtils.sizeToPixels("medium") //18
                         font.family: "Prelude"
                     }
 
                     Text {
                         id: vpnTitleState
-                        x: vpnMenu.width - width - 14;
+                        x: vpnMenu.width - width - Units.gu(1.4);
                         anchors.verticalCenter: parent.verticalCenter
                         text: "init";
-                        width: vpnMenu.width - vpnTitle.width - 35
+                        width: vpnMenu.width - vpnTitle.width - Units.gu(3.5)
                         horizontalAlignment: Text.AlignRight
                         elide: Text.ElideRight;
                         color: "#AAA";
-                        font.pixelSize: 13
+                        font.pixelSize: FontUtils.sizeToPixels("small") //13
                         font.family: "Prelude"
                         font.capitalization: Font.AllUppercase
                     }
@@ -142,7 +143,7 @@ Drawer {
         text: "VPN Preferences";
 		color: "#FFF";
 		font.bold: false;
-		font.pixelSize: 18;
+		font.pixelSize: FontUtils.sizeToPixels("medium") //18;
 		font.family: "Prelude"
 	    }
             onAction: {

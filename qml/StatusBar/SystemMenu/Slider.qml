@@ -17,17 +17,18 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Item {
     id: slider
     property real  setValue : 0.5
     property bool  active:  true
 
-    property int   railEdgeOffset:   8
+    property int   railEdgeOffset: 8 
     property int   railBorderWidth: 11
 
-    property int   handleGrabTolerance: 12
-    property int   railTapTolerance: 20
+    property int   handleGrabTolerance: 12 
+    property int   railTapTolerance: 20 
     property real  railChangeStep: 0.20
 
     property bool mouseDownOnHandle : false

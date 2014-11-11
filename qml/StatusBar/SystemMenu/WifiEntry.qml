@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Item {
     property string name
@@ -41,7 +42,7 @@ Item {
             width: parent.width - sigStrength.width - check.width - lock.width - rightMarging - 3*iconSpacing - 5
             elide: Text.ElideRight;
             font.bold: false;
-            font.pixelSize: 16
+            font.pixelSize: FontUtils.sizeToPixels("medium") //16
             font.family: "Prelude"
         }
         Text {
@@ -51,7 +52,7 @@ Item {
             text: status;
             color: "#AAA";
             font.bold: statusInBold;
-            font.pixelSize: 10
+            font.pixelSize: FontUtils.sizeToPixels("x-small") //10
             font.family: "Prelude"
             font.capitalization: Font.AllUppercase
         }
@@ -63,8 +64,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
 
         source: "../../images/statusbar/wifi-" + signalBars + ".png"
-        height: 24
-        width: 24
+        height: Units.gu(2.4) 
+        width: Units.gu(2.4) 
     }
 
     Image {

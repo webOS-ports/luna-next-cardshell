@@ -232,28 +232,30 @@ Drawer {
                         text: "Wi-Fi"
                         color: wifiMenu.active ? "#FFF" : "#AAA";
                         font.bold: false;
-                        font.pixelSize: 18
+                        font.pixelSize: FontUtils.sizeToPixels("medium") // 18
                         font.family: "Prelude"
                     }
 
                     Spinner {
                         id: wifiSpinner
-                        x: wifiTitle.width + 18;
-                        y:-17
+                        width: Units.gu(3.2)
+                        height: Units.gu(3.2)
+                        x: wifiTitle.width + Units.gu(1.8); 
+                        anchors.verticalCenter: parent.verticalCenter
                         on:false
                     }
 
                     Text {
                         id: wifiTitleState
-                        x: wifiMenu.width - width - 14;
+                        x: wifiMenu.width - width - Units.gu(1.4); 
                         anchors.verticalCenter: parent.verticalCenter
                         //text: runtime.getLocalizedString("init");
                         text: "init"
-                        width: wifiMenu.width - wifiTitle.width - 60
+                        width: wifiMenu.width - wifiTitle.width - Units.gu(6.0)
                         horizontalAlignment: Text.AlignRight
                         elide: Text.ElideRight;
                         color: "#AAA";
-                        font.pixelSize: 13
+                        font.pixelSize: FontUtils.sizeToPixels("small") //13
                         font.family: "Prelude"
                         font.capitalization: Font.AllUppercase
                     }
@@ -276,7 +278,7 @@ Drawer {
                              text: isWifiOn ? "Turn off WiFi" : "Turn on WiFi"
                              color: "#FFF";
                              font.bold: false;
-                             font.pixelSize: 18
+                             font.pixelSize: FontUtils.sizeToPixels("medium") //18
                              font.family: "Prelude"
                          }
 
@@ -300,7 +302,7 @@ Drawer {
             width: parent.width
             interactive: false
             spacing: 0
-            height: 1
+            height: Units.gu(0.1)
             model: wifiList
             delegate: wifiListDelegate
         }
@@ -311,7 +313,8 @@ Drawer {
                 x: ident + internalIdent
                 //text: runtime.getLocalizedString("Wi-Fi Preferences")
                 text: "Wi-Fi Preferences"
-                color: "#FFF"; font.bold: false; font.pixelSize: 18; font.family: "Prelude"}
+                color: "#FFF"; font.bold: false; font.pixelSize: FontUtils.sizeToPixels("medium"); font.family: "Prelude"}
+                //color: "#FFF"; font.bold: false; font.pixelSize: 18; font.family: "Prelude"}
             onAction: {
                 clearWifiList()
                 prefsTriggered()

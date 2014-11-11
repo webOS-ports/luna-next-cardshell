@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 MenuListEntry {
     property int ident: 0
@@ -39,7 +40,7 @@ MenuListEntry {
             text: Qt.formatDate(new Date, Qt.DefaultLocaleLongDate);
             color: "#AAA";
             font.bold: false;
-            font.pixelSize: 16
+            font.pixelSize: FontUtils.sizeToPixels("medium") //16
             font.family: "Prelude"
         }
 }

@@ -23,11 +23,11 @@ import LunaNext.Shell 0.1
 Item {
     id: systemMenu
     property int  maxHeight: Units.gu(40)
-    property int  headerIdent:   14
-    property int  subItemIdent:  16
-    property int  dividerWidthOffset: 7
+    property int  headerIdent: Units.gu (1.4) 
+    property int  subItemIdent: Units.gu (1.6) 
+    property int  dividerWidthOffset: Units.gu(0.7)
     property int  itemIdent:     subItemIdent + headerIdent
-    property int  edgeOffset: 11
+    property int  edgeOffset: Units.gu(1.1) 
     property bool flickableOverride: false
 
     property bool airplaneModeInProgress: false
@@ -114,10 +114,10 @@ Item {
         anchors.fill: parent
         color: "transparent"
         clip: true
-        anchors.leftMargin: 7
+        anchors.leftMargin: Units.gu(0.7) 
         anchors.topMargin: 0
-        anchors.bottomMargin:14
-        anchors.rightMargin: 7
+        anchors.bottomMargin: Units.gu(1.4)
+        anchors.rightMargin: Units.gu(0.7) 
 
         Flickable {
             id: flickableArea
@@ -156,7 +156,7 @@ Item {
                 BrightnessElement {
                     id: brightness
                     visible:    true
-                    margin:      5;
+                    margin: Units.gu(0.5); 
                     onFlickOverride: {
                         flickableOverride = override;
                     }
@@ -319,21 +319,21 @@ Item {
     Item {
         id: maskTop
         z:10
-        width: parent.width - 22
+        width: parent.width - Units.gu(2.2) 
         anchors.horizontalCenter: parent.horizontalCenter
         y: 0
         opacity: !flickableArea.atYBeginning ? 1.0 : 0.0
 
         BorderImage {
             width: parent.width
-            source: "../../images//menu-dropdown-scrollfade-top.png"
+            source: "../../images/menu-dropdown-scrollfade-top.png"
             border { left: 20; top: 0; right: 20; bottom: 0 }
         }
 
         Image {
             anchors.horizontalCenter: parent.horizontalCenter
             y:0
-            source: "../../images//menu-arrow-up.png"
+            source: "../../images/menu-arrow-up.png"
         }
 
         Behavior on opacity { NumberAnimation{ duration: 70} }
@@ -342,9 +342,9 @@ Item {
     Item {
         id: maskBottom
         z:10
-        width: parent.width - 22
+        width: parent.width - Units.gu(2) 
         anchors.horizontalCenter: parent.horizontalCenter
-        y: flickableArea.height - 29
+        y: flickableArea.height - Units.gu(1) 
         opacity: !flickableArea.atYEnd ? 1.0 : 0.0
 
         BorderImage {

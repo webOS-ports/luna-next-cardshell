@@ -17,11 +17,12 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Rectangle {
     id: itemRect
     width: parent.width
-    height: 42
+    height: Units.gu(4.2) 
     color: "transparent"
 
     property Item content;
@@ -36,14 +37,14 @@ Rectangle {
         visible: (selectable && selected) || forceSelected
         source: menuPosition == 0 ? "../../images/menu-selection-gradient-default.png" :
                 ( menuPosition == 1 ? "../../images/menu-selection-gradient-default.png" : "../../images/menu-selection-gradient-last.png")
-        width: parent.width - 8;
+        width: parent.width - Units.gu(0.8); 
         height: parent.height
         anchors.horizontalCenter: parent.horizontalCenter
         border { left: 19; top: 0; right: 19; bottom: 0 }
-        anchors.leftMargin: 5
+        anchors.leftMargin: Units.gu(0.5)
         anchors.topMargin: 0
         anchors.bottomMargin: 0
-        anchors.rightMargin: 5
+        anchors.rightMargin: Units.gu(0.5)
     }
 
     Item {
