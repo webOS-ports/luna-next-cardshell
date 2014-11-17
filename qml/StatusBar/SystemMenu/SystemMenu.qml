@@ -36,6 +36,10 @@ Item {
     height: maxHeight
     state: "hidden"
 
+    function isVisible() {
+        return state === "visible";
+    }
+
     function toggleState() {
         if (state === "hidden")
             state = "visible";

@@ -241,6 +241,17 @@ WindowManager {
         z: 4 // on top of everything (including fullscreen)
     }
 
+    LockScreen {
+        id: lockScreen
+
+        z: 700
+
+        anchors.top: statusBarInstance.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+
     StatusBar {
         id: statusBarInstance
 
@@ -254,17 +265,7 @@ WindowManager {
         windowManagerInstance: windowManager
         fullLauncherVisible: launcherInstance.fullLauncherVisible
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
-    }
-
-    LockScreen {
-        id: lockScreen
-
-        z: 700
-
-        anchors.top: statusBarInstance.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
+        lockScreen: lockScreen
     }
 
     LunaGestureArea {

@@ -23,6 +23,8 @@ Item {
 
     visible: false
 
+    property bool locked: lockScreen.state !== "none";
+
     property string deviceLockMode: "none"
 
     function lockDisplay() {
