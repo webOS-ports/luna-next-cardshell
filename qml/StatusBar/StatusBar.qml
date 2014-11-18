@@ -34,6 +34,7 @@ Item {
     property bool justTypeLauncherActive: false
     property Item batteryService
     property Item wifiService
+    property Item lockScreen
 
     //FIXME We need to add the actual carrier string once we have oFono stuff working
     property string myCarrierText: "LuneOS"
@@ -177,7 +178,18 @@ Item {
             anchors.bottom: parent.bottom
             anchors.right: parent.right
             width: 100
-            onClicked: systemMenu.toggleState()
+            onClicked: {
+                if (!lockScreen.locked)
+                    systemMenu.toggleState();
+            }
+        }
+
+        Connection {
+            target: lockScreen
+            onLockedChanged: {
+                if (systemMenu.isVisible())
+                    systemMenu.toggleState();
+            }
         }
 
         SystemMenu {
