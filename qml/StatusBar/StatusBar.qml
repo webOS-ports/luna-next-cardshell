@@ -184,7 +184,7 @@ Item {
             }
         }
 
-        Connection {
+        Connections {
             target: lockScreen
             onLockedChanged: {
                 if (systemMenu.isVisible())
