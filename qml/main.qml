@@ -37,6 +37,7 @@ Compositor {
         id: mainShellLoader
 
         property QtObject compositor: compositor
+        property string cardShellState: mainShellLoader.state
 
         anchors.fill: parent
 

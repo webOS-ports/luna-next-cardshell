@@ -34,6 +34,7 @@ Rectangle {
     id: root
 
     color: "black"
+    state: cardShellState // inherited from the main shell Loader
 
     Preferences {
         id: preferences
@@ -66,5 +67,7 @@ Rectangle {
     CardsArea {
         id: cardsArea
         anchors.fill: parent
+
+        state: root.state
     }
 }
