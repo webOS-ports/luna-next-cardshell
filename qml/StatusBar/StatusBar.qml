@@ -236,6 +236,8 @@ Item {
         }
         onSwitchToLauncherView: {
             state = "default";
+            if (systemMenu.isVisible())
+                systemMenu.toggleState();
         }
     }
 }
