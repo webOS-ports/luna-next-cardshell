@@ -42,13 +42,23 @@ WindowManager {
     property real screenheight: Settings.displayHeight
     property real screenDPI: Settings.dpi
 
+    states: [
+        State {
+            name: "firstuse"
+            PropertyChanges { target: gestureAreaInstance; height: 0 }
+            PropertyChanges { target: lockScreen; isFirstUse: true }
+        },
+        State {
+            name: "normal"
+            PropertyChanges { target: gestureAreaInstance; height: Units.gu(4) }
+            PropertyChanges { target: lockScreen; isFirstUse: false }
+        }
+    ]
+
     gestureAreaInstance: gestureAreaInstance
 
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, volumeControl ]
-
-    height: root.height
-    width: root.width
 
     onSwitchToCardView: {
         // we're back to card view so no card should have the focus
@@ -58,8 +68,8 @@ WindowManager {
     }
 
     Loader {
-        anchors.top: root.top
-        anchors.left: root.left
+        anchors.top: parent.top
+        anchors.left: parent.left
 
         width: 50
         height: 32
@@ -245,6 +255,8 @@ WindowManager {
         id: lockScreen
 
         z: 700
+
+        isFirstUse: false
 
         anchors.top: statusBarInstance.bottom
         anchors.bottom: parent.bottom

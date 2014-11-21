@@ -21,9 +21,10 @@ import LunaNext.Common 0.1
 Item {
     id: lockScreen
 
-    visible: false
+    visible: locked && !isFirstUse
 
-    property bool locked: lockScreen.state !== "none";
+    property bool isFirstUse: false
+    property bool locked: false;
 
     property string deviceLockMode: "none"
 
@@ -82,15 +83,15 @@ Item {
     states: [
         State {
             name: "none"
-            PropertyChanges { target: lockScreen; visible: false }
+            PropertyChanges { target: lockScreen; locked: false }
         },
         State {
             name: "pad"
-            PropertyChanges { target: lockScreen; visible: true }
+            PropertyChanges { target: lockScreen; locked: true }
         },
         State {
             name: "pin-password"
-            PropertyChanges { target: lockScreen; visible: true }
+            PropertyChanges { target: lockScreen; locked: true }
         }
     ]
 
