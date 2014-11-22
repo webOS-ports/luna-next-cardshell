@@ -137,7 +137,7 @@ WindowManager {
 
     Connections {
         target: gestureAreaInstance
-        onSwipeRightGesture: screenShooter.capture();
+        onSwipeRightGesture: screenShooter.capture("");
     }
 
     SystemService {
