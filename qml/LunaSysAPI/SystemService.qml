@@ -72,16 +72,20 @@ Item {
 
     function handleTakeScreenShot(message) {
         var request = JSON.parse(message.payload);
+        var path = "";
 
         if (request === null)
             return buildErrorResponse("Invalid parameters.");
 
+        if (typeof request.file !== 'undefined' && request.file.length !== 0)
+            path = request.file;
+
         if (systemService.screenShooter === null)
             return buildErrorResponse("Internal error.");
 
-        var path = systemService.screenShooter.capture();
+        var reply = systemService.screenShooter.capture(path);
 
-        return JSON.stringify({"returnValue":true, "path": path});
+        return JSON.stringify({"returnValue":reply["returnValue"], "path": reply["path"]});
     }
 
     function handleFocusApplication(message) {
