@@ -83,9 +83,12 @@ Item {
         if (systemService.screenShooter === null)
             return buildErrorResponse("Internal error.");
 
-        var reply = systemService.screenShooter.capture(path);
+        path = systemService.screenShooter.capture(path);
 
-        return JSON.stringify({"returnValue":reply["returnValue"], "path": reply["path"]});
+        if (path.length !== 0)
+            return JSON.stringify({"returnValue":true, "path": path});
+        else
+            return JSON.stringify({"returnValue":false});
     }
 
     function handleFocusApplication(message) {
