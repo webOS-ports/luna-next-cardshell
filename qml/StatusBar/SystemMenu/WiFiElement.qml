@@ -143,6 +143,21 @@ Drawer {
     }
     */
 
+    function joinWifi(ssid) {
+        service.call("luna://com.palm.wifi/connect",
+                     JSON.stringify(
+                         {"ssid":ssid,"security":{"simpleSecurity":{"passKey":""}}
+                         }),
+                     function(message) {
+                         var response = JSON.parse(message.payload);
+                         console.log("WiFi connect response: " + JSON.stringify(response));
+                     },
+                     function(error) {
+                         console.log("Could not join wifi network: " + error)
+                     });
+        console.log("join done I think");
+    }
+
     function enableWifi(enable) {
         service.call("luna://com.palm.wifi/setstate",
                      JSON.stringify({"state":enable ? "enabled" : "disabled"}),
@@ -364,6 +379,7 @@ Drawer {
                         menuCloseRequest(300);
                     }
 
+                    menuCloseRequest(300);
                     coloseOnConnect = true;
                 }
             }

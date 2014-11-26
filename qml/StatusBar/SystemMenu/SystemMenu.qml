@@ -181,6 +181,18 @@ Item {
                         launcherInstance.launchApplication("org.webosports.app.settings",{"page":"WiFi"});
                     }
 
+                    onItemSelected: {
+                        var target = {};
+                        target["ssid"] = name;
+                        target["securityType"] = securityType;
+                        target["connectState"] = connState;
+                        if (securityType.length <= 0) {
+                            wifi.joinWifi(name);
+                        } else {
+                            launcherInstance.launchApplication("org.webosports.app.settings",{"target":target});
+                        }
+                    }
+
                     onMenuCloseRequest: {
                         closeMenuTimer.interval = delayMs;
                         closeMenuTimer.start();
