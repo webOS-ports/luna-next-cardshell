@@ -95,7 +95,7 @@ Item {
 
         SequentialAnimation {
             id: loadingAnimation
-            running: true
+            running: bootScreenItem.visible
             loops: Animation.Infinite
 
             NumberAnimation {
