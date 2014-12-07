@@ -68,6 +68,7 @@ Item {
             source: appIconImage
 
             SequentialAnimation on radius {
+                running: glow
                 loops: Animation.Infinite
                 NumberAnimation {
                     from: 4; to: 20
