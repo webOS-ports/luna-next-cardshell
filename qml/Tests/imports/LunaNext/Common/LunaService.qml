@@ -60,6 +60,9 @@ QtObject {
         else if (serviceURI === "luna://com.palm.systemmanager/matchDevicePasscode") {
             matchDevicePasscode_call(args, returnFct, handleError);
         }
+        else if (serviceURI === "luna://com.palm.power/com/palm/power/batteryStatusQuery") {
+            getBatteryStatusQuery_call(args, returnFct, handleError);
+        }
         else {
             // Embed the jsonArgs into a payload message
             var message = { applicationId: "org.webosports.tests.dummyWindow", payload: jsonArgs };
@@ -205,6 +208,15 @@ QtObject {
             "lockMode": deviceLockMode,
             "policyState": polcyState,
             "retriesLeft": retriesLeft
+        };
+
+        returnFct({payload: JSON.stringify(message)});
+    }
+
+    function getBatteryStatusQuery_call(args, returnFct, handleError) {
+        var message = {
+            "returnValue": true,
+            "percent_ui": 10
         };
 
         returnFct({payload: JSON.stringify(message)});
