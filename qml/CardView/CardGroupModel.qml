@@ -18,8 +18,31 @@ ListModel {
         onRowsAboutToBeRemoved: removeWindow(listCardsModel.getByIndex(last));
         onRowsInserted: {
             var newWindow = listCardsModel.getByIndex(last);
+            var groupIndexForInsertion = listCardGroupsModel.count;
+            if( newWindow.parentWinId ) {
+                var windowFound = false;
+                // First, we have to find which group contains this parent window
+                for( groupIndex=0; !windowFound && groupIndex<listCardGroupsModel.count; ++groupIndex ) {
+                    var windowList = listCardGroupsModel.get(groupIndex).windowList;
+                    var windowIndex=0;
+                    for( windowIndex=0; !windowFound && windowIndex<windowList.count; ++windowIndex ) {
+                        if( windowList.get(windowIndex).window.winId === newWindow.parentWinId ) {
+                            groupIndexForInsertion = groupIndex;
+                            windowFound = true;
+                        }
+                    }
+                }
+            }
 
-            createNewGroup(newWindow, listCardGroupsModel.count);
+            // then add it to the dest group
+            if( groupIndexForInsertion === listCardGroupsModel.count ) {
+                createNewGroup(newWindow, groupIndexForInsertion);
+            }
+            else {
+                var windowListTo = listCardGroupsModel.get(groupIndexForInsertion).windowList;
+                windowListTo.append({"window": newWindow});
+            }
+
             // DEBUG: move the new window in the previous group, and build groups of 3 windows
             //if( last>0 && ((last+1)%4) !== 0 )
             //    moveWindowGroup(newWindow, listCardGroupsModel.count-1, listCardGroupsModel.count-2);
