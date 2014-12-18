@@ -28,7 +28,7 @@ QtObject {
     property string currentLockStatus: "locked"
 
     property var deviceLockModeSubscriber
-    property string deviceLockMode: "password"
+    property string deviceLockMode: "none"
     property string polcyState: "none"
     property int retriesLeft: 3
     property string configuredPasscode: "4242"

@@ -31,9 +31,20 @@ Item {
         id: systemServicePublic
         name: "org.webosports.notifications"
         onInitialized: {
-            systemServicePublic.registerMethod("/", "createNotification", handleCreateNotification);
-            systemServicePublic.registerMethod("/", "closeNotification", handleCloseNotification);
-            systemServicePublic.registerMethod("/", "closeAllNotifications", handleCloseAllNotifications);
+            systemServicePublic.registerMethod("/", "create", handleCreateNotification);
+            systemServicePublic.registerMethod("/", "close", handleCloseNotification);
+            systemServicePublic.registerMethod("/", "closeAll", handleCloseAllNotifications);
+        }
+    }
+
+    LunaService {
+        id: systemServicePrivate
+        name: "org.webosports.notifications"
+        usePrivateBus: true
+        onInitialized: {
+            systemServicePrivate.registerMethod("/", "create", handleCreateNotification);
+            systemServicePrivate.registerMethod("/", "close", handleCloseNotification);
+            systemServicePrivate.registerMethod("/", "closeAll", handleCloseAllNotifications);
         }
     }
 
@@ -102,12 +113,12 @@ createNotification {
 
         var notificationId = request.id;
 
-        var notification = notificationManager.getById(notificationId);
+        var notification = notificationManager.getNotificationById(notificationId);
         if (notification === null)
             return buildErrorResponse("Invalid notification id provided");
 
         /* verify we're deleting only a notiication which belongs to the calling app */
-        if (message.applicationId !== notification.appName)
+        if (message.applicationId !== notification.ownerId)
             return buildErrorResponse("Not allowed to close a not owned notification")
 
         notificationManager.closeById(notificationId);
