@@ -27,6 +27,8 @@ Rectangle {
 
     color: "black"
 
+    readonly property int maxDashboardWindowHeight: 52
+
     WindowModel {
         id: listDashboardsModel
         windowTypeFilter: WindowType.Dashboard
@@ -49,8 +51,8 @@ Rectangle {
             delegate: Item {
                         id: dashboardItem
 
-                        width: dashboardsColumn.width - Units.gu(1) * 2
-                        height: window ? window.height : 0
+                        width: dashboardsColumn.width
+                        height: maxDashboardWindowHeight
 
                         children: [ window ]
 
@@ -63,6 +65,8 @@ Rectangle {
                                 window.anchors.left = dashboardItem.left;
                                 window.anchors.right = dashboardItem.right;
                                 window.y = 0;
+
+
 
                                 /* Resize the real client window to have the right size */
                                 window.changeSize(Qt.size(dashboardItem.width, window.height));

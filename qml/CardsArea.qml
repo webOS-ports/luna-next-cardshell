@@ -205,7 +205,7 @@ WindowManager {
 
         windowManagerInstance: parent
 
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: dashboardAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -217,7 +217,7 @@ WindowManager {
     DashboardArea {
         id: dashboardAreaInstance
 
-        anchors.bottom: notificationAreaInstance.top
+        anchors.bottom: alertWindowsAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
