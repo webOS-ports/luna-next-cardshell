@@ -22,7 +22,7 @@ ListModel {
             if( newWindow.parentWinId ) {
                 var windowFound = false;
                 // First, we have to find which group contains this parent window
-                for( groupIndex=0; !windowFound && groupIndex<listCardGroupsModel.count; ++groupIndex ) {
+                for( var groupIndex=0; !windowFound && groupIndex<listCardGroupsModel.count; ++groupIndex ) {
                     var windowList = listCardGroupsModel.get(groupIndex).windowList;
                     var windowIndex=0;
                     for( windowIndex=0; !windowFound && windowIndex<windowList.count; ++windowIndex ) {
@@ -39,8 +39,9 @@ ListModel {
                 createNewGroup(newWindow, groupIndexForInsertion);
             }
             else {
-                var windowListTo = listCardGroupsModel.get(groupIndexForInsertion).windowList;
-                windowListTo.append({"window": newWindow});
+                var destGroup = listCardGroupsModel.get(groupIndexForInsertion);
+                destGroup.windowList.insert(1, {"window": newWindow});
+                destGroup.currentCardInGroup = 1;
             }
 
             // DEBUG: move the new window in the previous group, and build groups of 3 windows
