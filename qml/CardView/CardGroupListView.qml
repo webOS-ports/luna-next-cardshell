@@ -26,7 +26,7 @@ import "../Utils"
 Item {
     id: cardGroupListViewItem
 
-    property bool enableDragnDrop: false
+    property bool enableDragnDrop: true
 
     property real maximizedCardTopMargin;
 
@@ -48,7 +48,7 @@ Item {
         id: dragNDropTweak
         owner: "luna-next-cardshell"
         key: "stackedCardSupport"
-        defaultValue: false
+        defaultValue: true
         onValueChanged: updateDragNDropTweak();
 
         function updateDragNDropTweak()
