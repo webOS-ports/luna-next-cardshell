@@ -25,6 +25,7 @@ Item {
 
     property bool powered: wifiModel.powered
     property bool connected: wifiModel.connected
+    property bool online: false
     property int signalBars: 0
 
     property QtObject __currentService: null
@@ -42,10 +43,12 @@ Item {
     function updateFromCurrentService() {
         if (__currentService == null) {
             wifiService.signalBars = 0;
+            wifiService.online = false;
             return;
         }
 
         wifiService.signalBars = convertStrengthToBars(__currentService.strength);
+        wifiService.online = (__currentService.state === "online");
     }
 
     TechnologyModel {
@@ -65,6 +68,7 @@ Item {
                 if (service.state === "ready" || service.state === "online") {
                     /* we can only have one connected wifi service at the same time */
                     __currentService = service;
+
                     updateFromCurrentService();
                     __currentService.strengthChanged.connect(updateFromCurrentService);
                     break;
