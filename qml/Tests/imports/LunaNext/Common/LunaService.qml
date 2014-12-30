@@ -23,6 +23,7 @@ QtObject {
     property string name
     property string method
     property bool usePrivateBus: false
+    property string service
 
     property var lockStatusSubscriber
     property string currentLockStatus: "locked"
@@ -33,6 +34,7 @@ QtObject {
     property int retriesLeft: 3
     property string configuredPasscode: "4242"
 
+    signal response
     signal initialized
 
     Component.onCompleted: {

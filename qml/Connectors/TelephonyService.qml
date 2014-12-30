@@ -24,37 +24,88 @@ import Connman 0.2
 Item {
     id: telephonyService
 
-    property bool online: manager.available && modem.online
-    property string status: netreg.status
-    property int strength: netreg.strength
-    property string technology: netreg.technology
-    property bool wanConnected: connectionManager.attached
-    property string wanTechnology: connectionManager.bearer
-    property bool offlineMode: networkManager.offlineMode
+    property bool powered: false
+    property bool connected: false
+    property string registration: "noservice"
+    property int bars: 0
+    property int rssi: 0
 
-    onOfflineModeChanged: console.log("DEBUG: offlineMode = " + offlineMode)
+    LunaService {
+        id: powerQuery
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        service: "luna://com.palm.telephony"
+        method: "powerQuery"
 
-    NetworkManager {
-        id: networkManager
+        onInitialized: {
+            powerQuery.subscribe(JSON.stringify({"subscribe":true}));
+        }
+
+        onResponse: function (message) {
+            var response = JSON.parse(message.payload);
+
+            if (!response.returnValue) {
+                telephonyService.powered = false;
+                return;
+            }
+
+            if (response.extended.powerState)
+                telephonyService.powered = (response.extended.powerState === "on");
+        }
     }
 
-    OfonoManager {
-        id: manager
+    LunaService {
+        id: networkStatusQuery
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        service: "luna://com.palm.telephony"
+        method: "networkStatusQuery"
+
+        onInitialized: {
+            networkStatusQuery.subscribe(JSON.stringify({"subscribe":true}));
+        }
+
+        onResponse: function (message) {
+            var response = JSON.parse(message.payload);
+
+            if (!response.returnValue) {
+                telephonyService.registration = "noservice";
+                telephonyService.connected = false;
+                return;
+            }
+
+            if (response.extended.state)
+                telephonyService.connected = (response.extended.state === "service");
+
+            if (response.extended.registration)
+                telephonyService.registration = response.extended.registration;
+        }
     }
 
-    OfonoModem {
-        id: modem
-        modemPath: manager.modems.count? manager.modems[0] : ""
-    }
+    LunaService {
+        id: signalStrengthQuery
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        service: "luna://com.palm.telephony"
+        method: "signalStrengthQuery"
 
-    OfonoConnMan {
-        id: connectionManager
-        modemPath: manager.modems.count? manager.modems[0] : ""
-    }
+        onInitialized: {
+            signalStrengthQuery.subscribe(JSON.stringify({"subscribe":true}));
+        }
 
-    OfonoNetworkRegistration {
-        id: netreg
-        modemPath: manager.modems.count? manager.modems[0] : ""
-        onStrengthChanged: console.log("Strength changed to " + netreg.strength)
+        onResponse: function (message) {
+            var response = JSON.parse(message.payload);
+
+            if (!response.returnValue) {
+                telephonyService.bars = 0;
+                telephonyService.rssi = 0;
+                return;
+            }
+
+            if (response.extended.bars)
+                telephonyService.bars = response.extended.bars;
+            if (response.extended.rssi)
+                telephonyService.rssi = response.extended.rssi;
+        }
     }
 }

@@ -19,22 +19,27 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 
-BaseIndicator {
-    id: telephonySignalIndicator
+Item {
+    id: airplaneModeService
 
-    property int bars: 0
+    property bool active: false
 
-    imageSource: __getIconForStrengthValue(bars)
+    LunaService {
+        id: getStatus
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        service: "luna://com.palm.connectionmanager"
+        method: "getStatus"
 
-    function __getIconForStrengthValue(value) {
-        var baseName = "../../images/statusbar/rssi-";
+        onInitialized: {
+            getStatus.subscribe(JSON.stringify({"subscribe":true}));
+        }
 
-        var normalizedValue = bars;
-        if (value > 5)
-            normalizedValue = "5";
-        else if (value < 0)
-            normalizedValue = "error";
+        onResponse: function (message) {
+            var response = JSON.parse(message.payload);
 
-        return baseName + normalizedValue + ".png";
+            if (response.hasOwnProperty("offline"))
+                airplaneModeService.active = response.offline;
+        }
     }
 }

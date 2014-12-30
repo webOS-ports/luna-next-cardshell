@@ -36,8 +36,16 @@ Row {
         id: telephonyService
     }
 
+    WanService {
+        id: wanService
+    }
+
     WiFiService {
         id: wifiService
+    }
+
+    AirplaneModeService {
+        id: airplaneModeService
     }
 
     FlightmodeStatusIndicator {
@@ -46,7 +54,7 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: telephonyService.offlineMode
+        enabled: airplaneModeService.active
     }
 
     WifiIndicator {
@@ -65,8 +73,8 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: telephonyService.wanConnected
-        technology: telephonyService.wanTechnology
+        enabled: telephonyService.powered && wanService.connected && wanService.online
+        technology: wanService.technology
     }
 
     TelephonySignalIndicator {
@@ -75,8 +83,8 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: telephonyService.online && !telephonyService.offlineMode
-        strength: telephonyService.strength
+        enabled: telephonyService.powered
+        bars: telephonyService.bars
     }
 
     BatteryIndicator {
