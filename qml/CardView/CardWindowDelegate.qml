@@ -44,22 +44,12 @@ Item {
     property real cornerRadius: 20
     property real animationDuration: 100
 
-    y: cardY
-    height: cardHeight
-    width: cardWidth
+    Component.onCompleted: {
+        y = cardY;
+        height = cardHeight;
+        width = cardWidth;
+    }
 
-    onMaximizedHeightChanged: {
-        if( window && window.userData.state === "maximized" )
-        {
-            cardDelegateContainer.height = maximizedHeight;
-        }
-    }
-    onFullscreenHeightChanged: {
-        if( window && window.userData.state === "fullscreen" )
-        {
-            cardDelegateContainer.height = fullscreenHeight;
-        }
-    }
     onAnchorWindowUserDataChanged: {
         if( anchorWindowUserData ) {
             windowUserData.parent = cardWindowWrapper;
@@ -103,6 +93,12 @@ Item {
             PropertyAnimation { target: cardDelegateContainer; property: "height"; to: cardHeight; duration: animationDuration }
             PropertyAnimation { target: cardDelegateContainer; property: "width"; to: cardWidth; duration: animationDuration }
         }
+        onStopped: {
+            // set bindings properly
+            y = Qt.binding( function() { return cardY; } );
+            height = Qt.binding( function() { return cardHeight; } );
+            width = Qt.binding( function() { return cardWidth; } );
+        }
     }
     SequentialAnimation {
         id: toMaximizeAnimation
@@ -114,6 +110,12 @@ Item {
         }
         PropertyAction { targets: [cardShadow]; property: "visible"; value: false }
         PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: false }
+        onStopped: {
+            // set bindings properly
+            y = Qt.binding( function() { return maximizedY; } );
+            height = Qt.binding( function() { return maximizedHeight; } );
+            width = Qt.binding( function() { return fullWidth; } );
+        }
     }
     SequentialAnimation {
         id: toFullscreenAnimation
@@ -125,6 +127,12 @@ Item {
         }
         PropertyAction { targets: [cardShadow]; property: "visible"; value: false }
         PropertyAction { targets: [windowUserData]; property: "useShaderCorner"; value: false }
+        onStopped: {
+            // set bindings properly
+            y = Qt.binding( function() { return fullscreenY; } );
+            height = Qt.binding( function() { return fullscreenHeight; } );
+            width = Qt.binding( function() { return fullWidth; } );
+        }
     }
 
     Behavior on scale  { NumberAnimation { duration: 100 } }
