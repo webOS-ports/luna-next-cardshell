@@ -74,6 +74,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         visible: securityType != ""
         source: "../../images/statusbar/system-menu-lock.png"
+        height: Units.gu(2.875)
+        width: Units.gu(2.5) 
     }
 
     Image {
@@ -82,5 +84,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         visible: connected
         source: "../../images/statusbar/system-menu-popup-item-checkmark.png"
+        height: Units.gu(2.875)
+        width: Units.gu(3.875) 
     }
 }
