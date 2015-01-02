@@ -79,7 +79,7 @@ FocusScope {
         id: cornerStaticMask
         anchors.fill: cardWrapperItem
         visible: !useShaderCorner
-        cornerRadius: cornerRadius
+        cornerRadius: cardWrapperItem.cornerRadius
     }
     // Rounded corners (shader version)
     CornerShader {
