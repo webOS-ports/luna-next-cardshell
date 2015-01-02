@@ -35,6 +35,7 @@ QtObject {
     property string configuredPasscode: "4242"
 
     signal response
+    signal error
     signal initialized
 
     Component.onCompleted: {
@@ -76,6 +77,15 @@ QtObject {
     }
 
     function subscribe(serviceURI, jsonArgs, returnFct, handleError) {
+        if( arguments.length === 1 ) {
+            // handle the short form of subscribe
+            return subscribe(service+"/"+method, arguments[0], onResponse, onError);
+        }
+        else if(arguments.length === 3 ) {
+            // handle the intermediate form of subscribe
+            return subscribe(service+"/"+method, arguments[0], arguments[1], arguments[2]);
+        }
+
         var args = JSON.parse(jsonArgs);
         if( serviceURI === "palm://com.palm.bus/signal/registerServerStatus" ||
             serviceURI === "luna://com.palm.bus/signal/registerServerStatus" )
