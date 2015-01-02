@@ -64,8 +64,8 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
 
         source: "../../images/statusbar/wifi-" + signalBars + ".png"
-        height: Units.gu(2.4) 
-        width: Units.gu(2.4) 
+        height: Units.gu(2.25) 
+        width: Units.gu(2.5) 
     }
 
     Image {
