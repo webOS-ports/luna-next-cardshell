@@ -24,7 +24,7 @@ Item {
     visible: false
 
     anchors.centerIn: parent
-    width: image.width
+    width: image.width + Units.gu(1)
     height: image.height
 
     Timer {
@@ -48,9 +48,8 @@ Item {
     Image {
         id:  image
 
-        width: sourceSize.width
-        height: 48
-        fillMode: Image.Pad
+        width: Units.gu(24)
+		height: Units.gu(7.2)
         verticalAlignment: Image.AlignBottom;
         anchors.centerIn: parent
         opacity: 1.0
