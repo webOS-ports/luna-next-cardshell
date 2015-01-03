@@ -71,6 +71,7 @@ Item {
 
                     updateFromCurrentService();
                     __currentService.strengthChanged.connect(updateFromCurrentService);
+                    __currentService.stateChanged.connect(updateFromCurrentService);
                     break;
                 }
             }

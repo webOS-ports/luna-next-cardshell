@@ -73,7 +73,7 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: telephonyService.powered && wanService.connected && wanService.online
+        enabled: telephonyService.powered && wanService.connected && !wifiService.online
         technology: wanService.technology
     }
 
