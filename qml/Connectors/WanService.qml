@@ -27,16 +27,19 @@ Item {
     property bool connected: false
     property string technology: "none"
 
+    ServiceStatus {
+        serviceName: "com.palm.connectionmanager"
+        onConnected: {
+            getConnMgrWanStatus.subscribe(JSON.stringify({"subscribe":true}));
+        }
+    }
+
     LunaService {
         id: getConnMgrWanStatus
         name: "org.webosports.luna"
         usePrivateBus: true
         service: "luna://com.palm.connectionmanager"
         method: "getStatus"
-
-        onInitialized: {
-            getConnMgrWanStatus.subscribe(JSON.stringify({"subscribe":true}));
-        }
 
         onResponse: function (message) {
             var response = JSON.parse(message.payload);
@@ -55,16 +58,19 @@ Item {
         }
     }
 
+    ServiceStatus {
+        serviceName: "com.palm.wan"
+        onConnected: {
+            getWanStatus.subscribe(JSON.stringify({"subscribe":true}));
+        }
+    }
+
     LunaService {
         id: getWanStatus
         name: "org.webosports.luna"
         usePrivateBus: true
         service: "luna://com.palm.wan"
         method: "getstatus"
-
-        onInitialized: {
-            getWanStatus.subscribe(JSON.stringify({"subscribe":true}));
-        }
 
         onResponse: function (message) {
             var response = JSON.parse(message.payload);
