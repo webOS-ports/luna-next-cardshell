@@ -30,16 +30,55 @@ Item {
     property int bars: 0
     property int rssi: 0
 
+    Timer {
+        id: resubscribeTimer
+        interval: 500
+        repeat: false
+        running: false
+        onTriggered: {
+            probeTelephonyService();
+        }
+    }
+
+    ServiceStatus {
+        serviceName: "com.palm.telephony"
+        onConnected: {
+            console.log("TelephonyService: service connected");
+            probeTelephonyService();
+        }
+        onDisconnected: {
+            console.log("TelephonyService: service disconnected");
+        }
+    }
+
+    function handleTelephonyServiceProbeResponse(message) {
+        var response = JSON.parse(message.payload);
+
+        if (!response.returnValue &&
+             response.errorText === "Backend not initialized") {
+            resubscribeTimer.start();
+            return;
+        }
+
+        subscribeTelephonyService();
+    }
+
+    function probeTelephonyService() {
+        powerQuery.call(JSON.stringify({}), handleTelephonyServiceProbeResponse, function (errorMessage) { });
+    }
+
+    function subscribeTelephonyService() {
+        powerQuery.subscribe(JSON.stringify({"subscribe":true}));
+        networkStatusQuery.subscribe(JSON.stringify({"subscribe":true}));
+        signalStrengthQuery.subscribe(JSON.stringify({"subscribe":true}));
+    }
+
     LunaService {
         id: powerQuery
         name: "org.webosports.luna"
         usePrivateBus: true
         service: "luna://com.palm.telephony"
         method: "powerQuery"
-
-        onInitialized: {
-            powerQuery.subscribe(JSON.stringify({"subscribe":true}));
-        }
 
         onResponse: function (message) {
             var response = JSON.parse(message.payload);
@@ -52,6 +91,10 @@ Item {
             if (response.extended.powerState)
                 telephonyService.powered = (response.extended.powerState === "on");
         }
+
+        onError: function (errorMessage) {
+            console.log("ERROR: could not subscribe with com.palm.telephony/powerQuery: " + errorMessage);
+        }
     }
 
     LunaService {
@@ -60,10 +103,6 @@ Item {
         usePrivateBus: true
         service: "luna://com.palm.telephony"
         method: "networkStatusQuery"
-
-        onInitialized: {
-            networkStatusQuery.subscribe(JSON.stringify({"subscribe":true}));
-        }
 
         onResponse: function (message) {
             var response = JSON.parse(message.payload);
@@ -80,6 +119,10 @@ Item {
             if (response.extended.registration)
                 telephonyService.registration = response.extended.registration;
         }
+
+        onError: function (errorMessage) {
+            console.log("ERROR: could not subscribe with com.palm.telephony/networkStatusQuery: " + errorMessage);
+        }
     }
 
     LunaService {
@@ -88,10 +131,6 @@ Item {
         usePrivateBus: true
         service: "luna://com.palm.telephony"
         method: "signalStrengthQuery"
-
-        onInitialized: {
-            signalStrengthQuery.subscribe(JSON.stringify({"subscribe":true}));
-        }
 
         onResponse: function (message) {
             var response = JSON.parse(message.payload);
@@ -106,6 +145,10 @@ Item {
                 telephonyService.bars = response.extended.bars;
             if (response.extended.rssi)
                 telephonyService.rssi = response.extended.rssi;
+        }
+
+        onError: function (errorMessage) {
+            console.log("ERROR: could not subscribe with com.palm.telephony/signalStrengthQuery: " + errorMessage);
         }
     }
 }

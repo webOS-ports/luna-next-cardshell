@@ -36,6 +36,7 @@ QtObject {
 
     signal response
     signal initialized
+    signal error
 
     Component.onCompleted: {
         initialized();
