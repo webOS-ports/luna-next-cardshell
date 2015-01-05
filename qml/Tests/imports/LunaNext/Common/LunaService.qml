@@ -35,7 +35,6 @@ QtObject {
     property string configuredPasscode: "4242"
 
     signal response
-    signal error
     signal initialized
     signal error
 

@@ -23,60 +23,75 @@ import LunaNext.Shell.Notifications 0.1
 import "Utils"
 
 Rectangle {
-    height: listDashboardsModel.count > 0 ? dashboardsColumn.height + Units.gu(2) : 0
+    height: listDashboardsModel.count > 0 ? dashboardsColumnFlickable.height + Units.gu(2) : 0
 
     color: "black"
 
-    readonly property int maxDashboardWindowHeight: 52
+    readonly property int maxDashboardWindowHeight: parent.height/2
+    readonly property int dashboardCardFixedHeight: 56 // this value comes from the CSS of the dashboard cards
 
     WindowModel {
         id: listDashboardsModel
         windowTypeFilter: WindowType.Dashboard
     }
 
-    Column {
-        id: dashboardsColumn
+    Flickable {
+        id: dashboardsColumnFlickable
 
+        interactive: height === maxDashboardWindowHeight
+        clip: interactive
+        flickableDirection: Flickable.VerticalFlick
+        height: Math.min(maxDashboardWindowHeight, dashboardsColumn.height);
         anchors {
             bottom: parent.bottom
             left: parent.left
             right: parent.right
             margins: Units.gu(1)
         }
-        spacing: Units.gu(1) / 2
+        contentHeight: dashboardsColumn.height
+        contentWidth: width
 
-        Repeater {
-            anchors.horizontalCenter: dashboardsColumn.horizontalCenter
-            model: listDashboardsModel
-            delegate: Item {
-                        id: dashboardItem
+        Column {
+            id: dashboardsColumn
+            rotation: 180
 
-                        width: dashboardsColumn.width
-                        height: maxDashboardWindowHeight
+            anchors {
+                bottom: parent.bottom
+                left: parent.left
+                right: parent.right
+            }
+            spacing: Units.gu(1) / 2
 
-                        children: [ window ]
+            Repeater {
+                anchors.horizontalCenter: dashboardsColumn.horizontalCenter
+                model: listDashboardsModel
+                delegate: Item {
+                            id: dashboardItem
 
-                        Component.onCompleted: {
-                            if( window ) {
-                                window.parent = dashboardItem;
+                            width: dashboardsColumn.width
+                            height: dashboardCardFixedHeight
+                            rotation: -180
 
-                                /* This resizes only the quick item which contains the child surface but
-                                 * doesn't really resize the client window */
-                                window.anchors.left = dashboardItem.left;
-                                window.anchors.right = dashboardItem.right;
-                                window.y = 0;
+                            children: [ window ]
 
+                            Component.onCompleted: {
+                                if( window ) {
+                                    window.parent = dashboardItem;
 
+                                    /* This resizes only the quick item which contains the child surface but
+                                     * doesn't really resize the client window */
+                                    window.anchors.fill = dashboardItem;
 
-                                /* Resize the real client window to have the right size */
-                                window.changeSize(Qt.size(dashboardItem.width, window.height));
+                                    /* Resize the real client window to have the right size */
+                                    window.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
+                                }
                             }
                         }
-                    }
+            }
         }
-    }
 
-    Behavior on height {
-        NumberAnimation { duration: 150 }
+        Behavior on height {
+            NumberAnimation { duration: 150 }
+        }
     }
 }
