@@ -47,9 +47,6 @@ Item {
 
     Image {
         id:  image
-
-        width: Units.gu(24)
-		height: Units.gu(7.2)
         verticalAlignment: Image.AlignBottom;
         anchors.centerIn: parent
         opacity: 1.0
@@ -69,11 +66,13 @@ Item {
     }
 
     function onAudioStatusChanged(message) {
-        var response = JSON.parse(message.payload);
+		var response = JSON.parse(message.payload);
 
         // we don't indicate volume changes when sound is muted
         if (response.mute) {
             image.source = "../images/bell_off.png"
+			image.width = Units.gu(9.6)
+			image.height = Units.gu(9.6)
         }
         else {
             var normalizedVolume = 0;
@@ -82,6 +81,8 @@ Item {
             if (normalizedVolume < 0)
                 normalizedVolume = 0;
             image.source = ("../images/notification-music-indicator-" + normalizedVolume + ".png");
+			image.width = Units.gu(24)
+			image.height = Units.gu(7.2)
         }
 
         root.visible = true;

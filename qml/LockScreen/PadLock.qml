@@ -31,6 +31,8 @@ Item {
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         visible: pad.moving
+		width: Units.gu(50)
+		height: Units.gu(30)
     }
 
     DropArea {
@@ -48,11 +50,13 @@ Item {
     Image {
         id: pad
         source: pad.on ? "../images/screen-lock-padlock-on.png" : "../images/screen-lock-padlock-off.png"
+		height: Units.gu(12)
+		width: Units.gu(12)
 
         property bool on: false
 
-        property int _basePositionX: parent.width / 2 - (pad.sourceSize.width / 2)
-        property int _basePositionY: parent.height - pad.sourceSize.height - Units.gu(1)
+        property int _basePositionX: parent.width / 2 - (pad.width / 2)
+        property int _basePositionY: parent.height - pad.height - Units.gu(1)
 
         x: _basePositionX
         y: _basePositionY
@@ -82,6 +86,10 @@ Item {
             onReleased: {
                 pad.checkForUnlockPosition();
                 pad.resetPosition();
+				pad.on = false;
+            }
+			onPressed: {
+                pad.on = true;
             }
         }
     }
