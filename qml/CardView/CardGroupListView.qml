@@ -124,6 +124,7 @@ Item {
         preferredHighlightEnd: width/2+cardGroupListViewItem.cardWindowWidth/2
         highlightRangeMode: ListView.StrictlyEnforceRange
         highlightFollowsCurrentItem: true
+        highlightMoveDuration: 300
 
         model: groupsDataModel
         spacing: Units.gu(2)
