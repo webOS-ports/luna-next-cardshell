@@ -50,6 +50,17 @@ FocusScope {
     Drag.active: dragMouseArea.held
     Drag.source: cardWrapperItem
 
+    CardWindowSplash {
+        id: splash
+        appIcon: wrappedWindow !== null ? wrappedWindow.appIcon : ""
+        anchors.fill: parent;
+        z: 10
+    }
+
+    function windowVisibleChanged() {
+        splash.state = wrappedWindow.mapped ? "hidden" : "visible"
+    }
+
     // A simple container, to facilite the wrapping
     Item {
         id: childWrapper
@@ -71,6 +82,8 @@ FocusScope {
 
                 /* Resize the real client window to have the right size */
                 window.changeSize(Qt.size(cardView.defaultWindowWidth, cardView.defaultWindowHeight));
+
+                window.mappedChanged.connect(windowVisibleChanged);
             }
         }
     }
