@@ -35,11 +35,10 @@ Item {
     property Item batteryService
     property Item wifiService
     property Item lockScreen
+	
+	property string carrierName: "LuneOS";
 
-    //FIXME We need to add the actual carrier string once we have oFono stuff working
-    property string myCarrierText: "LuneOS"
-
-    Rectangle {
+	Rectangle {
         id: background
         anchors.fill: parent
         color: "black"
@@ -52,8 +51,8 @@ Item {
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
             implicitWidth: titleText.contentWidth
-
-            Text {
+			
+			Text {
                 id: titleText
                 anchors.fill: parent
                 horizontalAlignment: Text.AlignHCenter
@@ -100,6 +99,34 @@ Item {
             anchors.bottomMargin: parent.height * 0.2
             implicitWidth: carrierText.contentWidth
             visible: true
+			
+			LunaService {
+			id: networkStatusQuery
+
+				name: "org.webosports.luna"
+				usePrivateBus: true
+
+				onInitialized: {
+					networkStatusQuery.subscribe("luna://com.palm.telephony/networkStatusQuery",
+										   "{\"subscribe\":true}",
+										   onNetworkStatusChanged, onError);
+				}
+
+				function onNetworkStatusChanged(message) {
+					var response = JSON.parse(message.payload);
+					if (response.extended.registration)
+					{
+							carrierName = response.extended.networkName;
+							carrierText.text = carrierName;
+					}
+				}
+
+				function onError(message) {
+					console.log("Failed to call networkStatus service: " + message);
+				}
+					
+			}
+			
 
             Text {
                 id: carrierText
@@ -109,9 +136,9 @@ Item {
                 font.family: Settings.fontStatusBar
                 font.pixelSize: parent.height;
                 font.bold: true
-                //Set the default carrier text in case no Tweaks option has been set yet
-                text: myCarrierText
-                Tweak {
+				text: carrierName; 
+                
+				Tweak {
                     id: enableCustomCarrierString
                     owner: "luna-next-cardshell"
                     key: "useCustomCarrierString"
@@ -128,7 +155,7 @@ Item {
                         else
                         {
                             //Otherwise show the regular "Carrier"
-                            carrierText.text = myCarrierText
+                            carrierText.text = carrierName
                         }
                     }
                 }
@@ -149,7 +176,7 @@ Item {
                         else
                         {
                             //Otherwise show the regular "Carrier"
-                            carrierText.text = myCarrierText;
+                            carrierText.text = carrierName;
                         }
                     }
                 }
