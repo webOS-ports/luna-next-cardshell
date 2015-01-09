@@ -136,9 +136,9 @@ Item {
                 font.family: Settings.fontStatusBar
                 font.pixelSize: parent.height;
                 font.bold: true
-				text: carrierName; 
+                text: carrierName; 
                 
-				Tweak {
+		Tweak {
                     id: enableCustomCarrierString
                     owner: "luna-next-cardshell"
                     key: "useCustomCarrierString"
