@@ -23,9 +23,9 @@ import "../Utils"
 
 import "SystemMenu"
 
+
 /// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
 /// [-- app menu -- / -- (custom) carrier name -- |   --- title ---    |  -- indicators --]
-
 Item {
     id: statusBar
 
@@ -36,8 +36,7 @@ Item {
     property Item wifiService
     property Item lockScreen
 
-    //FIXME We need to add the actual carrier string once we have oFono stuff working
-    property string myCarrierText: "LuneOS"
+    property string carrierName: "LuneOS"
 
     Rectangle {
         id: background
@@ -59,10 +58,10 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 color: "white"
                 font.family: Settings.fontStatusBar
-                font.pixelSize: parent.height;
+                font.pixelSize: parent.height
                 font.bold: true
-                //Set the default to Time in case no Tweaks option has been set yet.
 
+                //Set the default to Time in case no Tweaks option has been set yet.
                 Timer {
                     id: clockTimer
                     interval: 100
@@ -73,14 +72,16 @@ Item {
 
                 function updateClock() {
                     if (dateTimeTweak.value === "dateTime")
-                        titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy h:mm");
+                        titleText.text = Qt.formatDateTime(new Date(),
+                                                           "dd-MMM-yyyy h:mm")
                     else if (dateTimeTweak.value === "timeOnly")
-                        titleText.text = Qt.formatDateTime(new Date(), "h:mm");
+                        titleText.text = Qt.formatDateTime(new Date(), "h:mm")
                     else if (dateTimeTweak.value === "dateOnly")
-                        titleText.text = Qt.formatDateTime(new Date(), "dd-MMM-yyyy");
+                        titleText.text = Qt.formatDateTime(new Date(),
+                                                           "dd-MMM-yyyy")
                 }
 
-                text: Qt.formatDateTime(new Date(), "h:mm");
+                text: Qt.formatDateTime(new Date(), "h:mm")
                 //FIXME Still necessary to adjust based on regional settings later for date and time.
                 Tweak {
                     id: dateTimeTweak
@@ -101,34 +102,56 @@ Item {
             implicitWidth: carrierText.contentWidth
             visible: true
 
+            LunaService {
+                id: networkStatusQuery
+
+                name: "org.webosports.luna"
+                usePrivateBus: true
+
+                onInitialized: {
+                    networkStatusQuery.subscribe(
+                                "luna://com.palm.telephony/networkStatusQuery",
+                                "{\"subscribe\":true}",
+                                onNetworkStatusChanged, onError)
+                }
+
+                function onNetworkStatusChanged(message) {
+                    var response = JSON.parse(message.payload)
+                    if (response.extended.registration) {
+                        carrierName = response.extended.networkName
+                        carrierText.text = carrierName
+                    }
+                }
+
+                function onError(message) {
+                    console.log("Failed to call networkStatus service: " + message)
+                }
+            }
+
             Text {
                 id: carrierText
                 anchors.fill: parent
                 horizontalAlignment: Text.AlignHLeft
                 color: "white"
                 font.family: Settings.fontStatusBar
-                font.pixelSize: parent.height;
+                font.pixelSize: parent.height
                 font.bold: true
-                //Set the default carrier text in case no Tweaks option has been set yet
-                text: myCarrierText
+                text: carrierName
+
                 Tweak {
                     id: enableCustomCarrierString
                     owner: "luna-next-cardshell"
                     key: "useCustomCarrierString"
                     defaultValue: "false"
-                    onValueChanged: updateCustomCarrierString();
+                    onValueChanged: updateCustomCarrierString()
 
-                    function updateCustomCarrierString()
-                    {
-                        if (enableCustomCarrierString.value === true)
-                        {
+                    function updateCustomCarrierString() {
+                        if (enableCustomCarrierString.value === true) {
                             //Only show custom carrier text in case we have the option enabled in Tweaks
-                            carrierText.text = customCarrierString.value;
-                        }
-                        else
-                        {
+                            carrierText.text = customCarrierString.value
+                        } else {
                             //Otherwise show the regular "Carrier"
-                            carrierText.text = myCarrierText
+                            carrierText.text = carrierName
                         }
                     }
                 }
@@ -137,19 +160,15 @@ Item {
                     owner: "luna-next-cardshell"
                     key: "carrierString"
                     defaultValue: "Custom Carrier String"
-                    onValueChanged: updateCarrierString();
+                    onValueChanged: updateCarrierString()
 
-                    function updateCarrierString()
-                    {
-                        if (enableCustomCarrierString.value === true)
-                        {
+                    function updateCarrierString() {
+                        if (enableCustomCarrierString.value === true) {
                             //Only show custom carrier text in case we have the option enabled in Tweaks
-                            carrierText.text = customCarrierString.value;
-                        }
-                        else
-                        {
+                            carrierText.text = customCarrierString.value
+                        } else {
                             //Otherwise show the regular "Carrier"
-                            carrierText.text = myCarrierText;
+                            carrierText.text = carrierName
                         }
                     }
                 }
@@ -163,7 +182,6 @@ Item {
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
             state: statusBar.state === "application-visible" ? "visible" : "hidden"
-
         }
 
         SystemIndicators {
@@ -180,7 +198,7 @@ Item {
             width: 100
             onClicked: {
                 if (!lockScreen.locked)
-                    systemMenu.toggleState();
+                    systemMenu.toggleState()
             }
         }
 
@@ -188,7 +206,7 @@ Item {
             target: lockScreen
             onLockedChanged: {
                 if (systemMenu.isVisible())
-                    systemMenu.toggleState();
+                    systemMenu.toggleState()
             }
         }
 
@@ -198,7 +216,7 @@ Item {
             visible: false
             x: parent.width - systemMenu.width + systemMenu.edgeOffset
 
-            onCloseSystemMenu: systemMenu.toggleState();
+            onCloseSystemMenu: systemMenu.toggleState()
         }
     }
 
@@ -207,37 +225,49 @@ Item {
     states: [
         State {
             name: "hidden"
-            PropertyChanges { target: statusBar; visible: false }
+            PropertyChanges {
+                target: statusBar
+                visible: false
+            }
         },
         State {
             name: "default"
-            PropertyChanges { target: statusBar; visible: true }
+            PropertyChanges {
+                target: statusBar
+                visible: true
+            }
         },
         State {
             name: "application-visible"
-            PropertyChanges { target: statusBar; visible: true }
-            PropertyChanges { target: carrierString; visible: false }
+            PropertyChanges {
+                target: statusBar
+                visible: true
+            }
+            PropertyChanges {
+                target: carrierString
+                visible: false
+            }
         }
     ]
 
     Connections {
         target: windowManagerInstance
         onSwitchToDashboard: {
-            state = "default";
+            state = "default"
         }
         onSwitchToMaximize: {
-            state = "application-visible";
+            state = "application-visible"
         }
         onSwitchToFullscreen: {
-            state = "hidden";
+            state = "hidden"
         }
         onSwitchToCardView: {
-            state = "default";
+            state = "default"
         }
         onSwitchToLauncherView: {
-            state = "default";
+            state = "default"
             if (systemMenu.isVisible())
-                systemMenu.toggleState();
+                systemMenu.toggleState()
         }
     }
 }
