@@ -27,6 +27,8 @@ Item {
     visible: false
     anchors.top: parent.bottom
 
+    property Item _wrappedWindow: null
+
     states: [
         State {
             name: "hidden"
@@ -49,12 +51,20 @@ Item {
                 PropertyAction { target: justTypeLauncher; property: "visible" }
                 AnchorAnimation { easing.type:Easing.InOutQuad;  duration: 150 }
             }
+            ScriptAction {
+                script: {
+                    if (_wrappedWindow)
+                        _wrappedWindow.forceVisible();
+                }
+            }
         }
     ]
 
     function setLauncherWindow(window) {
         window.parent = justTypeLauncher;
         justTypeLauncher.children = [ window ];
+
+        _wrappedWindow = window;
 
         /* This resizes only the quick item which contains the child surface but
          * doesn't really resize the client window */
