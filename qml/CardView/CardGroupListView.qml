@@ -70,9 +70,9 @@ Item {
         model: CardGroupModel {
             id: listCardGroupsModel
 
-            onRowsInserted: {
+            onNewCardInserted: {
                 if( !containerForDraggedCard.visible ) { // don't activate the new card group during drag'n'drop
-                    internalListView.newGroupIndex = last;
+                    internalListView.delayedCardSelect(newWindow);
                 }
             }
         }
@@ -124,7 +124,7 @@ Item {
         preferredHighlightEnd: width/2+cardGroupListViewItem.cardWindowWidth/2
         highlightRangeMode: ListView.StrictlyEnforceRange
         highlightFollowsCurrentItem: true
-        highlightMoveDuration: 300
+        highlightMoveDuration: 0
 
         model: groupsDataModel
         spacing: Units.gu(2)
@@ -133,19 +133,17 @@ Item {
         focus: true
         interactive: cardGroupListViewItem.interactiveList
 
-        property int newGroupIndex: -1
-        onCountChanged: {
-            if( newGroupIndex>=0 && count > 0 ) {
-                var newGroup = listCardGroupsModel.get(newGroupIndex);
-                var lastWindow = listCardGroupsModel.getCurrentCardOfGroup(newGroup);
-                if( lastWindow ) {
-                    cardGroupListViewItem.cardSelect(lastWindow);
-                }
-                else {
-                    currentIndex = newGroupIndex;
-                }
-                newGroupIndex = -1;
+        function delayedCardSelect(windowToSelect) {
+            cardSelectTimer._windowToSelect = windowToSelect;
+            cardSelectTimer.start();
+        }
+        Timer {
+            id: cardSelectTimer
+            running: false; repeat: false; interval: 10
+            onTriggered: {
+                if(_windowToSelect) cardGroupListViewItem.cardSelect(_windowToSelect);
             }
+            property Item _windowToSelect
         }
 
         function setCurrentCardIndex(newIndex) {
