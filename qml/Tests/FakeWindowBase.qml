@@ -25,6 +25,7 @@ import "../WindowManager/WindowManagerServices.js" as WindowManagerServices
 Item {
     id: fakeWindowBase
     property int winId: 0
+    property int parentWinId: 0
     property string appId: "org.webosports.tests.fakewindowbase"
     property int windowType: WindowType.Card
 

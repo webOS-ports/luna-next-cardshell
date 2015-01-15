@@ -12,6 +12,8 @@ import LunaNext.Compositor 0.1
 ListModel {
     id: listCardGroupsModel
 
+    signal newCardInserted(int group, int index, Item newWindow)
+
     property WindowModel listCardsModel: WindowModel {
         windowTypeFilter: WindowType.Card
 
@@ -40,9 +42,11 @@ ListModel {
             }
             else {
                 var destGroup = listCardGroupsModel.get(groupIndexForInsertion);
-                destGroup.windowList.insert(1, {"window": newWindow});
-                destGroup.currentCardInGroup = 1;
+                destGroup.windowList.insert(destGroup.windowList.count, {"window": newWindow});
+                destGroup.currentCardInGroup = destGroup.windowList.count-1;
             }
+
+            listCardGroupsModel.newCardInserted(groupIndexForInsertion, 0, newWindow);
 
             // DEBUG: move the new window in the previous group, and build groups of 3 windows
             //if( last>0 && ((last+1)%4) !== 0 )
