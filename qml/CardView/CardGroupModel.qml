@@ -43,7 +43,6 @@ ListModel {
             else {
                 var destGroup = listCardGroupsModel.get(groupIndexForInsertion);
                 destGroup.windowList.insert(destGroup.windowList.count, {"window": newWindow});
-                destGroup.currentCardInGroup = destGroup.windowList.count-1;
             }
 
             listCardGroupsModel.newCardInserted(groupIndexForInsertion, 0, newWindow);
