@@ -194,8 +194,8 @@ Drawer {
     }
 
     function updateWifiStatus() {
-        service.call("luna://com.palm.wifi/getstatus",
-                     JSON.stringify({}),
+        service.subscribe("luna://com.palm.wifi/getstatus",
+                     JSON.stringify({"subscribe":true}),
                      function(message) {
                          var response = JSON.parse(message.payload);
                          switch(response.status) {
@@ -397,7 +397,6 @@ Drawer {
         coloseOnConnect = false;
         if(isWifiOn) {
             wifiSpinner.on = true
-            updateWifiStatus()
             findWifiNetworks();
         }
     }
