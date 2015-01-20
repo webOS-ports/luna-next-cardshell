@@ -77,7 +77,7 @@ Item {
         else {
             var normalizedVolume = 0;
             if (response.volume > 0)
-                normalizedVolume = (Math.round(response.volume/10) - 1) * 10;
+                normalizedVolume = ((Math.round(response.volume/11))*10);
             if (normalizedVolume < 0)
                 normalizedVolume = 0;
             image.source = ("../images/notification-music-indicator-" + normalizedVolume + ".png");
