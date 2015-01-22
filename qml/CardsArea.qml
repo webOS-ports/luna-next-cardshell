@@ -68,6 +68,28 @@ WindowManager {
             compositor.clearKeyboardFocus();
     }
 
+
+    //Use a Loader for the clock so we only load it when needed
+    Loader {
+        id: dockModeLoader
+        anchors.fill: parent
+
+        sourceComponent: dockModeClocksInstance
+
+        Component{
+            id: dockModeClocksInstance
+            Clocks {
+                width: parent.width; //1024
+                height: parent.height; //768
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                visible: lockScreen.visible
+                mainTimerRunning: lockScreen.visible
+            }
+        }
+    }
+
     Loader {
         anchors.top: parent.top
         anchors.left: parent.left
@@ -265,15 +287,7 @@ WindowManager {
         anchors.right: parent.right
     }
 
-    Clocks {
-        id: dockModeClocksInstance
-
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-    }
-	
-	StatusBar {
+    StatusBar {
         id: statusBarInstance
 
         anchors.top: parent.top
