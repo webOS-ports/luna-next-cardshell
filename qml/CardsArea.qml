@@ -23,6 +23,7 @@ import LunaNext.Compositor 0.1
 import LunaNext.Performance 0.1
 
 import "CardView"
+import "DockModeTime"
 import "StatusBar"
 import "LaunchBar"
 import "WindowManager"
@@ -195,7 +196,7 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        visible: !lockScreen.visible
+        visible: !lockScreen.visible && !dockModeClocksInstance.visible
 
         z: 1 // on top of cardview when no card is active
     }
@@ -264,7 +265,15 @@ WindowManager {
         anchors.right: parent.right
     }
 
-    StatusBar {
+    Clocks {
+        id: dockModeClocksInstance
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+	
+	StatusBar {
         id: statusBarInstance
 
         anchors.top: parent.top
