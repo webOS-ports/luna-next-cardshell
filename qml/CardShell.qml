@@ -22,6 +22,7 @@ import LunaNext.Shell 0.1
 import LunaNext.Compositor 0.1
 
 import "CardView"
+import "DockModeTime"
 import "StatusBar"
 import "LaunchBar"
 import "WindowManager"

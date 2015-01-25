@@ -100,7 +100,7 @@ Item {
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
             implicitWidth: carrierText.contentWidth
-            visible: true
+            visible: !appMenu.visible
 
             LunaService {
                 id: networkStatusQuery
@@ -174,6 +174,7 @@ Item {
                 }
             }
         }
+
         AppMenu {
             id: appMenu
             anchors.top: parent.top
@@ -181,7 +182,8 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-            state: statusBar.state === "application-visible" ? "visible" : "hidden"
+            state: statusBar.state === "application-visible" || (dockModeLoader.status == Loader.Ready && lockScreen.visible) ? "visible" : "hidden"
+			//state: statusBar.state === "application-visible" || dockModeClocksInstance.visible ? "visible" : "hidden"
         }
 
         SystemIndicators {
