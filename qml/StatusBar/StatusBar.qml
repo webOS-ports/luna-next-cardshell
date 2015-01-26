@@ -35,6 +35,7 @@ Item {
     property Item batteryService
     property Item wifiService
     property Item lockScreen
+    property Item dockMode
 
     property string carrierName: "LuneOS"
 
@@ -182,8 +183,7 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-            state: statusBar.state === "application-visible" || (dockModeLoader.status == Loader.Ready && lockScreen.visible) ? "visible" : "hidden"
-			//state: statusBar.state === "application-visible" || dockModeClocksInstance.visible ? "visible" : "hidden"
+            state: statusBar.state === "application-visible" || (dockMode.visible && lockScreen.visible) ? "visible" : "hidden"
         }
 
         SystemIndicators {

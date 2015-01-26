@@ -23,7 +23,7 @@ import LunaNext.Compositor 0.1
 import LunaNext.Performance 0.1
 
 import "CardView"
-import "DockModeTime"
+import "DockMode"
 import "StatusBar"
 import "LaunchBar"
 import "WindowManager"
@@ -66,28 +66,6 @@ WindowManager {
         // for the keyboard anymore
         if( compositor )
             compositor.clearKeyboardFocus();
-    }
-
-
-    //Use a Loader for the clock so we only load it when needed
-    Loader {
-        id: dockModeLoader
-        anchors.fill: parent
-
-        sourceComponent: dockModeClocksInstance
-
-        Component{
-            id: dockModeClocksInstance
-            Clocks {
-                width: parent.width; //1024
-                height: parent.height; //768
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                visible: lockScreen.visible
-                mainTimerRunning: lockScreen.visible
-            }
-        }
     }
 
     Loader {
@@ -218,7 +196,7 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        visible: !lockScreen.visible && !dockModeClocksInstance.visible
+        visible: !lockScreen.visible && !dockMode.visible
 
         z: 1 // on top of cardview when no card is active
     }
@@ -287,6 +265,17 @@ WindowManager {
         anchors.right: parent.right
     }
 
+    DockMode {
+        id: dockMode
+
+        z: 600 // below lock screen
+
+        anchors.top: statusBarInstance.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+
     StatusBar {
         id: statusBarInstance
 
@@ -301,6 +290,7 @@ WindowManager {
         fullLauncherVisible: launcherInstance.fullLauncherVisible
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
         lockScreen: lockScreen
+        dockMode: dockMode
     }
 
     LunaGestureArea {
