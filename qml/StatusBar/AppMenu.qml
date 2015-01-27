@@ -58,7 +58,7 @@ Item {
     }
 
     function setDefaultAppMenuTitle() {
-        title.text = (dockModeLoader.status == Loader.Ready && lockScreen.visible) ? "Time" : defaultAppMenuTitle;
+        title.text = (dockMode.visible && lockScreen.visible) ? "Time" : defaultAppMenuTitle;
     }
 
     function handleGetAppInfoResponse(message) {
