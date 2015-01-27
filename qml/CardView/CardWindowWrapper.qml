@@ -74,6 +74,9 @@ FocusScope {
             childWrapper.children = [ window ];
 
             if( window ) {
+                if (window.mapped)
+                    splash.state = "hidden";
+
                 window.parent = childWrapper;
 
                 /* This resizes only the quick item which contains the child surface but
