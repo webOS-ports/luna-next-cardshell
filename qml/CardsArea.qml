@@ -23,6 +23,7 @@ import LunaNext.Compositor 0.1
 import LunaNext.Performance 0.1
 
 import "CardView"
+import "DockMode"
 import "StatusBar"
 import "LaunchBar"
 import "WindowManager"
@@ -195,7 +196,7 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        visible: !lockScreen.visible
+        visible: !lockScreen.visible && !dockMode.visible
 
         z: 1 // on top of cardview when no card is active
     }
@@ -264,6 +265,17 @@ WindowManager {
         anchors.right: parent.right
     }
 
+    DockMode {
+        id: dockMode
+
+        z: 600 // below lock screen
+
+        anchors.top: statusBarInstance.bottom
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+    }
+
     StatusBar {
         id: statusBarInstance
 
@@ -278,6 +290,7 @@ WindowManager {
         fullLauncherVisible: launcherInstance.fullLauncherVisible
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
         lockScreen: lockScreen
+        dockMode: dockMode
     }
 
     LunaGestureArea {
