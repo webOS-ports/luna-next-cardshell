@@ -36,7 +36,7 @@ Rectangle {
     Row {
          spacing: Units.gu(1)//10
          anchors.centerIn: parent
-         anchors.verticalCenterOffset: Units.gu(20)//340 : 400
+         anchors.verticalCenterOffset: Units.gu(-22)//340 : 400
          Image { id: clockdot1; height: Units.gu(1.6); width: Units.gu(1.6); fillMode: Image.Stretch; source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==0 ? "on" : "off") + ".png" }
          Image { id: clockdot2; height: Units.gu(1.6); width: Units.gu(1.6); fillMode: Image.Stretch; source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==1 ? "on" : "off") + ".png" }
          Image { id: clockdot3; height: Units.gu(1.6); width: Units.gu(1.6); fillMode: Image.Stretch; source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==2 ? "on" : "off") + ".png" }

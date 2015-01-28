@@ -75,7 +75,7 @@ Item {
          parent: face
          anchors.centerIn: parent
          anchors.horizontalCenterOffset: glass ? 0 : (Settings.displayHeight > Settings.displayWidth) ? Units.gu(7) : Units.gu(12.5) //108
-         anchors.verticalCenterOffset: glass ? (Settings.displayHeight > Settings.displayWidth) ? Units.gu(-24) : Units.gu(-30) : Units.gu(0) //300 : -2
+         anchors.verticalCenterOffset: glass ? (Settings.displayHeight > Settings.displayWidth) ? Units.gu(20) : Units.gu(24) : Units.gu(0) //300 : -2
          font.family: "prelude"
          font.pixelSize: (Settings.displayHeight > Settings.displayWidth) ? Units.gu(3) : Units.gu(6) //FontUtils.sizeToPixels("x-large")
          //font.pointSize: glass ? 10 : 10//Units.gu(3.0) : Units.gu(3.0) //30 : 30

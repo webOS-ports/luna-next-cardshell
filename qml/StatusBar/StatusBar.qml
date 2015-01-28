@@ -183,7 +183,7 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-            state: statusBar.state === "application-visible" || (dockMode.visible && lockScreen.visible) ? "visible" : "hidden"
+            state: statusBar.state === "application-visible" || dockMode.visible ? "visible" : "hidden"
         }
 
         SystemIndicators {
