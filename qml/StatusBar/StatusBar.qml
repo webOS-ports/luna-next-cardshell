@@ -39,6 +39,38 @@ Item {
 
     property string carrierName: "LuneOS"
 
+    function probeNetworkStatus()
+    {
+        networkStatusQuery.subscribe(
+                    "luna://com.palm.telephony/networkStatusQuery",
+                    "{\"subscribe\":true}",
+                    onNetworkStatusChanged, onError)
+    }
+
+    function onNetworkStatusChanged(message) {
+        var response = JSON.parse(message.payload)
+
+        if (!response.returnValue &&
+              response.errorText === "Backend not initialized") {
+            resubscribeTimer.start();
+            return;
+        }
+        else if(response.extended.state==="noservice")
+        {
+            resubscribeTimer.start();
+            return;
+        }
+        else if (response.extended.registration && response.extended.state !== "noservice") {
+            carrierName = response.extended.networkName
+            carrierText.text = carrierName
+        }
+    }
+
+    function onError(message) {
+        console.log("Failed to call networkStatus service: " + message)
+    }
+
+
     Rectangle {
         id: background
         anchors.fill: parent
@@ -110,23 +142,9 @@ Item {
                 usePrivateBus: true
 
                 onInitialized: {
-                    networkStatusQuery.subscribe(
-                                "luna://com.palm.telephony/networkStatusQuery",
-                                "{\"subscribe\":true}",
-                                onNetworkStatusChanged, onError)
+                    probeNetworkStatus()
                 }
 
-                function onNetworkStatusChanged(message) {
-                    var response = JSON.parse(message.payload)
-                    if (response.extended.registration) {
-                        carrierName = response.extended.networkName
-                        carrierText.text = carrierName
-                    }
-                }
-
-                function onError(message) {
-                    console.log("Failed to call networkStatus service: " + message)
-                }
             }
 
             Text {
@@ -220,6 +238,16 @@ Item {
 
             onCloseSystemMenu: systemMenu.toggleState()
         }
+
+        Timer {
+                id: resubscribeTimer
+                interval: 500
+                repeat: false
+                running: false
+                onTriggered: {
+                    probeNetworkStatus();
+                }
+            }
     }
 
     state: "default"

@@ -47,6 +47,20 @@ Item {
         }
     }
 
+    Text
+    {
+        id: unlockText
+        text: "Drag up to unlock"
+        font.pixelSize: FontUtils.sizeToPixels("large")
+        color: "white"
+        font.bold: true
+        anchors.verticalCenter: targetScrim.verticalCenter
+        anchors.horizontalCenter: targetScrim.horizontalCenter
+        visible: false
+    }
+
+
+
     Image {
         id: pad
         source: pad.on ? "../images/screen-lock-padlock-on.png" : "../images/screen-lock-padlock-off.png"
@@ -87,9 +101,12 @@ Item {
                 pad.checkForUnlockPosition();
                 pad.resetPosition();
 				pad.on = false;
+                unlockText.visible = false;
             }
 			onPressed: {
                 pad.on = true;
+                unlockText.visible = true;
+
             }
         }
     }
