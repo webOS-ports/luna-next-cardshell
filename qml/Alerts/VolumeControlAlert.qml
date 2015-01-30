@@ -27,6 +27,14 @@ Item {
     width: image.width + Units.gu(1)
     height: image.height
 
+    LunaService {
+        id: playFeedback
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        service: "luna://org.webosports.audio"
+        method: "playFeedback"
+    }
+
     Timer {
         id: hideTimer
         interval: 2000
@@ -67,6 +75,8 @@ Item {
 
     function onAudioStatusChanged(message) {
 		var response = JSON.parse(message.payload);
+
+        playFeedback.call(JSON.stringify({"name":"AdjustVolume"}));
 
         // we don't indicate volume changes when sound is muted
         if (response.mute) {

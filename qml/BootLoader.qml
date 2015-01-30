@@ -17,11 +17,17 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
+import QtMultimedia 5.4
 
 Item {
     property Loader shellLoader
 
     property bool wentThroughFirstUse: false
+
+    Audio {
+        id: bootSound
+        source: "/usr/palm/sounds/boot.mp3"
+    }
 
     LunaService {
         id: systemService
@@ -54,6 +60,7 @@ Item {
                 if( response.state === "firstuse" || response.state === "normal" )
                     shellLoader.state = response.state;
 
+                bootSound.play();
                 shellLoader.source = "CardShell.qml";
                 bootScreenItem.opacity = 0;
             }
