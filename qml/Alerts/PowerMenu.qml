@@ -19,6 +19,7 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
+import QtMultimedia 5.4
 import "../Utils"
 
 Item {
@@ -28,6 +29,12 @@ Item {
 
     property real contentMargin: Units.gu(2)
     height: powerMenuColumn.height + contentMargin
+
+    Audio {
+        id: shutdownSound
+        source: "/usr/palm/sounds/shutdown.mp3"
+    }
+
 
     Rectangle {
         id: bgImage
@@ -89,6 +96,7 @@ Item {
             onAction: {
                 root.visible = false;
                 console.log("Reboot requested !")
+                shutdownSound.play();
                 powerKeyService.call("palm://com.palm.power/shutdown/machineReboot",
                     JSON.stringify({"reason": "User requested reboot"}), undefined, onRebootActionError)
             }
@@ -130,6 +138,7 @@ Item {
             onAction: {
                 root.visible = false;
                 console.log("Shutdown requested !")
+                shutdownSound.play();
                 powerKeyService.call("palm://com.palm.power/shutdown/machineOff",
                     JSON.stringify({"reason": "User requested poweroff"}), undefined, onPowerOffActionError)
             }

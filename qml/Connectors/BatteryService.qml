@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
+import QtMultimedia 5.4
 
 Item {
     id: batteryService
@@ -27,6 +28,31 @@ Item {
     property bool charging: false
 
     property bool powerdAvailable: false
+
+    property bool _playSoundWhenCharged: false
+
+    Audio {
+        id: chargedSound
+        source: "/usr/palm/sounds/battery_full.mp3"
+    }
+
+    Audio {
+        id: batteryLowSound
+        source: "/usr/palm/sounds/battery_low.mp3"
+    }
+
+    onPercentageChanged: {
+        if (percentage < 95)
+            _playSoundWhenCharged = true;
+        else if (percentage === 100 && _playSoundWhenCharged) {
+            _playSoundWhenCharged = false;
+            chargedSound.play();
+        }
+        else if ((percentage === 20 || percentage === 10 || percentage === 5) && _playSoundWhenCharged)
+        {
+            batteryLowSound.play();
+        }
+    }
 
     LunaService {
         id: lunaService
