@@ -55,10 +55,16 @@ FocusScope {
         appIcon: wrappedWindow !== null ? wrappedWindow.appIcon : ""
         anchors.fill: parent;
         z: 10
+        state: "hidden"
+        visible: false
+        onStateChanged: {
+            console.log("splash state " + splash.state);
+        }
     }
 
     function windowVisibleChanged() {
-        splash.state = wrappedWindow.mapped ? "hidden" : "visible"
+        if (!wrappedWindow.loadingAnimationDisabled)
+            splash.state = wrappedWindow.mapped ? "hidden" : "visible"
     }
 
     // A simple container, to facilite the wrapping
@@ -76,6 +82,8 @@ FocusScope {
             if( window ) {
                 if (window.mapped)
                     splash.state = "hidden";
+                else if (!window.loadingAnimationDisabled)
+                    splash.state = "visible";
 
                 window.parent = childWrapper;
 
