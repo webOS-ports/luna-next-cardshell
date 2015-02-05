@@ -22,16 +22,16 @@ import LunaNext.Shell 0.1
 Item {
     id: volumeControl
 
-    DeviceKeyHandler {
-        onVolumeUpPressed: volumeUp()
-        onVolumeDownPressed: volumeDown()
+    VolumeKeys {
+        onVolumeUp: handleVolumeUp()
+        onVolumeDown: handleVolumeDown()
     }
 
-    function volumeUp() {
+    function handleVolumeUp() {
         audioService.call("luna://org.webosports.audio/volumeUp", "{}", null, null);
     }
 
-    function volumeDown() {
+    function handleVolumeDown() {
         audioService.call("luna://org.webosports.audio/volumeDown", "{}", null, null);
     }
 
