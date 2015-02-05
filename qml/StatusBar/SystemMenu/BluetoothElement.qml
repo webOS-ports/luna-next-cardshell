@@ -176,6 +176,8 @@ Drawer {
                         id: bluetoothSpinner
                         x: bluetoothTitle.width + Units.gu(2); 
                         y: Units.gu(-1.7) 
+                        width: Units.gu(3.2)
+                        height: Units.gu(3.2)
                         on: btTurningOn && bluetoothMenu.isOpen();
                     }
 

@@ -26,8 +26,8 @@ Item {
     property string status:         ((connStatus == "connecting") ? "Connecting..." : ((connStatus == "connectfailed") ? "Unable to connect" : ""))
     property string vpnProfileInfo: ""
 
-    property int iconSpacing : 4
-    property int rightMarging: 8
+    property int iconSpacing : Units.gu(0.4)
+    property int rightMarging: Units.gu(0.8)
 
     Item {
         anchors.fill: parent
@@ -59,6 +59,8 @@ Item {
     Image {
         id: check
         x: parent.width - width - iconSpacing - rightMarging
+        height: Units.gu(2.3)
+        width: Units.gu(3.1)
         anchors.verticalCenter: parent.verticalCenter
         visible: connected
         source: "../../images/statusbar/system-menu-popup-item-checkmark.png"

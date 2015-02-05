@@ -144,7 +144,8 @@ Item {
     BorderImage {
         id: bar
         source: "../../images/statusbar/slider-track.png"
-        width: parent.width;
+        width: parent.width
+        height: Units.gu(2.4)
         border { left: railBorderWidth; top: 0; right: railBorderWidth; bottom: 0 }
         anchors.verticalCenter: parent.verticalCenter
     }
@@ -153,6 +154,7 @@ Item {
         id: barProgress
         source: "../../images/statusbar/slider-track-progress.png"
         width: Math.max(((parent.width - handle.width/2) * setValue + handle.width/2), 2*railBorderWidth)
+        height: Units.gu(2.4)
         border { left: railBorderWidth; top: 0; right: railBorderWidth; bottom: 0 }
         anchors.verticalCenter: parent.verticalCenter
     }
@@ -162,6 +164,8 @@ Item {
         source: "../../images/statusbar/slider-handle.png"
         x: railEdgeOffset + ((slider.width - 2*railEdgeOffset) * setValue) - width/2
         y: slider.height/2 - height/2
+        width: Units.gu(3)
+        height: Units.gu(3)
     }
 
 }
