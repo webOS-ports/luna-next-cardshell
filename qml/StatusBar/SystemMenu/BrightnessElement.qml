@@ -64,8 +64,8 @@ MenuListEntry {
     content:
         Item {
             id: brightnessContent
-            x: 4 
-            width: brightnessElement.width - 8 
+            x: Units.gu(0.4)
+            width: brightnessElement.width - Units.gu(0.8)
             height: brightnessElement.height
 
             Image {
