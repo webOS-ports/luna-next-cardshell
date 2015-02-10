@@ -17,6 +17,7 @@
  */
 
 import QtQuick 2.0
+import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 import MeeGo.QOfono 0.2
 import Connman 0.2
