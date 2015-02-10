@@ -133,7 +133,7 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-            implicitWidth: carrierText.contentWidth
+            width: (background.width / 2) - Units.gu(3)
             visible: !appMenu.visible
 
             LunaService {
@@ -157,6 +157,8 @@ Item {
                 font.pixelSize: parent.height
                 font.bold: true
                 text: carrierName
+                width: parent.width
+                elide: Text.ElideRight
 
                 Tweak {
                     id: enableCustomCarrierString
