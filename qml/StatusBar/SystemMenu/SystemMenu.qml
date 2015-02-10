@@ -120,7 +120,8 @@ Item {
         clip: true
         anchors.leftMargin: Units.gu(0.7) 
         anchors.topMargin: 0
-        anchors.bottomMargin: Units.gu(1.4)
+        // need to be in pixels due to border
+        anchors.bottomMargin: 14
         anchors.rightMargin: Units.gu(0.7) 
 
         Flickable {
@@ -335,13 +336,16 @@ Item {
     Item {
         id: maskTop
         z:10
-        width: parent.width - Units.gu(2.2) 
+        // 10 + 10 -- transparent pixels on left and right side of image
+        // + 2 -- minimal offset(like on legacy)
+        width: parent.width - 22
         anchors.horizontalCenter: parent.horizontalCenter
         y: 0
         opacity: !flickableArea.atYBeginning ? 1.0 : 0.0
 
         BorderImage {
             width: parent.width
+            height: Units.gu(3)
             source: "../../images/menu-dropdown-scrollfade-top.png"
             border { left: 20; top: 0; right: 20; bottom: 0 }
         }
@@ -349,6 +353,8 @@ Item {
         Image {
             anchors.horizontalCenter: parent.horizontalCenter
             y:0
+            width: Units.gu(2.1)
+            height: Units.gu(2.1)
             source: "../../images/menu-arrow-up.png"
         }
 
@@ -358,20 +364,26 @@ Item {
     Item {
         id: maskBottom
         z:10
-        width: parent.width - Units.gu(2) 
+        // 10 + 10 -- transparent pixels on left and right side of image
+        // + 2 -- minimal offset(like on legacy)
+        width: parent.width - 22
         anchors.horizontalCenter: parent.horizontalCenter
-        y: flickableArea.height - Units.gu(1) 
+        y: flickableArea.height - scrollfadeBottom.height + 1
         opacity: !flickableArea.atYEnd ? 1.0 : 0.0
 
         BorderImage {
+            id: scrollfadeBottom
             width: parent.width
+            height: Units.gu(3)
             source: "../../images/menu-dropdown-scrollfade-bottom.png"
             border { left: 20; top: 0; right: 20; bottom: 0 }
         }
 
         Image {
             anchors.horizontalCenter: parent.horizontalCenter
-            y:10
+            y: Units.gu(0.9)
+            width: Units.gu(2.1)
+            height: Units.gu(2.1)
             source: "../../images/menu-arrow-down.png"
         }
 

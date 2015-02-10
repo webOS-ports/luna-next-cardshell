@@ -60,6 +60,8 @@ Item {
     Image {
         id: check
         x: parent.width - width - iconSpacing - rightMarging
+        height: Units.gu(2.3)
+        width: Units.gu(3.1)
         anchors.verticalCenter: parent.verticalCenter
         visible: connected
         source: "../../images/statusbar/system-menu-popup-item-checkmark.png"
