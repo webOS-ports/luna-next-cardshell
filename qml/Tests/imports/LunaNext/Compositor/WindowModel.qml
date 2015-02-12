@@ -47,6 +47,8 @@ ListModel {
             _referenceModel = WindowModelSingleton.bannerAlertListModel;
         else if( windowTypeFilter === WindowType.Overlay )
             _referenceModel = WindowModelSingleton.overlayListModel;
+        else if( windowTypeFilter === WindowType.Pin )
+            _referenceModel = WindowModelSingleton.pinListModel;
 
         // windowModel.count = Qt.binding(function() { return _referenceModel.count });
         _referenceModel.rowsAboutToBeInserted.connect(rowsAboutToBeInserted);
