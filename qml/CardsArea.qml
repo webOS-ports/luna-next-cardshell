@@ -260,6 +260,8 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        windowManagerInstance: windowManager
+
         z: 5 // fullscreen window, above keyboard
     }
 
@@ -270,6 +272,8 @@ WindowManager {
         anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
+
+        windowManagerInstance: windowManager
 
         visible: !lockScreen.visible && simPinWindowArea.simPinWindowPresent
 

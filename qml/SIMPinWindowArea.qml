@@ -24,6 +24,8 @@ Item {
     id: simPinWindowAreaItem
 
     property bool simPinWindowPresent: listPinWindowModel.count>0
+    property Item windowManagerInstance
+    property Item __simPinWindow
 
     WindowModel {
         id: listPinWindowModel
@@ -34,12 +36,20 @@ Item {
         }
     }
 
+    function discardSIMPinWindow() {
+        if( __simPinWindow ) compositor.closeWindowWithId(__simPinWindow.winId);
+    }
+
     function appendPinWindow(window) {
         console.log("SIMPinWindowArea: adding " + window);
 
+        __simPinWindow = window;
         window.parent = simPinWindowAreaItem;
         window.anchors.fill = simPinWindowAreaItem;
         /* Resize the real client window to have the right size */
         window.changeSize(Qt.size(simPinWindowAreaItem.width, simPinWindowAreaItem.height));
+
+        windowManagerInstance.removeTapAction("discardSIMPinWindow"); // if any was registered, remove it
+        windowManagerInstance.addTapAction("discardSIMPinWindow", discardSIMPinWindow, null)
     }
 }
