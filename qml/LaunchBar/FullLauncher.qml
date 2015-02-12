@@ -159,6 +159,36 @@ Image {
 
             property string tabId: model.text
 
+            DropArea {
+                // drop area on the left side of the grid
+                anchors {
+                    top: parent.top; bottom: parent.bottom
+                    left: parent.left
+                }
+                width: 0.1 * parent.width
+                Timer {
+                    id: turnLeftTimer
+                    interval: 500; running: false; repeat: false
+                    onTriggered: tabContentList.decrementCurrentIndex();
+                }
+                onEntered: turnLeftTimer.start();
+                onExited: turnLeftTimer.stop();
+            }
+            DropArea {
+                // drop area on the right side of the grid
+                anchors {
+                    top: parent.top; bottom: parent.bottom
+                    right: parent.right
+                }
+                width: 0.1 * parent.width
+                Timer {
+                    id: turnRightTimer
+                    interval: 500; running: false; repeat: false
+                    onTriggered: tabContentList.incrementCurrentIndex();
+                }
+                onEntered: turnRightTimer.start();
+                onExited: turnRightTimer.stop();
+            }
             GridView {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
