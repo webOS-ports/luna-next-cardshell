@@ -17,7 +17,7 @@
 
 import QtQuick 2.0
 import LunaNext.Compositor 0.1
-import LuneOS.Service 1.0f
+import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
 // this should be a plugin import
@@ -28,11 +28,15 @@ Item {
     property int winId: 0
     property int parentWinId: 0
     property string appId: "org.webosports.tests.fakewindowbase"
+    property string appIcon: icon
+    property string icon: ""
     property int windowType: WindowType.Card
+    property bool mapped: false
 
     property variant compositor
 
     property Item userData
+
 
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
@@ -56,4 +60,5 @@ Item {
     }
 
     Component.onDestruction: compositor.closeWindowWithId(winId);
+    Component.onCompleted: mapped = true;
 }
