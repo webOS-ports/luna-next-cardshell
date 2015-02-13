@@ -57,10 +57,7 @@ Item {
             return;
         }
         else if(response.extended.state==="noservice")
-        {
-            resubscribeTimer.start();
             return;
-        }
         else if (response.extended.registration && response.extended.state !== "noservice") {
             carrierName = response.extended.networkName
             carrierText.text = carrierName
