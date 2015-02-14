@@ -46,6 +46,7 @@ Rectangle {
             y: rootAlertsArea.height - height
             width: rootAlertsArea.width
             height: window ? window.height : 0
+            onHeightChanged: computeNewRootHeight();
 
             children: [ window ]
 
@@ -58,9 +59,6 @@ Rectangle {
                     window.anchors.left = alertItem.left;
                     window.anchors.right = alertItem.right;
                     window.y = 0;
-
-                    /* Resize the real client window to have the right size */
-                    window.changeSize(Qt.size(alertItem.width, window.height));
                 }
             }
         }
@@ -72,17 +70,17 @@ Rectangle {
         var newMaxHeight = 0;
         var currentMaxHeight = 0;
         for( i=0; i < listPopupAlertsModel.count; ++i ) {
-            currentMaxHeight = listPopupAlertsModel.get(i).window.height;
+            currentMaxHeight = listPopupAlertsModel.getByIndex(i).height;
             if( currentMaxHeight > newMaxHeight )
                 newMaxHeight = currentMaxHeight;
         }
         for( i=0; i < listBannerAlertsModel.count; ++i ) {
-            currentMaxHeight = listBannerAlertsModel.get(i).window.height;
+            currentMaxHeight = listBannerAlertsModel.getByIndex(i).height;
             if( currentMaxHeight > newMaxHeight )
                 newMaxHeight = currentMaxHeight;
         }
 
-        return newMaxHeight;
+        rootAlertsArea.maxHeight = newMaxHeight;
     }
 
     Repeater {
@@ -99,7 +97,7 @@ Rectangle {
                 rootAlertsArea.maxHeight = item.height;
         }
         onItemRemoved: {
-            rootAlertsArea.maxHeight = computeNewRootHeight();
+            computeNewRootHeight();
         }
     }
     Repeater {
@@ -116,7 +114,7 @@ Rectangle {
                 rootAlertsArea.maxHeight = item.height;
         }
         onItemRemoved: {
-            rootAlertsArea.maxHeight = computeNewRootHeight();
+            computeNewRootHeight();
         }
     }
 }
