@@ -29,7 +29,7 @@ import "LaunchBar"
 import "WindowManager"
 import "LunaSysAPI"
 import "Utils"
-import "Alerts"
+import "Notifications"
 import "Connectors"
 import "LockScreen"
 
@@ -252,23 +252,40 @@ WindowManager {
         z: 4 // on top of everything (including fullscreen)
     }
 
+    DockMode {
+        id: dockMode
+
+        anchors.top: statusBarInstance.bottom
+        anchors.bottom: gestureAreaInstance.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        windowManagerInstance: windowManager
+
+        z: 5 // fullscreen window, above keyboard
+    }
+
+    SIMPinWindowArea {
+        id: simPinWindowArea
+
+        anchors.top: statusBarInstance.bottom
+        anchors.bottom: gestureAreaInstance.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        windowManagerInstance: windowManager
+
+        visible: !lockScreen.visible && simPinWindowArea.simPinWindowPresent
+
+        z: 5 // fullscreen window, above keyboard
+    }
+
     LockScreen {
         id: lockScreen
 
         z: 700
 
         isFirstUse: false
-
-        anchors.top: statusBarInstance.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-    }
-
-    DockMode {
-        id: dockMode
-
-        z: 600 // below lock screen
 
         anchors.top: statusBarInstance.bottom
         anchors.bottom: parent.bottom

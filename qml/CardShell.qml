@@ -27,7 +27,7 @@ import "LaunchBar"
 import "WindowManager"
 import "LunaSysAPI"
 import "Utils"
-import "Alerts"
+import "Notifications"
 import "Connectors"
 
 Rectangle {

@@ -23,15 +23,19 @@ Item {
     id: dockMode
 
     property bool dockModeActive: false
+    property Item windowManagerInstance
 
     visible: dockModeActive
 
     onDockModeActiveChanged: {
         console.log("DockMode changed to " + dockModeActive);
-        if (dockModeActive)
+        if (dockModeActive) {
             clocksLoader.sourceComponent = clocksComponent;
-        else
+            windowManagerInstance.addTapAction("deactivateDockMode", function() { dockMode.dockModeActive = false; }, null)
+        }
+        else {
             clocksLoader.sourceComponent = null;
+        }
     }
 
     LunaService {
@@ -46,6 +50,7 @@ Item {
             console.log("DockMode: Got lock status " + message.payload);
             var response = JSON.parse(message.payload);
 
+            windowManagerInstance.removeTapAction("deactivateDockMode"); // if any was registered, remove it
             dockModeActive = (response.lockState === "dockmode");
         }
 

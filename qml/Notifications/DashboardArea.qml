@@ -20,7 +20,7 @@ import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 import LunaNext.Shell.Notifications 0.1
 
-import "Utils"
+import "../Utils"
 
 Rectangle {
     height: listDashboardsModel.count > 0 ? dashboardsColumnFlickable.height + Units.gu(2) : 0

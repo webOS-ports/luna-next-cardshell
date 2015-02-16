@@ -29,6 +29,10 @@ Item {
         signal actualRowsAboutToBeRemoved(variant index, int first, int last);
         signal actualRowsInserted(variant index, int first, int last);
     }
+    property ListModel pinListModel: ListModel {
+        signal actualRowsAboutToBeRemoved(variant index, int first, int last);
+        signal actualRowsInserted(variant index, int first, int last);
+    }
 
     property Item _compositor;
 
@@ -48,6 +52,8 @@ Item {
                 windowModelSingleton.appendValue(bannerAlertListModel, {"window": window});
             else if( window.windowType === 5 )
                 windowModelSingleton.appendValue(overlayListModel, {"window": window});
+            else if( window.windowType === 6 )
+                windowModelSingleton.appendValue(pinListModel, {"window": window});
         }
         onWindowRemovedFromListModel: {
             if( window.windowType === 0 )
@@ -62,6 +68,8 @@ Item {
                 windowModelSingleton.removeValue(bannerAlertListModel,window);
             else if( window.windowType === 5 )
                 windowModelSingleton.removeValue(overlayListModel,window);
+            else if( window.windowType === 6 )
+                windowModelSingleton.removeValue(pinListModel,window);
         }
     }
 
