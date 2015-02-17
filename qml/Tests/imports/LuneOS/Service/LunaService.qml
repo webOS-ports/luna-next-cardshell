@@ -34,17 +34,27 @@ QtObject {
     property int retriesLeft: 3
     property string configuredPasscode: "4242"
 
-    signal response
     signal initialized
-    signal error
+    property var onResponse
+    property var onError
 
     Component.onCompleted: {
         initialized();
     }
 
     function call(serviceURI, jsonArgs, returnFct, handleError) {
+        if( arguments.length === 1 ) {
+            // handle the short form of call
+            return call(service+"/"+method, arguments[0], onResponse, onError);
+        }
+        else if(arguments.length === 3 ) {
+            // handle the intermediate form of call
+            return call(service+"/"+method, arguments[0], arguments[1], arguments[2]);
+        }
+
         console.log("LunaService::call called with serviceURI=" + serviceURI + ", args=" + jsonArgs);
-        var args = JSON.parse(jsonArgs);
+
+        var args =  JSON.parse(jsonArgs) ;
         if( serviceURI === "luna://com.palm.applicationManager/listLaunchPoints" ) {
             listLaunchPoints_call(args, returnFct, handleError);
         }
@@ -154,7 +164,10 @@ QtObject {
              { "title": "Oh My", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "Test1", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "Test2", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
-             { "title": "Test3", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
+             { "title": "DummyWindow", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
+             { "title": "DummyWindow2", "id": "org.webosports.tests.dummyWindow2", "icon": "../images/default-app-icon.png" },
+             { "title": "DashboardWindow", "id": "org.webosports.tests.fakeDashboardWindow", "icon": "../images/default-app-icon.png" },
+             { "title": "SIMPinWindow", "id": "org.webosports.tests.fakeSimPinWindow", "icon": "../images/default-app-icon.png" },
              { "title": "Test5", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "Test5bis", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
              { "title": "Test6", "id": "org.webosports.tests.dummyWindow", "icon": "../images/default-app-icon.png" },
@@ -184,9 +197,14 @@ QtObject {
             compositor.createFakeWindow("FakeDashboardWindow", jsonArgs);
         }
         else if( jsonArgs.id === "org.webosports.tests.fakePopupAlertWindow" ) {
-            // start a FakeDashboardWindow
+            // start a FakePopupAlertWindow
             // Simulate the attachement of a new window to the stub Wayland compositor
             compositor.createFakeWindow("FakePopupAlertWindow", jsonArgs);
+        }
+        else if( jsonArgs.id === "org.webosports.tests.fakeSimPinWindow" ) {
+            // start a FakeSIMPinWindow
+            // Simulate the attachement of a new window to the stub Wayland compositor
+            compositor.createFakeWindow("FakeSIMPinWindow", jsonArgs);
         }
         else {
             handleError("Error: parameter 'id' not specified");

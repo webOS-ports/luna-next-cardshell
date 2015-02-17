@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2015 Christophe Chapuis <chris.chapuis@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-.pragma library
+import QtQuick 2.0
 
-var Card = 0;
-var Launcher = 1;
-var Dashboard = 2;
-var PopupAlert = 3;
-var BannerAlert = 4;
-var Overlay = 5;
-var Pin = 6;
+QtObject {
+    signal volumeUp
+    signal volumeDown
+}

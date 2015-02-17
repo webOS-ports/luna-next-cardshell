@@ -20,7 +20,7 @@ import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 import LunaNext.Shell.Notifications 0.1
 
-import "Utils"
+import "../Utils"
 
 // The notification area can take three states:
 //  - hidden: nothing is shown
