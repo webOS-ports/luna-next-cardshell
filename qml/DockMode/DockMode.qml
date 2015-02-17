@@ -31,11 +31,19 @@ Item {
         console.log("DockMode changed to " + dockModeActive);
         if (dockModeActive) {
             clocksLoader.sourceComponent = clocksComponent;
-            windowManagerInstance.addTapAction("deactivateDockMode", function() { dockMode.dockModeActive = false; }, null)
+            windowManagerInstance.addTapAction("deactivateDockMode", function() { setDisplayState.call(JSON.stringify({"state":"undock"})); }, null)
         }
         else {
             clocksLoader.sourceComponent = null;
         }
+    }
+
+    LunaService {
+        id: setDisplayState
+        name: "org.webosports.luna"
+        usePrivateBus: true
+        service: "luna://com.palm.display"
+        method: "control/setState"
     }
 
     LunaService {
