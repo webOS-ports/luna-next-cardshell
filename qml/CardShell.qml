@@ -47,18 +47,6 @@ Rectangle {
         z: 1000
     }
 
-    PowerMenu {
-        id: powerMenuAlert
-        z: 800
-
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.topMargin: Units.gu(5);
-        anchors.rightMargin: Units.gu(1);
-
-        width: parent.width * 0.6
-    }
-
     VolumeControlAlert {
         id: volumeControlAlert
         z: 900
