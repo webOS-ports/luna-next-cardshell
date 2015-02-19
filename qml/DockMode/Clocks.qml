@@ -6,7 +6,7 @@ Rectangle {
     id: clock
 
     property bool mainTimerRunning: false
-    property int isLandscape: (Settings.displayWidth > Settings.displayHeigth)? 1 : 0 //(runtime.orientation+1)%2
+    property bool isLandscape: (Settings.displayWidth > Settings.displayHeigth)? true : false //(runtime.orientation+1)%2
 
     Image {
         id: bg
@@ -34,12 +34,34 @@ Rectangle {
     }
 
     Row {
-         spacing: Units.gu(1)//10
-         anchors.centerIn: parent
-         anchors.verticalCenterOffset: Units.gu(-22)//340 : 400
-         Image { id: clockdot1; height: Units.gu(1.6); width: Units.gu(1.6); fillMode: Image.Stretch; source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==0 ? "on" : "off") + ".png" }
-         Image { id: clockdot2; height: Units.gu(1.6); width: Units.gu(1.6); fillMode: Image.Stretch; source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==1 ? "on" : "off") + ".png" }
-         Image { id: clockdot3; height: Units.gu(1.6); width: Units.gu(1.6); fillMode: Image.Stretch; source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==2 ? "on" : "off") + ".png" }
+        spacing: Units.gu(1)//10
+        anchors.centerIn: parent
+        anchors.verticalCenterOffset: isLandscape ? Units.gu(-22) : Units.gu(-30)//340 : 400
+		//visible: isLandscape
+        Image { 
+			id: clockdot1; 
+			height: Units.gu(1.6); 
+			width: Units.gu(1.6); 
+			fillMode: Image.Stretch; 
+			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==0 ? "on" : "off") + ".png" 
+			//visible: !isLandscape
+		}
+        Image { 
+			id: clockdot2; 
+			height: Units.gu(1.6); 
+			width: Units.gu(1.6); 
+			fillMode: Image.Stretch; 
+			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==1 ? "on" : "off") + ".png" 
+			//visible: !isLandscape
+			}
+        Image { 
+			id: clockdot3; 
+			height: Units.gu(1.6); 
+			width: Units.gu(1.6); 
+			fillMode: Image.Stretch; 
+			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==2 ? "on" : "off") + ".png" 
+			//visible: !isLandscape
+		}
     }
 }
 
