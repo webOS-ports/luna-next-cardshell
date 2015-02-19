@@ -51,6 +51,7 @@ Item {
             systemServicePrivate.registerMethod("/", "showPerformanceUI", handleShowPerformanceUI);
             systemServicePrivate.registerMethod("/", "showFps", handleShowFps)
             systemServicePrivate.registerMethod("/", "getStatus", handleGetStatus);
+            systemServicePrivate.registerMethod("/", "restart", handleRestart);
         }
     }
 
@@ -225,6 +226,26 @@ Item {
             "subscribed": subscribed,
             "returnValue": true
         };
+
+        return JSON.stringify(response);
+    }
+
+    Timer {
+        id: restartTimer
+
+        interval: 100
+        running: false
+        repeat: false
+
+        onTriggered: Qt.quit()
+    }
+
+    function handleRestart(message) {
+        var response = {
+            "returnValue": true
+        };
+
+        restartTimer.start();
 
         return JSON.stringify(response);
     }

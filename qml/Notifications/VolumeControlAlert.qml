@@ -28,6 +28,8 @@ Item {
     width: image.width + Units.gu(1)
     height: image.height
 
+    property bool _hadFirstAudioStatus: false
+
     LunaService {
         id: playFeedback
         name: "org.webosports.luna"
@@ -76,6 +78,11 @@ Item {
 
     function onAudioStatusChanged(message) {
 		var response = JSON.parse(message.payload);
+
+        if (!_hadFirstAudioStatus) {
+            _hadFirstAudioStatus = true;
+            return;
+        }
 
         playFeedback.call(JSON.stringify({"name":"AdjustVolume"}));
 
