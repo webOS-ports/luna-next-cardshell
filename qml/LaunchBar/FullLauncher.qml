@@ -110,11 +110,15 @@ Image {
             text: model.text
         }
         model: ListModel {
-            ListElement { text: "Apps"; color: "green" }
-            ListElement { text: "Downloads"; color: "red" }
-            ListElement { text: "Favorites"; color: "green" }
-            ListElement { text: "Settings"; color: "red" }
+            ListElement { text: "Apps" }
+            ListElement { text: "Downloads" }
+            ListElement { text: "Favorites" }
+            ListElement { text: "Prefs" }
         }
+    }
+
+    LunaSysAPI.ApplicationModel {
+        id: commonAppsModel
     }
 
     ListView {
@@ -153,9 +157,10 @@ Image {
 
                 model: DraggableAppIconDelegateModel {
                         // list of icons, filtered on that tab
-                        model: LunaSysAPI.ApplicationModel {
-                            filter: { "launcherTab": tabContentItem.tabId }
-                            includeAppsWithMissingProperty: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
+                        model: TabApplicationModel {
+                            appsModel: commonAppsModel // one app model for all tab models
+                            launcherTab: tabContentItem.tabId
+                            isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
                         }
 
                         dragParent: fullLauncher

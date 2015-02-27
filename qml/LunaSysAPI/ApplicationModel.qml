@@ -31,6 +31,9 @@ ListModel {
     // properties is not found on the launchPoint object, the result
     property bool includeAppsWithMissingProperty: false
 
+    // signal sent whenever the list of apps has been updated
+    signal appsModelRefreshed();
+
     property QtObject lunaNextLS2Service: LunaService {
         id: service
         name: "org.webosports.luna"
@@ -69,6 +72,8 @@ ListModel {
                     applicationModel.append(result.launchPoints[i]);
             }
         }
+
+        appsModelRefreshed();
     }
 
     function handleLaunchPointChanges(message) {
