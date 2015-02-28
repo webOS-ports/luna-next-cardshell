@@ -19,6 +19,7 @@ import QtQuick 2.0
 import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
 import LunaNext.Common 0.1
+import LuneOS.Service 1.0
 
 import "../LunaSysAPI" as LunaSysAPI
 
@@ -269,5 +270,20 @@ Image {
 
             signal tabChangedDuringDrag(Item draggedItem, bool isLeftBorder);
         }
+    }
+
+    // db8 management
+    property QtObject lunaNextLS2Service: LunaService {
+        id: lunaNextLS2Service
+        name: "org.webosports.luna"
+        usePrivateBus: true
+    }
+    function __handleDBError(message) {
+        console.log("Could not fulfill DB operation : " + message)
+    }
+
+    function __queryDB(action, params, handleResultFct) {
+        lunaNextLS2Service.call("luna://com.palm.db/" + action, JSON.stringify(params),
+                  handleResultFct, __handleDBError)
     }
 }

@@ -1,0 +1,8 @@
+{
+	"id":"org.webosports.lunalaunchertab:1",
+	"owner":"org.webosports.luna",
+	"indexes":[	{"name":"rev","props":[{"name":"_rev"}]},
+				{"name": "pos", "props": [{"name": "pos"}] },
+				{"name": "appId", "props": [{"name": "appId"}] }],
+	"sync": true
+}
