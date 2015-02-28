@@ -4,8 +4,6 @@ import LunaNext.Compositor 0.1
 
 Item {
     id: analogclock
-    width: Settings.displayWidth;
-    height: Settings.displayHeight
 
     property int glass: 1
     property variant type: ["matte","glass"]
@@ -65,8 +63,8 @@ Item {
          id: face
          source: "../images/dockmode/time/analog/"+type[glass]+"/base.png"
          anchors.centerIn: parent
-         width: (Settings.displayWidth > Settings.displayHeight) ? Settings.displayHeight * 0.75 : parent.width * 0.75
-         height: (Settings.displayHeight > Settings.displayWidth) ? parent.width * 0.75 : Settings.displayHeight * 0.75 //parent.width * 0.75
+         width: (analogclock.width > analogclock.height) ? analogclock.height * 0.75 : analogclock.width * 0.75
+         height: (analogclock.height > analogclock.width) ? analogclock.width * 0.75 : analogclock.height * 0.75 //parent.width * 0.75
      }
 
      Text {
@@ -74,10 +72,10 @@ Item {
          text: day
          parent: face
          anchors.centerIn: parent
-         anchors.horizontalCenterOffset: glass ? 0 : (Settings.displayHeight > Settings.displayWidth) ? Units.gu(7) : Units.gu(12.5) //108
-         anchors.verticalCenterOffset: glass ? (Settings.displayHeight > Settings.displayWidth) ? Units.gu(20) : Units.gu(30) : Units.gu(0) //300 : -2
+         anchors.horizontalCenterOffset: glass ? 0 : (analogclock.height > analogclock.width) ? Units.gu(7) : Units.gu(12.5) //108
+         anchors.verticalCenterOffset: glass ? (analogclock.height > analogclock.width) ? Units.gu(20) : Units.gu(30) : Units.gu(0) //300 : -2
          font.family: "prelude"
-         font.pixelSize: (Settings.displayHeight > Settings.displayWidth) ? Units.gu(3) : Units.gu(6) //FontUtils.sizeToPixels("x-large")
+         font.pixelSize: (analogclock.height > analogclock.width) ? Units.gu(3) : Units.gu(6) //FontUtils.sizeToPixels("x-large")
          //font.pointSize: glass ? 10 : 10//Units.gu(3.0) : Units.gu(3.0) //30 : 30
          color: "#e1e1e1"
      }
@@ -88,10 +86,10 @@ Item {
          visible: !glass
          parent: face
          anchors.centerIn: parent
-         anchors.horizontalCenterOffset: (Settings.displayHeight > Settings.displayWidth) ? Units.gu(-6.5) : Units.gu(-12) //-108
+         anchors.horizontalCenterOffset: (analogclock.height > analogclock.width) ? Units.gu(-6.5) : Units.gu(-12) //-108
          anchors.verticalCenterOffset: Units.gu(0) //260 : -2
          font.family: "prelude"
-         font.pixelSize: (Settings.displayHeight > Settings.displayWidth) ? Units.gu(3) : Units.gu(6) //FontUtils.sizeToPixels("x-large") : FontUtils.sizeToPixels("x-large")
+         font.pixelSize: (analogclock.height > analogclock.width) ? Units.gu(3) : Units.gu(6) //FontUtils.sizeToPixels("x-large") : FontUtils.sizeToPixels("x-large")
          //font.pointSize: glass ? 6 : 10 //Units.gu(1.6): Units.gu(3.0) //16 : 30
          color: "#e1e1e1"
      }

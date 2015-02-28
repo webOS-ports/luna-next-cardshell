@@ -4,16 +4,14 @@ import LunaNext.Compositor 0.1
 
 Item {
     id: digitalclock
-    width: Settings.displayWidth //1024
-    height: Settings.displayHeight //768
 
     //constants
     property int timeOffset: Units.gu(-0.4) //-4
     property int dateOffset: Units.gu(-0.4) //-4
-    property int timeLandSize: 66 //Units.gu(15.8)//158//205
-    property int timePortSize: 48 //Units.gu(13.2)//132//175
-    property int dateLandSize: 22 //Units.gu(5.2)//52//60
-    property int datePortSize: 16 //Units.gu(4.4)//44//55
+    property int timeLandSize: Units.gu(15.8) //158//205
+    property int timePortSize: Units.gu(13.2) //132//175
+    property int dateLandSize: Units.gu(5.2) //52//60
+    property int datePortSize: Units.gu(4.4) //44//55
     property bool timerRunning: false
 
     function setHours() {
@@ -55,8 +53,8 @@ Item {
     property int year: setYear()
     property string month: setMonth()
     property string ampm: setAMPM()
-    property int isLandscape: (Settings.displayWidth
-                               > Settings.displayHeight) ? 1 : 0 //(runtime.orientation+1)%2
+    property int isLandscape: (digitalclock.width
+                               > digitalclock.height) ? 1 : 0 //(runtime.orientation+1)%2
     property variant orientation: ["portrait", "landscape"]
 
     function timeChanged() {
@@ -195,7 +193,7 @@ Item {
                                                                 -3.8) //-42 : -38
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? 20 : 15 /*Units.gu(2.0) : Units.gu(1.5) 20 : 15*/
+        font.pixelSize: isLandscape === 1 ? Units.gu(2.0) : Units.gu(1.5)
         color: "#e1e1e1"
         smooth: true
         parent: bgHour1
@@ -207,7 +205,7 @@ Item {
         anchors.verticalCenterOffset: timeOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? timeLandSize : timePortSize
+        font.pixelSize: isLandscape === 1 ? timeLandSize : timePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgHour1
@@ -219,7 +217,7 @@ Item {
         anchors.verticalCenterOffset: timeOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? timeLandSize : timePortSize
+        font.pixelSize: isLandscape === 1 ? timeLandSize : timePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgHour2
@@ -231,7 +229,7 @@ Item {
         anchors.verticalCenterOffset: timeOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? timeLandSize : timePortSize
+        font.pixelSize: isLandscape === 1 ? timeLandSize : timePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgMin1
@@ -242,7 +240,7 @@ Item {
         anchors.verticalCenterOffset: timeOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? timeLandSize : timePortSize
+        font.pixelSize: isLandscape === 1 ? timeLandSize : timePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgMin2
@@ -254,7 +252,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgMonth1
@@ -265,7 +263,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgMonth2
@@ -277,7 +275,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgMonth3
@@ -289,7 +287,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgDay1
@@ -300,7 +298,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgDay2
@@ -312,7 +310,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgYear1
@@ -323,7 +321,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgYear2
@@ -335,7 +333,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgYear3
@@ -346,7 +344,7 @@ Item {
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
-        font.pointSize: isLandscape === 1 ? dateLandSize : datePortSize
+        font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
         smooth: true
         parent: bgYear4
