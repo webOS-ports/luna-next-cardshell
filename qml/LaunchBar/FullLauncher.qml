@@ -101,6 +101,7 @@ Image {
                     color: "white"
                     text: tabButtonStyle.control.text
                     font.family: Settings.fontStatusBar
+                    font.pixelSize: tabRowDelegate.height*0.6
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
@@ -169,9 +170,16 @@ Image {
                 Timer {
                     id: turnLeftTimer
                     interval: 500; running: false; repeat: false
-                    onTriggered: tabContentList.decrementCurrentIndex();
+                    property Item draggedItem;
+                    onTriggered: {
+                        tabContentList.decrementCurrentIndex();
+                        tabContentList.currentItem.tabChangedDuringDrag(draggedItem, true);
+                    }
                 }
-                onEntered: turnLeftTimer.start();
+                onEntered: {
+                    turnLeftTimer.draggedItem = drag.source;
+                    turnLeftTimer.start();
+                }
                 onExited: turnLeftTimer.stop();
             }
             DropArea {
@@ -184,9 +192,16 @@ Image {
                 Timer {
                     id: turnRightTimer
                     interval: 500; running: false; repeat: false
-                    onTriggered: tabContentList.incrementCurrentIndex();
+                    property Item draggedItem;
+                    onTriggered: {
+                        tabContentList.incrementCurrentIndex();
+                        tabContentList.currentItem.tabChangedDuringDrag(draggedItem, false);
+                    }
                 }
-                onEntered: turnRightTimer.start();
+                onEntered: {
+                    turnRightTimer.draggedItem = drag.source;
+                    turnRightTimer.start();
+                }
                 onExited: turnRightTimer.stop();
             }
             GridView {
@@ -197,6 +212,7 @@ Image {
                 height: parent.height
 
                 model: DraggableAppIconDelegateModel {
+                        id: draggableAppIconDelegateModel
                         // list of icons, filtered on that tab
                         model: TabApplicationModel {
                             appsModel: commonAppsModel // one app model for all tab models
@@ -210,6 +226,36 @@ Image {
                         iconSize: fullLauncher.iconSize
 
                         onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
+
+                        property Connections _tabChangedConnect: Connections {
+                            target: tabContentItem
+                            onTabChangedDuringDrag: {
+                                draggedItem.createPlaceHolderAt(draggableAppIconDelegateModel, isLeftBorder ? 0 : draggableAppIconDelegateModel.count);
+                            }
+                        }
+
+                        onSaveCurrentLayout: {
+                                if( Settings.isTestEnvironment ) return;
+
+                                // first, clean up the DB
+                                __queryDB("del",
+                                          {query:{from:"org.webosports.lunalaunchertab:1"},
+                                            where: [ {prop:"tab",op:"=",val:tabContentItem.tabId} ]},
+                                          function (message) {});
+
+                                // then build up the object to save
+                                var data = [];
+                                for( var i=0; i<draggableAppIconDelegateModel.items.count; ++i ) {
+                                    var obj = draggableAppIconDelegateModel.items.get(i);
+                                    data.push({_kind: "org.webosports.lunalaunchertab:1",
+                                                  pos: obj.itemsIndex,
+                                                  tab:tabContentItem.tabId,
+                                                  appId: obj.model.appId});
+                                }
+
+                                // and put it in the DB
+                                __queryDB("put", {objects: data}, function (message) {});
+                        }
                 }
 
 
@@ -220,6 +266,8 @@ Image {
                     NumberAnimation { properties: "x, y"; duration: 200 }
                 }
             }
+
+            signal tabChangedDuringDrag(Item draggedItem, bool isLeftBorder);
         }
     }
 }

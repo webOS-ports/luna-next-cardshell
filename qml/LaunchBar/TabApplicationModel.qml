@@ -1,20 +1,17 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LuneOS.Service 0.1
+import LuneOS.Service 1.0
 
 import "../LunaSysAPI" as LunaSysAPI
 
 ListModel {
     id: tabAppsModel
 
-    property ListModel appsModel: LunaSysAPI.ApplicationModel { }
+    property ListModel appsModel: LunaSysAPI.ApplicationModel {
+        Component.onCompleted: appsModel.appsModelRefreshed.connect(refreshConfig);
+    }
     property string launcherTab
     property bool isDefaultTab: false
-
-    property Connections _connects: Connections {
-        target: appsModel
-        onAppsModelRefreshed: refreshConfig();
-    }
 
     Component.onCompleted: {
         // Read the default tab configuation file
