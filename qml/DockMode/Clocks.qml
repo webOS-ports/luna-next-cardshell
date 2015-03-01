@@ -6,20 +6,30 @@ Rectangle {
     id: clock
 
     property bool mainTimerRunning: false
-    property bool isLandscape: (Settings.displayWidth > Settings.displayHeigth)? true : false //(runtime.orientation+1)%2
+    property bool isLandscape: width > height ? true : false //(runtime.orientation+1)%2
 
     Image {
         id: bg
         source: "../images/dockmode/time/clock_bg.png"
         height: parent.height
+        width: parent.width
         fillMode: Image.Stretch
     }
 
     VisualItemModel{
         id: clockList
-        AnalogClock{glass: 1; timerRunning: mainTimerRunning}
-        DigitalClock{timerRunning: mainTimerRunning}
-        AnalogClock{glass: 0; timerRunning: mainTimerRunning}
+        AnalogClock{
+            width: flickable.width; height: flickable.height
+            glass: 1; timerRunning: mainTimerRunning
+        }
+        DigitalClock{
+            width: flickable.width; height: flickable.height
+            timerRunning: mainTimerRunning
+        }
+        AnalogClock{
+            width: flickable.width; height: flickable.height
+            glass: 0; timerRunning: mainTimerRunning
+        }
     }
 
     ListView {
