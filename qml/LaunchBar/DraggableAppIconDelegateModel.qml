@@ -24,8 +24,10 @@ VisualDataModel {
     property real iconSize
     property int dragAxis
     property Item dragParent
+    property bool isEditionActive: false
 
     signal startLaunchApplication(string appId, string appParams)
+    signal startEdition()
     signal saveCurrentLayout()
 
     delegate:
@@ -40,17 +42,15 @@ VisualDataModel {
             property string modelId: model.id
             property string modelParams:  model.params === undefined ? "{}" : model.params
 
+            Image {
+                source: Qt.resolvedUrl("../images/launcher/edit-icon-bg.png");
+                x: -3; y: -3; width: parent.width + 6; height: dragParent.cellHeight-4
+                fillMode: Image.Stretch
+                visible: appsVisualDataModel.isEditionActive
+            }
+
             LaunchableAppIcon {
                 id: launcherIcon
-
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                    radius: 5
-                    border.color: "lightblue"
-                    border.width: 2
-                    visible: !model.title || model.title === ""
-                }
 
                 anchors {
                     horizontalCenter: parent.horizontalCenter
@@ -66,7 +66,7 @@ VisualDataModel {
                 appParams: launcherIconDelegate.modelParams === undefined ? "{}" : modelParams
                 showTitle: true
 
-                Drag.active: dragArea.held
+                Drag.active: appsVisualDataModel.isEditionActive && dragArea.held
                 Drag.source: launcherIconDelegate
                 Drag.hotSpot.x: width / 2
                 Drag.hotSpot.y: height / 2
@@ -95,12 +95,21 @@ VisualDataModel {
                 property bool held: false
 
                 propagateComposedEvents: true
+                onPressed:  {
+                    if( appsVisualDataModel.isEditionActive ) {
+                        console.log("=== drag ===");
+                        launcherIconDelegate.VisualDataModel.groups = [ "persistedItems" ];
+                        held = true;
+                    }
+                }
                 onPressAndHold: {
-                    console.log("=== drag ===");
-                    // move our delegate to the persisted items group
-                    launcherIconDelegate.VisualDataModel.groups = [ "persistedItems" ];
-
-                    held = true;
+                    if( !held ) {
+                        console.log("=== drag ===");
+                        // move our delegate to the persisted items group
+                        launcherIconDelegate.VisualDataModel.groups = [ "persistedItems" ];
+                        appsVisualDataModel.startEdition();
+                        held = true;
+                    }
                 }
                 onReleased: {
                     if( held ) {

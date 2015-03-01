@@ -27,8 +27,8 @@ import "../LunaSysAPI" as LunaSysAPI
 Image {
     id: fullLauncher
 
-    property real iconSize: 64
-    property real bottomMargin: 80
+    property real iconSize: Units.gu(12)
+    property real bottomMargin: Units.gu(8)
 
     function calculateAppIconHMargin(_parent, appIconWidth) {
         var nbCellsPerLine = Math.floor(_parent.width / (appIconWidth + 10));
@@ -41,6 +41,8 @@ Image {
 
     property real cellWidth: appIconWidth + appIconHMargin
     property real cellHeight: iconSize + iconSize*0.4*2 // we give margin for two lines of text
+
+    property bool isEditionActive: false
 
     signal startLaunchApplication(string appId, string appParams)
 
@@ -75,6 +77,20 @@ Image {
             }
         }
     ]
+
+    // background of the tabs row list
+    BorderImage {
+        border { top: 20; bottom: 20; left: 4; right: 4 }
+        source: Qt.resolvedUrl("../images/launcher/tab-bg.png");
+        anchors.fill: tabRowList
+    }
+    Image {
+        anchors.top: tabRowList.bottom
+        width: tabRowList.width
+        height: 8
+        source: Qt.resolvedUrl("../images/launcher/tab-shadow.png");
+        fillMode: Image.Tile
+    }
 
     ListView {
         id: tabRowList
@@ -114,19 +130,49 @@ Image {
 
             // the separator on the left should only be visible if is not adjacent to a selected tab
             Image {
-                anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+                anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
                 source: Qt.resolvedUrl("../images/launcher/tab-divider.png");
                 visible: !tabRowDelegate.ListView.isCurrentItem &&
-                         tabRowDelegate.ListView.view.currentIndex !== index - 1 &&
-                         index !== 0
+                         tabRowDelegate.ListView.view.currentIndex !== index + 1
             }
         }
+
         model: ListModel {
             ListElement { text: "Apps" }
             ListElement { text: "Downloads" }
             ListElement { text: "Favorites" }
             ListElement { text: "Prefs" }
         }
+    }
+    Button {
+        id: tabRowFooter
+        width: Units.gu(10)
+        height: tabRowList.height * 0.85
+        anchors.right: tabRowList.right; anchors.rightMargin: 8
+        anchors.verticalCenter: tabRowList.verticalCenter
+        visible: fullLauncher.isEditionActive
+        style: ButtonStyle {
+            id: tabFooterButtonStyle
+            property string doneButtonImage: Qt.resolvedUrl("../images/launcher/edit-button-done.png");
+            property string doneButtonImagePressed: Qt.resolvedUrl("../images/launcher/edit-button-done-pressed.png");
+
+            background: BorderImage {
+                border { top: 10; bottom: 10; left: 10; right: 10 }
+                source: tabFooterButtonStyle.control.pressed ? doneButtonImagePressed: doneButtonImage;
+            }
+            label: Text {
+                color: "white"
+                text: tabFooterButtonStyle.control.text
+                font.family: Settings.fontStatusBar
+                font.pixelSize: tabRowFooter.height*0.6
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+        onClicked: {
+            fullLauncher.isEditionActive = false;
+        }
+        text: "DONE"
     }
 
     LunaSysAPI.ApplicationModel {
@@ -178,12 +224,16 @@ Image {
                             isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
                         }
 
+                        isEditionActive: fullLauncher.isEditionActive
+
                         dragParent: fullLauncher
                         dragAxis: Drag.XAndYAxis
                         iconWidth: fullLauncher.appIconWidth
                         iconSize: fullLauncher.iconSize
 
                         onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
+
+                        onStartEdition: fullLauncher.isEditionActive = true;
 
                         onSaveCurrentLayout: {
                                 if( Settings.isTestEnvironment ) return;

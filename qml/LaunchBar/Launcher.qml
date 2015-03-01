@@ -62,7 +62,7 @@ Item {
     FullLauncher {
         id: fullLauncherInstance
 
-        iconSize: Units.gu(4);
+        iconSize: Units.gu(6);
         bottomMargin: launchBarInstance.height;
 
         anchors.left: parent.left
