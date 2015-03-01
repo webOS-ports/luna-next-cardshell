@@ -161,51 +161,8 @@ Image {
 
             property string tabId: model.text
 
-            DropArea {
-                // drop area on the left side of the grid
-                anchors {
-                    top: parent.top; bottom: parent.bottom
-                    left: parent.left
-                }
-                width: 0.1 * parent.width
-                Timer {
-                    id: turnLeftTimer
-                    interval: 500; running: false; repeat: false
-                    property Item draggedItem;
-                    onTriggered: {
-                        tabContentList.decrementCurrentIndex();
-                        tabContentList.currentItem.tabChangedDuringDrag(draggedItem, true);
-                    }
-                }
-                onEntered: {
-                    turnLeftTimer.draggedItem = drag.source;
-                    turnLeftTimer.start();
-                }
-                onExited: turnLeftTimer.stop();
-            }
-            DropArea {
-                // drop area on the right side of the grid
-                anchors {
-                    top: parent.top; bottom: parent.bottom
-                    right: parent.right
-                }
-                width: 0.1 * parent.width
-                Timer {
-                    id: turnRightTimer
-                    interval: 500; running: false; repeat: false
-                    property Item draggedItem;
-                    onTriggered: {
-                        tabContentList.incrementCurrentIndex();
-                        tabContentList.currentItem.tabChangedDuringDrag(draggedItem, false);
-                    }
-                }
-                onEntered: {
-                    turnRightTimer.draggedItem = drag.source;
-                    turnRightTimer.start();
-                }
-                onExited: turnRightTimer.stop();
-            }
             GridView {
+                id: fullLauncherGridView
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: Units.gu(1)
@@ -227,13 +184,6 @@ Image {
                         iconSize: fullLauncher.iconSize
 
                         onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
-
-                        property Connections _tabChangedConnect: Connections {
-                            target: tabContentItem
-                            onTabChangedDuringDrag: {
-                                draggedItem.createPlaceHolderAt(draggableAppIconDelegateModel, isLeftBorder ? 0 : draggableAppIconDelegateModel.count);
-                            }
-                        }
 
                         onSaveCurrentLayout: {
                                 if( Settings.isTestEnvironment ) return;
@@ -266,9 +216,117 @@ Image {
                 moveDisplaced: Transition {
                     NumberAnimation { properties: "x, y"; duration: 200 }
                 }
-            }
 
-            signal tabChangedDuringDrag(Item draggedItem, bool isLeftBorder);
+                /* Drop areas of the grid */
+                DropArea {
+                    // drop area on the left side of the grid
+                    anchors {
+                        top: parent.top; bottom: parent.bottom; left: parent.left
+                    }
+                    width: Units.gu(1)
+                    Timer {
+                        id: turnLeftTimer
+                        interval: 500; running: false; repeat: false
+                        onTriggered: tabContentList.decrementCurrentIndex();
+                    }
+                    onEntered: {
+                        if( tabContentList.currentIndex > 0 )
+                            turnLeftTimer.start();
+                    }
+                    onDropped: {
+                    }
+                    onExited: turnLeftTimer.stop();
+                }
+                DropArea {
+                    // drop area on the right side of the grid
+                    anchors {
+                        top: parent.top; bottom: parent.bottom; right: parent.right
+                    }
+                    width: Units.gu(1)
+                    Timer {
+                        id: turnRightTimer
+                        interval: 500; running: false; repeat: false
+                        onTriggered: tabContentList.incrementCurrentIndex();
+                    }
+                    onEntered: {
+                        if( tabContentList.currentIndex < tabContentList.count-1 )
+                            turnRightTimer.start();
+                    }
+                    onExited: turnRightTimer.stop();
+                }
+                DropArea {
+                    // main drop area covering the grid
+                    property variant placeHolderItem;
+                    anchors {
+                        fill: parent
+                        margins: Units.gu(1)
+                    }
+                    onEntered: {
+                        // Find what index the drag is covering
+                        var coordsDragInGridView = mapToItem(fullLauncherGridView, drag.x, drag.y);
+                        var placeHolderPosition = fullLauncherGridView.indexAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
+                        if( placeHolderPosition < 0 )
+                        {
+                            // if the drag is not yet over an item, put the placeholder at the end
+                            placeHolderPosition = draggableAppIconDelegateModel.items.count;
+                        }
+                        if( draggableAppIconDelegateModel.model.count === 0 ) {
+                            // if there is no item in the persistent model, there is no properties either.
+                            // This prevents us from inserting a light dynamic placeholder.
+                            // So create an item in the model with the same properties.
+                            draggableAppIconDelegateModel.model.insert(placeHolderPosition, {title: "", icon: "", id: "", params: ""});
+                        }
+                        else {
+                            // Insert a new placeholder at that position
+                            draggableAppIconDelegateModel.items.insert(placeHolderPosition, {title: "", icon: "", id: "", params: ""});
+                        }
+                        placeHolderItem = draggableAppIconDelegateModel.items.get(placeHolderPosition);
+                    }
+                    onPositionChanged: {
+                        // Move the placeholder where the drag is
+                        var coordsDragInGridView = mapToItem(fullLauncherGridView, drag.x, drag.y);
+                        var placeHolderPosition = fullLauncherGridView.indexAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
+                        if( placeHolderPosition >= 0 && placeHolderPosition < draggableAppIconDelegateModel.items.count &&
+                            placeHolderItem &&
+                            placeHolderItem.itemsIndex !== placeHolderPosition ) {
+                            draggableAppIconDelegateModel.items.move( placeHolderItem.itemsIndex, placeHolderPosition );
+                        }
+                    }
+                    onExited: {
+                        if( placeHolderItem.isUnresolved ) {
+                            // Remove the placeholder
+                            placeHolderItem.inItems = false;
+                        }
+                        else {
+                            // The placeholder represents a real data: remove it
+                            draggableAppIconDelegateModel.model.remove(placeHolderItem.itemsIndex);
+                        }
+                        placeHolderItem = undefined;
+                    }
+                    onDropped: {
+                        if( placeHolderItem.isUnresolved ) {
+                            // Commit the placeholder with the drag source data
+                            placeHolderItem.model.title = drag.source.modelTitle;
+                            placeHolderItem.model.icon = drag.source.modelIcon;
+                            placeHolderItem.model.id = drag.source.modelId;
+                            placeHolderItem.model.params = drag.source.modelParams;
+                        }
+                        else {
+                            // The placeholder represents a real data: remove it
+                            draggableAppIconDelegateModel.model.set(placeHolderItem.itemsIndex,
+                                     {title : drag.source.modelTitle,
+                                       icon: drag.source.modelIcon,
+                                       id: drag.source.modelId,
+                                       params: drag.source.modelParams});
+                        }
+                        // ... And just forget about it.
+                        placeHolderItem = undefined;
+
+                        // save that layout in DB
+                        draggableAppIconDelegateModel.saveCurrentLayout();
+                    }
+                }
+            }
         }
     }
 
