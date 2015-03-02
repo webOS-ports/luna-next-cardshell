@@ -104,15 +104,19 @@ Image {
             width: Units.gu(20)
             height: tabRowList.height
             checked: tabRowDelegate.ListView.isCurrentItem
+
+            property bool highlight: false
+
             style: ButtonStyle {
                 id: tabButtonStyle
                 property string neutralButtonImage: Qt.resolvedUrl("../images/launcher/tab-bg.png");
                 property string neutralButtonImagePressed: Qt.resolvedUrl("../images/launcher/tab-selected-bg.png");
+                property string neutralButtonImageHighlight: Qt.resolvedUrl("../images/launcher/tab-highlight.png");
 
                 background: BorderImage {
                     property int borderSize: tabButtonStyle.control.checked ? 20 : 4
                     border { top: 20; bottom: 20; left: borderSize; right: borderSize }
-                    source: tabButtonStyle.control.checked ? neutralButtonImagePressed: neutralButtonImage;
+                    source: tabButtonStyle.control.highlight ? neutralButtonImageHighlight : tabButtonStyle.control.checked ? neutralButtonImagePressed: neutralButtonImage;
                 }
                 label: Text {
                     color: "white"
@@ -123,6 +127,7 @@ Image {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
+
             onClicked: {
                 tabRowDelegate.ListView.view.currentIndex = index;
             }
@@ -174,6 +179,54 @@ Image {
         }
         text: "DONE"
     }
+    /* Drop areas of the row buttons */
+    DropArea {
+        // drop area on the left side of the grid
+        anchors.fill: tabRowList
+        property Item _currentHighlightedButton;
+        onEntered: {
+            // Find what index the drag is covering
+            var coordsDragInTabRowList = mapToItem(tabRowList, drag.x, drag.y);
+            var dragPosition = tabRowList.indexAt(coordsDragInTabRowList.x+tabRowList.contentX, 0);
+            if( dragPosition >= 0 ) {
+                tabRowList.currentItem.highlight = false;
+                tabRowList.currentIndex = dragPosition;
+                tabRowList.currentItem.highlight = true;
+            }
+        }
+        onExited: {
+            tabRowList.currentItem.highlight = false;
+        }
+        onPositionChanged: {
+            // Find what index the drag is covering
+            var coordsDragInTabRowList = mapToItem(tabRowList, drag.x, drag.y);
+            var dragPosition = tabRowList.indexAt(coordsDragInTabRowList.x+tabRowList.contentX, 0);
+            if( dragPosition >= 0 ) {
+                tabRowList.currentItem.highlight = false;
+                tabRowList.currentIndex = dragPosition;
+                tabRowList.currentItem.highlight = true;
+            }
+        }
+        // slide to left
+        DropArea {
+            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
+            width: Units.gu(5)
+            onEntered: {
+                if( tabRowList.contentWidth>tabRowList.width )
+                    tabRowList.decrementCurrentIndex();
+            }
+        }
+        // slide to right
+        DropArea {
+            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
+            width: Units.gu(5)
+            onEntered: {
+                if( tabRowList.contentWidth>tabRowList.width )
+                    tabRowList.incrementCurrentIndex();
+            }
+        }
+    }
+
 
     LunaSysAPI.ApplicationModel {
         id: commonAppsModel
