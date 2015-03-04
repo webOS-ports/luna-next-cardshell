@@ -44,33 +44,29 @@ Rectangle {
     }
 
     Row {
-        spacing: Units.gu(1)//10
+        spacing: Units.gu(1)
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: isLandscape ? Units.gu(-22) : Units.gu(-30)//340 : 400
-		//visible: isLandscape
+        anchors.verticalCenterOffset: isLandscape ? Units.gu(-40) : Units.gu(-30)
         Image { 
 			id: clockdot1; 
-			height: Units.gu(1.6); 
-			width: Units.gu(1.6); 
+			height: Units.gu(1.0); 
+			width: Units.gu(1.0); 
 			fillMode: Image.Stretch; 
 			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==0 ? "on" : "off") + ".png" 
-			//visible: !isLandscape
 		}
         Image { 
 			id: clockdot2; 
-			height: Units.gu(1.6); 
-			width: Units.gu(1.6); 
+			height: Units.gu(1.0); 
+			width: Units.gu(1.0); 
 			fillMode: Image.Stretch; 
 			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==1 ? "on" : "off") + ".png" 
-			//visible: !isLandscape
-			}
+		}
         Image { 
 			id: clockdot3; 
-			height: Units.gu(1.6); 
-			width: Units.gu(1.6); 
+			height: Units.gu(1.0); 
+			width: Units.gu(1.0); 
 			fillMode: Image.Stretch; 
 			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==2 ? "on" : "off") + ".png" 
-			//visible: !isLandscape
 		}
     }
 }

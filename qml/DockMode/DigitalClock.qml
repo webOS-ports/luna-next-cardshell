@@ -6,12 +6,12 @@ Item {
     id: digitalclock
 
     //constants
-    property int timeOffset: Units.gu(-0.4) //-4
-    property int dateOffset: Units.gu(-0.4) //-4
-    property int timeLandSize: Units.gu(15.8) //158//205
-    property int timePortSize: Units.gu(13.2) //132//175
-    property int dateLandSize: Units.gu(5.2) //52//60
-    property int datePortSize: Units.gu(4.4) //44//55
+    property int timeOffset: Units.gu(-0.4) 
+    property int dateOffset: Units.gu(-0.4) 
+    property int timeLandSize: Units.gu(15.8)
+    property int timePortSize: Units.gu(12) 
+    property int dateLandSize: Units.gu(5.2)
+    property int datePortSize: Units.gu(3) 
     property bool timerRunning: false
 
     function setHours() {
@@ -78,15 +78,15 @@ Item {
     Row {
         spacing: 0
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: Units.gu(-4.8) //-48
+        anchors.verticalCenterOffset: Units.gu(-4.8)
         Image {
             id: bgHour1
             source: "../images/dockmode/time/digital/"
                     + orientation[isLandscape] + "/flippers-time.png"
         }
         Item {
-            width: Units.gu(0.4) //4
-            height: Units.gu(5.0) //50
+            width: Units.gu(0.4)
+            height: Units.gu(5.0)
         }
         Image {
             id: bgHour2
@@ -94,16 +94,16 @@ Item {
                     + orientation[isLandscape] + "/flippers-time.png"
         }
         Item {
-            width: Units.gu(2.2) //22
-            height: Units.gu(5.0) //50
+            width: Units.gu(2.2)
+            height: Units.gu(5.0)
         }
         Image {
             id: dots
             source: "../images/dockmode/time/digital/" + orientation[isLandscape] + "/dots.png"
         }
         Item {
-            width: Units.gu(2.2) //22
-            height: Units.gu(5.0) //50
+            width: Units.gu(2.2)
+            height: Units.gu(5.0)
         }
         Image {
             id: bgMin1
@@ -111,8 +111,8 @@ Item {
                     + orientation[isLandscape] + "/flippers-time.png"
         }
         Item {
-            width: Units.gu(0.4) //4
-            height: Units.gu(5.0) //50
+            width: Units.gu(0.4)
+            height: Units.gu(5.0)
         }
         Image {
             id: bgMin2
@@ -124,7 +124,7 @@ Item {
     Row {
         spacing: 2
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: Units.gu(13.6) //136
+        anchors.verticalCenterOffset: Units.gu(13.6)
         Image {
             id: bgMonth1
             source: "../images/dockmode/time/digital/"
@@ -187,10 +187,10 @@ Item {
         text: "" //runtime.twelveHourClock ? ampm : ""
         anchors.verticalCenterOffset: isLandscape === 1 ? Units.gu(
                                                               -9.5) : Units.gu(
-                                                              -8.0) //-95 : -80
+                                                              -8.0)
         anchors.horizontalCenterOffset: isLandscape === 1 ? Units.gu(
                                                                 -4.2) : Units.gu(
-                                                                -3.8) //-42 : -38
+                                                                -3.8)
         anchors.centerIn: parent
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? Units.gu(2.0) : Units.gu(1.5)
@@ -248,7 +248,7 @@ Item {
 
     Text {
         id: monthFirst
-        text: month.substring(0, 1)
+        text: month.substring(0, 1).toUpperCase()
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
@@ -259,7 +259,7 @@ Item {
     }
     Text {
         id: monthSecond
-        text: month.substring(1, 2)
+        text: month.substring(1, 2).toUpperCase()
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
@@ -271,7 +271,7 @@ Item {
 
     Text {
         id: monthThird
-        text: month.substring(2, 3)
+        text: month.substring(2, 3).toUpperCase()
         anchors.verticalCenterOffset: dateOffset
         anchors.centerIn: parent
         font.family: "prelude"
@@ -353,7 +353,7 @@ Item {
     Row {
         spacing: 0
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: Units.gu(-4.8) //-48
+        anchors.verticalCenterOffset: Units.gu(-4.8)
         Image {
             id: bgHour1Mask
             source: "../images/dockmode/time/digital/"
@@ -389,9 +389,9 @@ Item {
     }
 
     Row {
-        spacing: Units.gu(0.2) //2
+        spacing: Units.gu(0.2)
         anchors.centerIn: parent
-        anchors.verticalCenterOffset: Units.gu(13.6) //136
+        anchors.verticalCenterOffset: Units.gu(13.6) 
         Image {
             id: bgMonth1Mask
             source: "../images/dockmode/time/digital/"
