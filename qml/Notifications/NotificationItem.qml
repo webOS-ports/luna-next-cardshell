@@ -6,7 +6,7 @@ Item {
 
     property string title: "(no title)"
     property string body: "(no summary)"
-    property url iconUrl: Qt.resolvedUrl("images/default-app-icon.png");
+    property url iconUrl: Qt.resolvedUrl("../images/default-app-icon.png");
 
     Rectangle {
         id: iconBox
@@ -20,7 +20,7 @@ Item {
         Image {
             width: parent.width / 2
             anchors.centerIn: parent
-            source: "images/default-app-icon.png"
+            source: "../images/default-app-icon.png"
             fillMode: Image.PreserveAspectFit
             smooth: true
         }
