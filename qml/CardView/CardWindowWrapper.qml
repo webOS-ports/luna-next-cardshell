@@ -175,6 +175,13 @@ FocusScope {
     function setAsCurrentWindow() {
         cardView.setCurrentCard(wrappedWindow);
     }
+    
+    function syncClientWindowSize() {
+        if( cardWrapperItem.windowState !== WindowState.Carded && wrappedWindow ) {
+            /* Resize the real client window to have the right size */
+            wrappedWindow.changeSize(Qt.size(cardView.defaultWindowWidth, cardWrapperItem.height));
+        }
+    }    
 
     function loseFocus() {
         cardWrapperItem.focus = false;

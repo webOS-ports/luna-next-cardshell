@@ -115,6 +115,7 @@ Item {
             y = Qt.binding( function() { return maximizedY; } );
             height = Qt.binding( function() { return maximizedHeight; } );
             width = Qt.binding( function() { return fullWidth; } );
+            windowUserData.syncClientWindowSize();
         }
     }
     SequentialAnimation {
@@ -132,6 +133,7 @@ Item {
             y = Qt.binding( function() { return fullscreenY; } );
             height = Qt.binding( function() { return fullscreenHeight; } );
             width = Qt.binding( function() { return fullWidth; } );
+            windowUserData.syncClientWindowSize();
         }
     }
 
