@@ -72,7 +72,7 @@ Rectangle {
             model: notificationModel
             delegate: Image {
                     id: notifIconImage
-                    source: Qt.resolvedUrl("images/default-app-icon.png")
+                    source: Qt.resolvedUrl("../images/default-app-icon.png")
                     height:  Units.gu(3)
                     fillMode: Image.PreserveAspectFit
                 }
