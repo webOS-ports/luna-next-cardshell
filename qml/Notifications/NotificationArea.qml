@@ -19,6 +19,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 import LunaNext.Shell.Notifications 0.1
+import LuneOS.Service 1.0
 
 import "../Utils"
 
@@ -47,10 +48,19 @@ Rectangle {
             if (itemCount === 0) {
                 windowManagerInstance.removeTapAction("minimizeNotificationArea"); // just in case it was open
                 notificationArea.state = "hidden";
+                // notify the display
+                displayService.call("luna://com.palm.display/control/alert",
+                                    JSON.stringify({"status": "banner-deactivated"}), undefined, onDisplayControlError)
             }
             else if (notificationArea.state === "hidden"){
                 notificationArea.state = "minimized";
+                // notify the display
+                displayService.call("luna://com.palm.display/control/alert",
+                                    JSON.stringify({"status": "banner-activated"}), undefined, onDisplayControlError)
             }
+        }
+        function onDisplayControlError(message) {
+            console.log("Failed to call display service: " + message);
         }
     }
 
@@ -158,4 +168,12 @@ Rectangle {
             PropertyChanges { target: notificationArea; height: openListView.height+Units.gu(1) }
         }
     ]
+
+
+    LunaService {
+        id: displayService
+
+        name: "org.webosports.luna"
+        usePrivateBus: true
+    }
 }
