@@ -19,6 +19,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 import LunaNext.Shell.Notifications 0.1
+import LuneOS.Service 1.0
 
 import "../Utils"
 
@@ -116,5 +117,34 @@ Rectangle {
         onItemRemoved: {
             computeNewRootHeight();
         }
+    }
+
+    // have an object that surveys the count of alerts and notify the display if something interesting happens
+    QtObject {
+        property int count: listPopupAlertsModel.count + listBannerAlertsModel.count
+        onCountChanged: {
+            if (count === 0 && __previousCount !== 0) {
+                // notify the display
+                displayService.call("luna://com.palm.display/control/alert",
+                                    JSON.stringify({"status": "generic-deactivated"}), undefined, onDisplayControlError)
+            }
+            else if (count !== 0 && __previousCount === 0){
+                // notify the display
+                displayService.call("luna://com.palm.display/control/alert",
+                                    JSON.stringify({"status": "generic-activated"}), undefined, onDisplayControlError)
+            }
+
+            __previousCount = count;
+        }
+        function onDisplayControlError(message) {
+            console.log("Failed to call display service: " + message);
+        }
+        property int __previousCount: 0
+    }
+    LunaService {
+        id: displayService
+
+        name: "org.webosports.luna"
+        usePrivateBus: true
     }
 }

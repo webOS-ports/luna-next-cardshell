@@ -19,6 +19,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 import LunaNext.Shell.Notifications 0.1
+import LuneOS.Service 1.0
 
 import "../Utils"
 
@@ -33,6 +34,24 @@ Rectangle {
     WindowModel {
         id: listDashboardsModel
         windowTypeFilter: WindowType.Dashboard
+        onCountChanged: {
+            if (count === 0 && __previousCount !== 0) {
+                // notify the display
+                displayService.call("luna://com.palm.display/control/alert",
+                                    JSON.stringify({"status": "banner-deactivated"}), undefined, onDisplayControlError)
+            }
+            else if (count !== 0 && __previousCount === 0){
+                // notify the display
+                displayService.call("luna://com.palm.display/control/alert",
+                                    JSON.stringify({"status": "banner-activated"}), undefined, onDisplayControlError)
+            }
+
+            __previousCount = count;
+        }
+        function onDisplayControlError(message) {
+            console.log("Failed to call display service: " + message);
+        }
+        property int __previousCount: 0
     }
 
     Flickable {
@@ -93,5 +112,12 @@ Rectangle {
         Behavior on height {
             NumberAnimation { duration: 150 }
         }
+    }
+
+    LunaService {
+        id: displayService
+
+        name: "org.webosports.luna"
+        usePrivateBus: true
     }
 }
