@@ -18,9 +18,10 @@ Item {
         radius: 8
 
         Image {
-            width: parent.width / 2
+            anchors.fill: parent
+            anchors.margins: Units.gu(0.5)
             anchors.centerIn: parent
-            source: "../images/default-app-icon.png"
+            source: iconUrl
             fillMode: Image.PreserveAspectFit
             smooth: true
         }
