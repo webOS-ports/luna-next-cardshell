@@ -64,6 +64,13 @@ Rectangle {
         }
     }
 
+    function getIconUrlOrDefault(path) {
+        if (path.length === 0)
+            return Qt.resolvedUrl("../images/default-app-icon.png");
+
+        return path;
+    }
+
     Row {
         id: minimizedListView
 
@@ -82,8 +89,8 @@ Rectangle {
             model: notificationModel
             delegate: Image {
                     id: notifIconImage
-                    source: Qt.resolvedUrl("../images/default-app-icon.png")
-                    height:  Units.gu(3)
+                    source: getIconUrlOrDefault(object.iconUrl)
+                    height:  minimizedListView.height
                     fillMode: Image.PreserveAspectFit
                 }
         }
@@ -134,7 +141,7 @@ Rectangle {
                         height: Units.gu(6)
                         title: object.title
                         body: object.body
-                        iconUrl: object.iconUrl
+                        iconUrl: getIconUrlOrDefault(object.iconUrl)
                     }
 
                     onClicked: notificationArea.launchApplication(object.launchId, object.launchParams);
