@@ -62,6 +62,10 @@ Rectangle {
         function onDisplayControlError(message) {
             console.log("Failed to call display service: " + message);
         }
+
+        // the signal itemAdded is declared in C++, without a qmltype declaration,
+        // so QML isn't able to guess the name of the signal argument.
+        onItemAdded: freshNewItemsPopups.popupModel.append({"object" : arguments[0]});
     }
 
     Row {
@@ -88,6 +92,11 @@ Rectangle {
                 }
         }
     }
+    NotificationTemporaryPopupArea {
+        id: freshNewItemsPopups
+        visible: minimizedListView.visible && popupModel.count>0
+        anchors.fill: minimizedListView
+    }
 
     function minimizeNotificationArea() {
         if( notificationArea.state === "open" )
@@ -98,6 +107,7 @@ Rectangle {
         anchors.fill: minimizedListView
         enabled: minimizedListView.visible
         onClicked: {
+            freshNewItemsPopups.popupModel.clear();
             notificationArea.state = "open";
             windowManagerInstance.addTapAction("minimizeNotificationArea", minimizeNotificationArea, null)
         }
