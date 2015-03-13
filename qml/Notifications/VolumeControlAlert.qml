@@ -19,6 +19,8 @@ import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
+import "../Connectors"
+
 Item {
     id: root
 
@@ -63,17 +65,24 @@ Item {
         opacity: 1.0
     }
 
+    ServiceStatus {
+        id: audioServiceStatus
+        serviceName: "org.webosports.audio"
+        onConnected: {
+            audioService.subscribe("luna://org.webosports.audio/getStatus",
+                                   "{\"subscribe\":true}",
+                                   onAudioStatusChanged, onError);
+        }
+        onDisconnected: {
+            console.log("Lost audio service!");
+        }
+    }
+
     LunaService {
         id: audioService
 
         name: "org.webosports.luna"
         usePrivateBus: true
-
-        onInitialized: {
-            audioService.subscribe("luna://org.webosports.audio/getStatus",
-                                   "{\"subscribe\":true}",
-                                   onAudioStatusChanged, onError);
-        }
     }
 
     function onAudioStatusChanged(message) {
