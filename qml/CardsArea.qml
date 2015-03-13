@@ -39,8 +39,8 @@ import "LockScreen"
 WindowManager {
     id: windowManager
 
-    property real screenwidth: Settings.displayWidth
-    property real screenheight: Settings.displayHeight
+    property real screenwidth: windowManager.width
+    property real screenheight: windowManager.height
     property real screenDPI: Settings.dpi
 
     states: [
@@ -124,7 +124,7 @@ WindowManager {
             source: preferences.wallpaperFile
             asynchronous: true
             smooth: true
-            sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
+            sourceSize: Qt.size(screenwidth, screenheight)
         }
     }
 

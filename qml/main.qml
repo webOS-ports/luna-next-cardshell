@@ -33,22 +33,28 @@ Compositor {
         compositor.show();
     }
 
-    Loader {
-        id: mainShellLoader
+    OrientationHelper {
+        id: orientationHelper
+        automaticOrientation: false
+        transitionEnabled: false
 
-        property QtObject compositor: compositor
-        property string cardShellState: mainShellLoader.state
+        Loader {
+            id: mainShellLoader
 
-        anchors.fill: parent
+            property QtObject compositor: compositor
+            property string cardShellState: mainShellLoader.state
 
-        focus: true
-        onSourceChanged: Keys.forwardTo = [ mainShellLoader.item ]
-    }
+            anchors.fill: parent
 
-    BootLoader {
-        shellLoader: mainShellLoader
+            focus: true
+            onSourceChanged: Keys.forwardTo = [ mainShellLoader.item ]
+        }
 
-        anchors.fill: parent
-        z: 1 // above the main shell
+        BootLoader {
+            shellLoader: mainShellLoader
+
+            anchors.fill: parent
+            z: 1 // above the main shell
+        }
     }
 }
