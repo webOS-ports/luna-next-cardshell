@@ -30,7 +30,7 @@ Item {
     property real rotationCenterX: parent.width/2;
     property real rotationCenterY: parent.height/2;
     transform: Rotation { origin.x:  rotationCenterX; origin.y: rotationCenterY; angle: -orientationAngle}
-    Behavior on orientationAngle { NumberAnimation { duration: 500 } }
+    Behavior on orientationAngle { RotationAnimation { duration: 500; direction: RotationAnimation.Shortest } }
 
     states: [
         State {
