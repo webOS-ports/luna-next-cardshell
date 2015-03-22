@@ -44,6 +44,10 @@ Item {
     property real cornerRadius: 20
     property real animationDuration: 100
 
+    /* Advertise the wrapped window that the screen size has changed */
+    onFullscreenHeightChanged:  if( windowUserData ) windowUserData.syncClientWindowSize();
+    onFullWidthChanged: if( windowUserData ) windowUserData.syncClientWindowSize();
+
     Component.onCompleted: {
         y = cardY;
         height = cardHeight;
@@ -98,6 +102,7 @@ Item {
             y = Qt.binding( function() { return cardY; } );
             height = Qt.binding( function() { return cardHeight; } );
             width = Qt.binding( function() { return cardWidth; } );
+            windowUserData.syncClientWindowSize();
         }
     }
     SequentialAnimation {
