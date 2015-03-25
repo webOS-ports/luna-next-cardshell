@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2013-2014 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013-2014 Simon Busch <morphis@gravedo.de>
- * Copyright (C) 2013-2014 Herman van Hazendonk <github.com@herrie.org>
+ * Copyright (C) 2013-2015 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -55,6 +55,24 @@ Row {
         anchors.bottom: indicatorsRow.bottom
 
         enabled: airplaneModeService.active
+    }
+	
+	RotationLockIndicator {
+        id: rotationLockIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: preferences.rotationLock
+    }
+	
+	MuteSoundIndicator {
+        id: muteSoundIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: preferences.muteSound
     }
 
     WifiIndicator {
