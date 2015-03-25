@@ -317,9 +317,11 @@ Item {
                         if (muteControl.mute) {
                             setMuteControlText("Mute Sound", false);
                             volumeControl.setMute(false);
+                            preferences.muteSound = false;
                         } else {
                             setMuteControlText("Unmute Sound", true);
                             volumeControl.setMute(true);
+                            preferences.muteSound = true;
                         }
 
                         muteToggleTriggered(muteControl.mute)
