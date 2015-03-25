@@ -215,7 +215,7 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
-            width: 100
+            width: systemIndicators.width
             onClicked: {
                 if (!lockScreen.locked)
                     systemMenu.toggleState()
