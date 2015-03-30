@@ -106,7 +106,7 @@ Item {
         Image {
             id: separator
             anchors.verticalCenter: title.verticalCenter
-            smooth: true
+            layer.mipmap: true
             source: "../images/statusbar/menu-arrow.png"
             fillMode: Image.PreserveAspectFit
         }

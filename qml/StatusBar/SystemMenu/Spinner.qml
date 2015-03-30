@@ -25,7 +25,7 @@ Image {
 
     source: "../../images/spinner.png"
     visible: spinner.on
-    smooth: true
+    layer.mipmap: true
 
     NumberAnimation on rotation {
         running: spinner.on; from: 0; to: 360; loops: Animation.Infinite; duration: 3000

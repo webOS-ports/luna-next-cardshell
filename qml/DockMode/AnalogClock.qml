@@ -97,7 +97,7 @@ Item {
          source: "../images/dockmode/time/analog/"+type[glass]+"/hour.png"
          anchors.centerIn: parent
          parent: face
-         smooth: true
+         layer.mipmap: true
          transform: Rotation {
              id: hourRotation
              origin.x: hourHand.width/2; origin.y: hourHand.height/2;
@@ -113,7 +113,7 @@ Item {
          source: "../images/dockmode/time/analog/"+type[glass]+"/minute.png"
          anchors.centerIn: parent
          parent: face
-         smooth: true
+         layer.mipmap: true
          transform: Rotation {
              id: minuteRotation
              origin.x: minuteHand.width/2; origin.y: minuteHand.height/2;
@@ -130,7 +130,7 @@ Item {
          source: glass ? "" : "../images/dockmode/time/analog/"+type[glass]+"/second.png"
          anchors.centerIn: parent
          parent: face
-         smooth: true
+         layer.mipmap: true
          transform: Rotation {
              id: secondRotation
              origin.x: secondHand.width/2; origin.y: secondHand.height/2;

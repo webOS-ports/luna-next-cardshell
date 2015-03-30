@@ -123,7 +123,7 @@ WindowManager {
             fillMode: Image.PreserveAspectCrop
             source: preferences.wallpaperFile
             asynchronous: true
-            smooth: true
+            layer.mipmap: true
             sourceSize: Qt.size(Settings.displayWidth, Settings.displayHeight)
         }
     }

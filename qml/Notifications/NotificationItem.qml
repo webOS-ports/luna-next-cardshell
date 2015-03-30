@@ -23,7 +23,7 @@ Item {
             anchors.centerIn: parent
             source: iconUrl
             fillMode: Image.PreserveAspectFit
-            smooth: true
+            layer.mipmap: true
         }
     }
 

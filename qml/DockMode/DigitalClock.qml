@@ -195,7 +195,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? Units.gu(2.0) : Units.gu(1.5)
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgHour1
     }
 
@@ -207,7 +207,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? timeLandSize : timePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgHour1
     }
 
@@ -219,7 +219,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? timeLandSize : timePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgHour2
     }
 
@@ -231,7 +231,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? timeLandSize : timePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgMin1
     }
     Text {
@@ -242,7 +242,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? timeLandSize : timePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgMin2
     }
 
@@ -254,7 +254,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgMonth1
     }
     Text {
@@ -265,7 +265,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgMonth2
     }
 
@@ -277,7 +277,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgMonth3
     }
 
@@ -289,7 +289,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgDay1
     }
     Text {
@@ -300,7 +300,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgDay2
     }
 
@@ -312,7 +312,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgYear1
     }
     Text {
@@ -323,7 +323,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgYear2
     }
 
@@ -335,7 +335,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgYear3
     }
     Text {
@@ -346,7 +346,7 @@ Item {
         font.family: "prelude"
         font.pixelSize: isLandscape === 1 ? dateLandSize : datePortSize
         color: "#e1e1e1"
-        smooth: true
+        layer.mipmap: true
         parent: bgYear4
     }
 
