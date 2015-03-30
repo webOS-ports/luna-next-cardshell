@@ -43,7 +43,7 @@ Item {
         height: parent.height*0.5
         width: parent.width*0.7
         source: "../images/glow.png"
-        smooth: true
+        layer.mipmap: true
         fillMode: Image.PreserveAspectFit
     }
     Image {
@@ -53,7 +53,7 @@ Item {
         height: glowImage.height
         width: glowImage.width
         source: "../images/glowMask.png"
-        smooth: true
+        layer.mipmap: true
         fillMode: Image.Stretch
     }
 

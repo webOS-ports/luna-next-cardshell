@@ -44,7 +44,7 @@ Item {
                                  ( !isPressed ? neutralButtonImage : neutralButtonImagePressed )  ) )
         visible: true;
         anchors.fill: parent
-        smooth: true;
+        layer.mipmap: true;
         //border { left: 40; top: 40; right: 40; bottom: 40 }
         opacity: active ? 1.0 : inactiveOpacity
     }

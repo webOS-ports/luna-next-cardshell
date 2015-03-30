@@ -32,7 +32,7 @@ Item {
         anchors.bottom: parent.bottom
 
         fillMode: Image.PreserveAspectFit
-        smooth: true
+        layer.mipmap: true
 
         source: "../images/search-field-bg-launcher-left.png"
     }
@@ -43,7 +43,7 @@ Item {
         anchors.bottom: parent.bottom
 
         fillMode: Image.PreserveAspectFit
-        smooth: true
+        layer.mipmap: true
 
         source: "../images/search-field-bg-launcher-right.png"
     }
@@ -55,7 +55,7 @@ Item {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
 
-        smooth: true
+        layer.mipmap: true
 
         source: "../images/search-field-bg-launcher-center.png"
     }
@@ -65,7 +65,7 @@ Item {
         height: bgCenter.height * 0.8
 
         fillMode: Image.PreserveAspectFit
-        smooth: true
+        layer.mipmap: true
 
         source: "../images/search-button-launcher.png"
     }

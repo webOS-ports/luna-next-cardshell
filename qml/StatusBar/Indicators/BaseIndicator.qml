@@ -57,7 +57,7 @@ Item {
         id: indicatorImage
         fillMode: textVisible ? Image.Stretch : Image.PreserveAspectFit;
         width: textVisible ? indicatorRoot.width : undefined
-        smooth: true
+        layer.mipmap: true
         source: imageSource
         anchors.left: indicatorRoot.left
         anchors.bottom: indicatorRoot.bottom
