@@ -44,7 +44,7 @@ Item {
     transform: Rotation { origin.x: rotationCenterX; origin.y: rotationCenterY; angle: -orientationAngle}
     Behavior on orientationAngle { RotationAnimation { duration: 500; direction: RotationAnimation.Shortest}}
 
-    Connections { target: preferences; onRotationLockedChanged: if( preferences.rotationLock ) __lockedRotationAngle = orientationAngle; }
+    Connections { target: preferences; onRotationLockChanged: if( preferences.rotationLock ) __lockedRotationAngle = orientationAngle; }
 	
     states: [
         State {
