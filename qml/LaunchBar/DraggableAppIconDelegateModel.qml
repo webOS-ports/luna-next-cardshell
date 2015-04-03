@@ -16,10 +16,12 @@
  */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 VisualDataModel {
     id: appsVisualDataModel
 
+    property real cellWidth
     property real iconWidth
     property real iconSize
     property int dragAxis
@@ -34,8 +36,8 @@ VisualDataModel {
         Item {
             id: launcherIconDelegate
 
-            height: launcherIcon.height
-            width: launcherIcon.width
+            height: dragParent.cellHeight
+            width: appsVisualDataModel.cellWidth
 
             property string modelTitle: model.title
             property string modelIcon: model.icon
@@ -44,9 +46,12 @@ VisualDataModel {
 
             Image {
                 source: Qt.resolvedUrl("../images/launcher/edit-icon-bg.png");
-                x: -3; y: -3; width: parent.width + 6; height: dragParent.cellHeight-4
+                anchors {
+                    fill: parent
+                    margins: 3
+                }
                 fillMode: Image.Stretch
-                visible: appsVisualDataModel.isEditionActive
+                visible: appsVisualDataModel.isEditionActive && !dragArea.held
             }
 
             LaunchableAppIcon {
@@ -55,6 +60,7 @@ VisualDataModel {
                 anchors {
                     horizontalCenter: parent.horizontalCenter
                     verticalCenter: parent.verticalCenter
+                    verticalCenterOffset: 0.5*(launcherIcon.height-iconSize)-Units.gu(1.4)
                 }
 
                 width: appsVisualDataModel.iconWidth

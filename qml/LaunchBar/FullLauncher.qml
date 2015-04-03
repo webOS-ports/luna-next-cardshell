@@ -282,6 +282,7 @@ Image {
                         dragParent: fullLauncher
                         dragAxis: Drag.XAndYAxis
                         iconWidth: fullLauncher.appIconWidth
+                        cellWidth: fullLauncher.cellWidth
                         iconSize: fullLauncher.iconSize
 
                         onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
