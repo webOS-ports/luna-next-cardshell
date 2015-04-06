@@ -48,6 +48,7 @@ MenuListEntry {
                          var response = JSON.parse(message.payload);
                          if (!response.maximumBrightness)
                              return;
+                         var newValue = response.maximumBrightness / 100;
                          brightnessValue = Math.max(0.0, Math.min(newValue, 1.0));
                      },
                      function(error) {

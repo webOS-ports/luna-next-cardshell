@@ -76,6 +76,9 @@ QtObject {
         else if (serviceURI === "luna://com.palm.power/com/palm/power/batteryStatusQuery") {
             getBatteryStatusQuery_call(args, returnFct, handleError);
         }
+        else if (serviceURI === "palm://com.palm.display/control/getProperty") {
+            getDisplayProperty_call(args, returnFct, handleError);
+        }
         else {
             // Embed the jsonArgs into a payload message
             var message = { applicationId: "org.webosports.tests.dummyWindow", payload: jsonArgs };
@@ -179,6 +182,10 @@ QtObject {
 
     function giveFakeAppInfo_call(args, returnFct, handleError) {
         returnFct({"payload": JSON.stringify({"returnValue": true, "appInfo": { "appmenu": "Fake App" } })});
+    }
+
+    function getDisplayProperty_call(args, returnFct, handleError) {
+        returnFct({"payload": JSON.stringify({"returnValue": true, "maximumBrightness": 70 })});
     }
 
     function launchApp_call(jsonArgs, returnFct, handleError) {
