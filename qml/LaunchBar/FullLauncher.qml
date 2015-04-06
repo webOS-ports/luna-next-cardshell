@@ -58,6 +58,7 @@ Image {
             name: "hidden"
             AnchorChanges { target: fullLauncher; anchors.top: parent.bottom; anchors.bottom: undefined }
             PropertyChanges { target: fullLauncher; visible: false }
+            PropertyChanges { target: fullLauncher; isEditionActive: false }
         },
         State {
             name: "visible"
@@ -268,49 +269,33 @@ Image {
                 width: Math.floor(fullLauncher.width / fullLauncher.cellWidth) * fullLauncher.cellWidth
                 height: parent.height
 
-                model: DraggableAppIconDelegateModel {
-                        id: draggableAppIconDelegateModel
-                        // list of icons, filtered on that tab
-                        model: TabApplicationModel {
-                            appsModel: commonAppsModel // one app model for all tab models
-                            launcherTab: tabContentItem.tabId
-                            isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
-                        }
+                model: VisualDataModel {
+                    id: draggableAppIconDelegateModel
 
-                        isEditionActive: fullLauncher.isEditionActive
+                    // list of icons, filtered on that tab
+                    model: TabApplicationModel {
+                        appsModel: commonAppsModel // one app model for all tab models
+                        launcherTab: tabContentItem.tabId
+                        isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
+                    }
 
-                        dragParent: fullLauncher
-                        dragAxis: Drag.XAndYAxis
+                    delegate: DraggableAppIcon {
+                        modelTitle: model.title
+                        modelIcon: model.icon
+                        modelId: model.id
+                        modelParams:  model.params === undefined ? "{}" : model.params
+                        modelIndex: VisualDataModel.itemsIndex
+
                         iconWidth: fullLauncher.appIconWidth
-                        cellWidth: fullLauncher.cellWidth
                         iconSize: fullLauncher.iconSize
 
-                        onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
+                        editionMode: fullLauncher.isEditionActive
 
-                        onStartEdition: fullLauncher.isEditionActive = true;
+                        width: fullLauncher.cellWidth
+                        height: fullLauncher.cellHeight
 
-                        onSaveCurrentLayout: {
-                                if( Settings.isTestEnvironment ) return;
-
-                                // first, clean up the DB
-                                __queryDB("del",
-                                          {query:{from:"org.webosports.lunalaunchertab:1"},
-                                            where: [ {prop:"tab",op:"=",val:tabContentItem.tabId} ]},
-                                          function (message) {});
-
-                                // then build up the object to save
-                                var data = [];
-                                for( var i=0; i<draggableAppIconDelegateModel.items.count; ++i ) {
-                                    var obj = draggableAppIconDelegateModel.items.get(i);
-                                    data.push({_kind: "org.webosports.lunalaunchertab:1",
-                                                  pos: obj.itemsIndex,
-                                                  tab:tabContentItem.tabId,
-                                                  appId: obj.model.appId});
-                                }
-
-                                // and put it in the DB
-                                __queryDB("put", {objects: data}, function (message) {});
-                        }
+                        onStartLaunchApplication: if( !fullLauncher.isEditionActive ) fullLauncher.startLaunchApplication(appId, appParams);
+                    }
                 }
 
 
@@ -319,6 +304,116 @@ Image {
 
                 moveDisplaced: Transition {
                     NumberAnimation { properties: "x, y"; duration: 200 }
+                }
+
+                function saveCurrentLayout() {
+                        if( Settings.isTestEnvironment ) return;
+
+                        // first, clean up the DB
+                        __queryDB("del",
+                                  {query:{from:"org.webosports.lunalaunchertab:1"},
+                                    where: [ {prop:"tab",op:"=",val:tabContentItem.tabId} ]},
+                                  function (message) {});
+
+                        // then build up the object to save
+                        var data = [];
+                        for( var i=0; i<draggableAppIconDelegateModel.items.count; ++i ) {
+                            var obj = draggableAppIconDelegateModel.items.get(i);
+                            data.push({_kind: "org.webosports.lunalaunchertab:1",
+                                          pos: obj.itemsIndex,
+                                          tab:tabContentItem.tabId,
+                                          appId: obj.model.appId});
+                        }
+
+                        // and put it in the DB
+                        __queryDB("put", {objects: data}, function (message) {});
+                }
+
+                /* Drag area of the grid */
+                MouseArea {
+                    id: dragArea
+                    anchors { fill: parent }
+
+                    drag.target: held ? draggedLauncherIcon : undefined
+                    drag.axis: Drag.XAndYAxis
+
+                    property bool held: false
+                    Timer {
+                        id: releaseHeld
+                        interval: 200; running: false; repeat: false
+                        onTriggered: dragArea.held = false;
+                    }
+
+                    propagateComposedEvents: true
+                    onPressed:  {
+                        if( fullLauncher.isEditionActive && !held ) {
+                            console.log("=== drag ===");
+
+                            var coordsDragInGridView = mapToItem(fullLauncherGridView, mouse.x, mouse.y);
+                            var targetItem = fullLauncherGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
+
+                            if( targetItem )
+                            {
+                                draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-fullLauncherGridView.contentY);
+                                held = true;
+
+                                console.log("Removing original item dragged by the mouse:" + targetItem.modelTitle);
+                                draggableAppIconDelegateModel.items.remove(targetItem.VisualDataModel.itemsIndex, 1);
+
+                                draggedLauncherIcon.draggingActive = true;
+                            }
+                            else
+                            {
+                                console.log("Couldn't deduce which item was under mouse!");
+                            }
+                        }
+                    }
+                    onPressAndHold: {
+                        if( !held ) {
+                            console.log("=== drag ===");
+                            // move our delegate to the persisted items group
+
+                            var coordsDragInGridView = mapToItem(fullLauncherGridView, mouse.x, mouse.y);
+                            var targetItem = fullLauncherGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
+
+                            if( targetItem ) {
+                                draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-fullLauncherGridView.contentY);
+                                fullLauncher.isEditionActive = true;
+                                held = true;
+
+                                console.log("Removing original item dragged by the mouse:" + targetItem.modelTitle);
+                                draggableAppIconDelegateModel.items.remove(targetItem.VisualDataModel.itemsIndex, 1);
+
+                                draggedLauncherIcon.draggingActive = true;
+                            }
+                            else
+                            {
+                                console.log("Couldn't deduce which item was under mouse!");
+                            }
+                        }
+                    }
+                    onReleased: {
+                        if( held && !releaseHeld.running ) {
+                            console.log("trigger drop");
+                            if( draggedLauncherIcon.Drag.target && draggedLauncherIcon.Drag.target.placeHolderItem ) {
+                                draggedLauncherIcon.Drag.drop();
+                            }
+                            else {
+                                console.log("no drop target, resetting drag source");
+                                draggableAppIconDelegateModel.items.insert(draggedLauncherIcon.modelIndex,
+                                                                              {title : draggedLauncherIcon.modelTitle,
+                                                                               icon: draggedLauncherIcon.modelIcon,
+                                                                               id: draggedLauncherIcon.modelId,
+                                                                               params: draggedLauncherIcon.modelParams});
+                            }
+
+                            draggedLauncherIcon.draggingActive = false;
+                            releaseHeld.start();
+
+                            // save that layout in DB
+                            fullLauncherGridView.saveCurrentLayout();
+                        }
+                    }
                 }
 
                 /* Drop areas of the grid */
@@ -427,9 +522,36 @@ Image {
                         placeHolderItem = undefined;
 
                         // save that layout in DB
-                        draggableAppIconDelegateModel.saveCurrentLayout();
+                        fullLauncherGridView.saveCurrentLayout();
                     }
                 }
+            }
+        }
+
+        DraggableAppIcon {
+            id: draggedLauncherIcon
+
+            iconWidth: fullLauncher.appIconWidth
+            iconSize: fullLauncher.iconSize
+
+            editionMode: fullLauncher.isEditionActive
+
+            width: fullLauncher.cellWidth
+            height: fullLauncher.cellHeight
+
+            onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
+
+            visible: draggingActive
+
+            function initiateDragWithItem(targetItem, atX, atY) {
+                draggedLauncherIcon.modelTitle = targetItem.modelTitle
+                draggedLauncherIcon.modelIcon = targetItem.modelIcon
+                draggedLauncherIcon.modelId = targetItem.modelId
+                draggedLauncherIcon.modelParams = targetItem.modelParams
+                draggedLauncherIcon.modelIndex = targetItem.modelIndex
+
+                draggedLauncherIcon.x = atX;
+                draggedLauncherIcon.y = atY;
             }
         }
     }
