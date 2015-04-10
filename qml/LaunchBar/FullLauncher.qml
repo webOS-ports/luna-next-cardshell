@@ -269,33 +269,30 @@ Image {
                 width: Math.floor(fullLauncher.width / fullLauncher.cellWidth) * fullLauncher.cellWidth
                 height: parent.height
 
-                model: VisualDataModel {
-                    id: draggableAppIconDelegateModel
+                // list of icons, filtered on that tab
+                model: TabApplicationModel {
+                    id: gridTabModel
+                    appsModel: commonAppsModel // one app model for all tab models
+                    launcherTab: tabContentItem.tabId
+                    isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
+                }
 
-                    // list of icons, filtered on that tab
-                    model: TabApplicationModel {
-                        appsModel: commonAppsModel // one app model for all tab models
-                        launcherTab: tabContentItem.tabId
-                        isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
-                    }
+                delegate: DraggableAppIcon {
+                    modelTitle: model.title
+                    modelIcon: model.icon
+                    modelId: model.id
+                    modelParams:  model.params === undefined ? "{}" : model.params
+                    modelIndex: index
 
-                    delegate: DraggableAppIcon {
-                        modelTitle: model.title
-                        modelIcon: model.icon
-                        modelId: model.id
-                        modelParams:  model.params === undefined ? "{}" : model.params
-                        modelIndex: VisualDataModel.itemsIndex
+                    iconWidth: fullLauncher.appIconWidth
+                    iconSize: fullLauncher.iconSize
 
-                        iconWidth: fullLauncher.appIconWidth
-                        iconSize: fullLauncher.iconSize
+                    editionMode: fullLauncher.isEditionActive
 
-                        editionMode: fullLauncher.isEditionActive
+                    width: fullLauncher.cellWidth
+                    height: fullLauncher.cellHeight
 
-                        width: fullLauncher.cellWidth
-                        height: fullLauncher.cellHeight
-
-                        onStartLaunchApplication: if( !fullLauncher.isEditionActive ) fullLauncher.startLaunchApplication(appId, appParams);
-                    }
+                    onStartLaunchApplication: if( !fullLauncher.isEditionActive ) fullLauncher.startLaunchApplication(appId, appParams);
                 }
 
 
@@ -317,12 +314,12 @@ Image {
 
                         // then build up the object to save
                         var data = [];
-                        for( var i=0; i<draggableAppIconDelegateModel.items.count; ++i ) {
-                            var obj = draggableAppIconDelegateModel.items.get(i);
+                        for( var i=0; i<gridTabModel.count; ++i ) {
+                            var obj = gridTabModel.get(i);
                             data.push({_kind: "org.webosports.lunalaunchertab:1",
-                                          pos: obj.itemsIndex,
+                                          pos: obj.index,
                                           tab:tabContentItem.tabId,
-                                          appId: obj.model.appId});
+                                          appId: obj.appId});
                         }
 
                         // and put it in the DB
@@ -357,8 +354,7 @@ Image {
                                 draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-fullLauncherGridView.contentY);
                                 held = true;
 
-                                console.log("Removing original item dragged by the mouse:" + targetItem.modelTitle);
-                                draggableAppIconDelegateModel.items.remove(targetItem.VisualDataModel.itemsIndex, 1);
+                                gridTabModel.remove(targetItem.modelIndex);
 
                                 draggedLauncherIcon.draggingActive = true;
                             }
@@ -381,8 +377,7 @@ Image {
                                 fullLauncher.isEditionActive = true;
                                 held = true;
 
-                                console.log("Removing original item dragged by the mouse:" + targetItem.modelTitle);
-                                draggableAppIconDelegateModel.items.remove(targetItem.VisualDataModel.itemsIndex, 1);
+                                gridTabModel.remove(targetItem.modelIndex);
 
                                 draggedLauncherIcon.draggingActive = true;
                             }
@@ -395,16 +390,16 @@ Image {
                     onReleased: {
                         if( held && !releaseHeld.running ) {
                             console.log("trigger drop");
-                            if( draggedLauncherIcon.Drag.target && draggedLauncherIcon.Drag.target.placeHolderItem ) {
+                            if( draggedLauncherIcon.Drag.target && (typeof draggedLauncherIcon.Drag.target.placeHolderPosition !== "undefined") ) {
                                 draggedLauncherIcon.Drag.drop();
                             }
                             else {
                                 console.log("no drop target, resetting drag source");
-                                draggableAppIconDelegateModel.items.insert(draggedLauncherIcon.modelIndex,
-                                                                              {title : draggedLauncherIcon.modelTitle,
-                                                                               icon: draggedLauncherIcon.modelIcon,
-                                                                               id: draggedLauncherIcon.modelId,
-                                                                               params: draggedLauncherIcon.modelParams});
+                                gridTabModel.insert(draggedLauncherIcon.modelIndex,
+                                                    {title : draggedLauncherIcon.modelTitle,
+                                                     icon: draggedLauncherIcon.modelIcon,
+                                                     id: draggedLauncherIcon.modelId,
+                                                     params: draggedLauncherIcon.modelParams});
                             }
 
                             draggedLauncherIcon.draggingActive = false;
@@ -455,7 +450,7 @@ Image {
                 }
                 DropArea {
                     // main drop area covering the grid
-                    property variant placeHolderItem;
+                    property int placeHolderPosition;
                     anchors {
                         fill: parent
                         margins: Units.gu(1)
@@ -463,63 +458,36 @@ Image {
                     onEntered: {
                         // Find what index the drag is covering
                         var coordsDragInGridView = mapToItem(fullLauncherGridView, drag.x, drag.y);
-                        var placeHolderPosition = fullLauncherGridView.indexAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
+                        placeHolderPosition = fullLauncherGridView.indexAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
                         if( placeHolderPosition < 0 )
                         {
                             // if the drag is not yet over an item, put the placeholder at the end
-                            placeHolderPosition = draggableAppIconDelegateModel.items.count;
+                            placeHolderPosition = gridTabModel.count;
                         }
-                        if( draggableAppIconDelegateModel.model.count === 0 ) {
-                            // if there is no item in the persistent model, there is no properties either.
-                            // This prevents us from inserting a light dynamic placeholder.
-                            // So create an item in the model with the same properties.
-                            draggableAppIconDelegateModel.model.insert(placeHolderPosition, {title: "", icon: "", id: "", params: ""});
-                        }
-                        else {
-                            // Insert a new placeholder at that position
-                            draggableAppIconDelegateModel.items.insert(placeHolderPosition, {title: "", icon: "", id: "", params: ""});
-                        }
-                        placeHolderItem = draggableAppIconDelegateModel.items.get(placeHolderPosition);
+
+                        gridTabModel.insert(placeHolderPosition, {title: "", icon: "", id: "", params: ""});
                     }
                     onPositionChanged: {
                         // Move the placeholder where the drag is
                         var coordsDragInGridView = mapToItem(fullLauncherGridView, drag.x, drag.y);
-                        var placeHolderPosition = fullLauncherGridView.indexAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
-                        if( placeHolderPosition >= 0 && placeHolderPosition < draggableAppIconDelegateModel.items.count &&
-                            placeHolderItem &&
-                            placeHolderItem.itemsIndex !== placeHolderPosition ) {
-                            draggableAppIconDelegateModel.items.move( placeHolderItem.itemsIndex, placeHolderPosition );
+                        var destPlaceHolderPosition = fullLauncherGridView.indexAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
+                        if( destPlaceHolderPosition >= 0 && destPlaceHolderPosition < gridTabModel.count &&
+                            placeHolderPosition !== destPlaceHolderPosition ) {
+                            gridTabModel.move( placeHolderPosition, destPlaceHolderPosition, 1 );
+                            placeHolderPosition = destPlaceHolderPosition;
                         }
                     }
                     onExited: {
-                        if( placeHolderItem.isUnresolved ) {
-                            // Remove the placeholder
-                            placeHolderItem.inItems = false;
-                        }
-                        else {
-                            // The placeholder represents a real data: remove it
-                            draggableAppIconDelegateModel.model.remove(placeHolderItem.itemsIndex);
-                        }
-                        placeHolderItem = undefined;
+                        // The placeholder represents a real data: remove it
+                        gridTabModel.remove(placeHolderPosition);
                     }
                     onDropped: {
-                        if( placeHolderItem.isUnresolved ) {
-                            // Commit the placeholder with the drag source data
-                            placeHolderItem.model.title = drag.source.modelTitle;
-                            placeHolderItem.model.icon = drag.source.modelIcon;
-                            placeHolderItem.model.id = drag.source.modelId;
-                            placeHolderItem.model.params = drag.source.modelParams;
-                        }
-                        else {
-                            // The placeholder represents a real data: remove it
-                            draggableAppIconDelegateModel.model.set(placeHolderItem.itemsIndex,
-                                     {title : drag.source.modelTitle,
-                                       icon: drag.source.modelIcon,
-                                       id: drag.source.modelId,
-                                       params: drag.source.modelParams});
-                        }
-                        // ... And just forget about it.
-                        placeHolderItem = undefined;
+                        // The placeholder represents a real data: remove it
+                        gridTabModel.set(placeHolderPosition,
+                                 {title : drag.source.modelTitle,
+                                   icon: drag.source.modelIcon,
+                                   id: drag.source.modelId,
+                                   params: drag.source.modelParams});
 
                         // save that layout in DB
                         fullLauncherGridView.saveCurrentLayout();
@@ -538,8 +506,6 @@ Image {
 
             width: fullLauncher.cellWidth
             height: fullLauncher.cellHeight
-
-            onStartLaunchApplication: fullLauncher.startLaunchApplication(appId, appParams);
 
             visible: draggingActive
 
