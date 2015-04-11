@@ -82,16 +82,31 @@ ListModel {
         // If it is not yet referenced in db8 nor in default, then include it only if we are
         // the default tab
         tabAppsModel.clear();
+        var unsortedAppsArray = [];
         var nbApps = appsModel.count;
         for( var i = 0; i < nbApps; ++i ) {
             var appObj = appsModel.get(i);
             var posInTab = _dbTabConfig.indexOf(appObj.id);
             if( posInTab < 0 ) {
-                posInTab = _defaultTabConfig.indexOf(appObj.id + "_default");
+                var posInDefaultTab = _defaultTabConfig.indexOf(appObj.id + "_default");
+                if( posInDefaultTab >= 0 ) {
+                    // put it at the end of the list
+                    posInTab = nbApps + posInDefaultTab;
+                }
+                else if( isDefaultTab && _defaultTabExclConfig.indexOf(appObj.id + "_default")<0 ) {
+                    // put it at the very end of the list, after default elements
+                    posInTab = nbApps + _defaultTabConfig.length + 1;
+                }
             }
-            if( posInTab >= 0 || (isDefaultTab && _defaultTabExclConfig.indexOf(appObj.id + "_default")<0) ) {
-                tabAppsModel.append( appObj );
+            if( posInTab >= 0 ) {
+                unsortedAppsArray.push( {pos: posInTab, appObj: appObj} );
             }
+        }
+        // sort the positions
+        unsortedAppsArray.sort(function(a,b){ return a.pos - b.pos; });
+        // fill the model
+        for( var j = 0; j < unsortedAppsArray.length; ++j ) {
+            tabAppsModel.append(unsortedAppsArray[j].appObj);
         }
     }
 

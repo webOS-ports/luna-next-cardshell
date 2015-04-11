@@ -58,7 +58,7 @@ Image {
             name: "hidden"
             AnchorChanges { target: fullLauncher; anchors.top: parent.bottom; anchors.bottom: undefined }
             PropertyChanges { target: fullLauncher; visible: false }
-            PropertyChanges { target: fullLauncher; isEditionActive: false }
+            PropertyChanges { target: fullLauncher; isEditionActive: false; restoreEntryValues: false }
         },
         State {
             name: "visible"
@@ -303,13 +303,18 @@ Image {
                     NumberAnimation { properties: "x, y"; duration: 200 }
                 }
 
+                Connections {
+                    target: fullLauncher
+                    onIsEditionActiveChanged: if( !fullLauncher.isEditionActive ) fullLauncherGridView.saveCurrentLayout();
+                }
+
                 function saveCurrentLayout() {
                         if( Settings.isTestEnvironment ) return;
 
                         // first, clean up the DB
                         __queryDB("del",
-                                  {query:{from:"org.webosports.lunalaunchertab:1"},
-                                    where: [ {prop:"tab",op:"=",val:tabContentItem.tabId} ]},
+                                  {query:{from:"org.webosports.lunalaunchertab:1",
+                                    where: [ {prop:"tab",op:"=",val:tabContentItem.tabId} ]}},
                                   function (message) {});
 
                         // then build up the object to save
@@ -317,9 +322,9 @@ Image {
                         for( var i=0; i<gridTabModel.count; ++i ) {
                             var obj = gridTabModel.get(i);
                             data.push({_kind: "org.webosports.lunalaunchertab:1",
-                                          pos: obj.index,
+                                          pos: i,
                                           tab:tabContentItem.tabId,
-                                          appId: obj.appId});
+                                          appId: obj.id});
                         }
 
                         // and put it in the DB
@@ -404,9 +409,6 @@ Image {
 
                             draggedLauncherIcon.draggingActive = false;
                             releaseHeld.start();
-
-                            // save that layout in DB
-                            fullLauncherGridView.saveCurrentLayout();
                         }
                     }
                 }
@@ -488,9 +490,6 @@ Image {
                                    icon: drag.source.modelIcon,
                                    id: drag.source.modelId,
                                    params: drag.source.modelParams});
-
-                        // save that layout in DB
-                        fullLauncherGridView.saveCurrentLayout();
                     }
                 }
             }
