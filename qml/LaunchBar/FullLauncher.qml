@@ -357,6 +357,13 @@ Item {
                     onDropped: {
                     }
                     onExited: turnLeftTimer.stop();
+
+                    Image {
+                        anchors.fill: parent
+                        visible: turnLeftTimer.running
+                        fillMode: Image.TileVertically
+                        source: Qt.resolvedUrl("../images/launcher/scroll-tab-left.png")
+                    }
                 }
                 DropArea {
                     // drop area on the right side of the grid
@@ -374,6 +381,13 @@ Item {
                             turnRightTimer.start();
                     }
                     onExited: turnRightTimer.stop();
+
+                    Image {
+                        anchors.fill: parent
+                        visible: turnRightTimer.running
+                        fillMode: Image.TileVertically
+                        source: Qt.resolvedUrl("../images/launcher/scroll-tab-right.png")
+                    }
                 }
                 DropArea {
                     // main drop area covering the grid
