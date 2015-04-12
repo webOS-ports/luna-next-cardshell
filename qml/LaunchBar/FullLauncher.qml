@@ -40,7 +40,7 @@ Item {
     property real appIconHMargin: calculateAppIconHMargin(fullLauncher, appIconWidth)
 
     property real cellWidth: appIconWidth + appIconHMargin
-    property real cellHeight: iconSize + iconSize*0.4*2 // we give margin for two lines of text
+    property real cellHeight: iconSize + Units.gu(1.4)*2 + Units.gu(3)  // we give margin for two lines of text
 
     property bool isEditionActive: false
 
