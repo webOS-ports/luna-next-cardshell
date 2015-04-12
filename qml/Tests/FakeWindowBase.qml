@@ -58,6 +58,9 @@ Item {
     function postEvent(event) {
         console.log(fakeWindowBase + ": postEvent("+event+")");
     }
+    function forceVisible() {
+        visible = true;
+    }
 
     Component.onDestruction: compositor.closeWindowWithId(winId);
     Component.onCompleted: mapped = true;

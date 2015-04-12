@@ -40,10 +40,6 @@ Item {
     Drag.hotSpot.x: width / 2
     Drag.hotSpot.y: height / 2
 
-    Component.onDestruction: {
-        console.log("Bye bye ! I was " + modelTitle + " " + (VisualDataModel.isUnresolved ? "(unresolved)" : "(regular)"));
-    }
-
     Image {
         source: Qt.resolvedUrl("../images/launcher/edit-icon-bg.png");
         anchors {
