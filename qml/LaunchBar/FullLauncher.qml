@@ -24,7 +24,7 @@ import LuneOS.Service 1.0
 import "../LunaSysAPI" as LunaSysAPI
 
 
-Image {
+Item {
     id: fullLauncher
 
     property real iconSize: Units.gu(12)
@@ -49,9 +49,6 @@ Image {
     state: "hidden"
     visible: false
     anchors.top: parent.bottom
-
-    source: "../images/launcher/launcher-bg.png"
-    fillMode: Image.Tile
 
     states: [
         State {
@@ -79,7 +76,19 @@ Image {
         }
     ]
 
-    // background of the tabs row list
+    // Background of the full launcher
+    Image {
+        anchors.fill: parent
+        source: "../images/launcher/launcher-bg.png"
+        fillMode: Image.Tile
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: fullLauncher.isEditionActive = false;
+        }
+    }
+
+    // Background of the tabs row list
     BorderImage {
         border { top: 20; bottom: 20; left: 4; right: 4 }
         source: Qt.resolvedUrl("../images/launcher/tab-bg.png");
@@ -99,7 +108,21 @@ Image {
         width: parent.width
         height: Units.gu(4)        
         orientation: ListView.Horizontal
-        onCurrentIndexChanged: tabContentList.currentIndex = currentIndex
+
+        interactive: !draggedLauncherIcon.draggingActive
+
+        highlightRangeMode: ListView.ApplyRange
+        preferredHighlightBegin: width/2 - Units.gu(10);
+        preferredHighlightEnd: width/2 + Units.gu(10);
+        highlightMoveDuration: 500
+        highlightMoveVelocity: -1
+
+        onCurrentIndexChanged: tabContentList.currentIndex = currentIndex;
+
+        Component.onCompleted: {
+            tabRowList.positionViewAtBeginning();
+        }
+
         delegate: Button {
             id: tabRowDelegate
             width: Units.gu(20)
@@ -156,7 +179,7 @@ Image {
         height: tabRowList.height * 0.85
         anchors.right: tabRowList.right; anchors.rightMargin: 8
         anchors.verticalCenter: tabRowList.verticalCenter
-        visible: fullLauncher.isEditionActive
+        visible: fullLauncher.isEditionActive && !draggedLauncherIcon.draggingActive
         style: ButtonStyle {
             id: tabFooterButtonStyle
             property string doneButtonImage: Qt.resolvedUrl("../images/launcher/edit-button-done.png");
@@ -184,7 +207,6 @@ Image {
     DropArea {
         // drop area on the left side of the grid
         anchors.fill: tabRowList
-        property Item _currentHighlightedButton;
         onEntered: {
             // Find what index the drag is covering
             var coordsDragInTabRowList = mapToItem(tabRowList, drag.x, drag.y);
@@ -202,28 +224,10 @@ Image {
             // Find what index the drag is covering
             var coordsDragInTabRowList = mapToItem(tabRowList, drag.x, drag.y);
             var dragPosition = tabRowList.indexAt(coordsDragInTabRowList.x+tabRowList.contentX, 0);
-            if( dragPosition >= 0 ) {
+            if( dragPosition >= 0 && dragPosition !==  tabRowList.currentIndex ) {
                 tabRowList.currentItem.highlight = false;
                 tabRowList.currentIndex = dragPosition;
                 tabRowList.currentItem.highlight = true;
-            }
-        }
-        // slide to left
-        DropArea {
-            anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
-            width: Units.gu(5)
-            onEntered: {
-                if( tabRowList.contentWidth>tabRowList.width )
-                    tabRowList.decrementCurrentIndex();
-            }
-        }
-        // slide to right
-        DropArea {
-            anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
-            width: Units.gu(5)
-            onEntered: {
-                if( tabRowList.contentWidth>tabRowList.width )
-                    tabRowList.incrementCurrentIndex();
             }
         }
     }
@@ -245,6 +249,8 @@ Image {
 
         snapMode: ListView.SnapOneItem
 
+        interactive: !draggedLauncherIcon.draggingActive
+
         preferredHighlightBegin: 0
         preferredHighlightEnd: width
         highlightRangeMode: ListView.StrictlyEnforceRange
@@ -259,6 +265,7 @@ Image {
             width: ListView.view.width
             height: ListView.view.height
 
+            property alias launcherGridView: fullLauncherGridView
             property string tabId: model.text
 
             GridView {
@@ -329,88 +336,6 @@ Image {
 
                         // and put it in the DB
                         __queryDB("put", {objects: data}, function (message) {});
-                }
-
-                /* Drag area of the grid */
-                MouseArea {
-                    id: dragArea
-                    anchors { fill: parent }
-
-                    drag.target: held ? draggedLauncherIcon : undefined
-                    drag.axis: Drag.XAndYAxis
-
-                    property bool held: false
-                    Timer {
-                        id: releaseHeld
-                        interval: 200; running: false; repeat: false
-                        onTriggered: dragArea.held = false;
-                    }
-
-                    propagateComposedEvents: true
-                    onPressed:  {
-                        if( fullLauncher.isEditionActive && !held ) {
-                            console.log("=== drag ===");
-
-                            var coordsDragInGridView = mapToItem(fullLauncherGridView, mouse.x, mouse.y);
-                            var targetItem = fullLauncherGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
-
-                            if( targetItem )
-                            {
-                                draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-fullLauncherGridView.contentY);
-                                held = true;
-
-                                gridTabModel.remove(targetItem.modelIndex);
-
-                                draggedLauncherIcon.draggingActive = true;
-                            }
-                            else
-                            {
-                                console.log("Couldn't deduce which item was under mouse!");
-                            }
-                        }
-                    }
-                    onPressAndHold: {
-                        if( !held ) {
-                            console.log("=== drag ===");
-                            // move our delegate to the persisted items group
-
-                            var coordsDragInGridView = mapToItem(fullLauncherGridView, mouse.x, mouse.y);
-                            var targetItem = fullLauncherGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+fullLauncherGridView.contentY);
-
-                            if( targetItem ) {
-                                draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-fullLauncherGridView.contentY);
-                                fullLauncher.isEditionActive = true;
-                                held = true;
-
-                                gridTabModel.remove(targetItem.modelIndex);
-
-                                draggedLauncherIcon.draggingActive = true;
-                            }
-                            else
-                            {
-                                console.log("Couldn't deduce which item was under mouse!");
-                            }
-                        }
-                    }
-                    onReleased: {
-                        if( held && !releaseHeld.running ) {
-                            console.log("trigger drop");
-                            if( draggedLauncherIcon.Drag.target && (typeof draggedLauncherIcon.Drag.target.placeHolderPosition !== "undefined") ) {
-                                draggedLauncherIcon.Drag.drop();
-                            }
-                            else {
-                                console.log("no drop target, resetting drag source");
-                                gridTabModel.insert(draggedLauncherIcon.modelIndex,
-                                                    {title : draggedLauncherIcon.modelTitle,
-                                                     icon: draggedLauncherIcon.modelIcon,
-                                                     id: draggedLauncherIcon.modelId,
-                                                     params: draggedLauncherIcon.modelParams});
-                            }
-
-                            draggedLauncherIcon.draggingActive = false;
-                            releaseHeld.start();
-                        }
-                    }
                 }
 
                 /* Drop areas of the grid */
@@ -491,6 +416,92 @@ Image {
                                    id: drag.source.modelId,
                                    params: drag.source.modelParams});
                     }
+                }
+            }
+        }
+
+        /* Drag area of the grids */
+        MouseArea {
+            id: dragArea
+            anchors { fill: parent }
+
+            z: 1 // in front of the delegates
+
+            drag.target: held ? draggedLauncherIcon : undefined
+            drag.axis: Drag.XAndYAxis
+
+            property bool held: false
+            Timer {
+                id: releaseHeld
+                interval: 200; running: false; repeat: false
+                onTriggered: dragArea.held = false;
+            }
+
+            property GridView currentGridView: tabContentList.currentItem.launcherGridView
+
+            propagateComposedEvents: true
+            onPressed:  {
+                if( fullLauncher.isEditionActive && !held ) {
+                    console.log("=== drag ===");
+
+                    var coordsDragInGridView = mapToItem(currentGridView, mouse.x, mouse.y);
+                    var targetItem = currentGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+currentGridView.contentY);
+
+                    if( targetItem )
+                    {
+                        draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-currentGridView.contentY);
+                        held = true;
+
+                        currentGridView.model.remove(targetItem.modelIndex);
+
+                        draggedLauncherIcon.draggingActive = true;
+                    }
+                    else
+                    {
+                        console.log("Couldn't deduce which item was under mouse!");
+                    }
+                }
+            }
+            onPressAndHold: {
+                if( !held ) {
+                    console.log("=== drag ===");
+                    // move our delegate to the persisted items group
+
+                    var coordsDragInGridView = mapToItem(currentGridView, mouse.x, mouse.y);
+                    var targetItem = currentGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+currentGridView.contentY);
+
+                    if( targetItem ) {
+                        draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-currentGridView.contentY);
+                        fullLauncher.isEditionActive = true;
+                        held = true;
+
+                        currentGridView.model.remove(targetItem.modelIndex);
+
+                        draggedLauncherIcon.draggingActive = true;
+                    }
+                    else
+                    {
+                        console.log("Couldn't deduce which item was under mouse!");
+                    }
+                }
+            }
+            onReleased: {
+                if( held && !releaseHeld.running ) {
+                    console.log("trigger drop");
+                    if( draggedLauncherIcon.Drag.target && (typeof draggedLauncherIcon.Drag.target.placeHolderPosition !== "undefined") ) {
+                        draggedLauncherIcon.Drag.drop();
+                    }
+                    else {
+                        console.log("no drop target, resetting drag source");
+                        currentGridView.model.insert(draggedLauncherIcon.modelIndex,
+                                            {title : draggedLauncherIcon.modelTitle,
+                                             icon: draggedLauncherIcon.modelIcon,
+                                             id: draggedLauncherIcon.modelId,
+                                             params: draggedLauncherIcon.modelParams});
+                    }
+
+                    draggedLauncherIcon.draggingActive = false;
+                    releaseHeld.start();
                 }
             }
         }
