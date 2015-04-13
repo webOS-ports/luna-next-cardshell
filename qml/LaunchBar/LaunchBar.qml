@@ -82,6 +82,22 @@ Item {
         }
     }
 
+  /*
+    // list of icons
+    DraggableAppIconDelegateModel {
+        id: launcherListModel
+        // list of icons
+        model: ListModel { }
+
+        dragParent: fullLauncher
+        dragAxis: Drag.XAxis
+        iconWidth: launchBarItem.launcherBarIconSize
+        iconSize: launchBarItem.launcherBarIconSize
+
+        onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, "");
+        onSaveCurrentLayout: saveCurrentLayout();
+    }
+*/
     // list of icons
     VisualDataModel {
         id: launcherListModel

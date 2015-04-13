@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import QtGraphicalEffects 1.0
+import LunaNext.Common 0.1
 
 Item {
     id: launchableAppIcon
@@ -89,7 +90,7 @@ Item {
             text: launchableAppIcon.appTitle
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-            font.pixelSize: iconSize*0.3
+            font.pixelSize: Units.gu(1.4)
             font.bold: true
             maximumLineCount: 2
             elide: Text.ElideRight

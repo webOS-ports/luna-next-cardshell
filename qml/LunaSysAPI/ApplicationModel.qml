@@ -23,7 +23,17 @@ import LunaNext.Common 0.1
 ListModel {
     id: applicationModel
 
-    property string filter: "*"
+    // filter as a JSON list of property filters
+    // For example, to select only the app "org.webosports.calc", the
+    // filter should be :  { title: 'org.webosports.calc' }
+    property var filter
+    // when the includeAppsWithMissingProperty flag is true and one of the filtering
+    // properties is not found on the launchPoint object, the result
+    property bool includeAppsWithMissingProperty: false
+
+    // signal sent whenever the list of apps has been updated
+    signal appsModelRefreshed();
+
     property QtObject lunaNextLS2Service: LunaService {
         id: service
         name: "org.webosports.luna"
@@ -40,14 +50,30 @@ ListModel {
             "{}", fillFromJSONResult, handleError);
     }
 
+    function isFilteredOut(launchPoint) {
+        if( !applicationModel.filter ) return false; // no filter
+
+        for( var key in applicationModel.filter ) {
+            // if the filtering property isn't there or if it doesn't correspond to the filter,
+            // then filter that launchPoint out
+            if( !applicationModel.includeAppsWithMissingProperty && !launchPoint.hasOwnProperty(key) ) return true;
+            if( launchPoint.hasOwnProperty(key) && launchPoint[key] !== applicationModel.filter[key] ) return true;
+        }
+
+        return false;
+    }
+
     function fillFromJSONResult(message) {
         var result = JSON.parse(message.payload);
         applicationModel.clear();
         if(result.returnValue && result.launchPoints !== undefined) {
             for(var i=0; i<result.launchPoints.length; i++) {
-                applicationModel.append(result.launchPoints[i]);
+                if( !isFilteredOut(result.launchPoints[i]) )
+                    applicationModel.append(result.launchPoints[i]);
             }
         }
+
+        appsModelRefreshed();
     }
 
     function handleLaunchPointChanges(message) {
