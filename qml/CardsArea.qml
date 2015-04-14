@@ -243,11 +243,11 @@ WindowManager {
         id: overlaysManagerInstance
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 
-        visible: !lockScreen.visible
+        visible: !lockScreen.visible || lockScreen.needKeyboard
 
         z: 4 // on top of everything (including fullscreen)
     }

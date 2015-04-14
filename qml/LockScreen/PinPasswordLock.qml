@@ -95,15 +95,6 @@ Item {
         width: 320 - 4;
         x: pinPasswordLock.edgeOffset + 3
         y: titleText.y + titleText.height + (pinPasswordLock.isPINEntry ? 0 : 6)
-
-        onTextFieldClicked: {
-            if(!pinPasswordLock.isPINEntry) {
-                requestFocusChange(true);
-                focus = true;
-            } else {
-                focus = true;
-            }
-        }
     }
 
     PinPad {
