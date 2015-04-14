@@ -25,8 +25,6 @@ Item {
     property int maxPassLength: 30
     property alias enteredText: inputField.text
 
-    signal textFieldClicked();
-
     height: isPIN ? inputField.height + 12 : 50
 
     function keyInput(keyText, isNumber) {
@@ -68,23 +66,15 @@ Item {
         passwordCharacter: "•"
         cursorVisible: !isPIN;
         cursorPosition: text.length;
-        activeFocusOnPress: false;
-        focus: false;
+        activeFocusOnPress: !isPIN;
+        focus: !isPIN && visible;
         horizontalAlignment: isPIN ? TextInput.AlignHCenter : TextInput.AlignLeft;
         color: isPIN ? "#FFF" : "#000";
         font.bold: true;
         font.pixelSize: 18
         font.letterSpacing: 2
         font.family: "Prelude"
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                textFieldClicked();
-            }
-        }
     }
-
     Text {
         id: hintText
         visible: inputField.text.length == 0;

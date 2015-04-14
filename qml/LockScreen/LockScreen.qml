@@ -27,6 +27,8 @@ Item {
     property bool isFirstUse: false
     property bool locked: false;
 
+    property bool needKeyboard: pinPasswordLock.visible && deviceLockMode === "password"
+
     property string deviceLockMode: "none"
 
     function lockDisplay() {
