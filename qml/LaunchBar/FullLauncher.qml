@@ -20,7 +20,7 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
-
+import "../Utils"
 import "../LunaSysAPI" as LunaSysAPI
 
 
@@ -76,7 +76,29 @@ Item {
         }
     ]
 
-    // Background of the full launcher
+    //Tweaks
+    Tweak {
+        id: tabTitleCaseTweak
+        owner: "luna-next-cardshell"
+        key: "tabTitleCase"
+        defaultValue: "capitalizedCase"
+    }
+
+    Tweak {
+        id: tabIndicatorArrowsTweak
+        owner: "luna-next-cardshell"
+        key: "tabIndicatorArrows"
+        defaultValue: "false"
+    }
+
+    Tweak {
+        id: tabIndicatorNumberTweak
+        owner: "luna-next-cardshell"
+        key: "tabIndicatorNumber"
+        defaultValue: "all"
+    }	
+	
+	// Background of the full launcher
     Image {
         anchors.fill: parent
         source: "../images/launcher/launcher-bg.png"
@@ -112,8 +134,8 @@ Item {
         interactive: !draggedLauncherIcon.draggingActive
 
         highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: width/2 - Units.gu(10);
-        preferredHighlightEnd: width/2 + Units.gu(10);
+        //preferredHighlightBegin: tabIndicatorNumberTweak.value === "1" ? 0 : width/2 - Units.gu(10);
+        //preferredHighlightEnd: tabIndicatorNumberTweak.value === "1" ? 0 : width/2 + Units.gu(10);
         highlightMoveDuration: 500
         highlightMoveVelocity: -1
 
@@ -125,7 +147,6 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: Units.gu(20)
             height: tabRowList.height
             checked: tabRowDelegate.ListView.isCurrentItem
 
@@ -155,7 +176,7 @@ Item {
             onClicked: {
                 tabRowDelegate.ListView.view.currentIndex = index;
             }
-            text: model.text
+            text: tabTitleCaseTweak.value==="upperCase" ? model.text.toString().toUpperCase() : tabTitleCaseTweak.value==="lowerCase" ? model.text.toString().toLowerCase() : model.text; 
 
             // the separator on the left should only be visible if is not adjacent to a selected tab
             Image {
@@ -163,6 +184,43 @@ Item {
                 source: Qt.resolvedUrl("../images/launcher/tab-divider.png");
                 visible: !tabRowDelegate.ListView.isCurrentItem &&
                          tabRowDelegate.ListView.view.currentIndex !== index + 1
+            }
+			
+			//Optional arrow indicators enabled by Tweaks
+			Image {
+                anchors { right: parent.right; rightMargin: Units.gu(0.5); verticalCenter: parent.verticalCenter }//top: parent.top; bottom: parent.bottom }
+                source: Qt.resolvedUrl("../images/launcher/dark-arrow-right.png");
+                height: Units.gu(2.5);
+                fillMode: Image.PreserveAspectFit
+                visible: index + 1 < tabRowDelegate.ListView.view.count && tabIndicatorArrowsTweak.value === true
+                smooth: true
+                MouseArea
+                {
+                    anchors.fill: parent
+                    onClicked:
+                    {
+                        tabRowDelegate.ListView.view.currentIndex = index + 1;
+                    }
+                }
+
+            }
+
+            Image {
+                anchors { left: parent.left; leftMargin: Units.gu(0.5); verticalCenter: parent.verticalCenter }//top: parent.top; bottom: parent.bottom }
+                source: Qt.resolvedUrl("../images/launcher/dark-arrow-left.png");
+                height: Units.gu(2.5);
+                fillMode: Image.PreserveAspectFit
+                visible: index + 1 > 1 && tabIndicatorArrowsTweak.value === true
+                smooth: true
+                MouseArea
+                {
+                    anchors.fill: parent
+                    onClicked:
+                    {
+                        tabRowDelegate.ListView.view.currentIndex = index - 1;
+                    }
+
+                }
             }
         }
 
