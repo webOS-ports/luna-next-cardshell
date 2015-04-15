@@ -43,9 +43,14 @@
                 "help": "Define number of tab indicators per page",
                 "key": "tabIndicatorNumber",
                 "type": "ListSelector",
-                "value": "all",
+                "value": "default",
 				"choices": 
 				[ 
+					
+					{
+						"label": "Default",
+						"value": "default"
+					},	
 					{
 						"label": "1",
 						"value": "1"
@@ -75,7 +80,7 @@
                 "help": "Enable or disable showing of tab indicator arrows",
                 "key": "tabIndicatorArrows",
                 "type": "ToggleButton",
-                "value": "false"
+                "value": false
             },						
             {
                 "group": "ui",
