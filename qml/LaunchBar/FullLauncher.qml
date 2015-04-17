@@ -434,88 +434,106 @@ Item {
             }
         }
 
-        /* Drag area of the grids */
-        MouseArea {
-            id: dragArea
+        Flickable {
+            id: flkMouseArea
             anchors { fill: parent }
+            flickableDirection: Flickable.VerticalFlick
 
-            z: 1 // in front of the delegates
+            interactive: !dragArea.held
 
-            drag.target: held ? draggedLauncherIcon : undefined
-            drag.axis: Drag.XAndYAxis
+            contentHeight: tabContentList.currentItem.launcherGridView.contentHeight
+            contentWidth: tabContentList.currentItem.launcherGridView.contentWidth
 
-            property bool held: false
-            Timer {
-                id: releaseHeld
-                interval: 200; running: false; repeat: false
-                onTriggered: dragArea.held = false;
+            // bind the Y with the Y of the grid
+            Binding {
+                target: tabContentList.currentItem.launcherGridView
+                property: "contentY"
+                value: flkMouseArea.contentY
+                when: !!tabContentList.currentItem.launcherGridView
             }
 
-            property GridView currentGridView: tabContentList.currentItem.launcherGridView
+            /* Drag area of the grids */
+            MouseArea {
+                id: dragArea
+                anchors { fill: parent }
 
-            propagateComposedEvents: true
-            onPressed:  {
-                if( fullLauncher.isEditionActive && !held ) {
-                    console.log("=== drag ===");
+                drag.target: held ? draggedLauncherIcon : undefined
+                drag.axis: (!held) ? Drag.XAxis : Drag.XAndYAxis
 
-                    var coordsDragInGridView = mapToItem(currentGridView, mouse.x, mouse.y);
-                    var targetItem = currentGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+currentGridView.contentY);
+                property GridView currentGridView: tabContentList.currentItem.launcherGridView
 
-                    if( targetItem )
-                    {
-                        draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-currentGridView.contentY);
-                        held = true;
+                property bool held: false
+                Timer {
+                    id: releaseHeld
+                    interval: 200; running: false; repeat: false
+                    onTriggered: dragArea.held = false;
+                }
 
-                        currentGridView.model.remove(targetItem.modelIndex);
+                propagateComposedEvents: true
 
-                        draggedLauncherIcon.draggingActive = true;
-                    }
-                    else
-                    {
-                        console.log("Couldn't deduce which item was under mouse!");
+                onPressed:  {
+                    if( fullLauncher.isEditionActive && !held ) {
+                        console.log("=== drag ===");
+
+                        var coordsDragInGridView = mapToItem(currentGridView, mouse.x, mouse.y);
+                        var targetItem = currentGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+currentGridView.contentY);
+
+                        if( targetItem )
+                        {
+                            draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-currentGridView.contentY);
+                            held = true;
+
+                            currentGridView.model.remove(targetItem.modelIndex);
+
+                            draggedLauncherIcon.draggingActive = true;
+                        }
+                        else
+                        {
+                            console.log("Couldn't deduce which item was under mouse!");
+                        }
                     }
                 }
-            }
-            onPressAndHold: {
-                if( !held ) {
-                    console.log("=== drag ===");
-                    // move our delegate to the persisted items group
+                onPressAndHold: {
+                    if( !held ) {
+                        console.log("=== drag ===");
+                        // move our delegate to the persisted items group
 
-                    var coordsDragInGridView = mapToItem(currentGridView, mouse.x, mouse.y);
-                    var targetItem = currentGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+currentGridView.contentY);
+                        var coordsDragInGridView = mapToItem(currentGridView, mouse.x, mouse.y);
+                        var targetItem = currentGridView.itemAt(coordsDragInGridView.x, coordsDragInGridView.y+currentGridView.contentY);
 
-                    if( targetItem ) {
-                        draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-currentGridView.contentY);
-                        fullLauncher.isEditionActive = true;
-                        held = true;
+                        if( targetItem ) {
+                            draggedLauncherIcon.initiateDragWithItem(targetItem, targetItem.x, targetItem.y-currentGridView.contentY);
+                            fullLauncher.isEditionActive = true;
+                            held = true;
 
-                        currentGridView.model.remove(targetItem.modelIndex);
+                            currentGridView.model.remove(targetItem.modelIndex);
 
-                        draggedLauncherIcon.draggingActive = true;
-                    }
-                    else
-                    {
-                        console.log("Couldn't deduce which item was under mouse!");
+                            draggedLauncherIcon.draggingActive = true;
+                        }
+                        else
+                        {
+                            console.log("Couldn't deduce which item was under mouse!");
+                        }
                     }
                 }
-            }
-            onReleased: {
-                if( held && !releaseHeld.running ) {
-                    console.log("trigger drop");
-                    if( draggedLauncherIcon.Drag.target && (typeof draggedLauncherIcon.Drag.target.placeHolderPosition !== "undefined") ) {
-                        draggedLauncherIcon.Drag.drop();
-                    }
-                    else {
-                        console.log("no drop target, resetting drag source");
-                        currentGridView.model.insert(draggedLauncherIcon.modelIndex,
-                                            {title : draggedLauncherIcon.modelTitle,
-                                             icon: draggedLauncherIcon.modelIcon,
-                                             id: draggedLauncherIcon.modelId,
-                                             params: draggedLauncherIcon.modelParams});
-                    }
+                onReleased: {
+                    if( held && !releaseHeld.running ) {
+                        console.log("trigger drop");
+                        if( draggedLauncherIcon.Drag.target && (typeof draggedLauncherIcon.Drag.target.placeHolderPosition !== "undefined") ) {
+                            draggedLauncherIcon.Drag.drop();
+                        }
+                        else {
+                            console.log("no drop target, resetting drag source");
+                            currentGridView.model.insert(draggedLauncherIcon.modelIndex,
+                                                {title : draggedLauncherIcon.modelTitle,
+                                                 icon: draggedLauncherIcon.modelIcon,
+                                                 id: draggedLauncherIcon.modelId,
+                                                 params: draggedLauncherIcon.modelParams});
+                        }
 
-                    draggedLauncherIcon.draggingActive = false;
-                    releaseHeld.start();
+                        draggedLauncherIcon.draggingActive = false;
+                        releaseHeld.start();
+                    }
                 }
             }
         }
