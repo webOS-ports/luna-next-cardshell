@@ -38,18 +38,6 @@ Item {
         return Math.floor(remainingHSpace / nbCellsPerLine);
     }
 
-	function getButtonWidth() {
-        if (tabIndicatorNumberTweak.value === "default") {
-            return "default"
-        } else if (tabIndicatorNumberTweak.value === "all") {
-            return "all"
-        } else {
-            return tabIndicatorNumberTweak.value
-        }
-    }
-	
-	property string tabButtonWidthDivider: getButtonWidth()
-	
     property real appIconWidth: iconSize*1.5
     property real appIconHMargin: calculateAppIconHMargin(fullLauncher, appIconWidth)
 
@@ -148,8 +136,8 @@ Item {
         interactive: !draggedLauncherIcon.draggingActive
 
         highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: tabButtonWidthDivider === "default" ? width/2 - Units.gu(10) :"";
-        preferredHighlightEnd: tabButtonWidthDivider === "default" ? width/2 + Units.gu(10) :"";
+        preferredHighlightBegin: tabButtonWidthDivider === "default" ? width/2 - Units.gu(10) : undefined;
+        preferredHighlightEnd: tabButtonWidthDivider === "default" ? width/2 + Units.gu(10) : undefined;
         highlightMoveDuration: 500
         highlightMoveVelocity: -1
 
@@ -161,7 +149,7 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: tabButtonWidthDivider === "default" ? Units.gu(20) : tabButtonWidthDivider === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabButtonWidthDivider
+            width: tabButtonWidthDivider === "default" ? Units.gu(20) : tabButtonWidthDivider === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabIndicatorNumberTweak.value
             height: tabRowList.height
             checked: tabRowDelegate.ListView.isCurrentItem
 
