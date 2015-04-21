@@ -19,7 +19,6 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
-import QtQuick.Window 2.1
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
 
@@ -41,11 +40,7 @@ Item {
 
 	function getButtonWidth() {
         if (tabIndicatorNumberTweak.value === "default") {
-            if (Screen.width > Screen.height) {
-                return "all"
-            } else {
-                return 2
-            }
+            return "default"
         } else if (tabIndicatorNumberTweak.value === "all") {
             return "all"
         } else {
@@ -153,8 +148,8 @@ Item {
         interactive: !draggedLauncherIcon.draggingActive
 
         highlightRangeMode: ListView.ApplyRange
-        //preferredHighlightBegin: width/2 - Units.gu(10);
-        //preferredHighlightEnd: width/2 + Units.gu(10);
+        preferredHighlightBegin: tabButtonWidthDivider === "default" ? width/2 - Units.gu(10) :"";
+        preferredHighlightEnd: tabButtonWidthDivider === "default" ? width/2 + Units.gu(10) :"";
         highlightMoveDuration: 500
         highlightMoveVelocity: -1
 
@@ -166,7 +161,7 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: tabButtonWidthDivider === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabButtonWidthDivider
+            width: tabButtonWidthDivider === "default" ? Units.gu(20) : tabButtonWidthDivider === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabButtonWidthDivider
             height: tabRowList.height
             checked: tabRowDelegate.ListView.isCurrentItem
 
@@ -199,15 +194,12 @@ Item {
             text: tabTitleCaseTweak.value === "upperCase" ? model.text.toString().toUpperCase() : tabTitleCaseTweak.value === "lowerCase" ? model.text.toString().toLowerCase() : model.text
 
 			
-			            function getArrowVisible(arrowDirection) {
-                //console.log("left visible tabIndicatorNumberTweak.value: "+tabIndicatorNumberTweak.value + " Screen.width: "+Screen.width+" Screen.height: "+Screen.height + " tabIndicatorArrowsTweak.value: "+tabIndicatorArrowsTweak.value+ " index: "+index)
+            function getArrowVisible(arrowDirection) {
                 if (tabIndicatorArrowsTweak.value===true) {
                     if (tabIndicatorNumberTweak.value === "default") {
-                        if (Screen.width > Screen.height) {
-                            console.log("default + wide")
+                        if (fullLauncher.width > fullLauncher.height) {
                             return false
                         } else {
-                            console.log("default + narrow")
                             return true
                         }
                     } if (tabIndicatorNumberTweak.value === "all") {
@@ -237,7 +229,7 @@ Item {
                                 return true
                             } //Left arrow for the other tabs, except for last page
                             if (tabRowDelegate.ListView.view.currentIndex > 0
-                            && tabRowDelegate.ListView.view.currentIndex === index
+                                    && tabRowDelegate.ListView.view.currentIndex === index
                                     && index !== tabRowDelegate.ListView.view.count - 1) {
                                 return true
                             } else {
@@ -262,7 +254,7 @@ Item {
                                 return true
                             } //Left arrow for the other tabs, except for last page
                             if (tabRowDelegate.ListView.view.currentIndex > 0
-                            && tabRowDelegate.ListView.view.currentIndex === index
+                                    && tabRowDelegate.ListView.view.currentIndex === index
                                     && index !== tabRowDelegate.ListView.view.count - 2
                                     && index !== tabRowDelegate.ListView.view.count - 1) {
                                 return true
@@ -287,7 +279,7 @@ Item {
                                 return true
                             } //Left arrow for the other tabs, except for last page
                             if (tabRowDelegate.ListView.view.currentIndex > 0
-                            && tabRowDelegate.ListView.view.currentIndex === index
+                                    && tabRowDelegate.ListView.view.currentIndex === index
                                     && index !== tabRowDelegate.ListView.view.count - 3
                                     && index !== tabRowDelegate.ListView.view.count - 2
                                     && index !== tabRowDelegate.ListView.view.count - 1) {
@@ -310,9 +302,13 @@ Item {
                         return false
                     }
                 }
+                else
+                {
+                    return false
+                }
             }
             
-			//Optional arrow indicators enabled by Tweaks
+            //Optional arrow indicators enabled by Tweaks
             Image {
                 anchors {
                     left: parent.left
