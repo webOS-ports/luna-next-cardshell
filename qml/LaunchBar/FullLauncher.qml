@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2015 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,9 +19,11 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
+import QtQuick.Window 2.1
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
 
+import "../Utils"
 import "../LunaSysAPI" as LunaSysAPI
 
 
@@ -36,6 +39,22 @@ Item {
         return Math.floor(remainingHSpace / nbCellsPerLine);
     }
 
+	function getButtonWidth() {
+        if (tabIndicatorNumberTweak.value === "default") {
+            if (Screen.width > Screen.height) {
+                return "all"
+            } else {
+                return 2
+            }
+        } else if (tabIndicatorNumberTweak.value === "all") {
+            return "all"
+        } else {
+            return tabIndicatorNumberTweak.value
+        }
+    }
+	
+	property string tabButtonWidthDivider: getButtonWidth()
+	
     property real appIconWidth: iconSize*1.5
     property real appIconHMargin: calculateAppIconHMargin(fullLauncher, appIconWidth)
 
@@ -76,6 +95,28 @@ Item {
         }
     ]
 
+	//Tweaks
+    Tweak {
+        id: tabTitleCaseTweak
+        owner: "luna-next-cardshell"
+        key: "tabTitleCase"
+        defaultValue: "capitalizedCase"
+    }
+
+    Tweak {
+        id: tabIndicatorArrowsTweak
+        owner: "luna-next-cardshell"
+        key: "tabIndicatorArrows"
+        defaultValue: true
+    }
+
+    Tweak {
+        id: tabIndicatorNumberTweak
+        owner: "luna-next-cardshell"
+        key: "tabIndicatorNumber"
+        defaultValue: "default"
+    }
+	
     // Background of the full launcher
     Image {
         anchors.fill: parent
@@ -112,8 +153,8 @@ Item {
         interactive: !draggedLauncherIcon.draggingActive
 
         highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: width/2 - Units.gu(10);
-        preferredHighlightEnd: width/2 + Units.gu(10);
+        //preferredHighlightBegin: width/2 - Units.gu(10);
+        //preferredHighlightEnd: width/2 + Units.gu(10);
         highlightMoveDuration: 500
         highlightMoveVelocity: -1
 
@@ -125,7 +166,7 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: Units.gu(20)
+            width: tabButtonWidthDivider === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabButtonWidthDivider
             height: tabRowList.height
             checked: tabRowDelegate.ListView.isCurrentItem
 
@@ -155,8 +196,163 @@ Item {
             onClicked: {
                 tabRowDelegate.ListView.view.currentIndex = index;
             }
-            text: model.text
+            text: tabTitleCaseTweak.value === "upperCase" ? model.text.toString().toUpperCase() : tabTitleCaseTweak.value === "lowerCase" ? model.text.toString().toLowerCase() : model.text
 
+			
+			            function getArrowVisible(arrowDirection) {
+                //console.log("left visible tabIndicatorNumberTweak.value: "+tabIndicatorNumberTweak.value + " Screen.width: "+Screen.width+" Screen.height: "+Screen.height + " tabIndicatorArrowsTweak.value: "+tabIndicatorArrowsTweak.value+ " index: "+index)
+                if (tabIndicatorArrowsTweak.value===true) {
+                    if (tabIndicatorNumberTweak.value === "default") {
+                        if (Screen.width > Screen.height) {
+                            console.log("default + wide")
+                            return false
+                        } else {
+                            console.log("default + narrow")
+                            return true
+                        }
+                    } if (tabIndicatorNumberTweak.value === "all") {
+                        console.log("all")
+                        return false
+                    } if (tabIndicatorNumberTweak.value === "1") {
+                        if (arrowDirection === "left"
+                                && ((index > 0)
+                                    || (tabRowDelegate.ListView.view.currentIndex > 0))) {
+                            return true
+                        }
+                        if (arrowDirection === "right"
+                                && tabRowDelegate.ListView.view.count > 1
+                                && ((index + 1 !== tabRowDelegate.ListView.view.count)
+                                    || (tabRowDelegate.ListView.view.currentIndex + 1
+                                        !== tabRowDelegate.ListView.view.count))) {
+                            return true
+                        } else {
+                            return false
+                        }
+                    } if (tabIndicatorNumberTweak.value === "2") {
+                        if (arrowDirection === "left")
+                        {
+                            //For lef tab on last page
+                            if (tabRowDelegate.ListView.view.currentIndex >= index
+                                    && index === tabRowDelegate.ListView.view.count - 2) {
+                                return true
+                            } //Left arrow for the other tabs, except for last page
+                            if (tabRowDelegate.ListView.view.currentIndex > 0
+                            && tabRowDelegate.ListView.view.currentIndex === index
+                                    && index !== tabRowDelegate.ListView.view.count - 1) {
+                                return true
+                            } else {
+                                return false
+                            }
+                        }
+
+                        //Show always on the tab right of the current one, except for last page
+                        if (arrowDirection === "right" && tabRowDelegate.ListView.view.currentIndex + 1 === index
+                                && tabRowDelegate.ListView.view.currentIndex
+                                !== tabRowDelegate.ListView.view.count - 2) {
+                            return true
+                        } else {
+                            return false
+                        }
+                    } //For when we have 3 tabs
+                    if (tabIndicatorNumberTweak.value === "3") {
+                        if (arrowDirection === "left") {
+                            //For left tab on last page
+                            if (tabRowDelegate.ListView.view.currentIndex >= index
+                                    && index === tabRowDelegate.ListView.view.count - 3) {
+                                return true
+                            } //Left arrow for the other tabs, except for last page
+                            if (tabRowDelegate.ListView.view.currentIndex > 0
+                            && tabRowDelegate.ListView.view.currentIndex === index
+                                    && index !== tabRowDelegate.ListView.view.count - 2
+                                    && index !== tabRowDelegate.ListView.view.count - 1) {
+                                return true
+                            } else {
+                                return false
+                            }
+                        }
+
+                        if (arrowDirection === "right"
+                                && tabRowDelegate.ListView.view.currentIndex + 2 === index
+                                && index !== tabRowDelegate.ListView.view.count - 1) {
+                            return true
+                        } else {
+                            return false
+                        }
+                    } //For when we have 4 tabs
+                    if (tabIndicatorNumberTweak.value === "4") {
+                        if (arrowDirection === "left") {
+                            //For left tab on last page
+                            if (tabRowDelegate.ListView.view.currentIndex >= index
+                                    && index === tabRowDelegate.ListView.view.count - 4) {
+                                return true
+                            } //Left arrow for the other tabs, except for last page
+                            if (tabRowDelegate.ListView.view.currentIndex > 0
+                            && tabRowDelegate.ListView.view.currentIndex === index
+                                    && index !== tabRowDelegate.ListView.view.count - 3
+                                    && index !== tabRowDelegate.ListView.view.count - 2
+                                    && index !== tabRowDelegate.ListView.view.count - 1) {
+                                return true
+                            } else {
+                                return false
+                            }
+                        }
+
+                        if (arrowDirection === "right"
+                                && tabRowDelegate.ListView.view.currentIndex + 3 === index
+                                && index !== tabRowDelegate.ListView.view.count - 1) {
+                            return true
+                        } else {
+                            return false
+                        }
+                    }
+                    //For other options no arrows
+                    else {
+                        return false
+                    }
+                }
+            }
+            
+			//Optional arrow indicators enabled by Tweaks
+            Image {
+                anchors {
+                    left: parent.left
+                    leftMargin: Units.gu(0.5)
+                    verticalCenter: parent.verticalCenter
+                } 
+                source: Qt.resolvedUrl("../images/launcher/dark-arrow-left.png")
+                height: Units.gu(2.5)
+                fillMode: Image.PreserveAspectFit
+                visible: getArrowVisible(
+                             "left") 
+                smooth: true
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        tabRowDelegate.ListView.view.currentIndex = index - 1
+                    }
+                }
+            }
+            
+			Image {
+                anchors {
+                    right: parent.right
+                    rightMargin: Units.gu(0.5)
+                    verticalCenter: parent.verticalCenter
+                } 
+                source: Qt.resolvedUrl(
+                            "../images/launcher/dark-arrow-right.png")
+                height: Units.gu(2.5)
+                fillMode: Image.PreserveAspectFit
+                visible: getArrowVisible("right")
+                smooth: true
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        tabRowDelegate.ListView.view.currentIndex = index + 1
+                    }
+                }
+            }
+			
             // the separator on the left should only be visible if is not adjacent to a selected tab
             Image {
                 anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
