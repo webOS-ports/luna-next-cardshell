@@ -12,8 +12,78 @@
                 "type": "ToggleButton",
                 "value": true
             },
+			{
+                "group": "launcher",
+                "restart": "none",
+                "label": "Tab title case",
+                "help": "UPPER, lower or Capitalized Case for Tab titles",
+                "key": "tabTitleCase",
+                "type": "ListSelector",
+                "value": "capitalizedCase",
+				"choices": 
+				[ 
+					{
+						"label": "UPPERCASE",
+						"value": "upperCase"
+					}, 
+					{
+						"label": "lowercase",
+						"value": "lowerCase"
+					}, 
+					{
+						"label": "Capitalized Case",
+						"value": "capitalizedCase"
+					} 	
+				]
+            },
+			{
+                "group": "launcher",
+                "restart": "none",
+                "label": "Tab indicators per page",
+                "help": "Define number of tab indicators per page",
+                "key": "tabIndicatorNumber",
+                "type": "ListSelector",
+                "value": "default",
+				"choices": 
+				[ 
+					
+					{
+						"label": "Default",
+						"value": "default"
+					},	
+					{
+						"label": "1",
+						"value": "1"
+					}, 
+					{
+						"label": "2",
+						"value": "2"
+					}, 
+					{
+						"label": "3",
+						"value": "3"
+					},
+					{
+						"label": "4",
+						"value": "4"
+					},
+					{
+						"label": "All",
+						"value": "all"
+					}					
+				]
+            },			
+			{
+                "group": "launcher",
+                "restart": "none",
+                "label": "Tab indicator arrows",
+                "help": "Enable or disable showing of tab indicator arrows",
+                "key": "tabIndicatorArrows",
+                "type": "ToggleButton",
+                "value": false
+            },						
             {
-                "group": "ui (experimental)",
+                "group": "ui",
                 "restart": "luna",
                 "label": "Enable stacked cards",
                 "help": "Enable or disable stacked cards",
