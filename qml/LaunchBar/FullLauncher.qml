@@ -90,7 +90,7 @@ Item {
         id: tabIndicatorArrowsTweak
         owner: "luna-next-cardshell"
         key: "tabIndicatorArrows"
-        defaultValue: true
+        defaultValue: false
     }
 
     Tweak {
@@ -136,8 +136,8 @@ Item {
         interactive: !draggedLauncherIcon.draggingActive
 
         highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: tabButtonWidthDivider === "default" ? width/2 - Units.gu(10) : undefined;
-        preferredHighlightEnd: tabButtonWidthDivider === "default" ? width/2 + Units.gu(10) : undefined;
+        preferredHighlightBegin: tabIndicatorNumberTweak.value === "default" ? width/2 - Units.gu(10) : 0;
+        preferredHighlightEnd: tabIndicatorNumberTweak.value === "default" ? width/2 + Units.gu(10) : tabRowList.width;
         highlightMoveDuration: 500
         highlightMoveVelocity: -1
 
@@ -149,7 +149,7 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: tabButtonWidthDivider === "default" ? Units.gu(20) : tabButtonWidthDivider === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabIndicatorNumberTweak.value
+            width: tabIndicatorNumberTweak.value === "default" ? Units.gu(20) : tabIndicatorNumberTweak.value === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabIndicatorNumberTweak.value
             height: tabRowList.height
             checked: tabRowDelegate.ListView.isCurrentItem
 
