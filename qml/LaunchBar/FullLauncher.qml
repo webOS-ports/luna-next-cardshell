@@ -134,6 +134,8 @@ Item {
         highlightMoveDuration: 500
         highlightMoveVelocity: -1
 
+        snapMode: ListView.SnapOneItem
+
         //Optional arrow indicators
         Image {
             anchors {
