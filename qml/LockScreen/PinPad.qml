@@ -17,19 +17,22 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Item {
     id: pinPad;
 
-    width: 320
+    width: Units.gu(320/8)
     height: gridDividers.height
 
     Image {
         id: gridDividers
-
+		width: pinPad.width
+		fillMode: Image.PreserveAspectFit
         source: "../images/pin/pin-grid.png"
-        property int topOffset: 4
-        property int bottomOffset: 6
+        property int topOffset: Units.gu(4/8)
+        property int bottomOffset: Units.gu(6/8)
+		smooth: true
     }
 
     Grid {
@@ -55,6 +58,7 @@ Item {
         Rectangle { color: "transparent"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows;}
         PinButton { caption: "0"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
         PinButton { imgSource: "../images/pin/icon-delete.png"; caption: "\b"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
+		//PinButton { imgSource: "../images/pin/icon-delete.png"; caption: "\b"; onAction: keyAction(text);}
     }
 
     signal keyAction(string keyText);

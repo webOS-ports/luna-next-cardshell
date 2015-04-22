@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.1
+import LunaNext.Common 0.1
 
 Item {
     property bool   isPressed: false
@@ -26,8 +27,8 @@ Item {
     property bool   negative:    false
     property real   inactiveOpacity: 0.70
 
-    width:  200;
-    height:  40;
+    width:  Units.gu(200/8);
+    height:  Units.gu(40/8);
 
     BorderImage {
         id: pressedBkg
@@ -37,8 +38,10 @@ Item {
         visible: true;
         width: parent.width;
         height: parent.height;
-        border { left: 10; top: 10; right: 10; bottom: 10 }
+        border { left: Units.gu(10/8); top: Units.gu(10/8); right: Units.gu(10/8); bottom: Units.gu(10/8) }
         opacity: active ? 1.0 : inactiveOpacity
+		smooth: true
+		//fillMode: Image.PreserveAspectFit
     }
 
     Text {
@@ -47,7 +50,7 @@ Item {
         anchors.centerIn: parent
         color: "#FFF";
         font.bold: true;
-        font.pixelSize: 16
+        font.pixelSize: FontUtils.sizeToPixels("medium") //16
         font.family: "Prelude"
         opacity: active ? 1.0 : inactiveOpacity
     }
