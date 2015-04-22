@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2015 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +22,7 @@ import QtQuick.Controls.Styles 1.1
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
 
+import "../Utils"
 import "../LunaSysAPI" as LunaSysAPI
 
 
@@ -76,6 +78,21 @@ Item {
         }
     ]
 
+	//Tweaks
+    Tweak {
+        id: tabTitleCaseTweak
+        owner: "luna-next-cardshell"
+        key: "tabTitleCase"
+        defaultValue: "capitalizedCase"
+    }
+
+    Tweak {
+        id: tabIndicatorNumberTweak
+        owner: "luna-next-cardshell"
+        key: "tabIndicatorNumber"
+        defaultValue: "default"
+    }
+	
     // Background of the full launcher
     Image {
         anchors.fill: parent
@@ -112,10 +129,53 @@ Item {
         interactive: !draggedLauncherIcon.draggingActive
 
         highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: width/2 - Units.gu(10);
-        preferredHighlightEnd: width/2 + Units.gu(10);
+        preferredHighlightBegin: tabIndicatorNumberTweak.value === "default" ? width/2 - Units.gu(10) : 0;
+        preferredHighlightEnd: tabIndicatorNumberTweak.value === "default" ? width/2 + Units.gu(10) : tabRowList.width;
         highlightMoveDuration: 500
         highlightMoveVelocity: -1
+
+        snapMode: ListView.SnapOneItem
+
+        //Optional arrow indicators
+        Image {
+            anchors {
+                left: parent.left
+                leftMargin: Units.gu(0.5)
+                verticalCenter: parent.verticalCenter
+            }
+            source: Qt.resolvedUrl("../images/launcher/dark-arrow-left.png")
+            height: Units.gu(2.5)
+            fillMode: Image.PreserveAspectFit
+            visible: !tabRowList.atXBeginning
+            smooth: true
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    tabRowList.currentIndex = tabRowList.currentIndex - 1
+                }
+            }
+        }
+
+        Image {
+            anchors {
+                right: parent.right
+                rightMargin: Units.gu(0.5)
+                verticalCenter: parent.verticalCenter
+            }
+            source: Qt.resolvedUrl(
+                        "../images/launcher/dark-arrow-right.png")
+            height: Units.gu(2.5)
+            fillMode: Image.PreserveAspectFit
+            visible: !tabRowList.atXEnd
+            smooth: true
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    tabRowList.currentIndex = tabRowList.currentIndex + 1
+                }
+            }
+        }
+
 
         onCurrentIndexChanged: tabContentList.currentIndex = currentIndex;
 
@@ -125,7 +185,7 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: Units.gu(20)
+            width: tabIndicatorNumberTweak.value === "default" ? Units.gu(20) : tabIndicatorNumberTweak.value === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabIndicatorNumberTweak.value
             height: tabRowList.height
             checked: tabRowDelegate.ListView.isCurrentItem
 
@@ -155,8 +215,9 @@ Item {
             onClicked: {
                 tabRowDelegate.ListView.view.currentIndex = index;
             }
-            text: model.text
+            text: tabTitleCaseTweak.value === "upperCase" ? model.text.toString().toUpperCase() : tabTitleCaseTweak.value === "lowerCase" ? model.text.toString().toLowerCase() : model.text
 
+			
             // the separator on the left should only be visible if is not adjacent to a selected tab
             Image {
                 anchors { right: parent.right; top: parent.top; bottom: parent.bottom }
