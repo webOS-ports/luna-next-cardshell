@@ -73,15 +73,6 @@
 					}					
 				]
             },			
-			{
-                "group": "launcher",
-                "restart": "none",
-                "label": "Tab indicator arrows",
-                "help": "Enable or disable showing of tab indicator arrows",
-                "key": "tabIndicatorArrows",
-                "type": "ToggleButton",
-                "value": false
-            },						
             {
                 "group": "ui",
                 "restart": "luna",
