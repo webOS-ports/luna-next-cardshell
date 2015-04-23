@@ -17,6 +17,7 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Item {
     property bool isPressed: false
@@ -30,7 +31,8 @@ Item {
         visible: isPressed;
         width: parent.width;
         height: parent.height;
-        border { left: 10; top: 10; right: 10; bottom: 10 }
+        border { left: Units.gu(10/8); top: Units.gu(10/8); right: Units.gu(10/8); bottom: Units.gu(10/8) }
+        smooth: true
     }
 
     Text {
@@ -40,7 +42,7 @@ Item {
         anchors.centerIn: parent
         color: "#FFF";
         font.bold: true;
-        font.pixelSize: 30
+        font.pixelSize: FontUtils.sizeToPixels("x-large") //30
         font.family: "Prelude"
         font.capitalization: Font.AllUppercase
     }
@@ -50,6 +52,8 @@ Item {
         source: imgSource
         visible: imgSource != "";
         anchors.centerIn: parent
+        smooth: true
+        fillMode: Image.PreserveAspectFit
     }
 
     MouseArea {

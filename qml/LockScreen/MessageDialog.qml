@@ -17,11 +17,12 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 Item {
-    property int  edgeOffset: 11
-    property int  margin: 6
-    property int  topOffset: 4
+    property int  edgeOffset: Units.gu(11/8) 
+    property int  margin: Units.gu(6/8)
+    property int  topOffset: Units.gu(4/8)
 
     property string dialogTitle: "Title"
     property string dialogMessage: "Message Body."
@@ -35,7 +36,7 @@ Item {
     signal button2Pressed();
     signal button3Pressed();
 
-    width: 320 + 2 * edgeOffset
+    width: Units.gu(320/8) + Units.gu(2/8) * edgeOffset
     height: titleText.height + msgText.height + ((numberOfButtons > 0) ? (button1.height + button2.height + button3.height) : edgeOffset) + 2*edgeOffset + 4*margin + topOffset;
 
     id: dialog;
@@ -91,14 +92,15 @@ Item {
         source: "../images/popup-bg.png"
         width: parent.width;
         height: parent.height;
-        border { left: 35; top: 40; right: 35; bottom: 40 }
+        border { left: Units.gu(35/8); top: Units.gu(40/8); right: Units.gu(35/8); bottom: Units.gu(40/8) }
+        smooth: true
     }
 
     Text {
         id: titleText;
         width: dialog.width - 2 * (edgeOffset + margin);
         font.family: "Prelude"
-        font.pixelSize: 18
+        font.pixelSize: FontUtils.sizeToPixels("large)//18
         font.bold: true;
         wrapMode: Text.Wrap;
         color: "#FFF";
@@ -113,7 +115,7 @@ Item {
         id: msgText;
         width: dialog.width - 2 * (edgeOffset + margin);
         font.family: "Prelude"
-        font.pixelSize: 14
+        font.pixelSize: FontUtils.sizeToPixels("medium") //14
         font.bold: true;
         wrapMode: Text.Wrap;
         color: "#FFF";
@@ -129,8 +131,8 @@ Item {
         id: button1;
         caption: "Button 1";
         width: dialog.width - 2 * (edgeOffset + margin) - 1;
-        height: visible ? 52 : 0;
-        x: edgeOffset + margin + 1;
+        height: visible ? Units.gu(52/8) : 0;
+        x: edgeOffset + margin + Units.gu(1/8);
         y: msgText.y + msgText.height + margin;
         visible: numberOfButtons > 0;
         onAction: button1Pressed();
@@ -139,9 +141,9 @@ Item {
     ActionButton {
         id: button2;
         caption: "Button 2";
-        width: dialog.width - 2 * (edgeOffset + margin) - 1;
-        height: visible ? 52 : 0;
-        x: edgeOffset + margin + 1;
+        width: dialog.width - 2 * (edgeOffset + margin) - Units.gu(1/8);
+        height: visible ? Units.gu(52/8) : 0;
+        x: edgeOffset + margin + Units.gu(1/8);
         y: button1.y + button1.height
         visible: numberOfButtons > 1;
         onAction: button2Pressed();
@@ -150,9 +152,9 @@ Item {
     ActionButton {
         id: button3;
         caption: "Button 3";
-        width: dialog.width - 2 * (edgeOffset + margin) - 1;
-        height: visible ? 52 : 0;
-        x: edgeOffset + margin + 1;
+        width: dialog.width - 2 * (edgeOffset + margin) - Units.gu(1/8);
+        height: visible ? Units.gu(52/8) : 0;
+        x: edgeOffset + margin + Units.gu(1/8);
         y: button2.y + button2.height
         visible: numberOfButtons > 2;
         onAction: button3Pressed();
