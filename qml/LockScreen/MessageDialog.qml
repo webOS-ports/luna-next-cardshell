@@ -100,7 +100,7 @@ Item {
         id: titleText;
         width: dialog.width - 2 * (edgeOffset + margin);
         font.family: "Prelude"
-        font.pixelSize: FontUtils.sizeToPixels("large)//18
+        font.pixelSize: FontUtils.sizeToPixels("large")//18
         font.bold: true;
         wrapMode: Text.Wrap;
         color: "#FFF";
