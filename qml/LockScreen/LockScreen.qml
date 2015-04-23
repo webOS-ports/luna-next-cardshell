@@ -114,6 +114,7 @@ Item {
         visible: lockScreen.state === "pin-password"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: (Qt.inputMethod.keyboardRectangle.height/8)*-1
 
         onUnlock: unlockDisplay()
         onCanceled: {

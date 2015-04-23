@@ -16,7 +16,7 @@
 *
 * LICENSE@@@ */
 
-import QtQuick 2.0
+import QtQuick 2.4
 import LunaNext.Common 0.1
 
 Item {
@@ -25,7 +25,7 @@ Item {
     property int maxPassLength: 30
     property alias enteredText: inputField.text
 
-    height: isPIN ? inputField.height + 12 : 50
+    height: isPIN ? inputField.height + Units.gu(12/8) : Units.gu(50/8)
 
     function keyInput(keyText, isNumber) {
         if(inputField.text.length < (isPIN ? maxPINLength : maxPassLength)) {
@@ -54,15 +54,16 @@ Item {
         source: "../images/pin/password-lock-field.png"
         width: parent.width;
         height: parent.height;
-        border { left: 30; top: 10; right: 30; bottom: 10 }
+        border { left: Units.gu(30/8); top: Units.gu(10/8); right: Units.gu(30/8); bottom: Units.gu(10/8) }
+        smooth: true
     }
 
     TextInput {
         id: inputField;
-        width: parent.width - 16;
+        width: parent.width - Units.gu(16/8);
         anchors.verticalCenter: parent.verticalCenter;
         anchors.horizontalCenter: parent.horizontalCenter;
-        echoMode: TextInput.PasswordEchoOnEdit;
+        echoMode: TextInput.Password;
         passwordCharacter: "•"
         cursorVisible: !isPIN;
         cursorPosition: text.length;
@@ -71,21 +72,21 @@ Item {
         horizontalAlignment: isPIN ? TextInput.AlignHCenter : TextInput.AlignLeft;
         color: isPIN ? "#FFF" : "#000";
         font.bold: true;
-        font.pixelSize: 18
-        font.letterSpacing: 2
+        font.pixelSize: FontUtils.sizeToPixels("large")//18
+        //font.letterSpacing is disabled due to LNC crash on TP currently
+		//font.letterSpacing: 2
         font.family: "Prelude"
     }
     Text {
         id: hintText
         visible: inputField.text.length == 0;
         color: "#9C9C9C";
-        font.pixelSize: 17
+        font.pixelSize: FontUtils.sizeToPixels("large")
         font.family: "Prelude"
-        width: parent.width - 20;
+        width: parent.width - Units.gu(20/8);
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: isPIN ? Text.AlignHCenter : Text.AlignLeft;
-
         text: isPIN ? "Enter PIN" : " Enter Password"; // Localize this
     }
 }
