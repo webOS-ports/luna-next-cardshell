@@ -91,6 +91,8 @@ Rectangle {
                             height: dashboardCardFixedHeight
                             rotation: -180
 
+                            onWidthChanged: if(window) window.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
+
                             children: [ window ]
 
                             Component.onCompleted: {
