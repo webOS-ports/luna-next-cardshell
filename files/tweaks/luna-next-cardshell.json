@@ -80,7 +80,7 @@
                 "help": "Enable or disable stacked cards",
                 "key": "stackedCardSupport",
                 "type": "ToggleButton",
-                "value": false
+                "value": true
             },
 
 			{
