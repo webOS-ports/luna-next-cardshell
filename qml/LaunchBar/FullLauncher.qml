@@ -58,6 +58,7 @@ Item {
             AnchorChanges { target: fullLauncher; anchors.top: parent.bottom; anchors.bottom: undefined }
             PropertyChanges { target: fullLauncher; visible: false }
             PropertyChanges { target: fullLauncher; isEditionActive: false; restoreEntryValues: false }
+            PropertyChanges { target: flkMouseArea; contentY: 0; restoreEntryValues: false }
         },
         State {
             name: "visible"
