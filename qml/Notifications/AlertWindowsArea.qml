@@ -62,8 +62,9 @@ Rectangle {
                     window.anchors.left = alertItem.left;
                     window.anchors.right = alertItem.right;
                     window.y = 0;
-
-                    window.changeSize(Qt.size(alertItem.width, window.height));
+                    
+                    //TODO: Disable below for now because it breaks it altogether
+                    //window.changeSize(Qt.size(alertItem.width, window.height));
                 }
             }
         }
