@@ -25,7 +25,7 @@ Item {
     property int maxPassLength: 30
     property alias enteredText: inputField.text
 
-    height: isPIN ? inputField.height + Units.gu(12/8) : Units.gu(50/8)
+    height: isPIN ? inputField.height + Units.gu(12/10) : Units.gu(50/10)
 
     function keyInput(keyText, isNumber) {
         if(inputField.text.length < (isPIN ? maxPINLength : maxPassLength)) {
@@ -54,13 +54,13 @@ Item {
         source: "../images/pin/password-lock-field.png"
         width: parent.width;
         height: parent.height;
-        border { left: Units.gu(30/8); top: Units.gu(10/8); right: Units.gu(30/8); bottom: Units.gu(10/8) }
+        border { left: Units.gu(30/10); top: Units.gu(10/10); right: Units.gu(30/10); bottom: Units.gu(10/10) }
         smooth: true
     }
 
     TextInput {
         id: inputField;
-        width: parent.width - Units.gu(16/8);
+        width: parent.width - Units.gu(16/10);
         anchors.verticalCenter: parent.verticalCenter;
         anchors.horizontalCenter: parent.horizontalCenter;
         echoMode: TextInput.Password;
@@ -83,7 +83,7 @@ Item {
         color: "#9C9C9C";
         font.pixelSize: FontUtils.sizeToPixels("large")
         font.family: "Prelude"
-        width: parent.width - Units.gu(20/8);
+        width: parent.width - Units.gu(20/10);
         anchors.verticalCenter: parent.verticalCenter
         anchors.horizontalCenter: parent.horizontalCenter
         horizontalAlignment: isPIN ? Text.AlignHCenter : Text.AlignLeft;

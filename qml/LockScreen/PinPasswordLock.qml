@@ -23,9 +23,9 @@ import LunaNext.Common 0.1
 Item {
     id: pinPasswordLock
 
-    property int  edgeOffset: Units.gu(11/8)
-    property int  margin: Units.gu(6/8)
-    property int  topOffset: Units.gu(4/8)
+    property int  edgeOffset: Units.gu(11/10)
+    property int  margin: Units.gu(6/10)
+    property int  topOffset: Units.gu(4/10)
     property bool isPINEntry: true
     property int  minPassLength: 4
     property bool enforceMinLength: false
@@ -66,7 +66,7 @@ Item {
         }
     }
 
-    width: Units.gu(320/8) + 2 * pinPasswordLock.edgeOffset
+    width: Units.gu(320/10) + 2 * pinPasswordLock.edgeOffset
     height: buttonGrid.y + buttonGrid.height + pinPasswordLock.edgeOffset + margin;
     focus: true;
 
@@ -74,7 +74,7 @@ Item {
         source: "../images/popup-bg.png"
         width: parent.width;
         height: parent.height;
-        //border { left: Units.gu(35/8); top: Units.gu(40/8); right: Units.gu(35/8); bottom: Units.gu(40/8) }
+        //border { left: Units.gu(35/10); top: Units.gu(40/10); right: Units.gu(35/10); bottom: Units.gu(40/10) }
 		border { left: 35; top: 40; right: 35; bottom: 40 }
 		smooth: true
     }
@@ -94,9 +94,9 @@ Item {
     PasswordField {
         id: passwordField;
         isPIN: isPINEntry;
-        width: Units.gu(320/8) - Units.gu(4/8);
-        x: pinPasswordLock.edgeOffset + Units.gu(3/8)
-        y: titleText.y + titleText.height + (pinPasswordLock.isPINEntry ? 0 : Units.gu(6/8))
+        width: Units.gu(320/10) - Units.gu(4/10);
+        x: pinPasswordLock.edgeOffset + Units.gu(3/10)
+        y: titleText.y + titleText.height + (pinPasswordLock.isPINEntry ? 0 : Units.gu(6/10))
     }
 
     PinPad {
@@ -125,7 +125,7 @@ Item {
 
     Grid {
         id: buttonGrid
-        width: Units.gu(320/8) - 2 * pinPasswordLock.margin
+        width: Units.gu(320/10) - 2 * pinPasswordLock.margin
         x: pinPasswordLock.edgeOffset + pinPasswordLock.margin
         anchors.top: pinPasswordLock.isPINEntry ? keyPad.bottom : passwordField.bottom;
 
@@ -136,7 +136,7 @@ Item {
         ActionButton {
             caption: "Cancel";
             width: buttonGrid.width/buttonGrid.columns - pinPasswordLock.margin / 2
-            height:Units.gu(52/8)
+            height:Units.gu(52/10)
             onAction: canceled();
         }
 
@@ -144,7 +144,7 @@ Item {
             caption: "Done";
             affirmative: true
             width: buttonGrid.width/buttonGrid.columns - pinPasswordLock.margin / 2
-            height: Units.gu(52/8)
+            height: Units.gu(52/10)
             active: passwordField.enteredText.length >= (enforceMinLength ? minPassLength : 1)
             onAction: {
                 if(passwordField.enteredText.length > 0) {

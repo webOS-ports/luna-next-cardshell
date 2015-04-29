@@ -22,7 +22,7 @@ import LunaNext.Common 0.1
 Item {
     id: pinPad;
 
-    width: Units.gu(320/8)
+    width: Units.gu(320/10)
     height: gridDividers.height
 
     Image {
@@ -30,8 +30,8 @@ Item {
 		width: pinPad.width
 		fillMode: Image.PreserveAspectFit
         source: "../images/pin/pin-grid.png"
-        property int topOffset: Units.gu(4/8)
-        property int bottomOffset: Units.gu(6/8)
+        property int topOffset: Units.gu(4/10)
+        property int bottomOffset: Units.gu(6/10)
 		smooth: true
     }
 
