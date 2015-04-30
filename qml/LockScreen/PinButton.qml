@@ -51,7 +51,7 @@ Item {
         id: buttonImg
         source: imgSource
         visible: imgSource != "";
-        anchors.centerIn: parent
+        anchors.fill: parent
         smooth: true
         fillMode: Image.PreserveAspectFit
     }
