@@ -67,7 +67,7 @@ Item {
         onCanceled: {setPressed(false);}
         onClicked: {
             actionPerformed()
-         }
+        }
     }
 
     function setPressed (pressed) {
