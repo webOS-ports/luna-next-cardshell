@@ -27,12 +27,12 @@ Item {
 
     Image {
         id: gridDividers
-		width: pinPad.width
-		fillMode: Image.PreserveAspectFit
+	width: pinPad.width
+	fillMode: Image.PreserveAspectFit
         source: "../images/pin/pin-grid.png"
         property int topOffset: Units.gu(4/10)
         property int bottomOffset: Units.gu(6/10)
-		smooth: true
+	smooth: true
     }
 
     Grid {
@@ -58,7 +58,6 @@ Item {
         Rectangle { color: "transparent"; width: buttonGrid.width/buttonGrid.columns; height:buttonGrid.height/buttonGrid.rows;}
         PinButton { caption: "0"; width: buttonGrid.width/buttonGrid.columns + 1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
         PinButton { imgSource: "../images/pin/icon-delete.png"; caption: "\b"; width: buttonGrid.width/buttonGrid.columns+1; height:buttonGrid.height/buttonGrid.rows; onAction: keyAction(text);}
-		//PinButton { imgSource: "../images/pin/icon-delete.png"; caption: "\b"; onAction: keyAction(text);}
     }
 
     signal keyAction(string keyText);
