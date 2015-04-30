@@ -31,8 +31,8 @@ Item {
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         visible: pad.moving
-		width: Units.gu(50)
-		height: Units.gu(30)
+	width: Units.gu(50)
+	height: Units.gu(30)
     }
 
     DropArea {
@@ -42,7 +42,6 @@ Item {
         Rectangle {
             anchors.fill: parent
             color: "green"
-
             visible: parent.containsDrag
         }
     }
@@ -100,13 +99,12 @@ Item {
             onReleased: {
                 pad.checkForUnlockPosition();
                 pad.resetPosition();
-				pad.on = false;
+		pad.on = false;
                 unlockText.visible = false;
             }
-			onPressed: {
+            onPressed: {
                 pad.on = true;
                 unlockText.visible = true;
-
             }
         }
     }
