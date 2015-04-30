@@ -31,7 +31,7 @@ Item {
         visible: isPressed;
         width: parent.width;
         height: parent.height;
-        border { left: Units.gu(10/8); top: Units.gu(10/8); right: Units.gu(10/8); bottom: Units.gu(10/8) }
+        border { left: Units.gu(10/10); top: Units.gu(10/10); right: Units.gu(10/10); bottom: Units.gu(10/10) }
         smooth: true
     }
 
