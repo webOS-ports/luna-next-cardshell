@@ -62,9 +62,14 @@ Rectangle {
                     window.anchors.left = alertItem.left;
                     window.anchors.right = alertItem.right;
                     window.y = 0;
-                    
-                    //TODO: Disable below for now because it breaks it altogether
-                    //window.changeSize(Qt.size(alertItem.width, window.height));
+
+                    // be careful here: at this point in time, window.height is usually not yet set
+                    if(window.height>0) {
+                        window.changeSize(Qt.size(alertItem.width, window.height));
+                    }
+                    else {
+                        window.onHeightChanged.connect(function() { window.changeSize(Qt.size(alertItem.width, window.height)); });
+                    }
                 }
             }
         }
