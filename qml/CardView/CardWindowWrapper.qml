@@ -165,6 +165,12 @@ FocusScope {
        }
     ]
 
+    Connections {
+        target: cardView
+        onDefaultWindowWidthChanged: if( cardWrapperItem.windowState === WindowState.Carded ) syncClientWindowSize();
+        onDefaultWindowHeightChanged: if( cardWrapperItem.windowState === WindowState.Carded ) syncClientWindowSize();
+    }
+
     function setWrappedWindow(window) {
         childWrapper.setWrappedChild(window);
         if( window ) {
@@ -179,7 +185,10 @@ FocusScope {
     function syncClientWindowSize() {
         if( cardWrapperItem.windowState !== WindowState.Carded && wrappedWindow ) {
             /* Resize the real client window to have the right size */
-            wrappedWindow.changeSize(Qt.size(cardView.defaultWindowWidth, cardWrapperItem.height));
+            wrappedWindow.changeSize(Qt.size(cardWrapperItem.width, cardWrapperItem.height));
+        }
+        else if(wrappedWindow) {
+            wrappedWindow.changeSize(Qt.size(cardView.defaultWindowWidth, cardView.defaultWindowHeight));
         }
     }    
 

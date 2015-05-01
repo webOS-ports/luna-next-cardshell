@@ -56,7 +56,7 @@ Row {
 
         enabled: airplaneModeService.active
     }
-    
+	
 	RotationLockIndicator {
         id: rotationLockIndicator
 
@@ -73,7 +73,7 @@ Row {
         anchors.bottom: indicatorsRow.bottom
 
         enabled: preferences.muteSound
-    }    
+    }
 
     WifiIndicator {
         id: wifiIndicator

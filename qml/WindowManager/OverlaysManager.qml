@@ -32,11 +32,22 @@ Item {
         }
     }
 
+    onWidthChanged:  updateOverlaySizes();
+    onHeightChanged: updateOverlaySizes();
+
+    function updateOverlaySizes() {
+        console.log("new overlay window size = " + overlaysManagerItem.width +"x"+ overlaysManagerItem.height);
+        for( var i = 0; i < listOverlaysModel.count; ++i ) {
+            var window = listOverlaysModel.getByIndex(i);
+            window.changeSize(Qt.size(overlaysManagerItem.width, overlaysManagerItem.height));
+        }
+    }
+
     function appendOverlayWindow(window) {
         console.log("OverlayManager: adding " + window);
 
         window.parent = overlaysManagerItem;
-        window.anchors.bottom = overlaysManagerItem.bottom;
-        window.anchors.horizontalCenter = overlaysManagerItem.horizontalCenter;
+        window.anchors.fill = overlaysManagerItem;
+        window.changeSize(Qt.size(overlaysManagerItem.width, overlaysManagerItem.height));
     }
 }

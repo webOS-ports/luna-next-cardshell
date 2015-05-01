@@ -49,6 +49,8 @@ Rectangle {
             height: window ? window.height : 0
             onHeightChanged: computeNewRootHeight();
 
+            onWidthChanged: if(window) window.changeSize(Qt.size(alertItem.width, alertItem.height));
+
             children: [ window ]
 
             Component.onCompleted: {
@@ -60,6 +62,14 @@ Rectangle {
                     window.anchors.left = alertItem.left;
                     window.anchors.right = alertItem.right;
                     window.y = 0;
+
+                    // be careful here: at this point in time, window.height is usually not yet set
+                    if(window.height>0) {
+                        window.changeSize(Qt.size(alertItem.width, window.height));
+                    }
+                    else {
+                        window.onHeightChanged.connect(function() { window.changeSize(Qt.size(alertItem.width, window.height)); });
+                    }
                 }
             }
         }

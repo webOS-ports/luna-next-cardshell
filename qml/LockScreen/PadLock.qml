@@ -75,8 +75,8 @@ Item {
         y: _basePositionY
 
         function resetPosition() {
-            pad.x = _basePositionX;
-            pad.y = _basePositionY;
+            pad.x = Qt.binding( function() { return _basePositionX; } );
+            pad.y =  Qt.binding( function() { return _basePositionY; } );
         }
 
         function checkForUnlockPosition() {
