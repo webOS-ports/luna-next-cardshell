@@ -60,6 +60,9 @@ Item {
         }
     ]
 
+    onHeightChanged: _syncWrappedWindowSize();
+    onWidthChanged:  _syncWrappedWindowSize();
+
     function setLauncherWindow(window) {
         window.parent = justTypeLauncher;
         justTypeLauncher.children = [ window ];
@@ -71,6 +74,12 @@ Item {
         window.anchors.fill = justTypeLauncher;
 
         /* Resize the real client window to have the right size */
-        window.changeSize(Qt.size(justTypeLauncher.width, justTypeLauncher.height));
+        _syncWrappedWindowSize();
+    }
+
+    function _syncWrappedWindowSize() {
+        if( _wrappedWindow ) {
+            _wrappedWindow.changeSize(Qt.size(justTypeLauncher.width, justTypeLauncher.height));
+        }
     }
 }
