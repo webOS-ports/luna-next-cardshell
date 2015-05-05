@@ -43,6 +43,10 @@ Row {
     WiFiService {
         id: wifiService
     }
+    
+    BlueToothService {
+        id: btService
+    }
 
     AirplaneModeService {
         id: airplaneModeService
@@ -83,6 +87,16 @@ Row {
 
         enabled: wifiService.powered
         signalBars: wifiService.signalBars
+    }
+    
+    BTIndicator {
+        id: btIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: btService.powered
+        connectionStatus: btService.connectionStatus
     }
 
     WanStatusIndicator {
