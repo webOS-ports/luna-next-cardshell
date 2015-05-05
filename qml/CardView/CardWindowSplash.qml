@@ -68,7 +68,7 @@ Image {
 
     SequentialAnimation {
         id: loadingAnimation
-        running: true
+        running: splash.state == "visible"
         loops: Animation.Infinite
 
         NumberAnimation {
