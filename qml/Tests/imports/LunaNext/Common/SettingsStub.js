@@ -39,10 +39,19 @@ var displayWidth = 800;
 var displayHeight = 600;
 var dpi = 114;
 /**/
+
 var displayFps = true;
 var fontStatusBar = "Prelude"
 var showReticle = false;
+var tabletUi = true;
+
+// not used
+var lunaSystemResourcesPath = "./resourcesPath";
+var compatDpi = 114;
+var splashIconSize = 64;
+var gestureAreaHeight = 64;
+var positiveSpaceTopPadding = 0;
+var positiveSpaceBottomPadding = 0;
 
 var layoutScale = dpi/132;
-
 var gridUnit = 8;
