@@ -47,6 +47,14 @@ Row {
     BluetoothService {
         id: bluetoothService
     }
+
+    RecorderIndicator {
+        id: recorderIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: compositor.recording
     }
 
     AirplaneModeService {

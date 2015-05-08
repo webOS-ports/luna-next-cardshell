@@ -32,6 +32,7 @@ Item {
     signal windowRemovedFromListModel(Item window);
 
     property Item statusBarServicesConnector: StatusBarServicesConnector {}
+    property bool recording: false
 
     QtObject {
         id: localProperties
