@@ -21,18 +21,8 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 
 BaseIndicator {
-    id: btIndicator
-    
-    property string connectionStatus: null
+    id: bluetoothIndicator
 
-    imageSource: __getBTStatus(connectionStatus)
-
-    function __getBTStatus(connectionStatus) {
-        var baseName = "../../images/statusbar/bluetooth-";
-
-        var normalizedStatus = connectionStatus;
-        return baseName + normalizedStatus + ".png";
-    }
-
+    imageSource: "../../images/statusbar/bluetooth-on.png"
 }
 

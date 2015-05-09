@@ -44,8 +44,17 @@ Row {
         id: wifiService
     }
     
-    BlueToothService {
-        id: btService
+    BluetoothService {
+        id: bluetoothService
+    }
+
+    RecorderIndicator {
+        id: recorderIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: compositor.recording
     }
 
     AirplaneModeService {
@@ -89,14 +98,13 @@ Row {
         signalBars: wifiService.signalBars
     }
     
-    BTIndicator {
-        id: btIndicator
+    BluetoothIndicator {
+        id: bluetoothIndicator
 
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: btService.powered
-        connectionStatus: btService.connectionStatus
+        enabled: bluetoothService.powered
     }
 
     WanStatusIndicator {
