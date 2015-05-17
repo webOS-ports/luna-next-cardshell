@@ -8,6 +8,20 @@ Item {
     property string body: "(no summary)"
     property url iconUrl: Qt.resolvedUrl("../images/default-app-icon.png");
 
+    function getIconUrlOrDefault(path) {
+        var mypath = path.toString();
+        if (mypath.length === 0)
+        {
+            return Qt.resolvedUrl("../images/default-app-icon.png");
+        }
+        
+        if(mypath.slice(-1) === "/")
+        {
+            mypath = mypath + "icon.png"
+        }
+        return mypath
+    }
+    
     Rectangle {
         id: iconBox
         width: Units.gu(6)
@@ -21,7 +35,7 @@ Item {
             anchors.fill: parent
             anchors.margins: Units.gu(0.5)
             anchors.centerIn: parent
-            source: iconUrl
+            source: getIconUrlOrDefault(object.iconUrl)
             fillMode: Image.PreserveAspectFit
             layer.mipmap: true
         }
