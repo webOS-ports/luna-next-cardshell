@@ -69,11 +69,19 @@ Rectangle {
     }
 
     function getIconUrlOrDefault(path) {
-        if (path.length === 0)
+        var mypath = path.toString();
+        if (mypath.length === 0)
+        {
             return Qt.resolvedUrl("../images/default-app-icon.png");
-
-        return path;
+        }
+        
+        if(mypath.slice(-1) === "/")
+        {
+            mypath = mypath + "icon.png"
+        }
+        return mypath
     }
+
 
     Row {
         id: minimizedListView

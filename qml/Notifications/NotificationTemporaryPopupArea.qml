@@ -32,6 +32,21 @@ Item {
         anchors.fill: parent
     }
 
+    function getIconUrlOrDefault(path) {
+        var mypath = path.toString();
+        if (mypath.length === 0)
+        {
+            return Qt.resolvedUrl("../images/default-app-icon.png");
+        }
+        
+        if(mypath.slice(-1) === "/")
+        {
+            mypath = mypath + "icon.png"
+        }
+        return mypath
+    }
+
+
     Repeater {
         model: freshNewItemsModel
         delegate:Rectangle {
@@ -50,7 +65,7 @@ Item {
                     id: freshItemIcon
                     height: parent.height
                     width: parent.height
-                    source: object.iconUrl
+                    source: getIconUrlOrDefault(object.iconUrl)
                     fillMode: Image.PreserveAspectFit
                 }
                 Text {
