@@ -35,7 +35,7 @@ Item {
             anchors.fill: parent
             anchors.margins: Units.gu(0.5)
             anchors.centerIn: parent
-            source: getIconUrlOrDefault(object.iconUrl)
+            source: getIconUrlOrDefault(iconUrl)
             fillMode: Image.PreserveAspectFit
             layer.mipmap: true
         }
