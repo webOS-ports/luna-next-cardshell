@@ -30,7 +30,7 @@ FocusScope {
     property alias wrappedWindow: childWrapper.wrappedChild
 
     // a backlink to the cardView instance
-    property variant cardView
+    property Item cardView
 
     //   Available window states:
     //    * Carded
