@@ -222,10 +222,10 @@ Item {
         if( window.windowType === WindowType.Card ) {
             // Create the window container
             var windowWrapperComponent = Qt.createComponent("CardWindowWrapper.qml");
-            var windowWrapper = windowWrapperComponent.createObject(cardViewItem, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2, "y": gestureAreaInstance.y});
-            windowWrapper.cardView = cardViewItem;
-            windowWrapper.cornerRadius = cornerRadius
-
+            var windowWrapper = windowWrapperComponent.createObject(cardViewItem, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2,
+                                                                                   "y": gestureAreaInstance.y,
+                                                                                   "cardView": cardViewItem,
+                                                                                   "cornerRadius": cornerRadius});
             // Bind the container with its app window
             windowWrapper.setWrappedWindow(window);
         }
