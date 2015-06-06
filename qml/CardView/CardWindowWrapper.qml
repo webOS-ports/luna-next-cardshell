@@ -47,7 +47,7 @@ FocusScope {
     signal stopDrag();
 
     // Drag management
-    Drag.active: dragMouseArea.held
+    Drag.active: false
     Drag.source: cardWrapperItem
 
     CardWindowSplash {
@@ -134,12 +134,14 @@ FocusScope {
             cardWrapperItem.Drag.hotSpot.y = mouse.y
             held = true;
             cardWrapperItem.startDrag();
+            cardWrapperItem.Drag.active = true;
         }
         onReleased: {
             // stop the drag'n'drop
             if( held ) {
                 console.log("Card wrapper: released drag");
                 cardWrapperItem.Drag.drop();
+                cardWrapperItem.Drag.active = false;
                 held = false;
                 cardWrapperItem.stopDrag();
             }
