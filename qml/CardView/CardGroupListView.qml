@@ -106,6 +106,7 @@ Item {
                     cardGroupListViewItem.interactiveList = false;
                     containerForDraggedCard.startDrag(window);
                     listCardGroupsModel.removeWindow(window);
+                    internalListView.forceLayout();
                 }
             }
             onCardDragStop: {
@@ -250,6 +251,7 @@ Item {
                 }
             }
 
+            onEntered: positionChanged(drag);
             onPositionChanged: {
                 //First, determine what group & card we are talking about
                 var internalListViewCoords = mapToItem(internalListView, drag.x, drag.y);
