@@ -15,9 +15,14 @@ Item {
     property real defaultWindowWidth: cardViewItem.width
     property real defaultWindowHeight: cardViewItem.height - maximizedCardTopMargin
 
+    property bool keepCurrentCardMaximized: false
+
     property real cornerRadius: 20
 
     signal currentCardChanged(Item currentCard);
+    onCurrentCardChanged: {
+        if( cardViewItem.keepCurrentCardMaximized ) setCurrentCardState(WindowState.Maximized);
+    }
 
     focus: true
     Keys.forwardTo: cardGroupListViewInstance
@@ -26,7 +31,10 @@ Item {
         id: cardsModel
         windowTypeFilter: WindowType.Card
 
-        onRowsAboutToBeRemoved: if( cardsModel.getByIndex(last).userData.windowState !== WindowState.Carded ) cardViewItem.setCurrentCardState(WindowState.Carded);
+        onRowsAboutToBeRemoved: {
+            if( !cardViewItem.keepCurrentCardMaximized &&
+                cardsModel.getByIndex(last).userData.windowState !== WindowState.Carded ) cardViewItem.setCurrentCardState(WindowState.Carded);
+        }
     }
 
     CardGroupListView {
@@ -72,16 +80,26 @@ Item {
     }
 
     function setCurrentCardState(windowState) {
-        if( !currentActiveWindow() ) return;
+        var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
+        if( !lCurrentActiveWindow ) return;
 
         if( windowState === WindowState.Carded ) {
-            state = "cardList";
+            if( state !== "cardList" )
+                state = "cardList";
+            else
+                __setToCard(lCurrentActiveWindow);
         }
         else if( windowState === WindowState.Maximized ) {
-            state = "maximizedCard";
+            if( state !== "maximizedCard" )
+                state = "maximizedCard";
+            else
+                __setToMaximized(lCurrentActiveWindow);
         }
         else if( state === WindowState.Fullscreen ) {
-            state = "fullscreenCard";
+            if( state !== "fullscreenCard" )
+                state = "fullscreenCard";
+            else
+                __setToFullscreen(lCurrentActiveWindow);
         }
     }
 

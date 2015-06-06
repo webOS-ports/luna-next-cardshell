@@ -133,6 +133,11 @@ Item {
         focus: true
         interactive: cardGroupListViewItem.interactiveList
 
+        onCurrentIndexChanged: {
+            if( cardView && internalListView.currentIndex>=0 )
+                cardView.currentCardChanged(currentActiveWindow())
+        }
+
         function delayedCardSelect(windowToSelect) {
             cardSelectTimer._windowToSelect = windowToSelect;
             cardSelectTimer.start();
@@ -148,9 +153,6 @@ Item {
 
         function setCurrentCardIndex(newIndex) {
             internalListView.currentIndex = newIndex
-            if( cardView && internalListView.currentIndex>=0 ) {
-                cardView.currentCardChanged(currentActiveWindow())
-            }
         }
     }
 

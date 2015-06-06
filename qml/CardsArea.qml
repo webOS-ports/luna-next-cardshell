@@ -48,11 +48,13 @@ WindowManager {
             name: "firstuse"
             PropertyChanges { target: gestureAreaInstance; height: 0 }
             PropertyChanges { target: lockScreen; isFirstUse: true }
+            PropertyChanges { target: cardViewInstance; keepCurrentCardMaximized: true }
         },
         State {
             name: "normal"
             PropertyChanges { target: gestureAreaInstance; height: Units.gu(4) }
             PropertyChanges { target: lockScreen; isFirstUse: false }
+            PropertyChanges { target: cardViewInstance; keepCurrentCardMaximized: false }
         }
     ]
 
