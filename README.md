@@ -3,7 +3,7 @@ Luna Next Cardshell
 
 Summary
 -------
-The new webOS UI of the webOS ports project.
+The new webOS UI for the WebOS Ports LuneOS project.
 
 Description
 -----------
