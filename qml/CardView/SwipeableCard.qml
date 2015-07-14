@@ -7,6 +7,7 @@ Item {
     property alias cardItem: cardLoader.item
 
     signal requestDestruction()
+    property bool __destructionRequested: false
 
     VisualItemModel {
         id: visualCardModel
@@ -39,8 +40,9 @@ Item {
         model: visualCardModel
 
         onContentYChanged: {
-            if(contentY>(swipeableRoot.height*0.8) && !dragging) {
+            if(contentY>(swipeableRoot.height*0.8) && !dragging && !__destructionRequested) {
                 requestDestruction(); // delete card
+                __destructionRequested = true;
             }
         }
     }
