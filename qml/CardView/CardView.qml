@@ -114,6 +114,9 @@ Item {
         if (appId === "com.palm.launcher")
             return false;
 
+        if (getAppIdForFocusApplication() === appId)
+            return true;
+
         var window=null;
         var i=0;
         for(i=0; i<cardsModel.count;i++) {
