@@ -90,7 +90,7 @@ Item {
             z: ListView.isCurrentItem ? 1 : 0
 
             onCardSelect: {
-                listCardGroupsModel.setWindowInFront(window, index)
+                //listCardGroupsModel.setWindowInFront(window, index)
                 cardGroupListViewItem.cardSelect(window);
             }
             onCardRemove: cardGroupListViewItem.cardRemove(window);
