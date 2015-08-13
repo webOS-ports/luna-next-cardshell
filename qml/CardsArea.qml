@@ -48,7 +48,7 @@ WindowManager {
             name: "firstuse"
             PropertyChanges { target: gestureAreaInstance; height: 0 }
             PropertyChanges { target: lockScreen; isFirstUse: true }
-            PropertyChanges { target: cardViewInstance; keepCurrentCardMaximized: true }
+            PropertyChanges { target: cardViewInstance; keepCurrentCardMaximized: false }
         },
         State {
             name: "normal"
