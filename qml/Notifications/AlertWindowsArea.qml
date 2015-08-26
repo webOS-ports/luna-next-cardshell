@@ -27,6 +27,7 @@ Rectangle {
     id: rootAlertsArea
     height: maxHeight
     property int maxHeight: 0
+    property QtObject compositorInstance
 
     color: "black"
 
@@ -49,7 +50,7 @@ Rectangle {
             height: window ? window.height : 0
             onHeightChanged: computeNewRootHeight();
 
-            onWidthChanged: if(window) window.changeSize(Qt.size(alertItem.width, alertItem.height));
+            onWidthChanged: if(window) window.changeSize(Qt.size(alertItem.width, window.height));
 
             children: [ window ]
 
@@ -123,9 +124,33 @@ Rectangle {
         onItemAdded: {
             if( item.height > rootAlertsArea.maxHeight )
                 rootAlertsArea.maxHeight = item.height;
+
+            clearBannersTimer.stop();
+            if( listBannerAlertsModel.count === 1 ) {
+                clearBannersTimer.interval = 2000;
+            }
+            else {
+                clearBannersTimer.interval = 5000;
+            }
+            clearBannersTimer.restart();
         }
         onItemRemoved: {
             computeNewRootHeight();
+        }
+    }
+    Timer {
+        id: clearBannersTimer
+        interval: 2000
+        running: false
+        repeat: false
+        onTriggered: {
+            var winIdList = [];
+            for( var i=0; i<listBannerAlertsModel.count; ++i ) {
+                winIdList.push(listBannerAlertsModel.getByIndex(i).winId);
+            }
+            for( var i2=0; i2<winIdList.length; ++i2 ) {
+                compositorInstance.closeWindowWithId(winIdList[i2]);
+            }
         }
     }
 

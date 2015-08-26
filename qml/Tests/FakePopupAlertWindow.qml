@@ -23,7 +23,7 @@ FakeWindowBase {
     id: fakePopupAlertWindow
 
     appId: "org.webosports.tests.fakePopupAlertWindow"
-    windowType: WindowType.PopupAlert
+    windowType: WindowType.BannerAlert
 
     property string appIcon
 

@@ -232,6 +232,7 @@ WindowManager {
     AlertWindowsArea {
         id: alertWindowsAreaInstance
 
+        compositorInstance: compositor
         anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
