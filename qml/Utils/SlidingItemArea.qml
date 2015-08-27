@@ -36,6 +36,15 @@ Item {
     signal pressAndHold()
     signal released()
 
+    function resetSlidingArea() {
+        if( slidingAxis === Drag.XAxis ) {
+            slidingTargetItem.x = slidingArea.width/2 - slidingTargetItem.width/2;
+        }
+        else if( slidingAxis === Drag.YAxis ) {
+            slidingTargetItem.y = slidingArea.height/2 - slidingTargetItem.height/2;
+        }
+    }
+
     NumberAnimation {
         id: swipeOutAnimation
         duration: 100

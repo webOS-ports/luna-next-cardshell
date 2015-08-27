@@ -55,14 +55,16 @@ Rectangle {
         // so QML isn't able to guess the name of the signal argument.
         onItemAdded: {
             var notifObject = arguments[0];
+
             // Banner in all cases
+            notificationArea.state = "minimized";
             freshNewItemsPopups.popupModel.append({"object" : notifObject});
 
             // If the notification's duration is long enough, also add it to the notification list
             if( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 )
             {
                 // Sticky notification
-                mergedModel.append({"type": "notification", "notifObject": notifObject, "iconUrl": notifObject.iconUrl});
+                mergedModel.append({"notifType": "notification", "window": null, "notifObject": notifObject, "iconUrl": notifObject.iconUrl});
             }
         }
     }
@@ -72,7 +74,16 @@ Rectangle {
 
         onRowsInserted: {
             var window = listDashboardsModel.getByIndex(last);
-            mergedModel.append({"type": "dashboard", "window": window, "iconUrl": window.appIcon});
+            mergedModel.append({"notifType": "dashboard", "window": window, "notifObject": {}, "iconUrl": window.appIcon});
+        }
+        onRowsAboutToBeRemoved: {
+            var window = listDashboardsModel.getByIndex(last);
+            for( var i=0; i<mergedModel.count; ++i ) {
+                if( mergedModel.get(i).window && mergedModel.get(i).window === window ) {
+                    mergedModel.remove(i);
+                    break;
+                }
+            }
         }
     }
 
@@ -166,7 +177,7 @@ Rectangle {
             model: mergedModel
             delegate: Image {
                     id: notifIconImage
-                    source: getIconUrlOrDefault(mergedModel.get(index).iconUrl)
+                    source: getIconUrlOrDefault(iconUrl)
                     height:  minimizedListView.height
                     fillMode: Image.PreserveAspectFit
                 }
@@ -188,76 +199,73 @@ Rectangle {
         }
     }
 
-    Flickable {
+    ListView {
         id: openListView
 
         visible: false
         interactive: height === maxDashboardWindowHeight
         clip: interactive
-        flickableDirection: Flickable.VerticalFlick
-        height: Math.min(maxDashboardWindowHeight, openListColumn.height);
+        orientation: ListView.Vertical
+        cacheBuffer: maxDashboardWindowHeight
+        height: Math.min(maxDashboardWindowHeight, contentHeight);
         anchors {
             bottom: parent.bottom
             left: parent.left
             right: parent.right
             margins: Units.gu(1)/2
         }
-        contentHeight: openListColumn.height
-        contentWidth: width
 
-        Column {
-            id: openListColumn
+        spacing: Units.gu(1) / 2
+        model: mergedModel
 
-            anchors {
-                bottom: parent.bottom
-                left: parent.left
-                right: parent.right
-            }
-            spacing: Units.gu(1) / 2
+        delegate:
+            SlidingItemArea {
+                id: slidingNotificationArea
 
-            Repeater {
-                anchors.horizontalCenter: openListColumn.horizontalCenter
-                model: mergedModel
-                delegate:
-                    SlidingItemArea {
-                        id: slidingNotificationArea
+                property var delegateNotifObject: typeof notifObject !== 'undefined' ? notifObject : undefined;
+                property Item delegateWindow: typeof window !== 'undefined' ? window : null;
+                property string delegateType: notifType;
+                property int delegateIndex: index
 
-                        property var delegateNotifObject: mergedModel.get(index).notifObject
-                        property Item delegateWindow: mergedModel.get(index).window
-                        property string delegateType: mergedModel.get(index).type
+                slidingTargetItem: notificationItemLoader
 
-                        slidingTargetItem: notificationItem
+                height: notificationItemLoader.height
+                width: notificationItemLoader.width
 
-                        height: notificationItem.height
-                        width: notificationItem.width
+                Loader {
+                    id: notificationItemLoader
+                    width: notificationArea.width - Units.gu(1)
+                    height: dashboardCardFixedHeight
+                    anchors.verticalCenter: slidingNotificationArea.verticalCenter
 
-                        Loader {
-                            id: notificationItem
-                            width: notificationArea.width - Units.gu(1)
-                            height: dashboardCardFixedHeight
-                            anchors.verticalCenter: slidingNotificationArea.verticalCenter
+                    sourceComponent: slidingNotificationArea.delegateType === "notification" ? notificationItemDelegate : dashboardDelegate
+                    property var loaderNotifObject: slidingNotificationArea.delegateNotifObject
+                    property Item loaderWindow: slidingNotificationArea.delegateWindow
 
-                            sourceComponent: slidingNotificationArea.delegateType === "notification" ? notificationItemDelegate : dashboardDelegate
-                            property var loaderNotifObject: slidingNotificationArea.delegateNotifObject
-                            property var loaderWindow: slidingNotificationArea.delegateWindow
+                    signal clicked()
+                    signal closed()
 
-                            signal clicked()
-                            signal closed()
-
-                            onClicked: {
-                                item.clicked();
-                            }
-                            onClosed: {
-                                mergedModel.remove(slidingNotificationArea.index);
-                                item.closed();
-                            }
-                        }
-
-                        onClicked: notificationItem.clicked();
-                        onSlidedLeft: notificationItem.closed();
-                        onSlidedRight: notificationItem.closed();
+                    onClicked: {
+                        item.clicked();
                     }
-            }
+                    onClosed: {
+                        item.closed();
+                        mergedModel.remove(slidingNotificationArea.delegateIndex);
+
+                        slidingNotificationArea.resetSlidingArea();
+                    }
+                }
+
+                onClicked: notificationItemLoader.clicked();
+                onSlidedLeft: notificationItemLoader.closed();
+                onSlidedRight: notificationItemLoader.closed();
+
+                Component.onCompleted: {
+                    // avoid putting property binding
+                    if( delegateType === "dashboard" ) {
+                        slidingEnabled = false;  // necessary for now in order to be able to interact with the dashboard, unfortunately
+                    }
+                }
         }
 
         Behavior on height {
