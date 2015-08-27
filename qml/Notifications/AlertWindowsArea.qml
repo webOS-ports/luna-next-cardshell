@@ -27,17 +27,12 @@ Rectangle {
     id: rootAlertsArea
     height: maxHeight
     property int maxHeight: 0
-    property QtObject compositorInstance
 
     color: "black"
 
     WindowModel {
         id: listPopupAlertsModel
         windowTypeFilter: WindowType.PopupAlert
-    }
-    WindowModel {
-        id: listBannerAlertsModel
-        windowTypeFilter: WindowType.BannerAlert
     }
 
     Component {
@@ -86,11 +81,6 @@ Rectangle {
             if( currentMaxHeight > newMaxHeight )
                 newMaxHeight = currentMaxHeight;
         }
-        for( i=0; i < listBannerAlertsModel.count; ++i ) {
-            currentMaxHeight = listBannerAlertsModel.getByIndex(i).height;
-            if( currentMaxHeight > newMaxHeight )
-                newMaxHeight = currentMaxHeight;
-        }
 
         rootAlertsArea.maxHeight = newMaxHeight;
     }
@@ -112,51 +102,10 @@ Rectangle {
             computeNewRootHeight();
         }
     }
-    Repeater {
-        id: repeaterBanners
-
-        anchors.left: rootAlertsArea.left
-        anchors.right: rootAlertsArea.right
-        anchors.bottom: rootAlertsArea.bottom
-        model: listBannerAlertsModel
-        delegate: alertComponent
-
-        onItemAdded: {
-            if( item.height > rootAlertsArea.maxHeight )
-                rootAlertsArea.maxHeight = item.height;
-
-            clearBannersTimer.stop();
-            if( listBannerAlertsModel.count === 1 ) {
-                clearBannersTimer.interval = 2000;
-            }
-            else {
-                clearBannersTimer.interval = 5000;
-            }
-            clearBannersTimer.restart();
-        }
-        onItemRemoved: {
-            computeNewRootHeight();
-        }
-    }
-    Timer {
-        id: clearBannersTimer
-        interval: 2000
-        running: false
-        repeat: false
-        onTriggered: {
-            var winIdList = [];
-            for( var i=0; i<listBannerAlertsModel.count; ++i ) {
-                winIdList.push(listBannerAlertsModel.getByIndex(i).winId);
-            }
-            for( var i2=0; i2<winIdList.length; ++i2 ) {
-                compositorInstance.closeWindowWithId(winIdList[i2]);
-            }
-        }
-    }
 
     // have an object that surveys the count of alerts and notify the display if something interesting happens
     QtObject {
-        property int count: listPopupAlertsModel.count + listBannerAlertsModel.count
+        property int count: listPopupAlertsModel.count
         onCountChanged: {
             if (count === 0 && __previousCount !== 0) {
                 // notify the display

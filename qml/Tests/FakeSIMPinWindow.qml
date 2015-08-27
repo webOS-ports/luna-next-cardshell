@@ -25,8 +25,6 @@ FakeWindowBase {
     appId: "org.webosports.tests.fakeSimPinWindow"
     windowType: WindowType.Pin
 
-    property string appIcon
-
 
     Rectangle {
         id: windowRectangle

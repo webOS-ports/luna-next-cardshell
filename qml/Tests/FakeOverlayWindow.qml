@@ -25,8 +25,6 @@ FakeWindowBase {
     appId: "org.webosports.tests.fakeOverlayWindow"
     windowType: WindowType.Overlay
 
-    property string appIcon
-
     x: Math.random()*200
     y: parent.height - height
     width: 300 + Math.random()*150

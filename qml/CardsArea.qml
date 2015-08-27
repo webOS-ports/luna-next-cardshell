@@ -206,9 +206,10 @@ WindowManager {
     NotificationArea {
         id: notificationAreaInstance
 
+        compositorInstance: compositor
         windowManagerInstance: parent
 
-        anchors.bottom: dashboardAreaInstance.top
+        anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -217,22 +218,9 @@ WindowManager {
         z: 2 // on top of cardview when no card is active
     }
 
-    DashboardArea {
-        id: dashboardAreaInstance
-
-        anchors.bottom: alertWindowsAreaInstance.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-
-        visible: !lockScreen.visible
-
-        z: 4 // just under the keyboard
-    }
-
     AlertWindowsArea {
         id: alertWindowsAreaInstance
 
-        compositorInstance: compositor
         anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
