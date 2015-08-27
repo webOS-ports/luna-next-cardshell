@@ -36,8 +36,8 @@ Rectangle {
     property QtObject compositorInstance
     property Item windowManagerInstance
     readonly property int maxDashboardWindowHeight: parent.height/2
-    readonly property int dashboardCardFixedHeight: 56 // this value comes from the CSS of the dashboard cards
-    readonly property int bannerNotificationFixedHeight: 24 // this value comes from the CSS of the banner
+    readonly property int dashboardCardFixedHeight: Units.gu(5.6) // this value comes from the CSS of the dashboard cards
+    readonly property int bannerNotificationFixedHeight: Units.gu(2.4) // this value comes from the CSS of the banner
 
     height: 0
     color: "black"
