@@ -57,14 +57,17 @@ Rectangle {
             var notifObject = arguments[0];
 
             // Banner in all cases
-            notificationArea.state = "minimized";
             freshNewItemsPopups.popupModel.append({"object" : notifObject});
 
             // If the notification's duration is long enough, also add it to the notification list
             if( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 )
             {
                 // Sticky notification
-                mergedModel.append({"notifType": "notification", "window": null, "notifObject": notifObject, "iconUrl": notifObject.iconUrl});
+                mergedModel.append({"notifType": "notification",
+                                    "window": null,
+                                    "notifObject": notifObject,
+                                    "iconUrl": notifObject.iconUrl,
+                                    "notifHeight": dashboardCardFixedHeight});
             }
         }
     }
@@ -74,7 +77,24 @@ Rectangle {
 
         onRowsInserted: {
             var window = listDashboardsModel.getByIndex(last);
-            mergedModel.append({"notifType": "dashboard", "window": window, "notifObject": {}, "iconUrl": window.appIcon});
+            window.visible = false;
+
+            // Handle dashboards with custom height
+            var dashHeight = 0;
+            if( window.windowProperties && window.windowProperties.hasProperty("dashHeight") )
+            {
+                dashHeight = window.windowProperties.dashHeight;
+            }
+            if( dashHeight<=0 ) dashHeight = dashboardCardFixedHeight;
+
+            if( notificationArea.state === "hidden" || notificationArea.state == "open" ) {
+                notificationArea.state = "minimized";
+            }
+            mergedModel.append({"notifType": "dashboard",
+                                "window": window,
+                                "notifObject": {},
+                                "iconUrl": window.appIcon,
+                                "notifHeight": dashHeight});
         }
         onRowsAboutToBeRemoved: {
             var window = listDashboardsModel.getByIndex(last);
@@ -102,7 +122,6 @@ Rectangle {
             signal clicked()
             signal closed()
 
-            //height: dashboardCardFixedHeight // was : Units.gu(6)
             title: notifObject.title
             body: notifObject.body
             iconUrl: getIconUrlOrDefault(notifObject.iconUrl)
@@ -122,7 +141,6 @@ Rectangle {
             signal clicked()
             signal closed()
 
-            // height: dashboardCardFixedHeight
             onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
 
             children: [ dashboardWindow ]
@@ -134,13 +152,21 @@ Rectangle {
                     /* This resizes only the quick item which contains the child surface but
                                              * doesn't really resize the client window */
                     dashboardWindow.anchors.fill = dashboardItem;
+                    dashboardWindow.visible = true;
 
                     /* Resize the real client window to have the right size */
                     dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
                 }
             }
+            Component.onDestruction: {
+                if( dashboardWindow ) dashboardWindow.visible = false;
+            }
 
-            onClosed: compositorInstance.closeWindowWithId(dashboardWindow.winId);
+            onClosed: {
+                dashboardWindow.visible = false;
+                compositorInstance.closeWindowWithId(dashboardWindow.winId);
+                dashboardWindow = null;
+            }
         }
     }
 
@@ -225,6 +251,7 @@ Rectangle {
                 property var delegateNotifObject: typeof notifObject !== 'undefined' ? notifObject : undefined;
                 property Item delegateWindow: typeof window !== 'undefined' ? window : null;
                 property string delegateType: notifType;
+                property int delegateHeight: notifHeight
                 property int delegateIndex: index
 
                 slidingTargetItem: notificationItemLoader
@@ -235,7 +262,7 @@ Rectangle {
                 Loader {
                     id: notificationItemLoader
                     width: notificationArea.width - Units.gu(1)
-                    height: dashboardCardFixedHeight
+                    height: slidingNotificationArea.delegateHeight
                     anchors.verticalCenter: slidingNotificationArea.verticalCenter
 
                     sourceComponent: slidingNotificationArea.delegateType === "notification" ? notificationItemDelegate : dashboardDelegate
@@ -286,11 +313,28 @@ Rectangle {
         }
 
         height: popupModel.count > 0 ? bannerNotificationFixedHeight : 0;
+
+        Connections {
+            target: freshNewItemsPopups.popupModel
+            onCountChanged: {
+                if( freshNewItemsPopups.popupModel.count > 0 )
+                    notificationArea.state = "banner";
+                else if( mergedModel.count > 0 )
+                    notificationArea.state = "minimized";
+            }
+        }
     }
 
     states: [
         State {
             name: "hidden"
+            when: (freshNewItemsPopups.popupModel.count + mergedModel.count) === 0
+            PropertyChanges { target: minimizedListView; visible: false }
+            PropertyChanges { target: openListView; visible: false }
+            PropertyChanges { target: notificationArea; height: 0 }
+        },
+        State {
+            name: "banner"
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
             PropertyChanges { target: notificationArea; height: freshNewItemsPopups.height }
@@ -317,15 +361,11 @@ Rectangle {
                 // notify the display
                 displayService.call("luna://com.palm.display/control/alert",
                                     JSON.stringify({"status": "banner-deactivated"}), undefined, onDisplayControlError)
-
-                notificationArea.state = "hidden";
             }
             else if (count !== 0 && __previousCount === 0){
                 // notify the display
                 displayService.call("luna://com.palm.display/control/alert",
                                     JSON.stringify({"status": "banner-activated"}), undefined, onDisplayControlError)
-
-                notificationArea.state = "minimized";
             }
 
             __previousCount = count;
