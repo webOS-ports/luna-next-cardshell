@@ -23,9 +23,7 @@ FakeWindowBase {
     id: fakePopupAlertWindow
 
     appId: "org.webosports.tests.fakePopupAlertWindow"
-    windowType: WindowType.BannerAlert
-
-    property string appIcon
+    windowType: WindowType.PopupAlert
 
     height: 50 + Math.random()*50
 

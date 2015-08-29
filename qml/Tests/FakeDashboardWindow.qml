@@ -25,8 +25,6 @@ FakeWindowBase {
     appId: "org.webosports.tests.fakeDashboardWindow"
     windowType: WindowType.Dashboard
 
-    property string appIcon
-
     height: 50 + Math.random()*50
 
     property alias scale: windowRectangle.scale

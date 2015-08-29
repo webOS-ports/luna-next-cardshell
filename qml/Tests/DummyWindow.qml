@@ -93,7 +93,20 @@ FakeWindowBase {
                 onAction: {
                     lunaNextLS2Service.call("luna://org.webosports.notifications/create",
                                             JSON.stringify({"title": "Test title", "body": "Test notification",
-                                                            "iconUrl": Qt.resolvedUrl("../images/default-app-icon.png")}),
+                                                            "iconUrl": Qt.resolvedUrl("../images/default-app-icon.png"), "expireTimeout": 60}),
+                                            undefined, undefined)
+                }
+            }
+            ActionButton {
+                anchors.horizontalCenter: parent.horizontalCenter
+                caption: "Add banner"
+                width: parent.width / 2
+                height: 50
+
+                onAction: {
+                    lunaNextLS2Service.call("luna://org.webosports.notifications/create",
+                                            JSON.stringify({"title": "Test title", "body": "Test notification",
+                                                            "iconUrl": Qt.resolvedUrl("../images/default-app-icon.png"), "expireTimeout": -1}),
                                             undefined, undefined)
                 }
             }

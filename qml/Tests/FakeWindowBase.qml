@@ -29,7 +29,7 @@ Item {
     property int parentWinId: 0
     property string appId: "org.webosports.tests.fakewindowbase"
     property string appIcon: icon
-    property string icon: ""
+    property string icon: Qt.resolvedUrl("../images/default-app-icon.png");
     property int windowType: WindowType.Card
     property bool mapped: false
 
