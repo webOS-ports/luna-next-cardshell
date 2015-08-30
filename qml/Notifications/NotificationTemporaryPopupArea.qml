@@ -53,13 +53,14 @@ Item {
             id: itemDelegate
             color: "black"
             width: freshNewItemsPopups.width
-            height: freshNewItemsPopups.height
+            height: Units.gu(3)
             y: Units.gu(3)
 
             property int delegateIndex: index
 
             Row {
                 anchors.fill: parent
+                anchors.margins: 0.5*Units.gu(1)
                 spacing: Units.gu(0.8)
                 Image {
                     id: freshItemIcon

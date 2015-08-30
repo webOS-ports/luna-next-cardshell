@@ -303,16 +303,16 @@ Rectangle {
     // Banner popup view
     NotificationTemporaryPopupArea {
         id: freshNewItemsPopups
-        visible: popupModel.count>0
+        visible: height>0
 
         anchors {
             bottom: parent.bottom
             left: parent.left
             right: parent.right
-            margins: Units.gu(1)/2
         }
 
         height: popupModel.count > 0 ? bannerNotificationFixedHeight : 0;
+        Behavior on height { NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }
 
         Connections {
             target: freshNewItemsPopups.popupModel
