@@ -19,10 +19,10 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 
 Item {
-    id: freshNewItemsPopups
+    id: bannerItemsPopups
 
     property ListModel popupModel: ListModel {
-        id: freshNewItemsModel
+        id: bannerItemsModel
     }
 
     clip: true
@@ -48,11 +48,11 @@ Item {
 
 
     Repeater {
-        model: freshNewItemsModel
+        model: bannerItemsModel
         delegate:Rectangle {
             id: itemDelegate
             color: "black"
-            width: freshNewItemsPopups.width
+            width: bannerItemsPopups.width
             height: Units.gu(3)
             y: Units.gu(3)
 
@@ -92,7 +92,7 @@ Item {
                 }
                 PauseAnimation { duration: 1500 }
                 ScriptAction {
-                    script: freshNewItemsModel.remove(delegateIndex);
+                    script: bannerItemsModel.remove(delegateIndex);
                 }
             }
 

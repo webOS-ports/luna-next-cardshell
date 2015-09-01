@@ -57,11 +57,10 @@ Rectangle {
             var notifObject = arguments[0];
 
             // Banner in all cases
-            freshNewItemsPopups.popupModel.append({"object" : notifObject});
+            bannerItemsPopups.popupModel.append({"object" : notifObject});
 
             // If the notification's duration is long enough, also add it to the notification list
-            if( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 )
-            {
+            if( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 ) {
                 // Sticky notification
                 mergedModel.append({"notifType": "notification",
                                     "window": null,
@@ -81,9 +80,9 @@ Rectangle {
 
             // Handle dashboards with custom height
             var dashHeight = 0;
-            if( window.windowProperties && window.windowProperties.hasProperty("dashHeight") )
+            if( window.windowProperties && window.windowProperties.hasOwnProperty("LuneOS_dashheight") )
             {
-                dashHeight = window.windowProperties.dashHeight;
+                dashHeight = window.windowProperties["LuneOS_dashheight"];
             }
             if( dashHeight<=0 ) dashHeight = dashboardCardFixedHeight;
 
@@ -219,7 +218,7 @@ Rectangle {
         anchors.fill: minimizedListView
         enabled: minimizedListView.visible
         onClicked: {
-            freshNewItemsPopups.popupModel.clear();
+            bannerItemsPopups.popupModel.clear();
             notificationArea.state = "open";
             windowManagerInstance.addTapAction("minimizeNotificationArea", minimizeNotificationArea, null)
         }
@@ -301,8 +300,8 @@ Rectangle {
     }
 
     // Banner popup view
-    NotificationTemporaryPopupArea {
-        id: freshNewItemsPopups
+    BannerPopupArea {
+        id: bannerItemsPopups
         visible: height>0
 
         anchors {
@@ -314,13 +313,17 @@ Rectangle {
         height: popupModel.count > 0 ? bannerNotificationFixedHeight : 0;
         Behavior on height { NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }
 
+
         Connections {
-            target: freshNewItemsPopups.popupModel
+            target: bannerItemsPopups.popupModel
             onCountChanged: {
-                if( freshNewItemsPopups.popupModel.count > 0 )
+                if( bannerItemsPopups.popupModel.count > 0 )
                     notificationArea.state = "banner";
                 else if( mergedModel.count > 0 )
                     notificationArea.state = "minimized";
+            }
+            onRowsAboutToBeRemoved: {
+                notificationMgr.closeById(bannerItemsPopups.popupModel.get(last).object.replacesId);
             }
         }
     }
@@ -328,7 +331,7 @@ Rectangle {
     states: [
         State {
             name: "hidden"
-            when: (freshNewItemsPopups.popupModel.count + mergedModel.count) === 0
+            when: (bannerItemsPopups.popupModel.count + mergedModel.count) === 0
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
             PropertyChanges { target: notificationArea; height: 0 }
@@ -337,7 +340,7 @@ Rectangle {
             name: "banner"
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationArea; height: freshNewItemsPopups.height }
+            PropertyChanges { target: notificationArea; height: bannerItemsPopups.height }
         },
         State {
             name: "minimized"
