@@ -29,6 +29,8 @@ FakeWindowBase {
 
     property alias scale: windowRectangle.scale
 
+    property var windowProperties: { "LuneOS_dashheight": 50 + Math.random()*50 }
+
     Rectangle {
         id: windowRectangle
 
