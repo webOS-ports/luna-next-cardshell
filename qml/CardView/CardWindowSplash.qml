@@ -23,11 +23,11 @@ Image {
 
     property string appIcon: ""
 
-    readonly property string _defaultAppIcon: "../images/default-app-icon.png"
+    readonly property string _defaultAppIcon: Qt.resolvedUrl("../images/default-app-icon.png")
 
     visible: true
     state: "visible"
-    source: "../images/loading-bg.png"
+    source: Qt.resolvedUrl("../images/loading-bg.png")
 
     states: [
         State { name: "visible" },
