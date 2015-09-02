@@ -82,7 +82,7 @@ Rectangle {
             var dashHeight = 0;
             if( window.windowProperties && window.windowProperties.hasOwnProperty("LuneOS_dashheight") )
             {
-                dashHeight = window.windowProperties["LuneOS_dashheight"];
+                dashHeight = Units.length(window.windowProperties["LuneOS_dashheight"]);
             }
             if( dashHeight<=0 ) dashHeight = dashboardCardFixedHeight;
 
