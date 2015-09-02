@@ -315,10 +315,10 @@ Item {
         }
         else
         {
-            launcherListModel.model.append({appId: "org.webosports.tests.dummyWindow",          icon: Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.model.append({appId: "org.webosports.tests.fakeDashboardWindow",  icon: Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.model.append({appId: "org.webosports.tests.fakePopupAlertWindow", icon: Qt.resolvedUrl("../images/default-app-icon.png")});
-            launcherListModel.model.append({appId: "org.webosports.tests.dummyWindow2",          icon: Qt.resolvedUrl("../images/default-app-icon.png")});
+            launcherListModel.model.append({appId: "org.webosports.tests.dummyWindow",          icon: Qt.resolvedUrl("../Tests/images/test-app-icon.png")});
+            launcherListModel.model.append({appId: "org.webosports.tests.fakeDashboardWindow",  icon: Qt.resolvedUrl("../Tests/images/dashboard-app-icon.png")});
+            launcherListModel.model.append({appId: "org.webosports.tests.fakePopupAlertWindow", icon: Qt.resolvedUrl("../Tests/images/alert-app-icon.png")});
+            launcherListModel.model.append({appId: "org.webosports.tests.dummyWindow2",          icon: Qt.resolvedUrl("../Tests/images/test2-app-icon.png")});
         }
         launcherRow.visible = true;
     }

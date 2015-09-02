@@ -37,7 +37,7 @@ FakeWindowBase {
         anchors.fill: parent
         gradient: Gradient {
             GradientStop { position: 0.0; color: "grey" }
-            GradientStop { position: 1.0; color: "red" }
+            GradientStop { position: 1.0; color: Qt.rgba(Math.random(),Math.random(),1,1) }
         }
 
         Row {

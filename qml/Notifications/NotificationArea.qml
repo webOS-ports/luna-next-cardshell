@@ -82,7 +82,7 @@ Rectangle {
             var dashHeight = 0;
             if( window.windowProperties && window.windowProperties.hasOwnProperty("LuneOS_dashheight") )
             {
-                dashHeight = window.windowProperties["LuneOS_dashheight"];
+                dashHeight = Units.length(window.windowProperties["LuneOS_dashheight"]);
             }
             if( dashHeight<=0 ) dashHeight = dashboardCardFixedHeight;
 
@@ -119,14 +119,22 @@ Rectangle {
             property var notifObject: loaderNotifObject;
 
             signal clicked()
-            signal closed()
+            signal closed(int notifIndex)
 
             title: notifObject.title
             body: notifObject.body
             iconUrl: getIconUrlOrDefault(notifObject.iconUrl)
 
-            onClicked: notificationArea.launchApplication(notifObject.launchId, notifObject.launchParams);
-            onClosed: notificationMgr.closeById(notifObject.replacesId);
+            onClosed: {
+                notificationMgr.closeById(notifObject.replacesId);
+                mergedModel.remove(notifIndex);
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: notificationArea.launchApplication(notificationItem.notifObject.launchId,
+                                                              notificationItem.notifObject.launchParams);
+            }
         }
     }
     Component {
@@ -138,7 +146,7 @@ Rectangle {
             property Item dashboardWindow: loaderWindow;
 
             signal clicked()
-            signal closed()
+            signal closed(int notifIndex)
 
             onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
 
@@ -163,7 +171,7 @@ Rectangle {
 
             onClosed: {
                 dashboardWindow.visible = false;
-                compositorInstance.closeWindowWithId(dashboardWindow.winId);
+                compositorInstance.closeWindowWithId(dashboardWindow.winId); // this will take care of removing the card from mergedModel
                 dashboardWindow = null;
             }
         }
@@ -244,7 +252,7 @@ Rectangle {
         model: mergedModel
 
         delegate:
-            SlidingItemArea {
+            SwipeableNotification {
                 id: slidingNotificationArea
 
                 property var delegateNotifObject: typeof notifObject !== 'undefined' ? notifObject : undefined;
@@ -253,45 +261,31 @@ Rectangle {
                 property int delegateHeight: notifHeight
                 property int delegateIndex: index
 
-                slidingTargetItem: notificationItemLoader
+                notifComponent: notificationItemLoaderComponent
 
-                height: notificationItemLoader.height
-                width: notificationItemLoader.width
+                height: delegateHeight
+                width: notificationArea.width - Units.gu(1)
 
-                Loader {
-                    id: notificationItemLoader
-                    width: notificationArea.width - Units.gu(1)
-                    height: slidingNotificationArea.delegateHeight
-                    anchors.verticalCenter: slidingNotificationArea.verticalCenter
+                Component {
+                    id: notificationItemLoaderComponent
 
-                    sourceComponent: slidingNotificationArea.delegateType === "notification" ? notificationItemDelegate : dashboardDelegate
-                    property var loaderNotifObject: slidingNotificationArea.delegateNotifObject
-                    property Item loaderWindow: slidingNotificationArea.delegateWindow
+                    Loader {
+                        id: notificationItemLoader
+                        width: slidingNotificationArea.width
+                        height: slidingNotificationArea.delegateHeight
 
-                    signal clicked()
-                    signal closed()
+                        sourceComponent: slidingNotificationArea.delegateType === "notification" ? notificationItemDelegate : dashboardDelegate
+                        property var loaderNotifObject: slidingNotificationArea.delegateNotifObject
+                        property Item loaderWindow: slidingNotificationArea.delegateWindow
 
-                    onClicked: {
-                        item.clicked();
-                    }
-                    onClosed: {
-                        item.closed();
-                        mergedModel.remove(slidingNotificationArea.delegateIndex);
-
-                        slidingNotificationArea.resetSlidingArea();
+                        signal closed()
+                        onClosed: {
+                            item.closed(slidingNotificationArea.delegateIndex);
+                        }
                     }
                 }
 
-                onClicked: notificationItemLoader.clicked();
-                onSlidedLeft: notificationItemLoader.closed();
-                onSlidedRight: notificationItemLoader.closed();
-
-                Component.onCompleted: {
-                    // avoid putting property binding
-                    if( delegateType === "dashboard" ) {
-                        slidingEnabled = false;  // necessary for now in order to be able to interact with the dashboard, unfortunately
-                    }
-                }
+                onRequestDestruction: slidingNotificationArea.notifItem.closed();
         }
 
         Behavior on height {
