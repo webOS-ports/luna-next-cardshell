@@ -1,9 +1,0 @@
-module LunaNext.Compositor
-Compositor 0.1 Compositor.qml
-WindowModel 0.1 WindowModel.qml
-WindowState 0.1 WindowStateStub.js
-WindowType 0.1 WindowTypeStub.js
-ScreenShooter 0.1 ScreenShooter.qml
-EventType 0.1 EventTypeStub.js
-
-typeinfo LunaNext.Compositor.qmltypes
