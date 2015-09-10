@@ -40,18 +40,21 @@ Item {
 
         orientation: ListView.Horizontal
         interactive: true
-        snapMode: ListView.SnapToItem
+        snapMode: ListView.SnapOneItem
         currentIndex: 1
         model: visualNotifModel
 
         onContentXChanged: {
             if((contentX>(swipeableRoot.width*1.8) || contentX<(swipeableRoot.width*0.2))
-                    && !dragging && !__destructionRequested) {
+                    && moving && !dragging && !__destructionRequested) {
                 requestDestruction(); // delete notif
                 __destructionRequested = true;
+            }
+            else if( !moving  ) {
+                positionViewAtIndex(1, ListView.Beginning);
             }
         }
     }
 
-    onReset: myListView.currentIndex = 1;
+    onReset: myListView.positionViewAtIndex(1, ListView.Beginning);
 }
