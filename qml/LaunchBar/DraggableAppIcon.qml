@@ -32,8 +32,15 @@ Item {
     property alias modelIcon: launcherIcon.appIcon
     property alias modelId: launcherIcon.appId
     property alias modelParams:  launcherIcon.appParams
+    // default launchPointId can't be removed, see
+    //  https://github.com/webOS-ports/luna-appmanager/blob/master/Src/base/application/ApplicationManager.cpp#L2111
+    property string modelLaunchPointId: modelId + "_default"
+    property bool modelRemovable: false
+    property bool modelHideable: false // don't use this right now
 
     signal startLaunchApplication(string appId, string appParams)
+    signal removeAppLauncher(string appId)
+    signal hideAppLauncher(string appId)
 
     Drag.active: draggableAppIconItem.draggingActive
     Drag.source: draggableAppIconItem
@@ -64,5 +71,36 @@ Item {
         glow: draggableAppIconItem.draggingActive
 
         onStartLaunchApplication: draggableAppIconItem.startLaunchApplication(appId, appParams);
+    }
+
+    // App uninstall/remove icon
+    Image {
+        id: removeAppButton
+        property bool highlight: false
+        property string iconFile: draggableAppIconItem.modelRemovable ?
+                                       ( "edit-button-delete" + (highlight?"-highlight":"")) :
+                                       ( "edit-button-remove" + (highlight?"-highlight":""))
+        source: Qt.resolvedUrl("../images/launcher/"+iconFile+".png");
+        anchors {
+            top: parent.top
+            right: parent.right
+        }
+        width: launcherIcon.width*0.4; height: width
+        fillMode: Image.PreserveAspectFit
+        visible: draggableAppIconItem.editionMode && !draggingActive &&
+                 (draggableAppIconItem.modelRemovable || draggableAppIconItem.modelHideable)
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                removeAppButton.highlight = true;
+                if( draggableAppIconItem.modelRemovable ) {
+                    draggableAppIconItem.removeAppLauncher(draggableAppIconItem.modelId);
+                }
+                else if( draggableAppIconItem.modelHideable ) {
+                    draggableAppIconItem.hideAppLauncher(draggableAppIconItem.modelLaunchPointId);
+                }
+            }
+        }
     }
 }

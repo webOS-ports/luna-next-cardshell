@@ -350,8 +350,10 @@ Item {
                     modelTitle: model.title
                     modelIcon: model.icon
                     modelId: model.id
-                    modelParams:  model.params === undefined ? "{}" : model.params
+                    modelParams:  (typeof model.params === "undefined") ? "{}" : model.params
                     modelIndex: index
+                    modelRemovable: !!model.removable
+                    modelHideable: false
 
                     iconWidth: fullLauncher.appIconWidth
                     iconSize: fullLauncher.iconSize
@@ -361,9 +363,13 @@ Item {
                     width: fullLauncher.cellWidth
                     height: fullLauncher.cellHeight
 
-                    onStartLaunchApplication: if( !fullLauncher.isEditionActive ) fullLauncher.startLaunchApplication(appId, appParams);
+                    onStartLaunchApplication: {
+                        if( !fullLauncher.isEditionActive ) fullLauncher.startLaunchApplication(appId, appParams);
+                    }
+                    onRemoveAppLauncher:  {
+                        if( fullLauncher.isEditionActive ) fullLauncher.removeApplication(appId);
+                    }
                 }
-
 
                 cellWidth: fullLauncher.cellWidth
                 cellHeight: fullLauncher.cellHeight
@@ -468,7 +474,7 @@ Item {
                             placeHolderPosition = gridTabModel.count;
                         }
 
-                        gridTabModel.insert(placeHolderPosition, {title: "", icon: "", id: "", params: ""});
+                        gridTabModel.insert(placeHolderPosition, {title: "", icon: "", id: "", params: "", removable: false});
                     }
                     onPositionChanged: {
                         // Move the placeholder where the drag is
@@ -490,7 +496,8 @@ Item {
                                  {title : drag.source.modelTitle,
                                    icon: drag.source.modelIcon,
                                    id: drag.source.modelId,
-                                   params: drag.source.modelParams});
+                                   params: drag.source.modelParams,
+                                   removable: drag.source.modelRemovable});
                     }
                 }
             }
@@ -590,7 +597,8 @@ Item {
                                                 {title : draggedLauncherIcon.modelTitle,
                                                  icon: draggedLauncherIcon.modelIcon,
                                                  id: draggedLauncherIcon.modelId,
-                                                 params: draggedLauncherIcon.modelParams});
+                                                 params: draggedLauncherIcon.modelParams,
+                                                 removable: draggedLauncherIcon.modelRemovable});
                         }
 
                         draggedLauncherIcon.draggingActive = false;
@@ -619,6 +627,8 @@ Item {
                 draggedLauncherIcon.modelId = targetItem.modelId
                 draggedLauncherIcon.modelParams = targetItem.modelParams
                 draggedLauncherIcon.modelIndex = targetItem.modelIndex
+                draggedLauncherIcon.modelRemovable = targetItem.modelRemovable
+                draggedLauncherIcon.modelHideable = false
 
                 draggedLauncherIcon.x = atX;
                 draggedLauncherIcon.y = atY;
@@ -626,12 +636,13 @@ Item {
         }
     }
 
-    // db8 management
+    // ls2 management
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
         name: "org.webosports.luna"
         usePrivateBus: true
     }
+    // ls2 db8 management
     function __handleDBError(message) {
         console.log("Could not fulfill DB operation : " + message)
     }
@@ -639,5 +650,15 @@ Item {
     function __queryDB(action, params, handleResultFct) {
         lunaNextLS2Service.call("luna://com.palm.db/" + action, JSON.stringify(params),
                   handleResultFct, __handleDBError)
+    }
+
+    // ls2 launchPoint removal
+    function removeApplication(id) {
+        console.log("Removing app " + id);
+        lunaNextLS2Service.call("palm://com.palm.appinstaller/remove",
+            JSON.stringify({"packageName": id}), undefined, handleRemoveAppError)
+    }
+    function handleRemoveAppError(message) {
+        console.log("Could not remove application : " + message);
     }
 }
