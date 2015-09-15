@@ -66,7 +66,7 @@ Item {
 
             if (response.lockState === "locked")
                 lockScreen.state = "pad";
-            else if (response.lockState === "unlocked")
+            else if (response.lockState === "unlocked" || response.lockState === "dockmode")
                 lockScreen.state = "none";
         }
 
