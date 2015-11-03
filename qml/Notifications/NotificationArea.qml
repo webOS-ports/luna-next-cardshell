@@ -92,7 +92,7 @@ Rectangle {
             mergedModel.append({"notifType": "dashboard",
                                 "window": window,
                                 "notifObject": {},
-                                "iconUrl": window.appIcon,
+                                "iconUrl": window.miniIcon ? window.miniIcon : window.appIcon,
                                 "notifHeight": dashHeight});
         }
         onRowsAboutToBeRemoved: {
