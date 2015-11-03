@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2013-2014 Christophe Chapuis <chris.chapuis@gmail.com>
- * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
+ * Copyright (C) 2014-2015 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ Item {
     property Item wifiService
     property Item lockScreen
     property Item dockMode
+    property string timeFormat: "HH24"
 
     property string carrierName: "LuneOS"
 
@@ -68,6 +69,23 @@ Item {
         console.log("Failed to call networkStatus service: " + message)
     }
 
+    function probeTimeFormat()
+    {
+        timeFormatQuery.subscribe(
+                    "luna://com.palm.systemservice/getPreferences",
+                    JSON.stringify({"subscribe":true, "keys":["timeFormat"]}),
+                    onTimeFormatChanged, onTimeFormatError)
+    }
+
+    function onTimeFormatChanged(message) {
+		var response = JSON.parse(message.payload)
+        timeFormat = response.timeFormat
+    }
+
+    function onTimeFormatError(message) {
+        console.log("Failed to call timeFormat service: " + message)
+    }
+	
 
     Rectangle {
         id: background
@@ -83,6 +101,19 @@ Item {
             anchors.bottomMargin: parent.height * 0.2
             implicitWidth: titleText.contentWidth
 
+			LunaService {
+                id: timeFormatQuery
+
+                name: "org.webosports.luna"
+                usePrivateBus: true
+
+                onInitialized: {
+                    probeTimeFormat()
+                }
+
+            }
+
+			
             Text {
                 id: titleText
                 anchors.fill: parent
@@ -103,17 +134,18 @@ Item {
 
                 function updateClock() {
                     if (dateTimeTweak.value === "dateTime")
-                        titleText.text = Qt.formatDateTime(new Date(),
-                                                           "dd-MMM-yyyy h:mm")
+                        titleText.text = timeFormat === "HH24" ? Qt.formatDateTime(new Date(),
+                                                           "dd-MMM-yyyy h:mm") : Qt.formatDateTime(new Date(),
+                                                           "dd-MMM-yyyy h:mm AP")
                     else if (dateTimeTweak.value === "timeOnly")
-                        titleText.text = Qt.formatDateTime(new Date(), "h:mm")
+                        titleText.text = timeFormat === "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
                     else if (dateTimeTweak.value === "dateOnly")
                         titleText.text = Qt.formatDateTime(new Date(),
-                                                           "dd-MMM-yyyy")
+                                                           "dd-MMM-yyyy") 
                 }
 
-                text: Qt.formatDateTime(new Date(), "h:mm")
-                //FIXME Still necessary to adjust based on regional settings later for date and time.
+                text: timeFormat === "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
+                
                 Tweak {
                     id: dateTimeTweak
                     owner: "luna-next-cardshell"
