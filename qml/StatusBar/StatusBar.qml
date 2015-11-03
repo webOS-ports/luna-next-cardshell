@@ -37,7 +37,7 @@ Item {
     property Item wifiService
     property Item lockScreen
     property Item dockMode
-	property string timeFormat: "HH24"
+    property string timeFormat: "HH24"
 
     property string carrierName: "LuneOS"
 
@@ -134,17 +134,17 @@ Item {
 
                 function updateClock() {
                     if (dateTimeTweak.value === "dateTime")
-                        titleText.text = timeFormat == "HH24" ? Qt.formatDateTime(new Date(),
+                        titleText.text = timeFormat === "HH24" ? Qt.formatDateTime(new Date(),
                                                            "dd-MMM-yyyy h:mm") : Qt.formatDateTime(new Date(),
                                                            "dd-MMM-yyyy h:mm AP")
                     else if (dateTimeTweak.value === "timeOnly")
-                        titleText.text = timeFormat == "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
+                        titleText.text = timeFormat === "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
                     else if (dateTimeTweak.value === "dateOnly")
                         titleText.text = Qt.formatDateTime(new Date(),
                                                            "dd-MMM-yyyy") 
                 }
 
-                text: timeFormat == "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
+                text: timeFormat === "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
                 
                 Tweak {
                     id: dateTimeTweak
