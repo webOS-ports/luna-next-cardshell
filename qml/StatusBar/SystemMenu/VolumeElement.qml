@@ -81,7 +81,7 @@ MenuListEntry {
 
                 onValueChanged: {
                     service.call("luna://org.webosports.audio/setVolume",
-                                 JSON.stringify({"volume": volumeValue * 100}),
+                                 JSON.stringify({"volume": Math.floor(volumeValue * 100)}),
                                  function(message) { }, function(error) { });
                 }
 

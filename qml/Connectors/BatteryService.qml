@@ -33,7 +33,8 @@ Item {
 
     property bool _playSoundWhenCharged: false
 
-    property bool error: false
+    // Because powerd doesn't respond in error state, start there
+    property bool error: true
 
     Audio {
         id: chargedSound
@@ -78,7 +79,6 @@ Item {
 
     function handleError(message) {
         console.log("Service error: " + message);
-        batteryService.error = true;
     }
 
     function handlePowerdServiceStatus(message) {
@@ -99,9 +99,13 @@ Item {
     function handlePowerdBatteryEvent(message) {
         var response = JSON.parse(message.payload);
 
-        // batteryLevel goes from 0 to 12.
-        level = Math.floor((response.percent_ui * 12) / 100);
-        percentage = response.percent_ui
+        if (typeof response.percent_ui !== "undefined") {
+            // Got a valid state, remove the error flag to show the indicator
+            batteryService.error = false;
+            // batteryLevel goes from 0 to 12.
+            level = Math.floor((response.percent_ui * 12) / 100);
+            percentage = response.percent_ui
+        }
     }
 
     function handlePowerdUsbDockStatus(message) {
