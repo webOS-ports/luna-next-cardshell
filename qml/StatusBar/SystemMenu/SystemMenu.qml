@@ -376,7 +376,7 @@ Item {
 
                 PowerElement {
                     id: power
-                    visible: true
+                    visible: !Settings.hasPowerButton
                     menuPosition: 3
                     ident: headerIdent
 
