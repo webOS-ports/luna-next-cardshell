@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2013-2014 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2014-2015 Herman van Hazendonk <github.com@herrie.org>
+ * Copyright (C) 2015 Alan Stice <alan@alanstice.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,6 +41,8 @@ Item {
     property string timeFormat: "HH24"
 
     property string carrierName: "LuneOS"
+
+    signal showPowerMenu()
 
     function probeNetworkStatus()
     {
@@ -269,6 +272,8 @@ Item {
             x: parent.width - systemMenu.width + systemMenu.edgeOffset
 
             onCloseSystemMenu: systemMenu.toggleState()
+
+            onShowPowerMenu: statusBar.showPowerMenu();
         }
 
         Timer {

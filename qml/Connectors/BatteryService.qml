@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2015 Alan Stice <alan@alanstice.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +32,8 @@ Item {
     property bool powerdAvailable: false
 
     property bool _playSoundWhenCharged: false
+
+    property bool error: false
 
     Audio {
         id: chargedSound
@@ -75,6 +78,7 @@ Item {
 
     function handleError(message) {
         console.log("Service error: " + message);
+        batteryService.error = true;
     }
 
     function handlePowerdServiceStatus(message) {

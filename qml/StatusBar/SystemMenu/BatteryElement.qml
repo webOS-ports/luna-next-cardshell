@@ -43,6 +43,7 @@ MenuListEntry {
 
     function handleError(error) {
         console.log("Could not get power status: " + error);
+        batteryElement.visible = false;
     }
 
     LunaService {

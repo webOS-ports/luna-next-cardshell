@@ -2,6 +2,7 @@
  * Copyright (C) 2013-2014 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013-2014 Simon Busch <morphis@gravedo.de>
  * Copyright (C) 2013-2015 Herman van Hazendonk <github.com@herrie.org>
+ * Copyright (C) 2015 Alan Stice <alan@alanstice.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -136,6 +137,8 @@ Row {
         level: batteryService.level
         charging: batteryService.charging
         percentage: batteryService.percentage
+
+        enabled: !batteryService.error
     }
 
     Image {

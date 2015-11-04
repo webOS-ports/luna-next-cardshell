@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
  * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2015 Alan Stice <alan@alanstice.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,6 +43,8 @@ WindowManager {
     property real screenwidth: windowManager.width
     property real screenheight: windowManager.height
     property real screenDPI: Settings.dpi
+
+    signal showPowerMenu()
 
     states: [
         State {
@@ -299,6 +302,8 @@ WindowManager {
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
         lockScreen: lockScreen
         dockMode: dockMode
+
+        onShowPowerMenu: windowManager.showPowerMenu();
     }
 
     LunaGestureArea {
