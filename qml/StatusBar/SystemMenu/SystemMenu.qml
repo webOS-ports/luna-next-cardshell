@@ -348,6 +348,28 @@ Item {
                         closeMenuTimer.start();
                     }
                 }
+
+                PowerElement {
+                    id: power
+                    objectName: "powerMenu"
+                    visible: true
+                    ident: headerIdent;
+                    internalIdent: subItemIdent;
+                    active: true;
+                    maxViewHeight : maxHeight - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin;
+
+                    onMenuCloseRequest: {
+                        closeMenuTimer.interval = delayMs;
+                        closeMenuTimer.start();
+                    }
+
+                    onRequestViewAdjustment: {
+                        // this is not working correctly in QML right now.
+                        viewAnimation.to = flickableArea.contentItem.y - offset;
+                        viewAnimation.start();
+                    }
+                }
+
             }
 
         }
