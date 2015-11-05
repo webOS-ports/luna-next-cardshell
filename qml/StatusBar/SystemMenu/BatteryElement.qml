@@ -25,6 +25,9 @@ MenuListEntry {
     property int ident: 0
     property string batteryText: "100%"
 
+    // Start hidden and become visible if we have valid interface with the battery
+    visible: false
+
 //    Connections {
 //        target: statusBarServicesConnector
 //        onSignalBatteryLevelUpdated: {
@@ -38,7 +41,11 @@ MenuListEntry {
 
     function updateBatteryStatus(message) {
         var response = JSON.parse(message.payload);
-        batteryText = response.percent_ui + "%";
+        // precent_ui is undefined on devices without a battery.
+        if (typeof response.percent_ui !== "undefined") {
+            batteryText = response.percent_ui + "%";
+            batteryElement.visible = true;
+        }
     }
 
     function handleError(error) {

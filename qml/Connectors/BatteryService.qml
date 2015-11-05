@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2015 Alan Stice <alan@alanstice.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,6 +32,9 @@ Item {
     property bool powerdAvailable: false
 
     property bool _playSoundWhenCharged: false
+
+    // Because powerd doesn't respond in error state, start there
+    property bool error: true
 
     Audio {
         id: chargedSound
@@ -95,9 +99,13 @@ Item {
     function handlePowerdBatteryEvent(message) {
         var response = JSON.parse(message.payload);
 
-        // batteryLevel goes from 0 to 12.
-        level = Math.floor((response.percent_ui * 12) / 100);
-        percentage = response.percent_ui
+        if (typeof response.percent_ui !== "undefined") {
+            // Got a valid state, remove the error flag to show the indicator
+            batteryService.error = false;
+            // batteryLevel goes from 0 to 12.
+            level = Math.floor((response.percent_ui * 12) / 100);
+            percentage = response.percent_ui
+        }
     }
 
     function handlePowerdUsbDockStatus(message) {

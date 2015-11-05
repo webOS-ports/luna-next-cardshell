@@ -52,6 +52,7 @@ Item {
 
 
     // ---- Signals ----
+    signal showPowerMenu()
     signal closeSystemMenu()
     signal airplaneModeTriggered()
     signal rotationLockTriggered(bool isLocked)
@@ -156,18 +157,38 @@ Item {
                     ident: headerIdent;
                 }
 
-                MenuDivider {widthOffset: dividerWidthOffset}
+                MenuDivider {
+                    widthOffset: dividerWidthOffset
+                    visible: battery.visible
+                }
 
                 BrightnessElement {
                     id: brightness
-                    visible:    true
+                    visible: Settings.hasBrightnessControl
                     margin: Units.gu(0.5); 
                     onFlickOverride: {
                         flickableOverride = override;
                     }
                 }
 
-                MenuDivider {widthOffset: dividerWidthOffset}
+                MenuDivider {
+                    visible: brightness.visible
+                    widthOffset: dividerWidthOffset
+                }
+
+                VolumeElement {
+                    id: volume
+                    visible: !Settings.hasVolumeButton
+                    margin: Units.gu(0.5);
+                    onFlickOverride: {
+                        flickableOverride = override;
+                    }
+                }
+
+                MenuDivider {
+                    visible: volume.visible
+                    widthOffset: dividerWidthOffset
+                }
 
                 WiFiElement {
                     id: wifi
@@ -326,7 +347,7 @@ Item {
                 MuteElement {
                     id: muteControl
                     visible: true
-                    menuPosition: 2; // bottom
+                    menuPosition: 2;
                     ident:         headerIdent;
 
                     onAction: {
@@ -348,6 +369,22 @@ Item {
                         closeMenuTimer.start();
                     }
                 }
+
+                MenuDivider {
+                    visible: !Settings.hasPowerButton
+                }
+
+                PowerElement {
+                    id: power
+                    visible: !Settings.hasPowerButton
+                    menuPosition: 3
+                    ident: headerIdent
+
+                    onAction: {
+                        showPowerMenu();
+                    }
+                }
+
             }
 
         }
