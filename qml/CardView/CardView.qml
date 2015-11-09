@@ -236,6 +236,7 @@ Item {
     Connections {
         target: compositorInstance
         onWindowAdded: __handleWindowAdded(window)
+        onWindowRaised: { cardViewItem.setCurrentCard(window); cardViewItem.setCurrentCardState(WindowState.Maximized); }
         onWindowRemoved: __handleWindowRemoved(window)
     }
 
