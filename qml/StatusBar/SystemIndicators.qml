@@ -45,10 +45,6 @@ Row {
         id: wifiService
     }
     
-    BluetoothService {
-        id: bluetoothService
-    }
-
     RecorderIndicator {
         id: recorderIndicator
 
@@ -105,7 +101,7 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: bluetoothService.powered
+        enabled: BluetoothService.powered
     }
 
     WanStatusIndicator {

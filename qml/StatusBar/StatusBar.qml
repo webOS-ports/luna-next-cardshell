@@ -271,7 +271,10 @@ Item {
             visible: false
             x: parent.width - systemMenu.width + systemMenu.edgeOffset
 
-            onCloseSystemMenu: systemMenu.toggleState()
+            onCloseSystemMenu: {
+                systemMenu.resetMenu()
+                systemMenu.toggleState()
+            }
 
             onShowPowerMenu: statusBar.showPowerMenu();
         }

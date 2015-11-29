@@ -28,6 +28,7 @@ Drawer {
     property bool btTurningOn:   false
     property bool coloseOnConnect: false
     property string deviceAddressInError: ""
+    readonly property alias trustedDevices: bluetoothList
 
     // ------------------------------------------------------------
     // External interface to the Bluetooth Element is defined here:
@@ -128,7 +129,7 @@ Drawer {
 
     function clearBluetoothList() {
         bluetoothList.clear()
-	bluetoothListView.height = 1
+        bluetoothListView.height = 1
     }
 
     function resetEntryStatus() {
@@ -188,7 +189,7 @@ Drawer {
                         horizontalAlignment: Text.AlignRight
                         elide: Text.ElideRight;
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "init";
+                        text: "off";
                         color: "#AAA";
                         font.pixelSize: FontUtils.sizeToPixels("small") //13
                         font.family: "Prelude"
@@ -210,14 +211,14 @@ Drawer {
             content: Text {
                          id: bluetoothOnOffText;
                          x: ident + internalIdent;
-                         text: "Turn off Bluetooth";
+                         text: "Turn on Bluetooth";
                          color: "#FFF";
                          font.bold: false;
                          font.pixelSize: FontUtils.sizeToPixels("medium"); //18;
                          font.family: "Prelude"
                      }
             onAction: {
-                 if(isBluetoothOn && !btTurningOn)
+                if(isBluetoothOn && !btTurningOn)
                     menuCloseRequest(300);
 
                 onOffTriggered()
@@ -227,9 +228,9 @@ Drawer {
         MenuDivider  { }
 
         ListView {
-	    id: bluetoothListView
+            id: bluetoothListView
             width: parent.width
-	    height: Units.gu(0.1)
+            height: Units.gu(0.1)
             interactive: false
             spacing: 0
             model: bluetoothList
@@ -239,13 +240,13 @@ Drawer {
         MenuListEntry {
             selectable: true
             content: Text {
-		x: ident + internalIdent;
-        text: "Bluetooth Preferences";
-		color: "#FFF";
-	        font.bold: false;
-		font.pixelSize: FontUtils.sizeToPixels("medium"); //18; 
-		font.family: "Prelude";
-	    }
+                x: ident + internalIdent;
+                text: "Bluetooth Preferences";
+                color: "#FFF";
+                font.bold: false;
+                font.pixelSize: FontUtils.sizeToPixels("medium"); //18;
+                font.family: "Prelude";
+            }
             onAction: {
                 prefsTriggered();
                 menuCloseRequest(300);
@@ -283,7 +284,16 @@ Drawer {
                     }
 
                     bluetoothList.get(index).showErrorIfConnectFails = false;
-                    itemSelected(index)
+
+                    if (isBluetoothOn) {
+                        if (bluetoothList.count > index) {
+                            var data = bluetoothList.get(index);
+                            console.log("Bluetooth Device Selected. Name = ", data.deviceName, ", address = ", data.deviceAddress, ", state = ", data.connectionStatus, ", cod = ", data.deviceCod);
+                            itemSelected(index);
+                        } else {
+                            console.log("Bluetooth Device index Not Found:", index);
+                        }
+                    }
 
                     coloseOnConnect = false;
 
