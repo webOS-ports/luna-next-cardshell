@@ -19,6 +19,7 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
+import "../../Connectors"
 
 Item {
     id: systemMenu
@@ -260,23 +261,107 @@ Item {
                     internalIdent: subItemIdent;
                     active: !airplaneModeInProgress;
                     maxViewHeight : maxHeight - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin;
+                    property string pendingDevAddress: "";
+                    property int pendingCod: 0;
+
+                    Connections {
+                        target: BluetoothService
+
+                        onClearBtList: {
+                            bluetooth.clearBluetoothList();
+                        }
+
+                        onAddBtEntry: {
+                            bluetooth.addBluetoothEntry(name,address,cod,connStatus,connected);
+                        }
+
+                        onSetBtState:{
+                            bluetooth.setBluetoothState(isOn, turningOn, state);
+                        }
+
+                        onUpdateBtEntry: {
+                            if (!connected && BluetoothService.powered && bluetooth.pendingDevAddress !== "") {
+                                BluetoothService.connectBtDevice(bluetooth.pendingDevAddress, bluetooth.pendingCod);
+                                bluetooth.pendingDevAddress = "";
+                                bluetooth.pendingCod = 0;
+                            }
+
+                            for (var x = 0; x < bluetooth.trustedDevices.count; x++) {
+                                if(bluetooth.trustedDevices.get(x).deviceAddress === address) {
+                                    var entry = bluetooth.trustedDevices.get(x);
+                                    bluetooth.updateBluetoothEntry(entry.deviceName, entry.deviceAddress, entry.deviceCod, connStatus, connected);
+                                }
+                            }
+                        }
+                    }
+
 
                     onPrefsTriggered: {
                         //TODO needs page in Settings
-                        //launcherInstance.launchApplication("org.webosports.app.settings",{"page":"BlueTooth"});
+                        launcherInstance.launchApplication("org.webosports.app.settings",{"page":"Bluetooth"});
+                    }
+
+                    onOnOffTriggered: {
+                        if (isBluetoothOn) {
+                            BluetoothService.setPowered(false);
+                        }
+                        else {
+                            if (!btTurningOn)
+                                BluetoothService.setPowered(true);
+                        }
                     }
 
                     onItemSelected: {
-                        var target = {};
-                        //TODO Needs updating for BT values
-                        //target["ssid"] = name;
-                        //target["securityType"] = securityType;
-                        //target["connectState"] = connState;
-                        //if (securityType.length <= 0) {
-                        //    wifi.joinWifi(name);
-                        //} else {
-                            launcherInstance.launchApplication("org.webosports.app.settings",{"target":target});
-                        //}
+                        var item = trustedDevices.get(index);
+
+                        if (item.connectionStatus === "connected") {
+                            // Device is connected so disconnect all profiles it is connected on
+                            BluetoothService.disconnectAllBtMenuProfiles(item.deviceAddress);
+                        } else if (item.connectionStatus === "connecting") {
+                            // Is this device waiting to connect?
+                            if (item.deviceAddress === pendingDevAddress) {
+                                // There is no longer a pending connection attempt to this device
+                                pendingDevAddress = "";
+                                pendingCod = 0;
+                            }
+                            else {
+                                // Abort the connection attempt on the supported profiles
+                                BluetoothService.disconnectAllBtMenuProfiles(item.deviceAddress);
+                            }
+                        } else if (item.connectionStatus === "disconnected") {
+                            // Is there a pending connection attempt to another device?
+                            if ((pendingDevAddress) && (pendingDevAddress !== item.deviceAddress)) {
+                                // A connection to the previously pending device is no longer desired
+
+                                // Update the UI to reflect that there is no longer a pending connection attempt to the old device
+                                // Iterate through the list array to find out the index
+                                for (var x = 0; x < trustedDevices.count; x++) {
+                                    if (trustedDevices.get(x).deviceAddress !== pendingDevAddress) {
+                                        var entry = trustedDevices.get(x);
+                                        updateBluetoothEntry(entry.deviceName, entry.deviceAddress, entry.deviceCod, "disconnected", entry.isConnected);
+                                    }
+                                }
+                                pendingDevAddress = "";
+                                pendingCod = 0;
+                            }
+
+                            // Iterate through the list and disconnect the audio profiles
+                            for (var x = 0; x < trustedDevices.count; x++) {
+                                if (trustedDevices.get(x).connectionStatus !== "disconnected") {
+                                    var entry = trustedDevices.get(x);
+                                    BluetoothService.disconnectAllBtMenuProfiles(entry.deviceAddress);
+                                    pendingDevAddress = item.deviceAddress;
+                                    pendingCod = item.deviceCod;
+                                }
+                            }
+
+                            // The device the user tapped on must show "connecting"
+                            updateBluetoothEntry(item.deviceName, item.deviceAddress, item.deviceCod, "connecting", item.isConnected);
+
+                            // If the connection isn't pending then connect now
+                            if (pendingDevAddress === "")
+                                BluetoothService.connectBtDevice(item.deviceAddress, item.deviceCod);
+                        }
                     }
 
                     onMenuCloseRequest: {
