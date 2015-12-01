@@ -26,7 +26,10 @@ import "../Utils"
 Rectangle {
     id: rootAlertsArea
     height: maxHeight
+
     property int maxHeight: 0
+    property Item windowManagerItem
+    property Compositor compositorInstance
 
     color: "black"
 
@@ -65,6 +68,10 @@ Rectangle {
                     }
                     else {
                         window.onHeightChanged.connect(function() { window.changeSize(Qt.size(alertItem.width, window.height)); });
+                    }
+
+                    if( windowManagerItem ) {
+                        windowManagerItem.addTapAction("hideAlertWindow", function (winId) { compositorInstance.closeWindowWithId(window.winId); }, window.winId);
                     }
                 }
             }

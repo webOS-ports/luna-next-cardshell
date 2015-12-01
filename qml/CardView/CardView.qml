@@ -208,7 +208,7 @@ Item {
         id: gestureAreaConnections
         target: gestureAreaInstance
         onTapGesture: {
-            if( 0 === windowManagerInstance.nbRegisteredTapActions() ) {
+            if( 0 === windowManagerInstance.nbRegisteredTapActionsBeforeTap ) {
                 if( cardViewItem.isCurrentCardActive() ) {
                     cardViewItem.setCurrentCardState(WindowState.Carded);
                 }
