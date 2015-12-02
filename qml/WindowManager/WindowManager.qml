@@ -35,6 +35,8 @@ Item {
     signal switchToLauncherView
 
     // utility functions that may be useful when we have dashboard apps
+    property int nbRegisteredTapActionsBeforeTap: 0;
+
     function nbRegisteredTapActions() {
         return WindowManagerServices.nbRegisteredTapActions();
     }
@@ -56,6 +58,7 @@ Item {
         id: gestureAreaConnections
         target: gestureAreaInstance
         onTapGesture: {
+            nbRegisteredTapActionsBeforeTap = WindowManagerServices.nbRegisteredTapActions();
             doNextTapAction();
         }
     }

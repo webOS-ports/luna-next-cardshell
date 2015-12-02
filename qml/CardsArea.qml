@@ -229,6 +229,8 @@ WindowManager {
         anchors.right: parent.right
 
         visible: !lockScreen.visible
+        windowManagerItem: windowManager
+        compositorInstance: compositor
 
         z: 4 // just under the keyboard
     }
