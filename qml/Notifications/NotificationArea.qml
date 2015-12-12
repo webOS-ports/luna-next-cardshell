@@ -56,11 +56,13 @@ Rectangle {
         onItemAdded: {
             var notifObject = arguments[0];
 
+            var createStickyNotification = ( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 );
+
             // Banner in all cases
-            bannerItemsPopups.popupModel.append({"object" : notifObject});
+            bannerItemsPopups.popupModel.append({"object" : notifObject, "sticky": createStickyNotification});
 
             // If the notification's duration is long enough, also add it to the notification list
-            if( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 ) {
+            if( createStickyNotification ) {
                 // Sticky notification
                 mergedModel.append({"notifType": "notification",
                                     "window": null,
@@ -326,7 +328,10 @@ Rectangle {
                     notificationArea.state = "minimized";
             }
             onRowsAboutToBeRemoved: {
-                notificationMgr.closeById(bannerItemsPopups.popupModel.get(last).object.replacesId);
+                if( !bannerItemsPopups.popupModel.get(last).sticky )
+                {
+                    notificationMgr.closeById(bannerItemsPopups.popupModel.get(last).object.replacesId);
+                }
             }
         }
     }
