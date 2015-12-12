@@ -65,8 +65,17 @@ Rectangle {
                 mergedModel.append({"notifType": "notification",
                                     "window": null,
                                     "notifObject": notifObject,
-                                    "iconUrl": notifObject.iconUrl,
+                                    "iconUrl": notifObject.iconUrl.toString(),
                                     "notifHeight": dashboardCardFixedHeight});
+            }
+        }
+        onRowsAboutToBeRemoved: {
+            var notifObject = notificationModel.get(last);
+            for( var i=0; i<mergedModel.count; ++i ) {
+                if( mergedModel.get(i).notifObject && mergedModel.get(i).notifObject === notifObject ) {
+                    mergedModel.remove(i);
+                    break;
+                }
             }
         }
     }
