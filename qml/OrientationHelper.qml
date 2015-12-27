@@ -89,4 +89,8 @@ Item {
         if (preferences.rotationLock) return;
         orientationAngle = angle;
     }
+
+    function convertRawPos(pos) {
+        return mapFromItem(parent, pos.x, pos.y);
+    }
 }

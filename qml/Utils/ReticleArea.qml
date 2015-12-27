@@ -28,6 +28,9 @@ Item {
     }
 
     ReticleHandler {
-        onReticleEvent: reticle.startAt(pos);
+        onReticleEvent: {
+            var newPos = orientationHelper.convertRawPos(pos);
+            reticle.startAt(newPos);
+        }
     }
 }
