@@ -48,6 +48,39 @@ Rectangle {
         z: 1000
     }
 
+    DeviceKeyHandler {
+        property Item gestureItem: cardsArea.gestureAreaInstance
+
+        onHomePressed: {
+            console.log("Key: Home");
+            gestureItem.tapGesture();
+        }
+        onEndPressed: {
+            console.log("Key: End");
+            gestureItem.swipeUpGesture(0);
+        }
+        onEscapePressed: {
+            console.log("Key: Escape");
+            gestureItem.swipeLeftGesture(0);
+        }
+        onF6Pressed: {
+            console.log("Key: F6");
+            orientationHelper.setOrientation(0);
+        }
+        onF7Pressed: {
+            console.log("Key: F7");
+            orientationHelper.setOrientation(180);
+        }
+        onF8Pressed: {
+            console.log("Key: F8");
+            orientationHelper.setOrientation(270);
+        }
+        onF9Pressed: {
+            console.log("Key: F9");
+            orientationHelper.setOrientation(90);
+        }
+    }
+
     VolumeControlAlert {
         id: volumeControlAlert
         z: 900

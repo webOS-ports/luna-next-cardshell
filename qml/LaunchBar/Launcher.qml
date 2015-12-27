@@ -37,7 +37,7 @@ Item {
         usePrivateBus: true
     }
 
-    Keys.forwardTo: [ justTypeFieldInstance ]
+    Keys.forwardTo: [ justTypeFieldInstance, fullLauncherInstance ]
 
     // JustType field
     JustTypeField {

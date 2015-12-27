@@ -52,6 +52,18 @@ Item {
     visible: false
     anchors.top: parent.bottom
 
+    focus: true
+    Keys.onPressed: {
+        if (event.key === Qt.Key_Left) {
+            event.accepted = true;
+            tabRowList.currentIndex = Math.max(tabRowList.currentIndex - 1,0);
+        }
+        if (event.key === Qt.Key_Right) {
+            event.accepted = true;
+            tabRowList.currentIndex = Math.min(tabRowList.currentIndex + 1,tabRowList.count-1);
+        }
+    }
+
     states: [
         State {
             name: "hidden"
@@ -79,7 +91,7 @@ Item {
         }
     ]
 
-	//Tweaks
+    //Tweaks
     Tweak {
         id: tabTitleCaseTweak
         owner: "luna-next-cardshell"
@@ -93,7 +105,7 @@ Item {
         key: "tabIndicatorNumber"
         defaultValue: "default"
     }
-	
+
     // Background of the full launcher
     Image {
         anchors.fill: parent
@@ -218,7 +230,6 @@ Item {
             }
             text: tabTitleCaseTweak.value === "upperCase" ? model.text.toString().toUpperCase() : tabTitleCaseTweak.value === "lowerCase" ? model.text.toString().toLowerCase() : model.text
 
-			
             // the separator on the left should only be visible if is not adjacent to a selected tab
             Image {
                 anchors { right: parent.right; top: parent.top; bottom: parent.bottom }

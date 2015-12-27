@@ -35,17 +35,15 @@ Item {
     property bool automaticOrientation: false
     property int orientationAngle: !preferences.rotationLock ? Screen.angleBetween(Screen.primaryOrientation, Screen.orientation) : __lockedRotationAngle;
     property bool transitionEnabled: false
-	
 
     property real rotationCenterX: parent.width/2;
     property real rotationCenterY: parent.height/2;
-
 
     transform: Rotation { origin.x: rotationCenterX; origin.y: rotationCenterY; angle: -orientationAngle}
     Behavior on orientationAngle { RotationAnimation { duration: 500; direction: RotationAnimation.Shortest}}
 
     Connections { target: preferences; onRotationLockChanged: if( preferences.rotationLock ) __lockedRotationAngle = orientationAngle; }
-	
+
     states: [
         State {
             name: "normal"
@@ -85,5 +83,10 @@ Item {
     Component.onCompleted: {
         Screen.orientationUpdateMask = Qt.LandscapeOrientation | Qt.PortraitOrientation |
                                        Qt.InvertedLandscapeOrientation | Qt.InvertedPortraitOrientation;
+    }
+
+    function setOrientation(angle) {
+        if (preferences.rotationLock) return;
+        orientationAngle = angle;
     }
 }
