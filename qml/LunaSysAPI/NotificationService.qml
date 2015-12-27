@@ -72,6 +72,10 @@ createNotification {
    "title": "", // no markup
    "message": "", // should use some markup
    "iconUrl: "", // only local urls (file://) are allowed
+   "soundClass": "", // class name for sounds
+   "soundFile": "", // only local urls (file://) are allowed
+   "duration": <int>, //lenght of the sound
+   "doNotSuppress": <bool>, //if the notification suppression in enabled
    "replacesId": <int>, // if the notification should be replaced with a new one. Allow only to replace notifications with same ownerId.
    "priority": <int>,
    "expiresTimeout": <int>, // in seconds
@@ -97,11 +101,15 @@ createNotification {
         var title         = request.title ? request.title : "";  // string (no markup)
         var body          = request.body ? request.body : ""; // string (with eventual markup)
         var iconUrl       = request.iconUrl ? request.iconUrl : ""; // local url
+        var soundClass    = request.soundClass ? request.soundClass : ""; // sound class
+        var soundFile     = request.soundFile ? request.soundFile : ""; // sound file local url
+        var duration      = request.duration ? request.duration : 0; // sound duration
+        var doNotSuppress = request.doNotSuppress ? request.doNotSuppress : false; // local url
         var replacesId    = request.replacesId ? request.replacesId : 0;  // uint
         var priority      = request.priority ? request.priority : 0;  // uint
         var expireTimeout = request.expireTimeout ? request.expireTimeout : 10000; // int
 
-        var id = notificationManager.notify(ownerId, replacesId, launchId, launchParams, title, body, iconUrl, priority, expireTimeout);
+        var id = notificationManager.notify(ownerId, replacesId, launchId, launchParams, title, body, iconUrl, soundClass, soundFile, duration, doNotSuppress, priority, expireTimeout);
 
         return JSON.stringify({"returnValue":true, "id": id});
     }
