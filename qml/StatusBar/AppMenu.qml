@@ -81,7 +81,7 @@ Item {
             setDefaultAppMenuTitle();
             return;
         }
-        service.call("palm://com.palm.applicationManager/getAppInfo",
+        service.call("luna://com.palm.applicationManager/getAppInfo",
                      JSON.stringify({"appId":activeWindowAppId}),
                      handleGetAppInfoResponse, handleGetAppInfoError);
     }

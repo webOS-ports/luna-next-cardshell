@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2014 Simon Busch <morphis@gravedo.de>
  * Copyright (C) 2014 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2015 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +33,7 @@ Item {
         id: service
         name: "org.webosports.luna"
         onInitialized: {
-            service.call("palm://org.webosinternals.tweaks.prefs/get",
+            service.call("luna://org.webosinternals.tweaks.prefs/get",
                          JSON.stringify({owner: tweak.owner, keys: [tweak.key]}),
                          handleResult, handleError)
         }

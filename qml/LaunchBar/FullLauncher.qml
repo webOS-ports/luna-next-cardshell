@@ -655,7 +655,7 @@ Item {
     // ls2 launchPoint removal
     function removeApplication(id) {
         console.log("Removing app " + id);
-        lunaNextLS2Service.call("palm://com.palm.appinstaller/remove",
+        lunaNextLS2Service.call("luna://com.palm.appinstaller/remove",
             JSON.stringify({"packageName": id}), undefined, handleRemoveAppError)
     }
     function handleRemoveAppError(message) {

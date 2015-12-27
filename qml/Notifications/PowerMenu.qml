@@ -72,7 +72,7 @@ Item {
                 root.visible = false;
                 console.log("Reboot requested !")
                 shutdownSound.play();
-                powerKeyService.call("palm://com.palm.power/shutdown/machineReboot",
+                powerKeyService.call("luna://com.palm.power/shutdown/machineReboot",
                     JSON.stringify({"reason": "User requested reboot"}), undefined, onRebootActionError)
             }
 
@@ -114,7 +114,7 @@ Item {
                 root.visible = false;
                 console.log("Shutdown requested !")
                 shutdownSound.play();
-                powerKeyService.call("palm://com.palm.power/shutdown/machineOff",
+                powerKeyService.call("luna://com.palm.power/shutdown/machineOff",
                     JSON.stringify({"reason": "User requested poweroff"}), undefined, onPowerOffActionError)
             }
 

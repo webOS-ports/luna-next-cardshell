@@ -57,7 +57,7 @@ MenuListEntry {
         name: "org.webosports.luna"
         usePrivateBus: true
         onInitialized: {
-            service.subscribe("palm://com.palm.bus/signal/addmatch",
+            service.subscribe("luna://com.palm.bus/signal/addmatch",
                                   JSON.stringify({"category":"/com/palm/power","method":"batteryStatus"}),
                                   updateBatteryStatus, handleError);
             service.call("luna://com.palm.power/com/palm/power/batteryStatusQuery",

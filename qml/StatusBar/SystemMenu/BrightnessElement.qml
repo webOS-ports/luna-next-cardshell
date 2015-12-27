@@ -42,7 +42,7 @@ MenuListEntry {
     }
 
     function updateBrightness() {
-        service.call("palm://com.palm.display/control/getProperty",
+        service.call("luna://com.palm.display/control/getProperty",
                      JSON.stringify({"properties":["maximumBrightness"]}),
                      function(message) {
                          var response = JSON.parse(message.payload);

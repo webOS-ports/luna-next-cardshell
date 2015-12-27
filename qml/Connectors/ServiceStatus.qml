@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2014 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2015 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +32,7 @@ Item {
         id: registerServerStatus
         name: "org.webosports.luna"
         usePrivateBus: true
-        service: "palm://com.palm.bus"
+        service: "luna://com.palm.bus"
         method: "signal/registerServerStatus"
 
         onInitialized: {

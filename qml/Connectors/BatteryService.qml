@@ -2,6 +2,7 @@
  * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
  * Copyright (C) 2015 Alan Stice <alan@alanstice.com>
+ * Copyright (C) 2015 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,13 +66,13 @@ Item {
         usePrivateBus: true
 
         onInitialized: {
-            lunaService.subscribe("palm://com.palm.bus/signal/registerServerStatus",
+            lunaService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
                                   "{\"serviceName\":\"com.palm.power\"}",
                                   handlePowerdServiceStatus, handleError);
-            lunaService.subscribe("palm://com.palm.bus/signal/addmatch",
+            lunaService.subscribe("luna://com.palm.bus/signal/addmatch",
                                   "{\"category\":\"/com/palm/power\",\"method\":\"batteryStatus\"}",
                                   handlePowerdBatteryEvent, handleError);
-            lunaService.subscribe("palm://com.palm.bus/signal/addmatch",
+            lunaService.subscribe("luna://com.palm.bus/signal/addmatch",
                                   "{\"category\":\"/com/palm/power\",\"method\":\"USBDockStatus\"}",
                                   handlePowerdUsbDockStatus, handleError);
         }
