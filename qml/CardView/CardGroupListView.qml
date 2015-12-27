@@ -43,7 +43,8 @@ Item {
     signal cardDragStart(Item window);
 
     focus: true
-    Keys.forwardTo: internalListView
+    Keys.forwardTo: [internalListView, currentActiveWindow()]
+
     Tweak {
         id: dragNDropTweak
         owner: "luna-next-cardshell"
@@ -154,6 +155,31 @@ Item {
 
         function setCurrentCardIndex(newIndex) {
             internalListView.currentIndex = newIndex
+        }
+
+        Keys.onPressed: {
+            if (cardView.state === "cardList") {
+                if (event.key === Qt.Key_Left) {
+                    event.accepted = true;
+                    // cycle between stacks of cards
+                    setCurrentCardIndex(Math.max(currentIndex-1,0));
+                    /* cycle between cards
+                    var groupIndex = listCardGroupsModel.setCurrentCard(currentActiveWindow());
+                    var group = listCardGroupsModel.get(groupIndex);
+                    listCardGroupsModel.setCurrentCardInGroup(group, Math.max(group.currentCardInGroup-1,0));
+                    */
+                }
+                if (event.key === Qt.Key_Right) {
+                    event.accepted = true;
+                    // cycle between stacks of cards
+                    setCurrentCardIndex(Math.min(currentIndex+1,internalListView.count-1));
+                    /* cycle between cards
+                    var groupIndex = listCardGroupsModel.setCurrentCard(currentActiveWindow());
+                    var group = listCardGroupsModel.get(groupIndex);
+                    listCardGroupsModel.setCurrentCardInGroup(group, Math.min(group.currentCardInGroup+1,group.windowList.count-1));
+                    */
+                }
+            }
         }
     }
 
