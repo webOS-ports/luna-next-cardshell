@@ -24,7 +24,7 @@ Item {
 
     Reticle {
         id: reticle
-        initialScale: Units.gridUnit/10
+        initialScale: Units.gu(0.1)
         imagePath: Settings.lunaSystemResourcesPath + "/penindicator-ripple.png"
     }
 
