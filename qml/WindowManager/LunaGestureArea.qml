@@ -73,21 +73,6 @@ Item {
         PropertyAction { target: glowImageMask; property: "visible"; value: false }
     }
 
-    DeviceKeyHandler {
-        onHomePressed: {
-            console.log("Key: Home");
-            tapGesture();
-        }
-        onEndPressed: {
-            console.log("Key: End");
-            swipeUpGesture(0);
-        }
-        onEscapePressed: {
-            console.log("Key: Escape");
-            swipeLeftGesture(0);
-        }
-    }
-
     SwipeArea {
         id: gestureAreaInput
         anchors.fill: parent

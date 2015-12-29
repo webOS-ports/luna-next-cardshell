@@ -72,6 +72,7 @@ WindowManager {
         // for the keyboard anymore
         if( compositor )
             compositor.clearKeyboardFocus();
+        focus = true;
     }
 
     Loader {
