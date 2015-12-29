@@ -44,8 +44,29 @@ Rectangle {
 
     Loader {
         id: reticleArea
+        property bool showReticle: true
+		
+        Tweak {
+        id: showTapRippleTweak
+        owner: "luna-next-cardshell"
+        key: "tapRippleSupport"
+        defaultValue: true
+        onValueChanged: updateShowTapRippleTweak();
+
+        function updateShowTapRippleTweak() {
+            if (showTapRippleTweak.value === true){
+                console.log("INFO: Enabling Reticle Area...");
+                reticleArea.showReticle = true;
+            }
+            else {
+                console.log("INFO: Disabling Reticle Area...");
+                reticleArea.showReticle = false;
+            }
+        }
+    }
+
         anchors.fill: parent
-        source: Settings.showReticle ? "Utils/ReticleArea.qml" : ""
+        source: Settings.showReticle && showReticle ? "Utils/ReticleArea.qml" : ""
         z: 1000
     }
 
