@@ -213,7 +213,7 @@ WindowManager {
         compositorInstance: compositor
         windowManagerInstance: parent
 
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -225,7 +225,7 @@ WindowManager {
     AlertWindowsArea {
         id: alertWindowsAreaInstance
 
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -253,7 +253,7 @@ WindowManager {
         id: dockMode
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -266,7 +266,7 @@ WindowManager {
         id: simPinWindowArea
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.top
+        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -312,12 +312,30 @@ WindowManager {
     LunaGestureArea {
         id: gestureAreaInstance
 
+        Tweak {
+        id: gestureAreaTweak
+        owner: "luna-next-cardshell"
+        key: "showGestureArea"
+        defaultValue: true
+        onValueChanged: updateShowGestureAreaTweak();
+
+        function updateShowGestureAreaTweak() {
+            if (gestureAreaTweak.value === true){
+                console.log("INFO: Enabling Gesture Area...");
+                gestureAreaInstance.enableGestureArea = true;
+            }
+            else {
+                console.log("INFO: Disabling Gesture Area...");
+                gestureAreaInstance.enableGestureArea = false;
+            }
+        }
+    }
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: Units.gu(4);
+        height: gestureAreaInstance.enableGestureArea ? Units.gu(4) : Units.gu(0);
 
-        visible: !lockScreen.visible
+        visible: !lockScreen.visible && gestureAreaInstance.enableGestureArea
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
     }
