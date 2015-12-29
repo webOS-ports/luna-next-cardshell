@@ -24,10 +24,13 @@ Item {
 
     Reticle {
         id: reticle
+        initialScale: Units.gridUnit/10
         imagePath: Settings.lunaSystemResourcesPath + "/penindicator-ripple.png"
     }
 
     ReticleHandler {
+        fingerSize: Units.gu(0.1)
+
         onReticleEvent: {
             var newPos = orientationHelper.convertRawPos(pos);
             reticle.startAt(newPos);
