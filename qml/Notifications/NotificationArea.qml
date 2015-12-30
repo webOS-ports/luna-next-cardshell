@@ -143,7 +143,7 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: notificationArea.launchApplication(notificationItem.notifObject.launchId,
+                onClicked: launcherInstance.launchApplication(notificationItem.notifObject.launchId,
                                                               notificationItem.notifObject.launchParams);
             }
         }
