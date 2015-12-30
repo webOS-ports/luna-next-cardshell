@@ -24,8 +24,8 @@ Item {
 
     Reticle {
         id: reticle
-        initialScale: Units.gu(0.1)
-        imagePath: Settings.lunaSystemResourcesPath + "/penindicator-ripple.png"
+        initialScale: Units.gridUnit / 40
+        imagePath: Qt.resolvedUrl("../images/penindicator-ripple.png")
     }
 
     ReticleHandler {
