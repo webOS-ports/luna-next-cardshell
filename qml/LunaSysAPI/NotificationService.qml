@@ -97,6 +97,9 @@ createNotification {
 
         var launchId      = request.launchId ? request.launchId : "";  // string
         var launchParams  = request.launchParams ? request.launchParams : "";  // string
+        if( typeof launchParams !== 'string' ) {
+            launchParams = JSON.stringify(request.launchParams);
+        }
 
         var title         = request.title ? request.title : "";  // string (no markup)
         var body          = request.body ? request.body : ""; // string (with eventual markup)
