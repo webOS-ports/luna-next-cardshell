@@ -67,7 +67,7 @@ Rectangle {
                 mergedModel.append({"notifType": "notification",
                                     "window": null,
                                     "notifObject": notifObject,
-                                    "iconUrl": notifObject.iconUrl.toString(),
+                                    "iconUrl": notifObject.iconPath,
                                     "notifHeight": dashboardCardFixedHeight});
             }
         }
@@ -134,7 +134,7 @@ Rectangle {
 
             title: notifObject.title
             body: notifObject.body
-            iconUrl: getIconUrlOrDefault(notifObject.iconUrl)
+            iconUrl: getIconUrlOrDefault(notifObject.iconPath)
 
             onClosed: {
                 notificationMgr.closeById(notifObject.replacesId);

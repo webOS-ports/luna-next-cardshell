@@ -16,6 +16,8 @@
  */
 
 import QtQuick 2.0
+import QtMultimedia 5.5
+
 import LunaNext.Common 0.1
 
 Item {
@@ -58,6 +60,11 @@ Item {
 
             property int delegateIndex: index
 
+            Audio {
+                id: notifsound
+                source: object.soundFilePath
+            }
+
             Row {
                 anchors.fill: parent
                 anchors.margins: 0.5*Units.gu(1)
@@ -66,7 +73,7 @@ Item {
                     id: freshItemIcon
                     height: parent.height
                     width: parent.height
-                    source: getIconUrlOrDefault(object.iconUrl)
+                    source: getIconUrlOrDefault(object.iconPath)
                     fillMode: Image.PreserveAspectFit
                 }
                 Text {
@@ -89,6 +96,9 @@ Item {
                 NumberAnimation {
                     target: itemDelegate
                     property: "y"; to: 0; duration: 500; easing.type: Easing.InOutQuad
+                }
+                ScriptAction {
+                    script: if(notifsound.source.length>0) notifsound.play();
                 }
                 PauseAnimation { duration: 1500 }
                 ScriptAction {
