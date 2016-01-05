@@ -110,18 +110,10 @@ Rectangle {
         height: orientationHelper.height
         width: orientationHelper.width
 
-        signal screenEdgeFlickEdgeLeft(bool timeout)
-        signal screenEdgeFlickEdgeRight(bool timeout)
-
-        function screenEdgeFlickEdgeBottom(timeout) {
-            if (!timeout && cardsArea.gestureAreaInstance.visible === false
-                    && cardsArea.gesturesEnabled === true)
-                cardsArea.gestureAreaInstance.swipeUpGesture(0);
-        }
-        function screenEdgeFlickEdgeTop(timeout, pos) {
-            if (!timeout && cardsArea.gesturesEnabled === true)
-                cardsArea.statusBarInstance.screenEdgeFlickGesture(pos);
-        }
+        signal screenEdgeFlickEdgeLeft(bool timeout,point pos)
+        signal screenEdgeFlickEdgeRight(bool timeout, point pos)
+        signal screenEdgeFlickEdgeTop(bool timeout,point pos)
+        signal screenEdgeFlickEdgeBottom(bool timeout, point pos)
 
         onTouchBegin: orientationHelper.setLocked(true);
         onTouchEnd: orientationHelper.setLocked(false);
@@ -137,11 +129,11 @@ Rectangle {
                 if (screenPos.y < fingerSize) {
                     screenEdgeFlickEdgeTop(timeout, screenPos);
                 } else if (screenPos.y > gestureHandler.height - fingerSize) {
-                    screenEdgeFlickEdgeBottom(timeout);
+                    screenEdgeFlickEdgeBottom(timeout, screenPos);
                 } else if (screenPos.x < fingerSize) {
-                    screenEdgeFlickEdgeLeft(timeout);
+                    screenEdgeFlickEdgeLeft(timeout, screenPos);
                 } else if (screenPos.x > gestureHandler.width - fingerSize) {
-                    screenEdgeFlickEdgeRight(timeout);
+                    screenEdgeFlickEdgeRight(timeout, screenPos);
                 }
                 break;
             }
@@ -170,6 +162,7 @@ Rectangle {
         anchors.fill: parent
 
         state: root.state
+        gestureHandlerInstance: gestureHandler
 
         onShowPowerMenu: {
             powerMenuAlert.showPowerMenu();

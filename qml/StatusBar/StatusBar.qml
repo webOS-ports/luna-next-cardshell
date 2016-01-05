@@ -32,6 +32,7 @@ Item {
     id: statusBar
 
     property Item windowManagerInstance
+    property Item gestureHandlerInstance
     property bool fullLauncherVisible: false
     property bool justTypeLauncherActive: false
     property Item batteryService
@@ -269,6 +270,18 @@ Item {
             onLockedChanged: {
                 if (systemMenu.isVisible())
                     systemMenu.toggleState()
+            }
+        }
+
+        Connections {
+            target: gestureHandlerInstance
+            onScreenEdgeFlickEdgeTop: {
+                if (!timeout && windowManagerInstance.gesturesEnabled === true) {
+                    if (appMenu.contains(mapToItem(appMenu, pos.x, pos.y)))
+                        appMenu.toggleState()
+                    else if (systemMenu.contains(mapToItem(systemMenu, pos.x, systemMenu.y)))
+                        systemMenu.toggleState()
+                }
             }
         }
 
