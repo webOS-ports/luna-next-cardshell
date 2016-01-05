@@ -43,7 +43,7 @@ Rectangle {
     }
 
     Loader {
-        id: reticleArea
+        id: reticleItem
         property bool showReticle: true
 		
         Tweak {
@@ -56,17 +56,16 @@ Rectangle {
         function updateShowTapRippleTweak() {
             if (showTapRippleTweak.value === true){
                 console.log("INFO: Enabling Reticle Area...");
-                reticleArea.showReticle = true;
+                reticleItem.showReticle = true;
             }
             else {
                 console.log("INFO: Disabling Reticle Area...");
-                reticleArea.showReticle = false;
+                reticleItem.showReticle = false;
             }
         }
     }
 
-        anchors.fill: parent
-        source: Settings.showReticle && showReticle ? "Utils/ReticleArea.qml" : ""
+        source: Settings.showReticle && showReticle ? "Utils/ReticleItem.qml" : ""
         z: 1000
     }
 
@@ -100,6 +99,52 @@ Rectangle {
         onF9Pressed: {
             console.log("Key: F9");
             orientationHelper.setOrientation(90);
+        }
+    }
+
+    GestureHandler {
+        id: gestureHandler
+        fingerSize: Units.gu(5)
+        minimalFlickLength: Units.gu(10)
+        timeout: 2000
+        height: orientationHelper.height
+        width: orientationHelper.width
+
+        signal screenEdgeFlickEdgeLeft(bool timeout)
+        signal screenEdgeFlickEdgeRight(bool timeout)
+
+        function screenEdgeFlickEdgeBottom(timeout) {
+            if (!timeout && cardsArea.gestureAreaInstance.visible === false
+                    && cardsArea.state === "normal" && cardsArea.lockScreenInstance.visible === false)
+                cardsArea.gestureAreaInstance.swipeUpGesture(0);
+        }
+        function screenEdgeFlickEdgeTop(timeout, pos) {
+            if (!timeout)
+                cardsArea.statusBarInstance.screenEdgeFlickGesture(pos);
+        }
+
+        onTouchBegin: orientationHelper.setLocked(true);
+        onTouchEnd: orientationHelper.setLocked(false);
+        onGestureEvent: {
+            var screenPos = orientationHelper.convertRawPos(pos);
+
+            switch (gestureType) {
+            case GestureHandler.TapGesture:
+                if (reticleItem.status === Loader.Ready)
+                    reticleItem.item.startAt(screenPos);
+                break;
+            case GestureHandler.ScreenEdgeFlickGesture:
+                if (screenPos.y < fingerSize) {
+                    screenEdgeFlickEdgeTop(timeout, screenPos);
+                } else if (screenPos.y > gestureHandler.height - fingerSize) {
+                    screenEdgeFlickEdgeBottom(timeout);
+                } else if (screenPos.x < fingerSize) {
+                    screenEdgeFlickEdgeLeft(timeout);
+                } else if (screenPos.x > gestureHandler.width - fingerSize) {
+                    screenEdgeFlickEdgeRight(timeout);
+                }
+                break;
+            }
         }
     }
 

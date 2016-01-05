@@ -33,8 +33,10 @@ Item {
 
     property real __lockedRotationAngle: 0
     property bool automaticOrientation: false
-    property int orientationAngle: !preferences.rotationLock ? Screen.angleBetween(Screen.primaryOrientation, Screen.orientation) : __lockedRotationAngle;
+    property int orientationAngle: !locked ? Screen.angleBetween(Screen.primaryOrientation, Screen.orientation) : __lockedRotationAngle;
     property bool transitionEnabled: false
+    property bool rotationLock: false
+    property bool locked: rotationLock || preferences.rotationLock
 
     property real rotationCenterX: parent.width/2;
     property real rotationCenterY: parent.height/2;
@@ -86,8 +88,13 @@ Item {
     }
 
     function setOrientation(angle) {
-        if (preferences.rotationLock) return;
+        if (locked) return;
         orientationAngle = angle;
+    }
+
+    function setLocked(lock) {
+        if (lock) __lockedRotationAngle = orientationAngle;
+        rotationLock = lock;
     }
 
     function convertRawPos(pos) {

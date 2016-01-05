@@ -48,14 +48,16 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: {
-            var activeWindowAppId = determineActiveWindowAppId();
-            if (activeWindowAppId.length === 0)
-                return;
-            var params = {"id":activeWindowAppId, "params":"{\"palm-command\":\"open-app-menu\"}"};
-            service.call("luna://com.palm.applicationManager/launch", JSON.stringify(params),
-                         function(message) { }, function(error) { });
-        }
+        onClicked: toggleState();
+    }
+
+    function toggleState() {
+        var activeWindowAppId = determineActiveWindowAppId();
+        if (activeWindowAppId.length === 0)
+            return;
+        var params = {"id":activeWindowAppId, "params":"{\"palm-command\":\"open-app-menu\"}"};
+        service.call("luna://com.palm.applicationManager/launch", JSON.stringify(params),
+                     function(message) { }, function(error) { });
     }
 
     function setDefaultAppMenuTitle() {

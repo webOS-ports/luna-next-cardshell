@@ -63,6 +63,8 @@ WindowManager {
     ]
 
     gestureAreaInstance: gestureAreaInstance
+    property Item statusBarInstance: statusBarInstance
+    property Item lockScreenInstance: lockScreen
 
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, volumeControl ]
