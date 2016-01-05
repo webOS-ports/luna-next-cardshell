@@ -259,7 +259,7 @@ Item {
             anchors.right: parent.right
             width: systemIndicators.width
             onClicked: {
-                if (!lockScreen.locked)
+                if (!lockScreen.locked && !dockMode.visible && windowManagerInstance.state === "normal")
                     systemMenu.toggleState()
             }
         }

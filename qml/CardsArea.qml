@@ -64,7 +64,7 @@ WindowManager {
 
     gestureAreaInstance: gestureAreaInstance
     property Item statusBarInstance: statusBarInstance
-    property Item lockScreenInstance: lockScreen
+    property bool gesturesEnabled: !lockScreen.locked && !dockMode.visible && state === "normal"
 
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, volumeControl ]

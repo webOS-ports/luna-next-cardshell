@@ -115,11 +115,11 @@ Rectangle {
 
         function screenEdgeFlickEdgeBottom(timeout) {
             if (!timeout && cardsArea.gestureAreaInstance.visible === false
-                    && cardsArea.state === "normal" && cardsArea.lockScreenInstance.visible === false)
+                    && cardsArea.gesturesEnabled === true)
                 cardsArea.gestureAreaInstance.swipeUpGesture(0);
         }
         function screenEdgeFlickEdgeTop(timeout, pos) {
-            if (!timeout)
+            if (!timeout && cardsArea.gesturesEnabled === true)
                 cardsArea.statusBarInstance.screenEdgeFlickGesture(pos);
         }
 
