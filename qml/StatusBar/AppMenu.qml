@@ -111,6 +111,8 @@ Item {
             layer.mipmap: true
             source: "../images/statusbar/menu-arrow.png"
             fillMode: Image.PreserveAspectFit
+            height: Units.gu(2.6)
+            width: Units.gu(1.5)
         }
     }
 

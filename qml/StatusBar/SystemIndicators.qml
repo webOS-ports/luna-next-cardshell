@@ -141,5 +141,7 @@ Row {
         id: systemMenuArrow
         source: "../images/statusbar/menu-arrow.png"
         anchors.verticalCenter: parent.verticalCenter
+        height: Units.gu(2.6)
+        width: Units.gu(1.5)
     }
 }
