@@ -63,6 +63,7 @@ WindowManager {
     ]
 
     gestureAreaInstance: gestureAreaInstance
+    property bool gesturesEnabled: !lockScreen.locked && !dockMode.visible && state === "normal"
 
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, volumeControl ]
@@ -146,6 +147,15 @@ WindowManager {
     Connections {
         target: gestureAreaInstance
         onSwipeRightGesture: screenShooter.capture("");
+    }
+
+    Connections {
+        target: gestureHandlerInstance
+        onScreenEdgeFlickEdgeBottom: {
+            if (!timeout && gestureAreaInstance.visible === false
+                    && gesturesEnabled === true)
+                gestureAreaInstance.swipeUpGesture(0);
+        }
     }
 
     SystemService {
@@ -302,6 +312,7 @@ WindowManager {
         z: 2 // can only be hidden by a fullscreen window
 
         windowManagerInstance: windowManager
+        gestureHandlerInstance: windowManager.gestureHandlerInstance
         fullLauncherVisible: launcherInstance.fullLauncherVisible
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
         lockScreen: lockScreen

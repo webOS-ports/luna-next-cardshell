@@ -43,7 +43,7 @@ Rectangle {
     }
 
     Loader {
-        id: reticleArea
+        id: reticleItem
         property bool showReticle: true
 		
         Tweak {
@@ -56,17 +56,16 @@ Rectangle {
         function updateShowTapRippleTweak() {
             if (showTapRippleTweak.value === true){
                 console.log("INFO: Enabling Reticle Area...");
-                reticleArea.showReticle = true;
+                reticleItem.showReticle = true;
             }
             else {
                 console.log("INFO: Disabling Reticle Area...");
-                reticleArea.showReticle = false;
+                reticleItem.showReticle = false;
             }
         }
     }
 
-        anchors.fill: parent
-        source: Settings.showReticle && showReticle ? "Utils/ReticleArea.qml" : ""
+        source: Settings.showReticle && showReticle ? "Utils/ReticleItem.qml" : ""
         z: 1000
     }
 
@@ -103,6 +102,44 @@ Rectangle {
         }
     }
 
+    GestureHandler {
+        id: gestureHandler
+        fingerSize: Units.gu(5)
+        minimalFlickLength: Units.gu(10)
+        timeout: 2000
+        height: orientationHelper.height
+        width: orientationHelper.width
+
+        signal screenEdgeFlickEdgeLeft(bool timeout,point pos)
+        signal screenEdgeFlickEdgeRight(bool timeout, point pos)
+        signal screenEdgeFlickEdgeTop(bool timeout,point pos)
+        signal screenEdgeFlickEdgeBottom(bool timeout, point pos)
+
+        onTouchBegin: orientationHelper.setLocked(true);
+        onTouchEnd: orientationHelper.setLocked(false);
+        onGestureEvent: {
+            var screenPos = orientationHelper.convertRawPos(pos);
+
+            switch (gestureType) {
+            case GestureHandler.TapGesture:
+                if (reticleItem.status === Loader.Ready)
+                    reticleItem.item.startAt(screenPos);
+                break;
+            case GestureHandler.ScreenEdgeFlickGesture:
+                if (screenPos.y < fingerSize) {
+                    screenEdgeFlickEdgeTop(timeout, screenPos);
+                } else if (screenPos.y > gestureHandler.height - fingerSize) {
+                    screenEdgeFlickEdgeBottom(timeout, screenPos);
+                } else if (screenPos.x < fingerSize) {
+                    screenEdgeFlickEdgeLeft(timeout, screenPos);
+                } else if (screenPos.x > gestureHandler.width - fingerSize) {
+                    screenEdgeFlickEdgeRight(timeout, screenPos);
+                }
+                break;
+            }
+        }
+    }
+
     VolumeControlAlert {
         id: volumeControlAlert
         z: 900
@@ -125,6 +162,7 @@ Rectangle {
         anchors.fill: parent
 
         state: root.state
+        gestureHandlerInstance: gestureHandler
 
         onShowPowerMenu: {
             powerMenuAlert.showPowerMenu();

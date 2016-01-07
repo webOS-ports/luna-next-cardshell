@@ -19,21 +19,8 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 
-Item {
-    id: container
-
-    Reticle {
-        id: reticle
-        initialScale: Units.gridUnit / 40
-        imagePath: Qt.resolvedUrl("../images/penindicator-ripple.png")
-    }
-
-    ReticleHandler {
-        fingerSize: Units.gu(0.1)
-
-        onReticleEvent: {
-            var newPos = orientationHelper.convertRawPos(pos);
-            reticle.startAt(newPos);
-        }
-    }
+Reticle {
+    id: reticle
+    initialScale: Units.gridUnit / 40
+    imagePath: Qt.resolvedUrl("../images/penindicator-ripple.png")
 }

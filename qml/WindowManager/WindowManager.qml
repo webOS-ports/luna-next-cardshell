@@ -27,6 +27,7 @@ Item {
     id: windowManager
 
     property Item gestureAreaInstance
+    property Item gestureHandlerInstance
 
     signal switchToDashboard
     signal switchToCardView
