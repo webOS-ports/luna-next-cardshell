@@ -96,7 +96,7 @@ Rectangle {
                 //If the provide it in GridUnits we need to make sure we deal with it properly.
                 if( window.windowProperties.hasOwnProperty("LuneOS_metrics") && window.windowProperties["LuneOS_metrics"]==="units")
                 {
-                    dashHeight = Units.length(Units.gu(window.windowProperties["LuneOS_dashheight"]));
+                    dashHeight = Units.gu(window.windowProperties["LuneOS_dashheight"]);
                 }
                 //Provided in normal pixels, convert to device pixels
                 else
