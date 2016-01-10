@@ -30,11 +30,7 @@ Item {
     onDockModeActiveChanged: {
         console.log("DockMode changed to " + dockModeActive);
         if (dockModeActive) {
-            clocksLoader.sourceComponent = clocksComponent;
             windowManagerInstance.addTapAction("deactivateDockMode", function() { setDisplayState.call(JSON.stringify({"state":"undock"})); }, null)
-        }
-        else {
-            clocksLoader.sourceComponent = null;
         }
     }
 
@@ -70,20 +66,14 @@ Item {
     Loader {
         id: clocksLoader
 
+        active: dockModeActive // unload the Clocks component when not in dockmode
+        sourceComponent: Clocks {}
+
         width: parent.width;
         height: parent.height;
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-    }
-
-    Component {
-        id: clocksComponent
-
-        Clocks {
-            id: clocks
-            mainTimerRunning: dockModeActive
-        }
     }
 }
 

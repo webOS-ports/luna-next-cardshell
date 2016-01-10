@@ -55,7 +55,9 @@ Item {
     }
 
     Timer {
-        interval: 100; running: timerRunning; repeat: true;
+        interval: glass ? 30*1000 : 1000
+        running: timerRunning;
+        repeat: true;
         onTriggered: analogclock.timeChanged()
     }
 
