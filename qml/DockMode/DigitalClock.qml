@@ -69,7 +69,7 @@ Item {
     }
 
     Timer {
-        interval: 100
+        interval: 30*1000 // two refresh per minute
         running: timerRunning
         repeat: true
         onTriggered: digitalclock.timeChanged()

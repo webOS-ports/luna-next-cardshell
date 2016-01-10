@@ -5,7 +5,6 @@ import LunaNext.Compositor 0.1
 Rectangle {
     id: clock
 
-    property bool mainTimerRunning: false
     property bool isLandscape: width > height ? true : false //(runtime.orientation+1)%2
 
     Image {
@@ -19,21 +18,21 @@ Rectangle {
     VisualItemModel{
         id: clockList
         AnalogClock{
-            width: flickable.width; height: flickable.height
-            glass: 1; timerRunning: mainTimerRunning
+            width: clocksListView.width; height: clocksListView.height
+            glass: 1; timerRunning: ListView.isCurrentItem
         }
         DigitalClock{
-            width: flickable.width; height: flickable.height
-            timerRunning: mainTimerRunning
+            width: clocksListView.width; height: clocksListView.height
+            timerRunning: ListView.isCurrentItem
         }
         AnalogClock{
-            width: flickable.width; height: flickable.height
-            glass: 0; timerRunning: mainTimerRunning
+            width: clocksListView.width; height: clocksListView.height
+            glass: 0; timerRunning: ListView.isCurrentItem
         }
     }
 
     ListView {
-        id: flickable
+        id: clocksListView
         anchors.fill: parent
         focus: true
         highlightRangeMode: ListView.StrictlyEnforceRange
@@ -52,21 +51,21 @@ Rectangle {
 			height: Units.gu(1.0); 
 			width: Units.gu(1.0); 
 			fillMode: Image.Stretch; 
-			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==0 ? "on" : "off") + ".png" 
+            source: "../images/dockmode/time/indicator/"+(clocksListView.currentIndex==0 ? "on" : "off") + ".png"
 		}
         Image { 
 			id: clockdot2; 
 			height: Units.gu(1.0); 
 			width: Units.gu(1.0); 
 			fillMode: Image.Stretch; 
-			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==1 ? "on" : "off") + ".png" 
+            source: "../images/dockmode/time/indicator/"+(clocksListView.currentIndex==1 ? "on" : "off") + ".png"
 		}
         Image { 
 			id: clockdot3; 
 			height: Units.gu(1.0); 
 			width: Units.gu(1.0); 
 			fillMode: Image.Stretch; 
-			source: "../images/dockmode/time/indicator/"+(flickable.currentIndex==2 ? "on" : "off") + ".png" 
+            source: "../images/dockmode/time/indicator/"+(clocksListView.currentIndex==2 ? "on" : "off") + ".png"
 		}
     }
 }
