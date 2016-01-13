@@ -147,7 +147,6 @@ Rectangle {
 
             onClosed: {
                 notificationMgr.closeById(notifObject.replacesId);
-                mergedModel.remove(notifIndex);
             }
 
             MouseArea {
