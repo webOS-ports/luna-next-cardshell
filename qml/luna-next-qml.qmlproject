@@ -16,5 +16,5 @@ Project {
         directory: "."
     }
     /* List of plugin directories passed to QML runtime */
-    importPaths: [ "../../luneos-components/test/imports" ]
+    importPaths: [ "../../luneos-components/modules", "../../luneos-components/test/imports" ]
 }
