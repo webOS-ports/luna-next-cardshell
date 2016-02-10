@@ -22,6 +22,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 import LunaNext.Compositor 0.1
+import LuneOS.Components 1.0
 import LunaNext.Performance 0.1
 
 import "CardView"
@@ -327,6 +328,7 @@ WindowManager {
         Tweak {
         id: gestureAreaTweak
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "showGestureArea"
         defaultValue: true
         onValueChanged: updateShowGestureAreaTweak();

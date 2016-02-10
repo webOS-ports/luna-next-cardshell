@@ -20,6 +20,7 @@
 import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
+import LuneOS.Components 1.0
 
 import "../Utils"
 
@@ -160,6 +161,7 @@ Item {
                 Tweak {
                     id: dateTimeTweak
                     owner: "luna-next-cardshell"
+                    serviceName: "org.webosports.luna"
                     key: "showDateTime"
                     defaultValue: "timeOnly"
                 }
@@ -203,6 +205,7 @@ Item {
                 Tweak {
                     id: enableCustomCarrierString
                     owner: "luna-next-cardshell"
+                    serviceName: "org.webosports.luna"
                     key: "useCustomCarrierString"
                     defaultValue: "false"
                     onValueChanged: updateCustomCarrierString()
@@ -220,6 +223,7 @@ Item {
                 Tweak {
                     id: customCarrierString
                     owner: "luna-next-cardshell"
+                    serviceName: "org.webosports.luna"
                     key: "carrierString"
                     defaultValue: "Custom Carrier String"
                     onValueChanged: updateCarrierString()

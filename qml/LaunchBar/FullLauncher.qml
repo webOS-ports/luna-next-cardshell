@@ -21,6 +21,7 @@ import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
+import LuneOS.Components 1.0
 
 import "../Utils"
 import "../LunaSysAPI" as LunaSysAPI
@@ -95,6 +96,7 @@ Item {
     Tweak {
         id: tabTitleCaseTweak
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "tabTitleCase"
         defaultValue: "capitalizedCase"
     }
@@ -102,6 +104,7 @@ Item {
     Tweak {
         id: tabIndicatorNumberTweak
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "tabIndicatorNumber"
         defaultValue: "default"
     }
