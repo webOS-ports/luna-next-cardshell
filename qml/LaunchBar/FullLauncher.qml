@@ -95,6 +95,7 @@ Item {
     Tweak {
         id: tabTitleCaseTweak
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "tabTitleCase"
         defaultValue: "capitalizedCase"
     }
@@ -102,6 +103,7 @@ Item {
     Tweak {
         id: tabIndicatorNumberTweak
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "tabIndicatorNumber"
         defaultValue: "default"
     }

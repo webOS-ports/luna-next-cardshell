@@ -37,6 +37,7 @@ BaseIndicator {
     Tweak {
         id: batteryIndicatorType
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "showBatteryPercentage"
         defaultValue: "iconOnly"
         onValueChanged: updateBatteryIndicator();
@@ -63,6 +64,7 @@ BaseIndicator {
     Tweak {
         id: batteryPercentageColorOptions
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "batteryPercentageColor"
         defaultValue: String("white"); // without this cast, it would become a "color" type
         onValueChanged: updateBatteryPercentageColor();

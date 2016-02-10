@@ -327,6 +327,7 @@ WindowManager {
         Tweak {
         id: gestureAreaTweak
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "showGestureArea"
         defaultValue: true
         onValueChanged: updateShowGestureAreaTweak();

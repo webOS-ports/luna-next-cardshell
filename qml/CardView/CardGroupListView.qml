@@ -49,6 +49,7 @@ Item {
         id: dragNDropTweak
         owner: "luna-next-cardshell"
         key: "stackedCardSupport"
+        serviceName: "org.webosports.luna"
         defaultValue: true
         onValueChanged: updateDragNDropTweak();
 

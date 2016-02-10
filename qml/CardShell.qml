@@ -49,6 +49,7 @@ Rectangle {
         Tweak {
         id: showTapRippleTweak
         owner: "luna-next-cardshell"
+        serviceName: "org.webosports.luna"
         key: "tapRippleSupport"
         defaultValue: true
         onValueChanged: updateShowTapRippleTweak();
