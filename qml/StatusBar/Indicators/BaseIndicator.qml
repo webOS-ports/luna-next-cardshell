@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
+import QtQuick 2.5
 import LunaNext.Common 0.1
 
 Item {
@@ -57,7 +57,7 @@ Item {
         id: indicatorImage
         fillMode: textVisible ? Image.Stretch : Image.PreserveAspectFit;
         width: textVisible ? indicatorRoot.width : undefined
-        layer.mipmap: true
+        mipmap: true
         source: imageSource
         anchors.left: indicatorRoot.left
         anchors.bottom: indicatorRoot.bottom

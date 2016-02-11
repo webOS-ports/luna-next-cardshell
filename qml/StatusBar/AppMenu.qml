@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
+import QtQuick 2.5
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
@@ -108,7 +108,7 @@ Item {
         Image {
             id: separator
             anchors.verticalCenter: title.verticalCenter
-            layer.mipmap: true
+            mipmap: true
             source: "../images/statusbar/menu-arrow.png"
             fillMode: Image.PreserveAspectFit
             height: Units.gu(2.6)
