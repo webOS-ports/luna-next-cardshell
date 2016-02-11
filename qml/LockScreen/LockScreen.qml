@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2014 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2016 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
+import QtQuick 2.5
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
@@ -50,6 +51,26 @@ Item {
             lockDisplay();
         }
     }
+
+
+    Image {
+        anchors.top: parent.top
+        source: "../images/screen-lock-wallpaper-mask-top.png"
+        width: parent.width
+        height: Units.gu(11.7)
+        mipmap: true
+        fillMode: Image.TileHorizontally
+    }
+
+    Image {
+        anchors.bottom: parent.bottom
+        source: "../images/screen-lock-wallpaper-mask-bottom.png"
+        width: parent.width
+        height: Units.gu(25)
+        mipmap: true
+        fillMode: Image.TileHorizontally
+    }
+
 
     LunaService {
         id: service
