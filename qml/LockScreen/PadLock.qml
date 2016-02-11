@@ -30,7 +30,7 @@ Item {
         id: targetScrim
         source: "../images/screen-lock-target-scrim.png"
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: Units.gu(10)
+        anchors.bottomMargin: Settings.tabletUi ? Units.gu(10) : Units.gu(1)
         anchors.horizontalCenter: parent.horizontalCenter
         visible: pad.moving
         mipmap: true
@@ -73,7 +73,7 @@ Item {
         property bool on: false
 
         property int _basePositionX: parent.width / 2 - (pad.width / 2)
-        property int _basePositionY: parent.height - pad.height - Units.gu(10)
+        property int _basePositionY: Settings.tabletUi ? (parent.height - pad.height - Units.gu(10)) : (parent.height - pad.height - Units.gu(1))
 
         x: _basePositionX
         y: _basePositionY
