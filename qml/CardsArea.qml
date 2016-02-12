@@ -147,15 +147,14 @@ WindowManager {
 
     ScreenShooterGradient {
         id: screenShooterGradient
-        visible: false
         anchors.fill: parent
     }
 
     Connections {
         target: gestureAreaInstance
         onSwipeRightGesture: {
-            screenShooterGradient.visible = true;
             screenShooter.capture("");
+            screenShooterGradient.startShootEffect();
         }
     }
 

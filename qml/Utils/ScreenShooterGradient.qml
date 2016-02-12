@@ -26,17 +26,19 @@ Item {
     visible: false
     opacity: 1
 
+    function startShootEffect()
+    {
+        opacityAnimator.restart();
+    }
+
     OpacityAnimator {
         id: opacityAnimator
-        target: screenShooterGradient;
-        from: 1;
-        to: 0;
-        duration: 900
-        running: visible
-        onStopped:  {
-            screenShooterGradient.opacity = 1
-            screenShooterGradient.visible = false
-        }
+        target: screenShooterGradient
+        from: 1
+        to: 0
+        duration: 500
+        onStarted: screenShooterGradient.visible = true;
+        onStopped: screenShooterGradient.visible = false;
     }
 
 	RadialGradient {
