@@ -20,12 +20,13 @@ import QtGraphicalEffects 1.0
 import LunaNext.Common 0.1
 
 
+
 Item {
+
+
     id: screenShooterGradient
-	anchors.verticalCenter: parent.verticalCenter
-	anchors.horizontalCenter: parent.horizontalCenter
-    width: Math.min(Settings.displayWidth, Settings.displayHeight)/2
-    height: Math.min(Settings.displayWidth, Settings.displayHeight)/2
+    anchors.verticalCenter: parent.verticalCenter
+    anchors.horizontalCenter: parent.horizontalCenter
     visible: false
     opacity: 1
 
@@ -37,8 +38,23 @@ Item {
         duration: 900
         running: visible
     }
-	
+
+    Timer
+    {
+        running: opacityAnimator.running
+        interval: 900
+        repeat: false
+        onTriggered:  screenShooterGradient.visible = false
+
+    }
+
+    onVisibleChanged: {
+            screenShooterGradient.opacity = 1;
+    }
+
 	RadialGradient {
+        horizontalRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
+        verticalRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
         anchors.fill: parent
         GradientStop {
             position: 0.0
@@ -60,6 +76,5 @@ Item {
             position: 1.0
             color: "#FFFFD000"
         }
-	}
-
+    }
 }
