@@ -19,11 +19,7 @@ import QtQuick 2.5
 import QtGraphicalEffects 1.0
 import LunaNext.Common 0.1
 
-
-
 Item {
-
-
     id: screenShooterGradient
     anchors.verticalCenter: parent.verticalCenter
     anchors.horizontalCenter: parent.horizontalCenter
@@ -37,19 +33,10 @@ Item {
         to: 0;
         duration: 900
         running: visible
-    }
-
-    Timer
-    {
-        running: opacityAnimator.running
-        interval: 900
-        repeat: false
-        onTriggered:  screenShooterGradient.visible = false
-
-    }
-
-    onVisibleChanged: {
-            screenShooterGradient.opacity = 1;
+        onStopped:  {
+            screenShooterGradient.opacity = 1
+            screenShooterGradient.visible = false
+        }
     }
 
 	RadialGradient {
