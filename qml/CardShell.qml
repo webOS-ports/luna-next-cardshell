@@ -32,6 +32,7 @@ import "LunaSysAPI"
 import "Utils"
 import "Notifications"
 import "Connectors"
+import "AppTweaks"
 
 Rectangle {
     id: root
@@ -46,17 +47,14 @@ Rectangle {
     Loader {
         id: reticleItem
         property bool showReticle: true
-		
-        Tweak {
-        id: showTapRippleTweak
-        owner: "luna-next-cardshell"
-        serviceName: "org.webosports.luna"
-        key: "tapRippleSupport"
-        defaultValue: true
-        onValueChanged: updateShowTapRippleTweak();
+
+        Connections {
+            target: AppTweaks
+            onShowTapRippleTweakValueChanged: updateShowTapRippleTweak();
+        }
 
         function updateShowTapRippleTweak() {
-            if (showTapRippleTweak.value === true){
+            if (AppTweaks.showTapRippleTweakValue === true){
                 console.log("INFO: Enabling Reticle Area...");
                 reticleItem.showReticle = true;
             }
@@ -65,7 +63,6 @@ Rectangle {
                 reticleItem.showReticle = false;
             }
         }
-    }
 
         source: Settings.showReticle && showReticle ? "Utils/ReticleItem.qml" : ""
         z: 1000

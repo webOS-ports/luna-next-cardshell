@@ -23,6 +23,7 @@ import LunaNext.Compositor 0.1
 import LuneOS.Components 1.0
 
 import "../Utils"
+import "../AppTweaks"
 
 Item {
     id: cardGroupListViewItem
@@ -46,17 +47,13 @@ Item {
     focus: true
     Keys.forwardTo: [internalListView, currentActiveWindow()]
 
-    Tweak {
-        id: dragNDropTweak
-        owner: "luna-next-cardshell"
-        key: "stackedCardSupport"
-        serviceName: "org.webosports.luna"
-        defaultValue: true
-        onValueChanged: updateDragNDropTweak();
+    Connections {
+        target: AppTweaks
+        onDragNDropTweakValueChanged: updateDragNDropTweak();
 
         function updateDragNDropTweak()
         {
-            if (dragNDropTweak.value === true){
+            if (AppTweaks.dragNDropTweakValue === true){
                 console.log("INFO: Enabling Drag'n'Drop...");
                 enableDragnDrop = true;
             }

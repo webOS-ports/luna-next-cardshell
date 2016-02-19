@@ -22,6 +22,7 @@ import LunaNext.Common 0.1
 import LuneOS.Components 1.0
 
 import "../../Utils"
+import "../../AppTweaks"
 
 BaseIndicator {
     id: batteryIndicator
@@ -34,27 +35,22 @@ BaseIndicator {
     textValue: percentage + "%"
     textColor: __getColorForBatteryLevel(level)
 
-
-    Tweak {
-        id: batteryIndicatorType
-        owner: "luna-next-cardshell"
-        serviceName: "org.webosports.luna"
-        key: "showBatteryPercentage"
-        defaultValue: "iconOnly"
-        onValueChanged: updateBatteryIndicator();
+    Connections {
+        target: AppTweaks
+        onBatteryIndicatorTypeValueChanged: updateBatteryIndicator();
 
         function updateBatteryIndicator()
         {
-            if (batteryIndicatorType.value === "iconOnly"){
+            if (AppTweaks.batteryIndicatorTypeValue === "iconOnly"){
                 batteryIndicator.textVisible = false
                 batteryIndicator.imageVisible = true
             }
-            else if (batteryIndicatorType.value === "iconPercentage"){
+            else if (AppTweaks.batteryIndicatorTypeValue === "iconPercentage"){
                 batteryIndicator.textVisible = true
                 batteryIndicator.imageVisible = true
 
             }
-            else if (batteryIndicatorType.value === "percentageOnly"){
+            else if (AppTweaks.batteryIndicatorTypeValue === "percentageOnly"){
                 batteryIndicator.textVisible = true
                 batteryIndicator.imageVisible = false
             }
@@ -62,17 +58,13 @@ BaseIndicator {
         }
     }
 
-    Tweak {
-        id: batteryPercentageColorOptions
-        owner: "luna-next-cardshell"
-        serviceName: "org.webosports.luna"
-        key: "batteryPercentageColor"
-        defaultValue: String("white"); // without this cast, it would become a "color" type
-        onValueChanged: updateBatteryPercentageColor();
+    Connections {
+        target: AppTweaks
+        onBatteryPercentageColorOptionsValueChanged: updateBatteryPercentageColor();
 
         function updateBatteryPercentageColor()
         {
-            if (batteryPercentageColorOptions.value === "white") {
+            if (AppTweaks.batteryPercentageColorOptionsValue === "white") {
                 //Show white color
                 batteryIndicator.textColor = "white";
             }

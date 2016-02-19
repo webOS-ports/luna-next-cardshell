@@ -35,6 +35,7 @@ import "Utils"
 import "Notifications"
 import "Connectors"
 import "LockScreen"
+import "AppTweaks"
 
 // The window manager manages the switch between different window modes
 //     (card, maximized, fullscreen, ...)
@@ -329,16 +330,12 @@ WindowManager {
     LunaGestureArea {
         id: gestureAreaInstance
 
-        Tweak {
-            id: gestureAreaTweak
-            owner: "luna-next-cardshell"
-            serviceName: "org.webosports.luna"
-            key: "showGestureArea"
-            defaultValue: true
-            onValueChanged: updateShowGestureAreaTweak();
+        Connections {
+            target: AppTweaks
+            onGestureAreaTweakValueChanged: updateShowGestureAreaTweak();
 
             function updateShowGestureAreaTweak() {
-                if (gestureAreaTweak.value === true){
+                if (AppTweaks.gestureAreaTweakValue === true){
                     console.log("INFO: Enabling Gesture Area...");
                     gestureAreaInstance.enableGestureArea = true;
                 }
