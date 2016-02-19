@@ -24,8 +24,6 @@ Item {
 
     signal unlock
 
-    anchors.fill: parent
-
     Image {
         id: targetScrim
         source: "../images/lockscreen/screen-lock-target-scrim.png"

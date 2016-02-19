@@ -20,6 +20,8 @@ import QtQuick 2.5
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
+import "../Notifications"
+
 Item {
     id: lockScreen
 
@@ -148,8 +150,30 @@ Item {
         }
     ]
 
+    // Show the dashboards
+    Loader {
+        id: notifAreaOnLockScreen
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+
+        enabled: lockScreen.state === "pad"
+        visible: enabled
+
+        sourceComponent: Component {
+            NotificationArea {
+                interactive: false
+                maxDashboardWindowHeight: lockScreen.height
+            }
+        }
+    }
+
     PadLock {
         id: padLock
+        anchors.fill: parent
+        anchors.bottomMargin: notifAreaOnLockScreen.item ? notifAreaOnLockScreen.item.height : 0
 
         visible: lockScreen.state === "pad"
 

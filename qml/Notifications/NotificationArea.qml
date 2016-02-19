@@ -35,7 +35,8 @@ Rectangle {
 
     property QtObject compositorInstance
     property Item windowManagerInstance
-    readonly property int maxDashboardWindowHeight: parent.height/2
+    property bool interactive: true
+    property int maxDashboardWindowHeight: parent.height/2
     readonly property int dashboardCardFixedHeight: Units.gu(5.6) // this value comes from the CSS of the dashboard cards
     readonly property int bannerNotificationFixedHeight: Units.gu(2.4) // this value comes from the CSS of the banner
 
@@ -158,6 +159,7 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
+                enabled: notificationArea.interactive
                 onClicked: launcherInstance.launchApplication(notificationItem.notifObject.launchId,
                                                               notificationItem.notifObject.launchParams, handleLaunchAppSuccess);
 
@@ -268,7 +270,8 @@ Rectangle {
         onClicked: {
             bannerItemsPopups.popupModel.clear();
             notificationArea.state = "open";
-            windowManagerInstance.addTapAction("minimizeNotificationArea", minimizeNotificationArea, null)
+            if(windowManagerInstance)
+                windowManagerInstance.addTapAction("minimizeNotificationArea", minimizeNotificationArea, null)
         }
     }
 
@@ -294,6 +297,8 @@ Rectangle {
         delegate:
             SwipeableNotification {
                 id: slidingNotificationArea
+
+                interactive: notificationArea.interactive
 
                 property var delegateNotifObject: typeof notifObject !== 'undefined' ? notifObject : undefined;
                 property Item delegateWindow: typeof window !== 'undefined' ? window : null;
