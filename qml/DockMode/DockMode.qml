@@ -30,7 +30,11 @@ Item {
     onDockModeActiveChanged: {
         console.log("DockMode changed to " + dockModeActive);
         if (dockModeActive) {
+            windowManagerInstance.switchToDockMode();
             windowManagerInstance.addTapAction("deactivateDockMode", function() { setDisplayState.call(JSON.stringify({"state":"undock"})); }, null)
+        }
+        else {
+            windowManagerInstance.switchToCardView();
         }
     }
 

@@ -25,12 +25,36 @@ Item {
 
     visible: locked && !isFirstUse
 
+    property Item windowManagerInstance;
+
     property bool isFirstUse: false
     property bool locked: false;
 
     property bool needKeyboard: pinPasswordLock.visible && deviceLockMode === "password"
 
     property string deviceLockMode: "none"
+
+    onLockedChanged: {
+        if(!locked) {
+            if( _stateBeforeLock === "dockmode" ) windowManagerInstance.switchToDockMode();
+            else if( _stateBeforeLock === "minimize" ) windowManagerInstance.switchToMaximize(null);
+            else if( _stateBeforeLock === "fullscreen" ) windowManagerInstance.switchToFullscreen(null);
+            else if( _stateBeforeLock === "cardview" ) windowManagerInstance.switchToCardView();
+            else if( _stateBeforeLock === "launcherview" ) windowManagerInstance.switchToLauncherView();
+        }
+        else {
+            windowManagerInstance.switchToLockscreen();
+        }
+    }
+    property string _stateBeforeLock: "cardview"
+    Connections {
+        target: windowManagerInstance
+        onSwitchToDockMode: _stateBeforeLock = "dockmode";
+        onSwitchToMaximize: _stateBeforeLock = "minimize";
+        onSwitchToFullscreen: _stateBeforeLock = "fullscreen";
+        onSwitchToCardView: _stateBeforeLock = "cardview";
+        onSwitchToLauncherView: _stateBeforeLock = "launcherview";
+    }
 
     function lockDisplay() {
         service.call("luna://com.palm.display/control/setLockStatus", "{\"status\":\"lock\"}", null, null);

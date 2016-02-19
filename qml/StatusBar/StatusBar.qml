@@ -38,8 +38,6 @@ Item {
     property bool justTypeLauncherActive: false
     property Item batteryService
     property Item wifiService
-    property Item lockScreen
-    property Item dockMode
     property string timeFormat: "HH24"
 
     property string carrierName: "LuneOS"
@@ -248,7 +246,6 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-            state: ((statusBar.state === "application-visible" || dockMode.visible) && !lockScreen.locked) ? "visible" : "hidden"
         }
 
         SystemIndicators {
@@ -319,35 +316,33 @@ Item {
     states: [
         State {
             name: "hidden"
-            PropertyChanges {
-                target: statusBar
-                visible: false
-            }
+            PropertyChanges { target: statusBar; visible: false }
+            PropertyChanges { target: appMenu; state: "hidden" }
         },
         State {
             name: "default"
-            PropertyChanges {
-                target: statusBar
-                visible: true
-            }
+            PropertyChanges { target: statusBar; visible: true }
+            PropertyChanges { target: appMenu; state: "hidden" }
+        },
+        State {
+            name: "dockmode"
+            PropertyChanges { target: statusBar; visible: true }
+            PropertyChanges { target: appMenu; state: "dockmode" }
         },
         State {
             name: "application-visible"
-            PropertyChanges {
-                target: statusBar
-                visible: true
-            }
-            PropertyChanges {
-                target: carrierString
-                visible: false
-            }
+            PropertyChanges { target: statusBar; visible: true }
+            PropertyChanges { target: appMenu; state: "appmenu" }
         }
     ]
 
     Connections {
         target: windowManagerInstance
-        onSwitchToDashboard: {
+        onSwitchToLockscreen: {
             state = "default"
+        }
+        onSwitchToDockMode: {
+            state = "dockmode"
         }
         onSwitchToMaximize: {
             state = "application-visible"

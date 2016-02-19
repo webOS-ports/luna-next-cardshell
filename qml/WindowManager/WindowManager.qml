@@ -29,11 +29,12 @@ Item {
     property Item gestureAreaInstance
     property Item gestureHandlerInstance
 
-    signal switchToDashboard
     signal switchToCardView
     signal switchToMaximize(Item window)
     signal switchToFullscreen(Item window)
     signal switchToLauncherView
+    signal switchToDockMode
+    signal switchToLockscreen
 
     // utility functions that may be useful when we have dashboard apps
     property int nbRegisteredTapActionsBeforeTap: 0;
