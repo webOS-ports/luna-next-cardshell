@@ -85,19 +85,19 @@ Item {
 
         if( windowState === WindowState.Carded ) {
             if( state !== "cardList" )
-                state = "cardList";
+                windowManagerInstance.switchToCardView();
             else
                 __setToCard(lCurrentActiveWindow);
         }
         else if( windowState === WindowState.Maximized ) {
             if( state !== "maximizedCard" )
-                state = "maximizedCard";
+                windowManagerInstance.switchToMaximize(lCurrentActiveWindow);
             else
                 __setToMaximized(lCurrentActiveWindow);
         }
         else if( state === WindowState.Fullscreen ) {
             if( state !== "fullscreenCard" )
-                state = "fullscreenCard";
+                windowManagerInstance.switchToFullscreen(lCurrentActiveWindow);
             else
                 __setToFullscreen(lCurrentActiveWindow);
         }
@@ -149,8 +149,6 @@ Item {
                     var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
                     if( lCurrentActiveWindow )
                         __setToCard(lCurrentActiveWindow);
-
-                    windowManagerInstance.switchToCardView();
                 }
             }
         },
@@ -162,8 +160,6 @@ Item {
                     var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
                     if( lCurrentActiveWindow ) {
                         __setToMaximized(lCurrentActiveWindow);
-
-                        windowManagerInstance.switchToMaximize(lCurrentActiveWindow);
                     }
                 }
             }
@@ -176,8 +172,6 @@ Item {
                     var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
                     if( lCurrentActiveWindow ) {
                         __setToFullscreen(lCurrentActiveWindow);
-
-                        windowManagerInstance.switchToFullscreen(lCurrentActiveWindow);
                     }
                 }
             }
@@ -186,20 +180,34 @@ Item {
 
     Connections {
         target: windowManagerInstance
-        onSwitchToDashboard: {
-            gestureAreaConnections.target = gestureAreaInstance
-        }
         onSwitchToMaximize: {
             gestureAreaConnections.target = gestureAreaInstance
+            cardViewItem.state = "maximizedCard"
+            cardViewItem.visible = true;
         }
         onSwitchToFullscreen: {
             gestureAreaConnections.target = gestureAreaInstance
+            cardViewItem.state = "fullscreenCard"
+            cardViewItem.visible = true;
         }
         onSwitchToCardView: {
             gestureAreaConnections.target = gestureAreaInstance
+            cardViewItem.state = "cardList"
+            cardViewItem.visible = true;
         }
         onSwitchToLauncherView: {
             gestureAreaConnections.target = null
+            cardViewItem.state = "cardList"
+            cardViewItem.visible = true;
+        }
+        onSwitchToLockscreen: {
+            gestureAreaConnections.target = null
+            cardViewItem.visible = false;
+        }
+        onSwitchToDockMode: {
+            gestureAreaConnections.target = gestureAreaInstance
+            cardViewItem.state = "cardList"
+            cardViewItem.visible = false;
         }
     }
 

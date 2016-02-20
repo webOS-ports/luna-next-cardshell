@@ -29,7 +29,23 @@ Item {
     visible: false
 
     property string activeWindowAppId: ""
+    property string activeWindowTitle: defaultAppMenuTitle
     readonly property string defaultAppMenuTitle: "App Menu"
+    property string dockModeAppMenuTitle: "Time" // this will need to be more flexible with exhibition apps
+
+    onActiveWindowAppIdChanged: {
+        // now, if the appId is valid, fetch the app name
+        if (activeWindowAppId.length > 0) {
+            service.call("luna://com.palm.applicationManager/getAppInfo",
+                         JSON.stringify({"appId":activeWindowAppId}),
+                         handleGetAppInfoResponse, handleGetAppInfoError);
+        }
+        else
+        {
+            // reset window title
+            activeWindowTitle = defaultAppMenuTitle;
+        }
+    }
 
     LunaService {
         id: service
@@ -52,7 +68,6 @@ Item {
     }
 
     function toggleState() {
-        var activeWindowAppId = determineActiveWindowAppId();
         if (activeWindowAppId.length === 0)
             return;
         var params = {"id":activeWindowAppId, "params":"{\"palm-command\":\"open-app-menu\"}"};
@@ -60,32 +75,17 @@ Item {
                      function(message) { }, function(error) { });
     }
 
-    function setDefaultAppMenuTitle() {
-        title.text = dockMode.visible ? "Time" : defaultAppMenuTitle;
-    }
-
     function handleGetAppInfoResponse(message) {
         var response = JSON.parse(message.payload);
         if (response.returnValue && response.appInfo && response.appInfo.appmenu)
-            title.text = response.appInfo.appmenu;
+            activeWindowTitle = response.appInfo.appmenu;
         else
-            setDefaultAppMenuTitle()
+            activeWindowTitle = defaultAppMenuTitle;
     }
 
     function handleGetAppInfoError(error) {
         console.log("Could not retrieve information about current application: " + error);
-        setDefaultAppMenuTitle();
-    }
-
-    function updateAfterAppChange() {
-        var activeWindowAppId = determineActiveWindowAppId();
-        if (activeWindowAppId.length === 0) {
-            setDefaultAppMenuTitle();
-            return;
-        }
-        service.call("luna://com.palm.applicationManager/getAppInfo",
-                     JSON.stringify({"appId":activeWindowAppId}),
-                     handleGetAppInfoResponse, handleGetAppInfoError);
+        activeWindowTitle = defaultAppMenuTitle;
     }
 
     Row {
@@ -119,24 +119,37 @@ Item {
     states: [
         State {
             name: "hidden"
-            PropertyChanges { target: appMenu; activeWindowAppId: "" }
+            PropertyChanges { target: appMenu; visible: false }
+            PropertyChanges { target: title; text: defaultAppMenuTitle }
         },
-        State { name: "visible" }
+        State {
+            name: "appmenu"
+            StateChangeScript { script: { activeWindowAppId = determineActiveWindowAppId(); } }
+            PropertyChanges { target: appMenu; visible: true }
+            PropertyChanges { target: title; text: activeWindowTitle }
+        },
+        State {
+            name: "dockmode"
+            PropertyChanges { target: appMenu; activeWindowAppId: "" }
+            PropertyChanges { target: appMenu; visible: true }
+            PropertyChanges { target: title; text: dockModeAppMenuTitle }
+        }
     ]
 
     transitions: [
         Transition {
             from: "hidden"
-            to: "visible"
-            ScriptAction { script: { updateAfterAppChange(); appMenu.visible = true } }
-            NumberAnimation { target: appMenu; properties: "opacity"; from: 0; to: 1; duration: 300 }
+            SequentialAnimation {
+                PropertyAction { target: appMenu; property: "visible" }
+                NumberAnimation { target: appMenu; properties: "opacity"; from: 0; to: 1; duration: 300 }
+            }
         },
         Transition {
-            from: "visible"
             to: "hidden"
             SequentialAnimation {
                 NumberAnimation { target: appMenu; properties: "opacity"; from: 1; to: 0; duration: 300 }
-                ScriptAction { script: appMenu.visible = false }
+                PropertyAction { target: appMenu; property: "visible" }
+                PropertyAction { target: appMenu; property: "title" }
             }
         }
     ]

@@ -35,6 +35,7 @@ import "Utils"
 import "Notifications"
 import "Connectors"
 import "LockScreen"
+import "AppTweaks"
 
 // The window manager manages the switch between different window modes
 //     (card, maximized, fullscreen, ...)
@@ -207,8 +208,6 @@ WindowManager {
                 cardViewInstance.z = 3;   // active card over everything
             }
         }
-
-        visible: !lockScreen.visible
     }
 
     Launcher {
@@ -221,8 +220,6 @@ WindowManager {
         anchors.bottom: notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
-
-        visible: !lockScreen.visible && !dockMode.visible
 
         z: 1 // on top of cardview when no card is active
     }
@@ -302,6 +299,8 @@ WindowManager {
 
         z: 700
 
+        windowManagerInstance: windowManager
+
         isFirstUse: false
 
         anchors.top: statusBarInstance.bottom
@@ -324,8 +323,6 @@ WindowManager {
         gestureHandlerInstance: windowManager.gestureHandlerInstance
         fullLauncherVisible: launcherInstance.fullLauncherVisible
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
-        lockScreen: lockScreen
-        dockMode: dockMode
 
         onShowPowerMenu: windowManager.showPowerMenu();
     }
@@ -333,25 +330,21 @@ WindowManager {
     LunaGestureArea {
         id: gestureAreaInstance
 
-        Tweak {
-        id: gestureAreaTweak
-        owner: "luna-next-cardshell"
-        serviceName: "org.webosports.luna"
-        key: "showGestureArea"
-        defaultValue: true
-        onValueChanged: updateShowGestureAreaTweak();
+        Connections {
+            target: AppTweaks
+            onGestureAreaTweakValueChanged: updateShowGestureAreaTweak();
 
-        function updateShowGestureAreaTweak() {
-            if (gestureAreaTweak.value === true){
-                console.log("INFO: Enabling Gesture Area...");
-                gestureAreaInstance.enableGestureArea = true;
-            }
-            else {
-                console.log("INFO: Disabling Gesture Area...");
-                gestureAreaInstance.enableGestureArea = false;
+            function updateShowGestureAreaTweak() {
+                if (AppTweaks.gestureAreaTweakValue === true){
+                    console.log("INFO: Enabling Gesture Area...");
+                    gestureAreaInstance.enableGestureArea = true;
+                }
+                else {
+                    console.log("INFO: Disabling Gesture Area...");
+                    gestureAreaInstance.enableGestureArea = false;
+                }
             }
         }
-    }
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right

@@ -1,0 +1,2 @@
+module AppTweaks
+singleton AppTweaks 1.0 AppTweaks.qml

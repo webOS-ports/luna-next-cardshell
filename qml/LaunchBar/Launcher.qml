@@ -173,7 +173,11 @@ Item {
 
     Connections {
         target: windowManagerInstance
-        onSwitchToDashboard: {
+        onSwitchToLockscreen: {
+            gestureAreaConnections.target = null;
+            state = "hidden";
+        }
+        onSwitchToDockMode: {
             gestureAreaConnections.target = null;
             state = "hidden";
         }

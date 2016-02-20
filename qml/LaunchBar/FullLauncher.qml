@@ -25,6 +25,7 @@ import LuneOS.Components 1.0
 
 import "../Utils"
 import "../LunaSysAPI" as LunaSysAPI
+import "../AppTweaks"
 
 
 Item {
@@ -92,23 +93,6 @@ Item {
         }
     ]
 
-    //Tweaks
-    Tweak {
-        id: tabTitleCaseTweak
-        owner: "luna-next-cardshell"
-        serviceName: "org.webosports.luna"
-        key: "tabTitleCase"
-        defaultValue: "capitalizedCase"
-    }
-
-    Tweak {
-        id: tabIndicatorNumberTweak
-        owner: "luna-next-cardshell"
-        serviceName: "org.webosports.luna"
-        key: "tabIndicatorNumber"
-        defaultValue: "default"
-    }
-
     // Background of the full launcher
     Image {
         anchors.fill: parent
@@ -145,8 +129,8 @@ Item {
         interactive: !draggedLauncherIcon.draggingActive
 
         highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: tabIndicatorNumberTweak.value === "default" ? width/2 - Units.gu(10) : 0;
-        preferredHighlightEnd: tabIndicatorNumberTweak.value === "default" ? width/2 + Units.gu(10) : tabRowList.width;
+        preferredHighlightBegin: AppTweaks.tabIndicatorNumberTweakValue === "default" ? width/2 - Units.gu(10) : 0;
+        preferredHighlightEnd: AppTweaks.tabIndicatorNumberTweakValue === "default" ? width/2 + Units.gu(10) : tabRowList.width;
         highlightMoveDuration: 500
         highlightMoveVelocity: -1
 
@@ -201,7 +185,9 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: tabIndicatorNumberTweak.value === "default" ? Units.gu(20) : tabIndicatorNumberTweak.value === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count : tabRowList.width / tabIndicatorNumberTweak.value
+            width: AppTweaks.tabIndicatorNumberTweakValue === "default" ? Units.gu(20) :
+                   AppTweaks.tabIndicatorNumberTweakValue === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count :
+                                                                      tabRowList.width / AppTweaks.tabIndicatorNumberTweakValue
             height: tabRowList.height
             checked: tabRowDelegate.ListView.isCurrentItem
 
@@ -231,7 +217,8 @@ Item {
             onClicked: {
                 tabRowDelegate.ListView.view.currentIndex = index;
             }
-            text: tabTitleCaseTweak.value === "upperCase" ? model.text.toString().toUpperCase() : tabTitleCaseTweak.value === "lowerCase" ? model.text.toString().toLowerCase() : model.text
+            text: AppTweaks.tabTitleCaseTweakValue === "upperCase" ? model.text.toString().toUpperCase() :
+                  AppTweaks.tabTitleCaseTweakValue === "lowerCase" ? model.text.toString().toLowerCase() : model.text
 
             // the separator on the left should only be visible if is not adjacent to a selected tab
             Image {

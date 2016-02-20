@@ -105,7 +105,10 @@ Item {
 
     Connections {
         target: windowManagerInstance
-        onSwitchToDashboard: {
+        onSwitchToLockscreen: {
+            state = "hidden";
+        }
+        onSwitchToDockMode: {
             state = "hidden";
         }
         onSwitchToMaximize: {

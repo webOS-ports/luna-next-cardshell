@@ -23,6 +23,7 @@ import LunaNext.Common 0.1
 import LuneOS.Components 1.0
 
 import "../Utils"
+import "../AppTweaks"
 
 import "SystemMenu"
 
@@ -38,8 +39,6 @@ Item {
     property bool justTypeLauncherActive: false
     property Item batteryService
     property Item wifiService
-    property Item lockScreen
-    property Item dockMode
     property string timeFormat: "HH24"
 
     property string carrierName: "LuneOS"
@@ -138,33 +137,25 @@ Item {
                 //Set the default to Time in case no Tweaks option has been set yet.
                 Timer {
                     id: clockTimer
-                    interval: 100
+                    interval: 1000
                     running: true
                     repeat: true
                     onTriggered: titleText.updateClock()
                 }
 
                 function updateClock() {
-                    if (dateTimeTweak.value === "dateTime")
+                    if (AppTweaks.dateTimeTweakValue === "dateTime")
                         titleText.text = timeFormat === "HH24" ? Qt.formatDateTime(new Date(),
                                                            "dd-MMM-yyyy h:mm") : Qt.formatDateTime(new Date(),
                                                            "dd-MMM-yyyy h:mm AP")
-                    else if (dateTimeTweak.value === "timeOnly")
+                    else if (AppTweaks.dateTimeTweakValue === "timeOnly")
                         titleText.text = timeFormat === "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
-                    else if (dateTimeTweak.value === "dateOnly")
+                    else if (AppTweaks.dateTimeTweakValue === "dateOnly")
                         titleText.text = Qt.formatDateTime(new Date(),
                                                            "dd-MMM-yyyy") 
                 }
 
                 text: timeFormat === "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
-                
-                Tweak {
-                    id: dateTimeTweak
-                    owner: "luna-next-cardshell"
-                    serviceName: "org.webosports.luna"
-                    key: "showDateTime"
-                    defaultValue: "timeOnly"
-                }
             }
         }
 
@@ -202,36 +193,14 @@ Item {
                 width: parent.width
                 elide: Text.ElideRight
 
-                Tweak {
-                    id: enableCustomCarrierString
-                    owner: "luna-next-cardshell"
-                    serviceName: "org.webosports.luna"
-                    key: "useCustomCarrierString"
-                    defaultValue: "false"
-                    onValueChanged: updateCustomCarrierString()
-
-                    function updateCustomCarrierString() {
-                        if (enableCustomCarrierString.value === true) {
-                            //Only show custom carrier text in case we have the option enabled in Tweaks
-                            carrierText.text = customCarrierString.value
-                        } else {
-                            //Otherwise show the regular "Carrier"
-                            carrierText.text = carrierName
-                        }
-                    }
-                }
-                Tweak {
-                    id: customCarrierString
-                    owner: "luna-next-cardshell"
-                    serviceName: "org.webosports.luna"
-                    key: "carrierString"
-                    defaultValue: "Custom Carrier String"
-                    onValueChanged: updateCarrierString()
-
+                Connections {
+                    target: AppTweaks
+                    onEnableCustomCarrierStringValueChanged: updateCarrierString()
+                    onCustomCarrierStringValueChanged: updateCarrierString()
                     function updateCarrierString() {
-                        if (enableCustomCarrierString.value === true) {
+                        if (AppTweaks.enableCustomCarrierStringValue === true) {
                             //Only show custom carrier text in case we have the option enabled in Tweaks
-                            carrierText.text = customCarrierString.value
+                            carrierText.text = AppTweaks.customCarrierStringValue
                         } else {
                             //Otherwise show the regular "Carrier"
                             carrierText.text = carrierName
@@ -248,7 +217,6 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.2
             anchors.bottomMargin: parent.height * 0.2
-            state: ((statusBar.state === "application-visible" || dockMode.visible) && !lockScreen.locked) ? "visible" : "hidden"
         }
 
         SystemIndicators {
@@ -319,35 +287,33 @@ Item {
     states: [
         State {
             name: "hidden"
-            PropertyChanges {
-                target: statusBar
-                visible: false
-            }
+            PropertyChanges { target: statusBar; visible: false }
+            PropertyChanges { target: appMenu; state: "hidden" }
         },
         State {
             name: "default"
-            PropertyChanges {
-                target: statusBar
-                visible: true
-            }
+            PropertyChanges { target: statusBar; visible: true }
+            PropertyChanges { target: appMenu; state: "hidden" }
+        },
+        State {
+            name: "dockmode"
+            PropertyChanges { target: statusBar; visible: true }
+            PropertyChanges { target: appMenu; state: "dockmode" }
         },
         State {
             name: "application-visible"
-            PropertyChanges {
-                target: statusBar
-                visible: true
-            }
-            PropertyChanges {
-                target: carrierString
-                visible: false
-            }
+            PropertyChanges { target: statusBar; visible: true }
+            PropertyChanges { target: appMenu; state: "appmenu" }
         }
     ]
 
     Connections {
         target: windowManagerInstance
-        onSwitchToDashboard: {
+        onSwitchToLockscreen: {
             state = "default"
+        }
+        onSwitchToDockMode: {
+            state = "dockmode"
         }
         onSwitchToMaximize: {
             state = "application-visible"
