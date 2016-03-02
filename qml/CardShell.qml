@@ -65,7 +65,7 @@ Rectangle {
         }
 
         source: Settings.showReticle && showReticle ? "Utils/ReticleItem.qml" : ""
-        z: 1000
+        z: 10
     }
 
     DeviceKeyHandler {
@@ -141,12 +141,12 @@ Rectangle {
 
     VolumeControlAlert {
         id: volumeControlAlert
-        z: 900
+        z: 10
     }
 
     PowerMenu {
         id: powerMenuAlert
-        z: 800
+        z: 10
 
         anchors.top: parent.top
         anchors.right: parent.right
