@@ -23,6 +23,11 @@ import LunaNext.Common 0.1
 BaseIndicator {
     id: bluetoothIndicator
 
-    imageSource: "../../images/statusbar/bluetooth-on.png"
+    property bool connected: false
+    property bool isTurningOn: false
+
+    imageSource: connected ? "../../images/statusbar/bluetooth-connected.png" :
+                      isTurningOn ? "../../images/statusbar/bluetooth-connecting.png" :
+                                    "../../images/statusbar/bluetooth-on.png"
 }
 
