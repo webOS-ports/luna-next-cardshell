@@ -93,6 +93,8 @@ Item {
         anchors.leftMargin: Units.gu(1)
         anchors.top: parent.top
         anchors.bottom: parent.bottom
+        anchors.topMargin: parent.height * 0.2
+        anchors.bottomMargin: parent.height * 0.2
         spacing: Units.gu(1) / 2
 
         Text {

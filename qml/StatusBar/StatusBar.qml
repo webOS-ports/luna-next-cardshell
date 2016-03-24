@@ -45,13 +45,6 @@ Item {
 
     signal showPowerMenu()
 
-    function screenEdgeFlickGesture(pos) {
-        if (appMenu.contains(mapToItem(appMenu, pos.x, pos.y)))
-            appMenu.toggleState()
-        else if (systemMenu.contains(mapToItem(systemMenu, pos.x, systemMenu.y)))
-            systemMenu.toggleState()
-    }
-
     function probeNetworkStatus()
     {
         networkStatusQuery.subscribe(
@@ -215,8 +208,6 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left
-            anchors.topMargin: parent.height * 0.2
-            anchors.bottomMargin: parent.height * 0.2
         }
 
         SystemIndicators {
