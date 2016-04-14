@@ -134,7 +134,7 @@ Item {
          * between 0x00 and 0xff.
         */
 
-        if( key <= 0x0ff )
+        if( key <= 0x0ff && key >=0x02)
             return true;
         return false;
     }
