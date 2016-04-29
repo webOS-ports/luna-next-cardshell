@@ -45,7 +45,7 @@ Item {
     signal cardDragStart(Item window);
 
     focus: true
-    Keys.forwardTo: [internalListView, currentActiveWindow()]
+    Component.onCompleted: updateKeysForwardTo()
 
     Connections {
         target: AppTweaks
@@ -157,6 +157,7 @@ Item {
         }
 
         Keys.onPressed: {
+            updateKeysForwardTo();
             if (cardView.state === "cardList") {
                 if (event.key === Qt.Key_Left) {
                     event.accepted = true;
@@ -393,6 +394,10 @@ Item {
         if( foundGroupIndex>=0 ) {
             internalListView.setCurrentCardIndex(foundGroupIndex);
         }
+    }
+
+    function updateKeysForwardTo() {
+        Keys.forwardTo = [internalListView, currentActiveWindow()];
     }
 }
 
