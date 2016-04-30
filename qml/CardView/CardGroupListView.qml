@@ -157,7 +157,6 @@ Item {
         }
 
         Keys.onPressed: {
-            updateKeysForwardTo();
             if (cardView.state === "cardList") {
                 if (event.key === Qt.Key_Left) {
                     event.accepted = true;
@@ -394,6 +393,7 @@ Item {
         if( foundGroupIndex>=0 ) {
             internalListView.setCurrentCardIndex(foundGroupIndex);
         }
+        updateKeysForwardTo();
     }
 
     function updateKeysForwardTo() {
