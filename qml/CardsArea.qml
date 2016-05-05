@@ -86,7 +86,7 @@ WindowManager {
         height: 32
 
         // always on top of everything else!
-        z: 10
+        z: 1000
 
         Component {
             id: fpsTextComponent
@@ -107,7 +107,7 @@ WindowManager {
     /* Component already uses an Loader internally so need to do that again here */
     PerformanceOverlay {
         id: performanceOverlay
-        z: 10
+        z: 1000
         active: false
         onActiveChanged: {
             /* User can disable performance UI by clicking on it */
@@ -298,8 +298,8 @@ WindowManager {
     LockScreen {
         id: lockScreen
 
-        z: 6
-
+        z: 700
+		
         windowManagerInstance: windowManager
 
         isFirstUse: false
