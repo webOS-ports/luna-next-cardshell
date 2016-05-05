@@ -54,7 +54,7 @@ FocusScope {
         id: splash
         appIcon: wrappedWindow !== null ? wrappedWindow.appIcon : ""
         anchors.fill: parent;
-        z: 9
+        z: 10
     }
 
     function windowVisibleChanged() {
