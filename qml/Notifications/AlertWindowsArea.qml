@@ -71,7 +71,7 @@ Rectangle {
                     }
 
                     if( windowManagerItem ) {
-                        windowManagerItem.addTapAction("hideAlertWindow", function (winId) { compositorInstance.closeWindowWithId(window.winId); }, window.winId);
+                        windowManagerItem.addTapAction("hideAlertWindow", function (winId) { compositorInstance.closeWindowWithId(winId); }, window.winId);
                     }
                 }
             }

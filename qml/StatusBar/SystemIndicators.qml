@@ -102,6 +102,8 @@ Row {
         anchors.bottom: indicatorsRow.bottom
 
         enabled: BluetoothService.powered
+        connected: BluetoothService.connected
+        isTurningOn: BluetoothService.isTurningOn
     }
 
     WanStatusIndicator {
