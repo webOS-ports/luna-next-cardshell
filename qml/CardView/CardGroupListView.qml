@@ -45,7 +45,7 @@ Item {
     signal cardDragStart(Item window);
 
     focus: true
-    Keys.forwardTo: [internalListView, currentActiveWindow()]
+    Component.onCompleted: updateKeysForwardTo()
 
     Connections {
         target: AppTweaks
@@ -393,6 +393,11 @@ Item {
         if( foundGroupIndex>=0 ) {
             internalListView.setCurrentCardIndex(foundGroupIndex);
         }
+        updateKeysForwardTo();
+    }
+
+    function updateKeysForwardTo() {
+        Keys.forwardTo = [internalListView, currentActiveWindow()];
     }
 }
 
