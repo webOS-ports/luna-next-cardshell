@@ -48,7 +48,7 @@ Rectangle {
             height: window ? window.height : 0
             onHeightChanged: computeNewRootHeight();
 
-            onWidthChanged: if(window) window.changeSize(Qt.size(alertItem.width, alertItem.height));
+            onWidthChanged: if(window && window.height>0) window.changeSize(Qt.size(alertItem.width, alertItem.height));
 
             children: [ window ]
 
