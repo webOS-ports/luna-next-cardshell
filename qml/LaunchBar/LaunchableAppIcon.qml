@@ -26,7 +26,7 @@ Item {
     property string appIcon
     property string appTitle
     property string appId
-    property string appParams: "{}"
+    property string appParams: ""
     property bool showTitle: false
 
     property real iconSize: 64

@@ -351,7 +351,7 @@ Item {
                     modelTitle: model.title
                     modelIcon: model.icon
                     modelId: model.id
-                    modelParams:  (typeof model.params === "undefined") ? "{}" : model.params
+                    modelParams:  (typeof model.params === "undefined") ? "" : model.params
                     modelIndex: index
                     modelRemovable: !!model.removable
                     modelHideable: false
