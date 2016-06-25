@@ -409,15 +409,30 @@ Item {
                     visible: true
                     ident:         headerIdent;
 
+                    Component.onCompleted: {rotation.locked = preferences.rotationLock;}
+
+                    Connections {
+                        target: preferences
+
+                        onRotationLockAngleChanged: {
+                            if (preferences.rotationLock) {
+                                setRotationLockText("Turn off Rotation Lock", true);
+                                orientationHelper.orientationAngle = preferences.rotationLockAngle;
+                            } else {
+                                setRotationLockText("Turn on Rotation Lock", false);
+                            }
+                        }
+                    }
+
                     onAction: {
+                        if (rotation.delayUpdate)
+                            return;
                         rotation.delayUpdate = true;
 
                         if (rotation.locked) {
-                            setRotationLockText("Turn on Rotation Lock", false);
-                            preferences.rotationLock = false;
+                            preferences.rotationLockAngle = preferences.rotationInvalid;
                         } else {
-                            setRotationLockText("Turn off Rotation Lock", true);
-                            preferences.rotationLock = true;
+                            preferences.rotationLockAngle = orientationHelper.orientationAngle;
                         }
 
                         rotationLockTriggered(rotation.locked)
@@ -435,16 +450,30 @@ Item {
                     menuPosition: 2;
                     ident:         headerIdent;
 
+                    Component.onCompleted: {muteControl.mute = preferences.muteSound;}
+
+                    Connections {
+                        target: preferences
+
+                        onMuteSoundChanged: {
+                            if (!preferences.muteSound) {
+                                setMuteControlText("Mute Sound", false);
+                                volumeControl.setMute(false);
+                            } else {
+                                setMuteControlText("Unmute Sound", true);
+                                volumeControl.setMute(true);
+                            }
+                        }
+                    }
+
                     onAction: {
+                        if (muteControl.delayUpdate)
+                            return;
                         muteControl.delayUpdate = true;
 
                         if (muteControl.mute) {
-                            setMuteControlText("Mute Sound", false);
-                            volumeControl.setMute(false);
                             preferences.muteSound = false;
                         } else {
-                            setMuteControlText("Unmute Sound", true);
-                            volumeControl.setMute(true);
                             preferences.muteSound = true;
                         }
 
