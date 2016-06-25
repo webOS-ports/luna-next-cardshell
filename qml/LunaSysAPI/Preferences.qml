@@ -24,17 +24,19 @@ Item {
     id: preferences
 
     property bool airplaneMode: false
-    property bool rotationLock: false
+    property bool rotationLock: rotationLockAngle!==rotationInvalid
+    property int rotationLockAngle: rotationInvalid
     property bool muteSound: false
 
     property string wallpaperFile: ""
+    readonly property int rotationInvalid: 400
 
     //
     // private
     //
 
     onAirplaneModeChanged: systemService.setPreference("airplaneMode", preferences.airplaneMode)
-    onRotationLockChanged: systemService.setPreference("rotationLock", preferences.rotationLock)
+    onRotationLockAngleChanged: systemService.setPreference("rotationLock", preferences.rotationLockAngle)
     onMuteSoundChanged: systemService.setPreference("muteSound", preferences.muteSound)
 
     LunaService {
@@ -61,13 +63,13 @@ Item {
             if (response.hasOwnProperty("wallpaper")) {
                 preferences.wallpaperFile = response.wallpaper.wallpaperFile;
             }
-            else if (response.hasOwnProperty("airplaneMode")) {
+            if (response.hasOwnProperty("airplaneMode")) {
                 preferences.airplaneMode = response.airplaneMode;
             }
-            else if (response.hasOwnProperty("rotationLock")) {
-                preferences.rotationLock = response.rotationLock;
+            if (response.hasOwnProperty("rotationLock")) {
+                preferences.rotationLockAngle = response.rotationLock;
             }
-            else if (response.hasOwnProperty("muteSound")) {
+            if (response.hasOwnProperty("muteSound")) {
                 preferences.muteSound = response.muteSound;
             }
         }
