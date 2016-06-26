@@ -45,7 +45,7 @@ Item {
     signal cardDragStart(Item window);
 
     focus: true
-    Component.onCompleted: updateKeysForwardTo()
+    Component.onCompleted: updateKeysForwardTo(false)
 
     Connections {
         target: AppTweaks
@@ -93,7 +93,10 @@ Item {
                 //listCardGroupsModel.setWindowInFront(window, index)
                 cardGroupListViewItem.cardSelect(window);
             }
-            onCardRemove: cardGroupListViewItem.cardRemove(window);
+            onCardRemove: {
+                cardGroupListViewItem.updateKeysForwardTo(false);
+                cardGroupListViewItem.cardRemove(window);
+            }
             onCardDragStart: {
                 if( !enableDragnDrop ) {
                     console.log("Drag'n'drop is currently disabled.");
@@ -393,11 +396,14 @@ Item {
         if( foundGroupIndex>=0 ) {
             internalListView.setCurrentCardIndex(foundGroupIndex);
         }
-        updateKeysForwardTo();
+        updateKeysForwardTo(true);
     }
 
-    function updateKeysForwardTo() {
-        Keys.forwardTo = [internalListView, currentActiveWindow()];
+    function updateKeysForwardTo(addWindow) {
+        if (addWindow)
+            Keys.forwardTo = [internalListView, currentActiveWindow()];
+        else
+            Keys.forwardTo = [internalListView];
     }
 }
 
