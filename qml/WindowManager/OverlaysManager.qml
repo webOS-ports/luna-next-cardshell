@@ -32,6 +32,22 @@ Item {
         }
     }
 
+    Rectangle {
+        id: overlayBackgroundArea
+        anchors.fill: parent
+        color: "grey"
+        opacity: 0.2
+        visible: associatedPopupWindow !== null
+        property Item associatedPopupWindow
+        MouseArea {
+            anchors.fill: overlayBackgroundArea
+            onClicked: {
+                overlayBackgroundArea.associatedPopupWindow.destroy();
+                overlayBackgroundArea.associatedPopupWindow = null;
+            }
+        }
+    }
+
     onWidthChanged:  updateOverlaySizes();
     onHeightChanged: updateOverlaySizes();
 
@@ -39,7 +55,9 @@ Item {
         console.log("new overlay window size = " + overlaysManagerItem.width +"x"+ overlaysManagerItem.height);
         for( var i = 0; i < listOverlaysModel.count; ++i ) {
             var window = listOverlaysModel.getByIndex(i);
-            window.changeSize(Qt.size(overlaysManagerItem.width, overlaysManagerItem.height));
+            if(!window.isPopup) {
+                window.changeSize(Qt.size(overlaysManagerItem.width, overlaysManagerItem.height));
+            }
         }
     }
 
@@ -47,7 +65,13 @@ Item {
         console.log("OverlayManager: adding " + window);
 
         window.parent = overlaysManagerItem;
-        window.anchors.fill = overlaysManagerItem;
-        window.changeSize(Qt.size(overlaysManagerItem.width, overlaysManagerItem.height));
+        if(!window.isPopup) {
+            window.anchors.fill = overlaysManagerItem;
+            window.changeSize(Qt.size(overlaysManagerItem.width, overlaysManagerItem.height));
+        }
+        else {
+            window.anchors.centerIn = overlaysManagerItem;
+            overlayBackgroundArea.associatedPopupWindow = window;
+        }
     }
 }
