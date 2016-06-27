@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2016 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +35,17 @@ Item {
         anchors.fill: parent
     }
 
+    function isEmpty(str) {
+        if (typeof str == 'undefined' || !str || str.length === 0 || str === "" || !/[^\s]/.test(str) || /^\s*$/.test(str))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     function getIconUrlOrDefault(path) {
         var mypath = path.toString();
         if (mypath.length === 0)
@@ -47,7 +59,6 @@ Item {
         }
         return mypath
     }
-
 
     Repeater {
         model: bannerItemsModel
@@ -98,7 +109,13 @@ Item {
                     property: "y"; to: 0; duration: 500; easing.type: Easing.InOutQuad
                 }
                 ScriptAction {
-                    script: if(notifsound.source.length>0) notifsound.play();
+                    script: {
+                        if(!isEmpty(notifsound.source))
+                        {
+                            notifsound.play();
+                        }
+
+                    }
                 }
                 PauseAnimation { duration: 1500 }
                 ScriptAction {
