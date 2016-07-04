@@ -22,6 +22,7 @@ import LunaNext.Compositor 0.1
 
 Item {
     id: overlaysManagerItem
+    property Compositor compositorInstance
 
     WindowModel {
         id: listOverlaysModel
@@ -42,7 +43,7 @@ Item {
         MouseArea {
             anchors.fill: overlayBackgroundArea
             onClicked: {
-                overlayBackgroundArea.associatedPopupWindow.destroy();
+                compositorInstance.closeWindowWithId(overlayBackgroundArea.associatedPopupWindow.winId);
                 overlayBackgroundArea.associatedPopupWindow = null;
             }
         }

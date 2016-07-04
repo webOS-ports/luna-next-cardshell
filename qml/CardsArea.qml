@@ -263,6 +263,7 @@ WindowManager {
         anchors.right: parent.right
 
         visible: !lockScreen.visible || lockScreen.needKeyboard
+        compositorInstance: compositor
 
         z: 4 // on top of everything (including fullscreen)
     }
