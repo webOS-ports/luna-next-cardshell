@@ -417,7 +417,7 @@ Item {
                         onRotationLockAngleChanged: {
                             if (preferences.rotationLock) {
                                 setRotationLockText("Turn off Rotation Lock", true);
-                                orientationHelper.orientationAngle = preferences.rotationLockAngle;
+                                orientationHelper.__lockedRotationAngle = preferences.rotationLockAngle;
                             } else {
                                 setRotationLockText("Turn on Rotation Lock", false);
                             }
