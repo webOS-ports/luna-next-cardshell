@@ -75,6 +75,7 @@ Item {
                     internalListView.delayedCardSelect(newWindow);
                 }
             }
+            onCardRemoved: updateKeysForwardTo(false);
         }
 
         delegate: CardGroupDelegate {

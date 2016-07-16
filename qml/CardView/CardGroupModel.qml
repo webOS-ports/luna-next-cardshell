@@ -13,6 +13,7 @@ ListModel {
     id: listCardGroupsModel
 
     signal newCardInserted(int group, int index, Item newWindow)
+    signal cardRemoved()
 
     property WindowModel listCardsModel: WindowModel {
         windowTypeFilter: WindowType.Card
@@ -129,6 +130,7 @@ ListModel {
                         // select the previous one
                         listCardGroupsModel.setCurrentCardInGroup(listCardGroupsModel.get(groupIndex), Math.max(currentCardInGroup-1,0));
                     }
+                    cardRemoved();
                     windowList.remove(windowIndex);
 
                     // If the group is now empty, remove it
