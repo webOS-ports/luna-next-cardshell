@@ -18,7 +18,7 @@
 
 import QtQuick 2.0
 import QtMultimedia 5.5
-
+import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
 Item {
@@ -29,6 +29,53 @@ Item {
     }
 
     clip: true
+
+    LunaService {
+        id: service
+        name: "org.webosports.luna"
+        usePrivateBus: true
+    }
+
+    LunaService {
+            id: systemService
+
+            name: "org.webosports.luna"
+
+            property variant keysToWatch: ["ringtone","alerttone","notificationtone","locale"]
+
+            onInitialized: {
+                console.log("Calling preferences service for system sounds and locale...");
+
+                // subscribe to preference change events so that we know when something has changed
+                // and we can notify the relevant parts about this
+                systemService.call("luna://com.palm.systemservice/getPreferences",
+                                        JSON.stringify({"keys": keysToWatch,"subscribe":true}),
+                                        handlePreferencesResponse,
+                                        handleError);
+            }
+
+            function handlePreferencesResponse(message) {
+                var response = JSON.parse(message.payload);
+
+                if (response.hasOwnProperty("ringtone")) {
+                    preferences.ringtoneFullPath = response.ringtone.fullPath;
+                }
+                if (response.hasOwnProperty("alerttone")) {
+                    preferences.alerttoneFullPath = response.alerttone.fullPath;
+                }
+                if (response.hasOwnProperty("notificationtone")) {
+                    preferences.notificationtoneFullPath = response.notificationtone.fullPath;
+                }
+                if (response.hasOwnProperty("locale")) {
+                    preferences.locale = response.locale.languageCode+"_"+response.locale.countryCode;
+                }
+            }
+
+            function handleError(message) {
+                console.log("Failed to call preferences service: " + message);
+            }
+        }
+
 
     Rectangle {
         color: "black"
@@ -60,7 +107,145 @@ Item {
         return mypath
     }
 
-    Repeater {
+    function getResourcePathFromString(entry, appId, systemResourceFolder)
+    {
+        var basePathRoot = "";
+        if (isEmpty(entry))
+            return "";
+
+        // Absolute path?
+        if (entry[0] === '/') {
+            if (FileUtils.exists(entry)){
+                return entry;
+            }
+        }
+
+        // relative path. first check in the app folder
+        service.call("luna://com.palm.applicationManager/getAppBasePath",
+                     JSON.stringify({"appId":appId}),
+                     handleGetAppInfoResponse, handleGetAppInfoError);
+
+        function handleGetAppInfoResponse(message) {
+            var response = JSON.parse(message.payload);
+            if (response.returnValue && response.basePath){
+                var basePath = response.basePath;
+                var appFolder = basePath.match(/(.*)[\/\\]/)[1]||'';
+
+
+                basePathRoot = appFolder + "/resources/" + preferences.locale + "/" + entry;
+                if (FileUtils.exists(basePathRoot)){
+                    return basePathRoot;
+                }
+
+                // Try in the standard app folder path
+                basePathRoot = appFolder + "/" + entry;
+                if (FileUtils.exists(basePathRoot)){
+                    return basePathRoot;
+                }
+            }
+
+        }
+
+
+        function handleGetAppInfoError(error) {
+            console.log("Could not retrieve information about current application: " + error);
+        }
+
+        // Look for it in the system folder
+        basePathRoot = systemResourceFolder + "/" + entry;
+        if (FileUtils.exists(basePathRoot)){
+            return basePathRoot;
+        }
+
+        // ah well... we give up
+        return "";
+    }
+
+    function getSoundFilePath(soundFilePath, soundFile, soundClass, appId) {
+        if (isEmpty(soundFilePath) &&isEmpty(soundClass) && isEmpty(soundFile)){
+            return "";
+        }
+
+        if (soundClass === "none"){
+            return "";
+        }
+
+        if (soundClass === "vibrate") {
+            //FIXME: We don't have vibrateNamedEffect implemented yet, so not calling it here.
+            //luna://com.palm.vibrate/vibrateNamedEffect '{"name":"notifications"}';
+            return "";
+        }
+
+        var streamClass = soundClass;
+
+        if (streamClass === "alert"){
+            streamClass = "alerts";
+        } else if (streamClass === "notification") {
+            streamClass = "notifications";
+        } else if (streamClass === "ringtone") {
+            streamClass = "ringtones";
+        }
+        if (streamClass !== "alerts" &&
+                streamClass !== "alarm" &&
+                streamClass !== "calendar" &&
+                streamClass !== "notifications" &&
+                streamClass !== "ringtones" &&
+                streamClass !== "feedback"){
+            streamClass = "notifications";
+        }
+
+        var mySoundFilePath = "";
+
+        if(!isEmpty(soundFilePath)){
+            mySoundFilePath = soundFilePath;
+        }
+
+        if(!isEmpty(soundFile)){
+            mySoundFilePath = getResourcePathFromString(soundFile, appId, Settings.lunaSystemSoundsPath);
+        }
+
+        if (isEmpty(soundFilePath)) {
+            if (streamClass === "ringtones") {
+                mySoundFilePath = preferences.ringtoneFullPath;
+            } else if (streamClass === "alerts" ||
+                       streamClass === "alarm"  ||
+                       streamClass === "calendar") {
+                mySoundFilePath = preferences.alerttoneFullPath;
+            } else {
+                mySoundFilePath = preferences.notificationtoneFullPath;
+            }
+        }
+
+        if (isEmpty(mySoundFilePath)) {
+            if(FileUtils.exists(Settings.lunaSystemSoundsPath + "/" + Settings.lunaDefaultAlertSound)){
+                mySoundFilePath = Settings.lunaSystemSoundsPath + "/" + Settings.lunaDefaultAlertSound;
+            }
+        }
+
+        if (isEmpty(mySoundFilePath)) {
+            return "";
+        }
+        if(FileUtils.exists(mySoundFilePath)){
+            return mySoundFilePath;
+        } else {
+            return "";
+        }
+    }
+
+    function getSoundFileDuration(duration){
+        var soundFileDuration;
+
+        if (duration <= 0) {
+            soundFileDuration = -1; // use the duration of the file
+        }
+        // If stream class is of type notifications, then cap duration to maximum allowed by system
+        if (streamClass === "notifications" && duration <= 0) {
+            soundFileDuration = Settings.notificationSoundDuration;
+        }
+        return soundFileDuration;
+    }
+
+        Repeater {
         model: bannerItemsModel
         delegate:Rectangle {
             id: itemDelegate
@@ -73,7 +258,9 @@ Item {
 
             Audio {
                 id: notifsound
-                source: object.soundFilePath
+                source: getSoundFilePath(object.soundFilePath, object.soundFile, object.soundClass, object.ownerId)
+                //FIXME: We need to be able to set playback duration, seems duration in Audio is readonly and we'll need a Timer or NumberAnimation for this?
+                //duration: getSoundFileDuration (object.duration)
             }
 
             Row {
