@@ -30,6 +30,10 @@ Item {
 
     property string wallpaperFile: ""
     readonly property int rotationInvalid: 400
+    property string ringtoneFullPath: "/usr/palm/sounds/ringtone.wav"
+    property string alerttoneFullPath: "/usr/palm/sounds/alert.wav"
+    property string notificationtoneFullPath: "/usr/palm/sounds/notification.wav"
+    property string locale: "en_us"
 
     //
     // private
@@ -44,7 +48,7 @@ Item {
 
         name: "org.webosports.luna"
 
-        property variant keysToWatch: ["wallpaper","airplaneMode","rotationLock","muteSound"]
+        property variant keysToWatch: ["wallpaper","airplaneMode","rotationLock","muteSound","ringtone","notificationtone","alerttone","locale"]
 
         onInitialized: {
             console.log("Calling preferences service ...");
@@ -71,6 +75,18 @@ Item {
             }
             if (response.hasOwnProperty("muteSound")) {
                 preferences.muteSound = response.muteSound;
+            }
+            if (response.hasOwnProperty("ringtone")) {
+                preferences.ringtoneFullPath = response.ringtone.fullPath;
+            }
+            if (response.hasOwnProperty("alerttone")) {
+                preferences.alerttoneFullPath = response.alerttone.fullPath;
+            }
+            if (response.hasOwnProperty("notificationtone")) {
+                preferences.notificationtoneFullPath = response.notificationtone.fullPath;
+            }
+            if (response.hasOwnProperty("locale")) {
+                preferences.locale = response.locale.languageCode+"_"+response.locale.countryCode;
             }
         }
 
