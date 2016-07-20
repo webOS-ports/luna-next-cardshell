@@ -131,8 +131,14 @@ Item {
                 var basePath = response.basePath;
                 var appFolder = basePath.match(/(.*)[\/\\]/)[1]||'';
 
-
+                // Try the locale in the resources folder used by both Enyo 1 and 2.
                 basePathRoot = appFolder + "/resources/" + preferences.locale + "/" + entry;
+                if (FileUtils.exists(basePathRoot)){
+                    return basePathRoot;
+                }
+
+                // Try in the Enyo 2 assets folder path
+                basePathRoot = appFolder + "/assets/" + entry;
                 if (FileUtils.exists(basePathRoot)){
                     return basePathRoot;
                 }
@@ -143,9 +149,7 @@ Item {
                     return basePathRoot;
                 }
             }
-
         }
-
 
         function handleGetAppInfoError(error) {
             console.log("Could not retrieve information about current application: " + error);
