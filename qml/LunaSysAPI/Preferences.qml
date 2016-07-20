@@ -30,7 +30,7 @@ Item {
 
     property string wallpaperFile: ""
     readonly property int rotationInvalid: 400
-    property string ringtoneFullPath: "/usr/palm/sounds/ringtone.wav"
+    property string ringtoneFullPath: "/usr/palm/sounds/ringtone.mp3"
     property string alerttoneFullPath: "/usr/palm/sounds/alert.wav"
     property string notificationtoneFullPath: "/usr/palm/sounds/notification.wav"
     property string locale: "en_us"
