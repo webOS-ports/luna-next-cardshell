@@ -205,9 +205,6 @@ Item {
     Connections {
         id: gestureAreaConnections
         target: gestureAreaInstance
-        onTapGesture: {
-            state = "launchbar";
-        }
         onSwipeUpGesture:{
             if( state === "launchbar" ) {
                 state = "fullLauncher";
