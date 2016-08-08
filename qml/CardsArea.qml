@@ -191,10 +191,10 @@ WindowManager {
         gestureAreaInstance: gestureAreaInstance
         windowManagerInstance: windowManager
 
-        maximizedCardTopMargin: statusBarInstance.y + statusBarInstance.height
+        maximizedCardTopMargin: cardViewInstance.state === "fullscreenCard" ? 0 : statusBarInstance.y + statusBarInstance.height
 
         anchors.top: parent.top
-        anchors.bottom: notificationAreaInstance.top
+        anchors.bottom: cardViewInstance.state === "fullscreenCard" ? notificationAreaInstance.bottom : notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 

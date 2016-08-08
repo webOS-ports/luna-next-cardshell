@@ -47,7 +47,12 @@ Item {
         onCardRemove: cardViewItem.removeCard(window);
         onCardSelect: {
             setCurrentCard(window);
-            setCurrentCardState(WindowState.Maximized);
+            if(window.userData.isFullScreenMode) {
+                setCurrentCardState(WindowState.Fullscreen);
+            }
+            else {
+                setCurrentCardState(WindowState.Maximized);
+            }
         }
     }
 
@@ -137,6 +142,28 @@ Item {
         if (!lCurrentActiveWindow)
             return null;
         return lCurrentActiveWindow.appId;
+    }
+
+    function enableFullScreenMode(appId, enableFS) {
+        var window=null;
+        var i=0;
+        for(i=0; i<cardsModel.count;i++) {
+            window = cardsModel.getByIndex(i)
+            if(window && window.appId === appId) {
+                if(window.userData) {
+                    window.userData.isFullScreenMode = enableFS;
+                    if(window.userData.windowState === WindowState.Maximized) {
+                        windowManagerInstance.switchToFullscreen(window);
+                    }
+                    else if(window.userData.windowState === WindowState.Fullscreen) {
+                        windowManagerInstance.switchToMaximize(window);
+                    }
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     state: "cardList"

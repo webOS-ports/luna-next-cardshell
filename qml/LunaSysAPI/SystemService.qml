@@ -47,6 +47,7 @@ Item {
             systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
             systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);
             systemServicePrivate.registerMethod("/", "getFocusApplication", handleGetFocusApplication);
+            systemServicePrivate.registerMethod("/", "enableFullScreenMode", handleEnableFullScreenMode);
             systemServicePrivate.registerMethod("/", "setDisplayState", handleSetDisplayState);
             systemServicePrivate.registerMethod("/", "showPerformanceUI", handleShowPerformanceUI);
             systemServicePrivate.registerMethod("/", "showFps", handleShowFps)
@@ -60,6 +61,7 @@ Item {
         name: "org.webosports.luna"
         onInitialized: {
             systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
+            systemServicePublic.registerMethod("/", "enableFullScreenMode", handleEnableFullScreenMode);
         }
     }
 
@@ -104,6 +106,21 @@ Item {
 
         if (!cardViewInstance.focusApplication(request.appId))
             return buildErrorResponse("Failed to focus application");
+
+        return JSON.stringify({"returnValue":true});
+    }
+
+    function handleEnableFullScreenMode(message) {
+        var request = JSON.parse(message.payload);
+
+        if (request === null)
+            return buildErrorResponse("Invalid parameters.");
+
+        if (typeof request.enable !== 'boolean')
+            return buildErrorResponse("Invalid or missing boolean parameter 'enable'");
+
+        if (!cardViewInstance.enableFullScreenMode(message.applicationId, request.enable))
+            return buildErrorResponse("Failed to set fullscreen mode for " + message.applicationId);
 
         return JSON.stringify({"returnValue":true});
     }
