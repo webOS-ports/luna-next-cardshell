@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2015-2016 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2016 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,6 +29,10 @@ Item {
     }
 
     clip: true
+
+    IconPathServices {
+           id: iconPathServices
+    }
 
     LunaService {
         id: service
@@ -91,20 +95,6 @@ Item {
         {
             return false;
         }
-    }
-
-    function getIconUrlOrDefault(path) {
-        var mypath = path.toString();
-        if (mypath.length === 0)
-        {
-            return Qt.resolvedUrl("../images/default-app-icon.png");
-        }
-        
-        if(mypath.slice(-1) === "/")
-        {
-            mypath = mypath + "icon.png"
-        }
-        return mypath
     }
 
     function getResourcePathFromString(entry, appId, systemResourceFolder)
@@ -175,8 +165,12 @@ Item {
         }
 
         if (soundClass === "vibrate") {
-            //FIXME: We don't have vibrateNamedEffect implemented yet, so not calling it here.
+            //FIXME: We don't have vibrateNamedEffect implemented yet, so not calling it here, we're using regular vibrate for now
             //luna://com.palm.vibrate/vibrateNamedEffect '{"name":"notifications"}';
+            service.call("luna://com.palm.vibrate/vibrate",
+                         JSON.stringify({"period": 500, "duration": 200}),
+                         undefined,
+                         console.log("Unable to vibrate"));
             return "";
         }
 
@@ -271,12 +265,20 @@ Item {
                 anchors.fill: parent
                 anchors.margins: 0.5*Units.gu(1)
                 spacing: Units.gu(0.8)
+
                 Image {
                     id: freshItemIcon
                     height: parent.height
                     width: parent.height
-                    source: getIconUrlOrDefault(object.iconPath)
                     fillMode: Image.PreserveAspectFit
+
+                    function setSourceIcon(resolvedUrl) {
+                        freshItemIcon.source = resolvedUrl;
+                    }
+
+                    Component.onCompleted: {
+                        iconPathServices.setIconUrlOrDefault(object.iconPath, object.ownerId, setSourceIcon);
+                    }
                 }
                 Text {
                     height: parent.height
