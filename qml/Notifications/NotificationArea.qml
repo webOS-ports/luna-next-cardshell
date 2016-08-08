@@ -44,6 +44,10 @@ Rectangle {
     /* hidden by default as long as we don't any notifications */
     state: "hidden"
 
+    IconPathServices {
+           id: iconPathServices
+    }
+
     NotificationManager {
         id: notificationMgr
     }
@@ -67,7 +71,6 @@ Rectangle {
                 mergedModel.append({"notifType": "notification",
                                     "window": null,
                                     "notifObject": notifObject,
-                                    "iconUrl": notifObject.iconPath,
                                     "notifHeight": dashboardCardFixedHeight});
             }
         }
@@ -112,7 +115,6 @@ Rectangle {
             mergedModel.append({"notifType": "dashboard",
                                 "window": window,
                                 "notifObject": {},
-                                "iconUrl": window.miniIcon ? window.miniIcon : window.appIcon,
                                 "notifHeight": dashHeight});
         }
         onRowsAboutToBeRemoved: {
@@ -143,7 +145,10 @@ Rectangle {
 
             title: notifObject.title
             body: notifObject.body
-            iconUrl: getIconUrlOrDefault(notifObject.iconPath)
+
+            Component.onCompleted: {
+                iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.ownerId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
+            }
 
             onClosed: {
                 notificationMgr.closeById(notifObject.replacesId);
@@ -196,20 +201,6 @@ Rectangle {
         }
     }
 
-    function getIconUrlOrDefault(path) {
-        var mypath = path.toString();
-        if (mypath.length === 0)
-        {
-            return Qt.resolvedUrl("../images/default-app-icon.png");
-        }
-        
-        if(mypath.slice(-1) === "/")
-        {
-            mypath = mypath + "icon.png"
-        }
-        return mypath
-    }
-
     // Minimized view
     Row {
         id: minimizedListView
@@ -229,10 +220,30 @@ Rectangle {
             model: mergedModel
             delegate: Image {
                     id: notifIconImage
-                    source: getIconUrlOrDefault(iconUrl)
-                    height:  minimizedListView.height
+                    height: minimizedListView.height
+                    width: height
                     fillMode: Image.PreserveAspectFit
-                }
+
+                    function setSourceIcon(resolvedUrl) {
+                        notifIconImage.source = resolvedUrl;
+                    }
+
+                    // set the source asynchronously
+                    Component.onCompleted: {
+                        // if it's a dashboard, iconUrl is equal to: getIconUrl(myIconUrl, window.appId),
+                        // if it's a notification, it's simply getIconUrlOrDefault(iconUrl, ownerId, "mergedModel")
+
+                        // so, if it's a window, we need to call setIconUrlFromWindow first
+                        if(model.window) {
+                            iconPathServices.setIconUrlFromWindow(model.window, function(resolvedUrl) {
+                                iconPathServices.setIconUrlOrDefault(resolvedUrl, window.appId, setSourceIcon);
+                            });
+                        } else if(notifObject) {
+                            iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.ownerId, setSourceIcon);
+                        }
+                    }
+
+            }
         }
     }
 
