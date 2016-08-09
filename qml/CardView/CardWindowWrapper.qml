@@ -38,6 +38,8 @@ FocusScope {
     //    * Fullscreen
     property int windowState: WindowState.Carded
 
+    property bool isFullScreenMode: false
+
     // this is the radius that should be applied to the corners of this window container
     property real cornerRadius: 20
     property bool useShaderCorner: true
