@@ -119,8 +119,10 @@ Item {
         if (typeof request.enable !== 'boolean')
             return buildErrorResponse("Invalid or missing boolean parameter 'enable'");
 
-        if (!cardViewInstance.enableFullScreenMode(message.applicationId, request.enable))
-            return buildErrorResponse("Failed to set fullscreen mode for " + message.applicationId);
+        var appId = message.applicationId || message.serviceId;
+
+        if (!cardViewInstance.enableFullScreenMode(appId, request.enable))
+            return buildErrorResponse("Failed to set fullscreen mode for " + appId);
 
         return JSON.stringify({"returnValue":true});
     }

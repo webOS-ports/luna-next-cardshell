@@ -96,7 +96,7 @@ FocusScope {
     RoundedItem {
         id: cornerStaticMask
         anchors.fill: cardWrapperItem
-        visible: !useShaderCorner
+        visible: !useShaderCorner && windowState !== WindowState.Fullscreen
         cornerRadius: cardWrapperItem.cornerRadius
     }
     // Rounded corners (shader version)
