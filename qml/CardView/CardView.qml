@@ -100,7 +100,7 @@ Item {
             else
                 __setToMaximized(lCurrentActiveWindow);
         }
-        else if( state === WindowState.Fullscreen ) {
+        else if( windowState === WindowState.Fullscreen ) {
             if( state !== "fullscreenCard" )
                 windowManagerInstance.switchToFullscreen(lCurrentActiveWindow);
             else
