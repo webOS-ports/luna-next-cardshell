@@ -281,11 +281,12 @@ Item {
                     }
                 }
                 Text {
+                    id: notifTitle
                     height: parent.height
                     width: parent.width - freshItemIcon.width
-                    text: object.title.length>0 ? object.title : object.body
+                    text: object.title.length > 0 ? object.title + ": " + object.body : object.body
                     font.pixelSize: FontUtils.sizeToPixels("small")
-                    font.bold: true
+                    font.bold: false
                     color: "white"
                     elide: Text.ElideRight
                     horizontalAlignment: Text.AlignLeft
