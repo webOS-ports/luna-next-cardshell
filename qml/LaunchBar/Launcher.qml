@@ -150,11 +150,11 @@ Item {
         }
     ]
 
-    function launchApplication(id, params, notification) {
+    function launchApplication(id, params, notification, successCB) {
         console.log("launching app " + id + " with params " + params);
         state = "launchbar";
         lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",
-            JSON.stringify({"id": id, "params": params}), handleLaunchAppSuccess(notification), handleLaunchAppError)
+            JSON.stringify({"id": id, "params": params}), successCB, handleLaunchAppError)
     }
 
     Connections {
@@ -170,12 +170,6 @@ Item {
     function handleLaunchAppError(message) {
         console.log("Could not start application : " + message);
         state = "launchbar";
-    }
-
-    function handleLaunchAppSuccess(notification) {
-        if (typeof notification !== "undefined") {
-            notificationMgr.closeById(notification);
-        }
     }
 
     function expandLauncher() {

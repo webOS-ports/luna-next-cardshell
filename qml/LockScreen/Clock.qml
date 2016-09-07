@@ -18,7 +18,6 @@
 import QtQuick 2.6
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
-import QtQml 2.2
 
 Item {
     id: clockItem
@@ -76,15 +75,13 @@ Item {
 
         onInitialized: {
             probePrefs()
-            timeChanged()
         }
     }
 
-    Item {
+    Row {
         id: clockDigits
         height: Units.gu(8)
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.horizontalCenterOffset: -childrenRect.width / 2
         anchors.top: parent.top
         anchors.topMargin: (parent.height * 0.35) - (clockDigits.height * 2)
         children: [
@@ -92,7 +89,6 @@ Item {
             id: firstImage
             source: firstImageUrl
             visible: (timeFormat === "HH24" && Qt.formatTime(new Date(), "hh:mm").substring(0,1) !== "0") || (timeFormat === "HH12" && Qt.formatTime(new Date(), "hh:mm AP").substring(0,1) !== "0")
-            anchors.left: parent.left
             height: parent.height
             fillMode: Image.PreserveAspectFit
             mipmap: true
@@ -101,7 +97,6 @@ Item {
         Image {
             id: secondImage
             source: secondImageUrl
-            anchors.left: firstImage.visible ? firstImage.right : parent.left
             height: parent.height
             fillMode: Image.PreserveAspectFit
             mipmap: true
@@ -110,7 +105,6 @@ Item {
         Image {
             id: thirdImage
             source: "../images/lockscreen/screen-lock-clock-colon.png" //thirdImageUrl
-            anchors.left: secondImage.right
             height: parent.height
             fillMode: Image.PreserveAspectFit
             mipmap: true
@@ -119,7 +113,6 @@ Item {
         Image {
             id: fourthImage
             source: fourthImageUrl
-            anchors.left: thirdImage.right
             height: parent.height
             fillMode: Image.PreserveAspectFit
             mipmap: true
@@ -128,7 +121,6 @@ Item {
         Image {
             id: fifthImage
             source: fifthImageUrl
-            anchors.left: fourthImage.right
             height: parent.height
             fillMode: Image.PreserveAspectFit
             mipmap: true
