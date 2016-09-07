@@ -20,6 +20,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
 import LunaNext.Compositor 0.1
+import LunaNext.Shell.Notifications 0.1
 
 Item {
     id: launcherItem
@@ -38,6 +39,11 @@ Item {
     }
 
     Keys.forwardTo: [ justTypeFieldInstance, fullLauncherInstance ]
+
+    //Notification Manager
+    NotificationManager {
+        id: notificationMgr
+    }
 
     // JustType field
     JustTypeField {
@@ -144,11 +150,11 @@ Item {
         }
     ]
 
-    function launchApplication(id, params) {
+    function launchApplication(id, params, successCB) {
         console.log("launching app " + id + " with params " + params);
         state = "launchbar";
         lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",
-            JSON.stringify({"id": id, "params": params}), undefined, handleLaunchAppError)
+            JSON.stringify({"id": id, "params": params}), successCB, handleLaunchAppError)
     }
 
     Connections {

@@ -157,7 +157,15 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 onClicked: launcherInstance.launchApplication(notificationItem.notifObject.launchId,
-                                                              notificationItem.notifObject.launchParams);
+                                                              notificationItem.notifObject.launchParams, handleLaunchAppSuccess);
+
+															  
+            }
+
+            function handleLaunchAppSuccess() {
+                if (typeof notifObject.replacesId !== "undefined") {
+                    notificationMgr.closeById(notifObject.replacesId);
+                }
             }
         }
     }
