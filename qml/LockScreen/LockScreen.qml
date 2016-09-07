@@ -76,10 +76,15 @@ Item {
         }
     }
 
+    Clock
+    {
+        id: lockScreenClock
+    }
+
 
     Image {
         anchors.top: parent.top
-        source: "../images/screen-lock-wallpaper-mask-top.png"
+        source: "../images/lockscreen/screen-lock-wallpaper-mask-top.png"
         width: parent.width
         height: Units.gu(11.7)
         mipmap: true
@@ -88,7 +93,7 @@ Item {
 
     Image {
         anchors.bottom: parent.bottom
-        source: "../images/screen-lock-wallpaper-mask-bottom.png"
+        source: "../images/lockscreen/screen-lock-wallpaper-mask-bottom.png"
         width: parent.width
         height: Units.gu(25)
         mipmap: true

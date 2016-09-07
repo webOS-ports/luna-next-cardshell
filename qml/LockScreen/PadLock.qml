@@ -28,7 +28,7 @@ Item {
 
     Image {
         id: targetScrim
-        source: "../images/screen-lock-target-scrim.png"
+        source: "../images/lockscreen/screen-lock-target-scrim.png"
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Settings.tabletUi ? Units.gu(10) : Units.gu(1)
         anchors.horizontalCenter: parent.horizontalCenter
@@ -65,7 +65,7 @@ Item {
 
     Image {
         id: pad
-        source: pad.on ? "../images/screen-lock-padlock-on.png" : "../images/screen-lock-padlock-off.png"
+        source: pad.on ? "../images/lockscreen/screen-lock-padlock-on.png" : "../images/lockscreen/screen-lock-padlock-off.png"
 		height: Units.gu(12)
 		width: Units.gu(12)
         mipmap: true
