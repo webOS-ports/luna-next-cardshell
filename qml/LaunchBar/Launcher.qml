@@ -150,7 +150,7 @@ Item {
         }
     ]
 
-    function launchApplication(id, params, notification, successCB) {
+    function launchApplication(id, params, successCB) {
         console.log("launching app " + id + " with params " + params);
         state = "launchbar";
         lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",

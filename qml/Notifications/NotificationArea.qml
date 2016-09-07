@@ -163,7 +163,6 @@ Rectangle {
             }
 
             function handleLaunchAppSuccess() {
-                console.log("Herrie launchappsuccess")
                 if (typeof notifObject.replacesId !== "undefined") {
                     notificationMgr.closeById(notifObject.replacesId);
                 }
