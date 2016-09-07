@@ -142,9 +142,9 @@ Item {
                                                            "dd-MMM-yyyy h:mm") : Qt.formatDateTime(new Date(),
                                                            "dd-MMM-yyyy h:mm AP")
                     else if (AppTweaks.dateTimeTweakValue === "timeOnly")
-                        titleText.text = timeFormat === "HH24" ? Qt.formatDateTime(new Date(), "h:mm") : Qt.formatDateTime(new Date(), "h:mm AP")
+                        titleText.text = timeFormat === "HH24" ? Qt.formatTime(new Date(), "h:mm") : Qt.formatTime(new Date(), "h:mm AP")
                     else if (AppTweaks.dateTimeTweakValue === "dateOnly")
-                        titleText.text = Qt.formatDateTime(new Date(),
+                        titleText.text = Qt.formatDate(new Date(),
                                                            "dd-MMM-yyyy") 
                 }
 
