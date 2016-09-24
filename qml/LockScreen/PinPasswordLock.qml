@@ -262,7 +262,7 @@ Item {
                  passwordField.setHintText(queuedHint);
                  queuedHint = "";
              }
-         } else if(event.key == Qt.Key_Backspace) {
+         } else if(event.key === Qt.Key_Backspace) {
              passwordField.deleteOne();
          }
     }

@@ -81,8 +81,8 @@ Item {
 
     function setAirplaneModeStatus(newText, state) {
         airplane.modeText = newText;
-        airplane.airplaneOn = ((state == 2) || (state == 3));
-        airplaneModeInProgress = ((state == 1) || (state == 2));
+        airplane.airplaneOn = ((state === 2) || (state === 3));
+        airplaneModeInProgress = ((state === 1) || (state === 2));
 
         if(airplaneModeInProgress) {
             wifi.close();
@@ -313,6 +313,8 @@ Item {
 
                     onItemSelected: {
                         var item = trustedDevices.get(index);
+                        var x = 0;
+                        var entry;
 
                         if (item.connectionStatus === "connected") {
                             // Device is connected so disconnect all profiles it is connected on
@@ -335,9 +337,9 @@ Item {
 
                                 // Update the UI to reflect that there is no longer a pending connection attempt to the old device
                                 // Iterate through the list array to find out the index
-                                for (var x = 0; x < trustedDevices.count; x++) {
+                                for (x = 0; x < trustedDevices.count; x++) {
                                     if (trustedDevices.get(x).deviceAddress !== pendingDevAddress) {
-                                        var entry = trustedDevices.get(x);
+                                        entry = trustedDevices.get(x);
                                         updateBluetoothEntry(entry.deviceName, entry.deviceAddress, entry.deviceCod, "disconnected", entry.isConnected);
                                     }
                                 }
@@ -346,9 +348,9 @@ Item {
                             }
 
                             // Iterate through the list and disconnect the audio profiles
-                            for (var x = 0; x < trustedDevices.count; x++) {
+                            for (x = 0; x < trustedDevices.count; x++) {
                                 if (trustedDevices.get(x).connectionStatus !== "disconnected") {
-                                    var entry = trustedDevices.get(x);
+                                    entry = trustedDevices.get(x);
                                     BluetoothService.disconnectAllBtMenuProfiles(entry.deviceAddress);
                                     pendingDevAddress = item.deviceAddress;
                                     pendingCod = item.deviceCod;

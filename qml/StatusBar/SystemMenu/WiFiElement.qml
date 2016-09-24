@@ -75,31 +75,34 @@ Drawer {
     }
 
     function wifiConnectStateUpdate(connected, ssid, state) {
+        var index = 0;
+        var entry;
+
         if(isWifiOn) {
-            if(ssid != "") {
-                for(var index = 0; index < wifiList.count; index++) {
-                    var entry = wifiList.get(index)
+            if(ssid !== "") {
+                for(index = 0; index < wifiList.count; index++) {
+                    entry = wifiList.get(index)
                     entry.boldStatus = false;
-                    if(entry.wifiName == ssid) {
-                        if(state == "userSelected") {
+                    if(entry.wifiName === ssid) {
+                        if(state === "userSelected") {
                             entry.connectionStatus = "connecting";
                             entry.isConnected = false;
                             entry.itemStatus = runtime.getLocalizedString("Connecting...");
                             entry.showSelected = true;
-                        } else if((state == "associated") || (state == "associating")) {
+                        } else if((state === "associated") || (state === "associating")) {
                             entry.connectionStatus = state;
                             entry.isConnected = false;
                             entry.itemStatus = runtime.getLocalizedString("Connecting...");
-                        } else if((state == "ipFailed") || (state == "associationFailed")) {
+                        } else if((state === "ipFailed") || (state === "associationFailed")) {
                             entry.connectionStatus = state;
                             entry.isConnected = false;
-                            if(state == "ipFailed") {
+                            if(state === "ipFailed") {
                                 entry.itemStatus = runtime.getLocalizedString("IP configuration failed");
                                 entry.boldStatus = true;
                             } else {
                                 entry.itemStatus = runtime.getLocalizedString("Association failed");
                             }
-                        } else if(state == "ipConfigured") {
+                        } else if(state === "ipConfigured") {
                             entry.connectionStatus = state;
                             entry.isConnected = true;
                             entry.itemStatus = "";
@@ -112,7 +115,7 @@ Drawer {
                                 menuCloseRequest(1000);
                                 coloseOnConnect = false;
                             }
-                        } else if(state == "notAssociated") {
+                        } else if(state === "notAssociated") {
                             entry.connectionStatus = "";
                             entry.isConnected = false;
                             entry.itemStatus = "";
@@ -125,8 +128,8 @@ Drawer {
                     }
                 }
             } else if (!connected){
-                for(var index = 0; index < wifiList.count; index++) {
-                    var entry = wifiList.get(index)
+                for(index = 0; index < wifiList.count; index++) {
+                    entry = wifiList.get(index)
                     entry.isConnected = false;
                     entry.boldStatus = false;
                 }

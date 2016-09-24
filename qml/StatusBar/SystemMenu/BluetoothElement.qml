@@ -66,9 +66,9 @@ Drawer {
                               "connectionStatus": connStatus,
                               "isConnected": connected,
                               "listIndex": bluetoothList.count,
-                              "itemStatus": (connStatus != "connecting") ? "" : "Connecting...",
+                              "itemStatus": (connStatus !== "connecting") ? "" : "Connecting...",
                               "showErrorIfConnectFails": (connStatus === "connecting"),
-                              "showSelected":(connStatus == "connecting")
+                              "showSelected":(connStatus === "connecting")
                               })
 
             bluetoothListView.height = (bluetoothOnOff.height + separator.height) * bluetoothList.count
@@ -81,7 +81,7 @@ Drawer {
             var entry = bluetoothList.get(index)
             if(entry.deviceAddress === address) {
 
-                if(bluetoothMenu.isOpen() && (entry.connectionStatus != "connected") && (connectionStatus === "connected") && coloseOnConnect) {
+                if(bluetoothMenu.isOpen() && (entry.connectionStatus !== "connected") && (connectionStatus === "connected") && coloseOnConnect) {
                     // close the menu upon connection
                     menuCloseRequest(350);
                     coloseOnConnect = false;
@@ -90,20 +90,20 @@ Drawer {
                 entry.deviceName       = name;
                 entry.connectionStatus = connectionStatus;
                 entry.isConnected      = connected;
-                entry.showSelected     = (connectionStatus == "connecting");
-                if(cod != 0)
+                entry.showSelected     = (connectionStatus === "connecting");
+                if(cod !== 0)
                     entry.deviceCod = cod;
 
-                if(connectionStatus == "disconnected") {
+                if(connectionStatus === "disconnected") {
                     console.log("##### Device Disconnected: " + entry.deviceName + ". entry.showErrorIfConnectFails = " + entry.showErrorIfConnectFails);
-                    if(entry.showErrorIfConnectFails == true) {
+                    if(entry.showErrorIfConnectFails === true) {
                         // we failed to connect, so notify the user
                         entry.itemStatus = "Unable to connect";
                         resetStatusTimer.stop();
                         resetStatusTimer.interval = 5000;
                         resetStatusTimer.start();
 
-                        if((deviceAddressInError != address) && (deviceAddressInError != "")) {
+                        if((deviceAddressInError !== address) && (deviceAddressInError !== "")) {
                             resetEntryStatus();
                         }
 
@@ -111,13 +111,13 @@ Drawer {
                     } else {
                         entry.itemStatus = "";
                     }
-                } else if(connectionStatus == "connecting") {
+                } else if(connectionStatus === "connecting") {
                     entry.itemStatus = "Connecting...";
                     entry.showErrorIfConnectFails = true;
-                } else if(connectionStatus == "connected") {
+                } else if(connectionStatus === "connected") {
                     entry.itemStatus = "";
                     entry.showErrorIfConnectFails = false;
-                } else if(connectionStatus == "disconnecting") {
+                } else if(connectionStatus === "disconnecting") {
                     entry.itemStatus = "";
                  } else {
                     entry.itemStatus = "";
