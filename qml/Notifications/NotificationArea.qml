@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Christophe Chapuis <chris.chapuis@gmail.com>
+ * Copyright (C) 2014-2016 Christophe Chapuis <chris.chapuis@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -77,7 +77,8 @@ Rectangle {
         onRowsAboutToBeRemoved: {
             var notifObject = notificationModel.get(last);
             for( var i=0; i<mergedModel.count; ++i ) {
-                if( mergedModel.get(i).notifObject && mergedModel.get(i).notifObject === notifObject ) {
+                if( mergedModel.get(i).notifObject &&
+                    mergedModel.get(i).notifObject.replacesId === notifObject.replacesId ) {
                     mergedModel.remove(i);
                     break;
                 }
@@ -114,7 +115,7 @@ Rectangle {
             }
             mergedModel.append({"notifType": "dashboard",
                                 "window": window,
-                                "notifObject": {},
+                                "notifObject": null,
                                 "notifHeight": dashHeight});
         }
         onRowsAboutToBeRemoved: {
@@ -130,6 +131,7 @@ Rectangle {
 
     ListModel {
         id: mergedModel
+        dynamicRoles: true
     }
 
     Component {

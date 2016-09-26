@@ -47,8 +47,8 @@ Drawer {
         vpnList.append({"entryText": name,
                         "connectionStatus": connStatus,
                         "vpnInfo": profInfo,
-                        "isConnected": (connStatus == "connected"),
-                        "showSelected": (connStatus == "connecting"),
+                        "isConnected": (connStatus === "connected"),
+                        "showSelected": (connStatus === "connecting"),
                         "listIndex": vpnList.count})
 
         if(vpnMenu.isOpen() && (connStatus === "connected") && coloseOnConnect) {

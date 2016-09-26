@@ -44,7 +44,7 @@ Item {
     function updateBarValue(newVal, ended) {
         var value = clamp(newVal, 0.0, 1.0);
 
-        if(ended || setValue != value) {
+        if(ended || setValue !== value) {
             setValue = value;
             valueChanged(setValue, ended);
         }
