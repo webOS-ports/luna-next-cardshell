@@ -7,10 +7,13 @@ Item {
     property alias cardItem: cardLoader.item
 
     signal requestDestruction()
-    property bool __destructionRequested: false
 
     VisualItemModel {
         id: visualCardModel
+        Item {
+            width: swipeableRoot.width
+            height: swipeableRoot.height
+        }
         Item {
             width: swipeableRoot.width
             height: swipeableRoot.height
@@ -35,14 +38,47 @@ Item {
 
         orientation: ListView.Vertical
         interactive: true
-        snapMode: ListView.SnapToItem
-        currentIndex: 0
+        currentIndex: 1
         model: visualCardModel
+        boundsBehavior: Flickable.DragOverBounds
 
-        onContentYChanged: {
-            if(contentY>(swipeableRoot.height*0.8) && !dragging && !__destructionRequested) {
-                requestDestruction(); // delete card
-                __destructionRequested = true;
+        SmoothedAnimation {
+            id: swipeoutCard
+            target: myListView
+            property: "contentY"
+            duration: 200
+            to: swipeableRoot.height*2
+            onStopped: requestDestruction(); // delete card
+        }
+        SmoothedAnimation {
+            id: resetCard
+            target: myListView
+            property: "contentY"
+            duration: 100
+            to: swipeableRoot.height
+        }
+
+        onDraggingChanged: {
+            if(!dragging && !swipeoutCard.running) {
+                if(contentY>(swipeableRoot.height*1.5) ||
+                   contentY<(swipeableRoot.height*0.3))
+                {
+                    swipeoutCard.start();
+                }
+                else
+                {
+                    resetCard.start();
+                }
+            }
+        }
+        onFlickingChanged: {
+            if(!flicking && !swipeoutCard.running) {
+                if(verticalVelocity>1000) {
+                    swipeoutCard.start();
+                }
+                else {
+                    resetCard.start();
+                }
             }
         }
     }
