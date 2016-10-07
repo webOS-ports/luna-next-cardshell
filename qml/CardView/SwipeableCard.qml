@@ -58,6 +58,8 @@ Item {
             to: swipeableRoot.height
         }
 
+        onHeightChanged: resetCard.start();
+
         onDraggingChanged: {
             if(!dragging && !swipeoutCard.running) {
                 if(contentY>(swipeableRoot.height*1.5) ||
