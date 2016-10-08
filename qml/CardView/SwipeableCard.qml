@@ -3,17 +3,25 @@ import QtQuick 2.0
 Item {
     id: swipeableRoot
     property Component cardComponent
-    property alias interactive: myListView.interactive
+    property alias interactive: flickableArea.interactive
     property alias cardItem: cardLoader.item
 
     signal requestDestruction()
 
-    VisualItemModel {
-        id: visualCardModel
-        Item {
-            width: swipeableRoot.width
-            height: swipeableRoot.height
-        }
+    Flickable {
+        id: flickableArea
+
+        width: swipeableRoot.width
+        height: swipeableRoot.height
+
+        flickableDirection: Flickable.VerticalFlick
+        interactive: true
+        boundsBehavior: Flickable.DragOverBounds
+        contentHeight: swipeableRoot.height
+        // Put confortable margins on top and bottom of card to enable flicking
+        topMargin: swipeableRoot.height
+        bottomMargin: swipeableRoot.height
+
         Item {
             width: swipeableRoot.width
             height: swipeableRoot.height
@@ -24,62 +32,43 @@ Item {
                 sourceComponent: swipeableRoot.cardComponent
             }
         }
-        Item {
-            width: swipeableRoot.width
-            height: swipeableRoot.height
+
+        // Smooth movement when resetting card position
+        Behavior on contentY {
+            SmoothedAnimation { duration: 100 }
         }
-    }
+        // When nothing special is happening, always have the card centered
+        Binding {
+            when: !flickableArea.moving && !swipeoutCard.running
+            target: flickableArea
+            property: "contentY"
+            value: 0
+        }
 
-    ListView {
-        id: myListView
-
-        width: swipeableRoot.width
-        height: swipeableRoot.height
-
-        orientation: ListView.Vertical
-        interactive: true
-        currentIndex: 1
-        model: visualCardModel
-        boundsBehavior: Flickable.DragOverBounds
-
+        // handling of card swipe-out, either by drag or by flick
         SmoothedAnimation {
             id: swipeoutCard
-            target: myListView
+            target: flickableArea
             property: "contentY"
             duration: 200
-            to: swipeableRoot.height*2
+            to: swipeableRoot.height
             onStopped: requestDestruction(); // delete card
         }
-        SmoothedAnimation {
-            id: resetCard
-            target: myListView
-            property: "contentY"
-            duration: 100
-            to: swipeableRoot.height
-        }
-
-        onHeightChanged: resetCard.start();
 
         onDraggingChanged: {
             if(!dragging && !swipeoutCard.running) {
-                if(contentY>(swipeableRoot.height*1.5) ||
-                   contentY<(swipeableRoot.height*0.3))
+                if(contentY>(swipeableRoot.height*0.5) ||
+                   contentY<(-swipeableRoot.height*0.7))
                 {
                     swipeoutCard.start();
-                }
-                else
-                {
-                    resetCard.start();
                 }
             }
         }
         onFlickingChanged: {
-            if(!flicking && !swipeoutCard.running) {
-                if(verticalVelocity>1000) {
+            if(flicking && !swipeoutCard.running) {
+                if(verticalVelocity>1000)
+                {
                     swipeoutCard.start();
-                }
-                else {
-                    resetCard.start();
                 }
             }
         }
