@@ -70,6 +70,10 @@ Item {
                 {
                     swipeoutCard.start();
                 }
+                else if(verticalVelocity<0)
+                {
+                    contentY = 0;
+                }
             }
         }
     }
