@@ -49,9 +49,9 @@ Item {
     onFullWidthChanged: if( windowUserData ) windowUserData.syncClientWindowSize();
 
     Component.onCompleted: {
-        y = cardY;
-        height = cardHeight;
-        width = cardWidth;
+        y = Qt.binding( function() { return cardY; } );
+        height = Qt.binding( function() { return cardHeight; } );
+        width = Qt.binding( function() { return cardWidth; } );
     }
 
     onAnchorWindowUserDataChanged: {
