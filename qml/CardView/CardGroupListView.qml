@@ -125,14 +125,16 @@ Item {
         anchors.fill: parent
        // enabled: cardGroupListViewItem.interactiveList
         property bool interactive: cardGroupListViewItem.interactiveList
+        property real _initialCardSpread: 0.1
         onPinchStarted: {
             if(!interactive) return false;
+            _initialCardSpread = internalListView.currentItem.cardSpread;
         }
         onPinchFinished: {}
         onPinchUpdated: {
             if(interactive) {
-                var newCardSpread = internalListView.currentItem.cardSpread*pinch.scale;
-                internalListView.currentItem.cardSpread = Math.max(0.02, Math.min(0.3, newCardSpread));
+                var newCardSpread = _initialCardSpread*pinch.scale;
+                internalListView.currentItem.cardSpread = Math.max(0.1, Math.min(0.6, newCardSpread));
             }
         }
 
