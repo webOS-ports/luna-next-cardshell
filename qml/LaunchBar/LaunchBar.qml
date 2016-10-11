@@ -255,15 +255,18 @@ Item {
             if(Settings.tabletUi)
             {
                 launcherListModel.model.append({appId: "org.webosports.app.browser",   icon: "/usr/palm/applications/org.webosports.app.browser/icon.png"});
+                launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
+                launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/icon-256x256.png"});
+                launcherListModel.model.append({appId: "org.webosports.app.messaging", icon: "/usr/palm/applications/org.webosports.app.messaging/icon.png"});
+                launcherListModel.model.append({appId: "org.webosports.app.memos",   icon: "/usr/palm/applications/org.webosports.app.memos/icon.png"});
             }
             else
             {
                 launcherListModel.model.append({appId: "org.webosports.app.phone",   icon: "/usr/palm/applications/org.webosports.app.phone/icon.png"});
+                launcherListModel.model.append({appId: "org.webosports.app.messaging", icon: "/usr/palm/applications/org.webosports.app.messaging/icon.png"});
+                launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
+                launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/icon-256x256.png"});
             }
-            launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
-            launcherListModel.model.append({appId: "org.webosinternals.preware", icon: "/usr/palm/applications/org.webosinternals.preware/icon.png"});
-            launcherListModel.model.append({appId: "org.webosports.app.memos",   icon: "/usr/palm/applications/org.webosports.app.memos/icon.png"});
-
         }
     }
     function saveCurrentLayout() {
