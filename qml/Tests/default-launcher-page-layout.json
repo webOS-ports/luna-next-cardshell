@@ -2,28 +2,26 @@
     {
         "title" : "apps",
         "items" : [
-            "com.palm.app.browser_default",
+            "org.webosports.app.browser_default",
             "com.palm.app.email_default",
             "com.palm.app.calendar_default",
-            "com.palm.app.messaging_default",
-            "com.palm.app.notes_default",
-            "com.quickoffice.webos_default",
-            "com.quickoffice.ar_default",
-            "com.palm.app.maps_default",
-            "com.palm.app.contacts_default",
-            "com.palm.app.phone_default",
+            "org.webosports.app.messaging_default",
+            "org.webosports.app.memos_default",
+            "org.webosports.app.maps_default",
+            "org.webosports.app.contacts_default",
+            "org.webosports.app.phone_default",
             "com.palm.app.musicplayer_default",
             "com.palm.app.photos_default",
             "com.palm.app.enyo-facebook_default",
- 			"com.palm.app.youtube_default",
-			"com.palm.app.kindle_default",
-			"com.palm.app.amazonmp3_default"
+            "com.palm.app.youtube_default",
+            "com.palm.app.kindle_default",
+            "com.palm.app.amazonmp3_default"
         ] 
     },
     {
         "title" : "downloads",
         "items" : [
-            "com.palm.app.enyo-findapps_default"
+            "org.webosinternals.preware_default"
         ] 
     },
     {
@@ -41,6 +39,12 @@
             "com.palm.app.printmanager_default",
             "com.palm.app.languagepicker_default",
             "com.palm.app.screenlock_default",
+            "org.webosports.app.settings_default",
+            "org.webosinternals.tweaks_default",
+            "org.webosports.cdav.app_default",
+            "org.webosports.app.testr_default",
+            "sdl2_opengles1_test_default",
+            "sdl2_opengles2_test_default",
             "com.palm.app.swmanager_default",
             "com.palm.app.soundsandalerts_default",
             "com.palm.app.updates_default",
