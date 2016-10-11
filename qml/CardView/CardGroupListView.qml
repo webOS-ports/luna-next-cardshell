@@ -143,8 +143,9 @@ Item {
 
             anchors.fill: parent
 
-            preferredHighlightBegin: width/2-cardGroupListViewItem.cardWindowWidth/2
-            preferredHighlightEnd: width/2+cardGroupListViewItem.cardWindowWidth/2
+            property real currentItemWidth: currentItem ? currentItem.width : 0
+            preferredHighlightBegin: width/2-currentItemWidth/2
+            preferredHighlightEnd: width/2+currentItemWidth/2
             highlightRangeMode: ListView.StrictlyEnforceRange
             highlightFollowsCurrentItem: true
             highlightMoveDuration: 0
