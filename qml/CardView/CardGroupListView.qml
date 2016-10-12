@@ -36,13 +36,13 @@ Item {
     property real cardWindowWidth: width*cardScale
     property real cardWindowHeight: height*cardScale
 
-    property Item cardView
-
     property bool interactiveList: true
+    property bool isCardedViewActive: false
 
     signal cardRemove(Item window);
     signal cardSelect(Item window);
     signal cardDragStart(Item window);
+    signal currentCardChanged();
 
     focus: true
     Component.onCompleted: updateKeysForwardTo(false)
@@ -83,7 +83,17 @@ Item {
             cardGroupListViewInstance: cardGroupListViewItem
             cardGroupModel: listCardGroupsModel
             groupModel: windowList
-            cardSpread: ListView.isCurrentItem ? spreadRatio : 0.05
+            cardSpread: {
+                if(ListView.isCurrentItem) {
+                    if(cardGroupListViewItem.isCardedViewActive) {
+                        return spreadRatio; // fetch ratio from card group model
+                    } else {
+                        return 0; // current card is maximized or fullscreen
+                    }
+                } else {
+                    return 0.05; // default spreading when group isn't the current one
+                }
+            }
 
             delegateIsCurrent: ListView.isCurrentItem
 
@@ -128,16 +138,13 @@ Item {
         property real _initialCardSpread: 0.1
         onPinchStarted: {
             if(!interactive) return false;
-            _initialCardSpread = internalListView.currentItem.cardSpread;
+            _initialCardSpread = listCardGroupsModel.get(internalListView.currentIndex).spreadRatio;
         }
-        onPinchFinished: {
-            // commit value to model
-            listCardGroupsModel.get(internalListView.currentIndex).spreadRatio = internalListView.currentItem.cardSpread;
-        }
+        onPinchFinished: {}
         onPinchUpdated: {
             if(interactive) {
                 var newCardSpread = _initialCardSpread*pinch.scale;
-                internalListView.currentItem.cardSpread = Math.max(0.1, Math.min(0.6, newCardSpread));
+                listCardGroupsModel.get(internalListView.currentIndex).spreadRatio = Math.max(0.1, Math.min(0.6, newCardSpread));
             }
         }
 
@@ -161,8 +168,8 @@ Item {
             interactive: cardGroupListViewItem.interactiveList
 
             onCurrentIndexChanged: {
-                if( cardView && internalListView.currentIndex>=0 )
-                    cardView.currentCardChanged(currentActiveWindow())
+                if( internalListView.currentIndex>=0 )
+                    cardGroupListViewItem.currentCardChanged()
             }
 
             function delayedCardSelect(windowToSelect) {
@@ -183,7 +190,7 @@ Item {
             }
 
             Keys.onPressed: {
-                if (cardView.state === "cardList") {
+                if (cardGroupListViewItem.isCardedViewActive) {
                     if (event.key === Qt.Key_Left) {
                         event.accepted = true;
                         // cycle between stacks of cards

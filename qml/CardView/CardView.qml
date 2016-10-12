@@ -19,10 +19,7 @@ Item {
 
     property real cornerRadius: 20
 
-    signal currentCardChanged(Item currentCard);
-    onCurrentCardChanged: {
-        if( cardViewItem.keepCurrentCardMaximized ) setCurrentCardState(WindowState.Maximized);
-    }
+    signal currentCardChanged();
 
     focus: true
     Keys.forwardTo: cardGroupListViewInstance
@@ -40,9 +37,9 @@ Item {
     CardGroupListView {
         id: cardGroupListViewInstance
 
-        cardView: cardViewItem
         anchors.fill: cardViewItem
         maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin
+        isCardedViewActive: cardViewItem.state === "cardList"
 
         onCardRemove: cardViewItem.removeCard(window);
         onCardSelect: {
@@ -53,6 +50,10 @@ Item {
             else {
                 setCurrentCardState(WindowState.Maximized);
             }
+        }
+        onCurrentCardChanged: {
+            if( cardViewItem.keepCurrentCardMaximized ) setCurrentCardState(WindowState.Maximized);
+            cardViewItem.currentCardChanged();
         }
     }
 
