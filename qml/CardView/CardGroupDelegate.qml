@@ -116,49 +116,6 @@ Item {
         return cardGroupDelegateItem.childAt(x, y);
     }
 
-/* second attempt: conflicts with vertical flicking of a card
-    MultiPointTouchArea {
-        anchors.fill: parent
-        enabled: delegateIsCurrent && cardGroupListViewInstance.interactiveList
-        touchPoints: [
-            TouchPoint { id: touchPoint1 },
-            TouchPoint { id: touchPoint2 }
-        ]
-        minimumTouchPoints: 2
-        maximumTouchPoints: 2
-        mouseEnabled: false
-        onUpdated: {
-            var previousDistance  = (touchPoint1.previousX-touchPoint2.previousX)*(touchPoint1.previousX-touchPoint2.previousX) + (touchPoint1.previousY-touchPoint2.previousY)*(touchPoint1.previousY-touchPoint2.previousY);
-            var currentDistance  = (touchPoint1.x-touchPoint2.x)*(touchPoint1.x-touchPoint2.x) + (touchPoint1.y-touchPoint2.y)*(touchPoint1.y-touchPoint2.y);
-            var scaling = Math.sqrt(currentDistance/previousDistance);
-            var newCardSpread = cardSpread*scaling;
-            console.log("previousDistance: "+previousDistance+", currentDistance: "+currentDistance+", scaling:"+scaling+", newCardSpread:"+newCardSpread);
-            cardSpread = Math.max(0.02, Math.min(0.3, newCardSpread));
-        }
-    }
-*/
-    /* first attempt
-    PinchArea {
-        anchors.fill: parent
-        enabled: delegateIsCurrent && cardGroupListViewInstance.interactiveList
-        pinch {
-            target: groupPathViewGroupCards
-            minimumScale: 0.2
-            maximumScale: 3.0
-            dragAxis: Pinch.NoDrag
-            minimumRotation: 0
-            maximumRotation: 0
-        }
-//        onPinchFinished: {}
-//        onPinchStarted: {}
-//        onPinchUpdated: {
-//            log.text += "PinchArea onPinchUpdated" + "\n"
-//            var newCardSpread = cardSpread*pinch.scale;
-//            cardSpread = Math.max(0.02, Math.min(0.3, newCardSpread));
-        }
-    }
-    */
-
     Repeater {
         id: groupPathViewGroupCards
         model: groupDataModel
