@@ -83,11 +83,11 @@ Item {
             cardGroupListViewInstance: cardGroupListViewItem
             cardGroupModel: listCardGroupsModel
             groupModel: windowList
+            cardSpread: ListView.isCurrentItem ? spreadRatio : 0.05
 
             delegateIsCurrent: ListView.isCurrentItem
 
             y: 0
-
             z: ListView.isCurrentItem ? 1 : 0
 
             onCardSelect: {
@@ -130,7 +130,10 @@ Item {
             if(!interactive) return false;
             _initialCardSpread = internalListView.currentItem.cardSpread;
         }
-        onPinchFinished: {}
+        onPinchFinished: {
+            // commit value to model
+            listCardGroupsModel.get(internalListView.currentIndex).spreadRatio = internalListView.currentItem.cardSpread;
+        }
         onPinchUpdated: {
             if(interactive) {
                 var newCardSpread = _initialCardSpread*pinch.scale;
