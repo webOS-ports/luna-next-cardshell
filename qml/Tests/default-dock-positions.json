@@ -1,0 +1,21 @@
+[
+	{
+		"type": "tablet",
+		"items": [
+				"org.webosports.app.browser_default",
+				"com.palm.app.email_default",
+				"com.palm.app.calendar_default",
+				"org.webosports.app.messaging_default",
+				"org.webosports.app.memos_default" 
+			]
+	},
+	{
+		"type": "phone",
+		"items": [
+			"org.webosports.app.phone_default",
+			"org.webosports.app.messaging_default",
+			"com.palm.app.email_default",
+			"com.palm.app.calendar_default"
+		]
+	}
+]

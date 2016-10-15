@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
- * Copyright (C) 2014 Herman van Hazendonk <github.com@herrie.org>
+ * Copyright (C) 2014-2016 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,15 @@ import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 
+import "../LunaSysAPI" as LunaSysAPI
+
 Item {
     id: launchBarItem
+
+
+    property ListModel appsModel: LunaSysAPI.ApplicationModel {
+        Component.onCompleted: appsModel.appsModelRefreshed.connect(refreshConfig);
+    }
 
     signal startLaunchApplication(string appId, string appParams)
     signal toggleLauncherDisplay
@@ -251,12 +258,13 @@ Item {
         }
         else {
             //fallback to static filling
-            //First icon is depending on Settings.tabletUi, which we check and we'll populate the list accordingly
+
+            //Icons are depending on Settings.tabletUi, which we check and we'll populate the list accordingly
             if(Settings.tabletUi)
             {
                 launcherListModel.model.append({appId: "org.webosports.app.browser",   icon: "/usr/palm/applications/org.webosports.app.browser/icon.png"});
                 launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
-                launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/icon-256x256.png"});
+                launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/launcher/icon-"+Qt.formatDate(new Date, "d")+".png"});
                 launcherListModel.model.append({appId: "org.webosports.app.messaging", icon: "/usr/palm/applications/org.webosports.app.messaging/icon.png"});
                 launcherListModel.model.append({appId: "org.webosports.app.memos",   icon: "/usr/palm/applications/org.webosports.app.memos/icon.png"});
             }
@@ -265,7 +273,7 @@ Item {
                 launcherListModel.model.append({appId: "org.webosports.app.phone",   icon: "/usr/palm/applications/org.webosports.app.phone/icon.png"});
                 launcherListModel.model.append({appId: "org.webosports.app.messaging", icon: "/usr/palm/applications/org.webosports.app.messaging/icon.png"});
                 launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
-                launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/icon-256x256.png"});
+                launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/launcher/icon-"+Qt.formatDate(new Date, "d")+".png"});
             }
         }
     }
@@ -293,20 +301,63 @@ Item {
 
     Component.onCompleted: {
         // fill the listModel statically
+        // Read the default dock positions configuation file
+        var xhr = new XMLHttpRequest;
+        if( !Settings.isTestEnvironment ) {
+            xhr.open("GET", Qt.resolvedUrl("/etc/palm/default-dock-positions.json"));
+        }
+        else {
+            xhr.open("GET", Qt.resolvedUrl("../Tests/default-dock-positions.json"));
+        }
+        xhr.onreadystatechange = function() {
+            if( xhr.readyState === XMLHttpRequest.DONE ) {
+                var launchBarConfig = JSON.parse(xhr.responseText);
+                _defaultLaunchBarConfig = [];
+
+                var iItem;
+                var deviceType = Settings.tabletUi ? "tablet" : "phone";
+                for ( var iType in launchBarConfig){
+                    if(launchBarConfig[iType].type === deviceType)
+                    {
+                        for( iItem in launchBarConfig[iType].items ) {
+                            _defaultLaunchBarConfig.push(launchBarConfig[iType].items[iItem]);
+                        }
+                    }
+                }
+                refreshConfig();
+            }
+        }
+        xhr.send();
+        // Read the db8 configuration: the db schema the following:
+        // appId: string
         if( !Settings.isTestEnvironment ) {
             __queryDB("find",
-                      {query:{from:"org.webosports.lunalauncher:1",
-                              limit:8,
-                              orderBy: "pos", desc: false}},
+                      {query:{from:"org.webosports.lunalauncher:1", orderBy: "pos", asc: true, limit:5}},
                       __quickLaunchBarDBResult);
         }
-        else
-        {
-            launcherListModel.model.append({appId: "org.webosports.tests.dummyWindow",          icon: Qt.resolvedUrl("../Tests/images/test-app-icon.png")});
-            launcherListModel.model.append({appId: "org.webosports.tests.fakeDashboardWindow",  icon: Qt.resolvedUrl("../Tests/images/dashboard-app-icon.png")});
-            launcherListModel.model.append({appId: "org.webosports.tests.fakePopupAlertWindow", icon: Qt.resolvedUrl("../Tests/images/alert-app-icon.png")});
-            launcherListModel.model.append({appId: "org.webosports.tests.dummyWindow2",          icon: Qt.resolvedUrl("../Tests/images/test2-app-icon.png")});
-        }
         launcherRow.visible = true;
+    }
+    property var _defaultLaunchBarConfig: []
+
+    // refreshes the quick launcher configuration
+    function refreshConfig() {
+        // for all the apps from appsModel, use their icon so we always have an up-2-date icons
+        launcherListModel.model.clear();
+        var unsortedAppsArray = [];
+        var nbApps = appsModel.count;
+        for( var i = 0; i < nbApps; ++i ) {
+            var appObj = appsModel.get(i);
+            if(_defaultLaunchBarConfig.indexOf(appObj.id+"_default") !== -1)
+            {
+                unsortedAppsArray.push({pos: _defaultLaunchBarConfig.indexOf(appObj.id+"_default"), appId: appObj.id, icon: appObj.icon});
+            }
+        }
+
+        //Sort the apps
+        unsortedAppsArray.sort(function(a,b){ return a.pos - b.pos; });
+        // fill the model
+        for( var j = 0; j < unsortedAppsArray.length; ++j ) {
+            launcherListModel.model.append({appId: unsortedAppsArray[j].appId, icon: unsortedAppsArray[j].icon});
+        }
     }
 }
