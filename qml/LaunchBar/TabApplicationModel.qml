@@ -10,6 +10,7 @@ ListModel {
     property ListModel appsModel: LunaSysAPI.ApplicationModel {
         Component.onCompleted: appsModel.appsModelRefreshed.connect(refreshConfig);
     }
+
     property string launcherTab
     property bool isDefaultTab: false
 

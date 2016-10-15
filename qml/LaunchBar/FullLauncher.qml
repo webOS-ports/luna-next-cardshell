@@ -295,10 +295,7 @@ Item {
         }
     }
 
-
-    LunaSysAPI.ApplicationModel {
-        id: commonAppsModel
-    }
+    property ListModel commonAppsModel
 
     ListView {
         id: tabContentList
@@ -345,6 +342,11 @@ Item {
                     appsModel: commonAppsModel // one app model for all tab models
                     launcherTab: tabContentItem.tabId
                     isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
+                }
+
+                Connections {
+                    target: commonAppsModel
+                    onAppsModelRefreshed: gridTabModel.refreshConfig();
                 }
 
                 delegate: DraggableAppIcon {

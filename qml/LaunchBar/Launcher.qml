@@ -22,6 +22,8 @@ import LuneOS.Service 1.0
 import LunaNext.Compositor 0.1
 import LunaNext.Shell.Notifications 0.1
 
+import "../LunaSysAPI" as LunaSysAPI
+
 Item {
     id: launcherItem
 
@@ -31,6 +33,8 @@ Item {
 
     property bool launcherActive: state === "fullLauncher" || state === "justTypeLauncher"
     property bool justTypeLauncherActive: state === "justTypeLauncher"
+
+    property ListModel appsModel: LunaSysAPI.ApplicationModel {}
 
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
@@ -73,6 +77,7 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
+        commonAppsModel: launcherItem.appsModel
     }
 
     // bottom area: launcher bar
@@ -82,6 +87,7 @@ Item {
         height: Units.gu(8);
         anchors.left: parent.left
         anchors.right: parent.right
+        appsModel: launcherItem.appsModel
 
         onToggleLauncherDisplay: {
             if( launcherItem.state === "launchbar" ) {
