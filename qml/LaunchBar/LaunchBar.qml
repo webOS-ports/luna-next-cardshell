@@ -29,8 +29,11 @@ Item {
     id: launchBarItem
 
 
-    property ListModel appsModel: LunaSysAPI.ApplicationModel {
-        Component.onCompleted: appsModel.appsModelRefreshed.connect(refreshConfig);
+    property ListModel appsModel
+
+    Connections {
+        target: appsModel
+        onAppsModelRefreshed: launchBarItem.refreshConfig();
     }
 
     signal startLaunchApplication(string appId, string appParams)
