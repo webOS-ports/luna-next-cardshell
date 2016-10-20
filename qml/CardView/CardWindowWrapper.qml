@@ -60,7 +60,10 @@ FocusScope {
     }
 
     function windowVisibleChanged() {
-        splash.state = wrappedWindow.mapped ? "hidden" : "visible"
+        if(wrappedWindow.mapped) {
+            splash.state = "hidden";
+            wrappedWindow.mappedChanged.disconnect(windowVisibleChanged);
+        }
     }
 
     // A simple container, to facilite the wrapping
