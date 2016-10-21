@@ -39,7 +39,7 @@ Item {
         }
         // When nothing special is happening, always have the card centered
         Binding {
-            when: !flickableArea.moving && !swipeoutCard.running
+            when: !flickableArea.moving && !swipeoutCard.triggered
             target: flickableArea
             property: "contentY"
             value: 0
@@ -53,6 +53,13 @@ Item {
             duration: 200
             to: swipeableRoot.height
             onStopped: requestDestruction(); // delete card
+
+            property bool triggered: false
+
+            function swipeOut() {
+                triggered = true;
+                start();
+            }
         }
 
         onDraggingChanged: {
@@ -60,7 +67,7 @@ Item {
                 if(contentY>(swipeableRoot.height*0.5) ||
                    contentY<(-swipeableRoot.height*0.7))
                 {
-                    swipeoutCard.start();
+                    swipeoutCard.swipeOut();
                 }
             }
         }
@@ -68,7 +75,7 @@ Item {
             if(flicking && !swipeoutCard.running) {
                 if(verticalVelocity>1000)
                 {
-                    swipeoutCard.start();
+                    swipeoutCard.swipeOut();
                 }
                 else if(verticalVelocity<0)
                 {
