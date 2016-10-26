@@ -335,7 +335,7 @@ Item {
         // appId: string
         if( !Settings.isTestEnvironment ) {
             __queryDB("find",
-                      {query:{from:"org.webosports.lunalauncher:1", orderBy: "pos", asc: true, limit:5}},
+                      {query:{from:"org.webosports.lunalauncher:1", orderBy: "pos", limit:5}},
                       __quickLaunchBarDBResult);
         }
         launcherRow.visible = true;
