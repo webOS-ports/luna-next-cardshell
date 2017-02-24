@@ -25,6 +25,7 @@ Item {
     property string title: "(no title)"
     property string body: "(no summary)"
     property url iconUrl: Qt.resolvedUrl("../images/default-app-icon.png");
+    property string bgColor: Settings.tabletUi? "transparent" : "#393939";
 
     Rectangle {
         id: iconBox
@@ -32,7 +33,7 @@ Item {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        color: "#393939"
+        color: bgColor
         radius: 8
 
         Image {
@@ -53,7 +54,7 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        color: "#393939"
+        color: bgColor
         radius: 8
 
         Text {
