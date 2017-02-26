@@ -45,170 +45,11 @@ Rectangle {
     state: "hidden"
 
     IconPathServices {
-           id: iconPathServices
+        id: iconPathServices
     }
 
-    NotificationManager {
-        id: notificationMgr
-    }
-
-    NotificationListModel {
-        id: notificationModel
-
-        // the signal itemAdded is declared in C++, without a qmltype declaration,
-        // so QML isn't able to guess the name of the signal argument.
-        onItemAdded: {
-            var notifObject = arguments[0];
-
-            var createStickyNotification = ( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 );
-
-            // Banner in all cases
-            bannerItemsPopups.popupModel.append({"object" : notifObject, "sticky": createStickyNotification});
-
-            // If the notification's duration is long enough, also add it to the notification list
-            if( createStickyNotification ) {
-                // Sticky notification
-                mergedModel.append({"notifType": "notification",
-                                    "window": null,
-                                    "notifObject": notifObject,
-                                    "notifHeight": dashboardCardFixedHeight});
-            }
-        }
-        onRowsAboutToBeRemoved: {
-            var notifObject = notificationModel.get(last);
-            for( var i=0; i<mergedModel.count; ++i ) {
-                if( mergedModel.get(i).notifObject &&
-                    mergedModel.get(i).notifObject.replacesId === notifObject.replacesId ) {
-                    mergedModel.remove(i);
-                    break;
-                }
-            }
-        }
-    }
-    WindowModel {
-        id: listDashboardsModel
-        windowTypeFilter: WindowType.Dashboard
-
-        onRowsInserted: {
-            var window = listDashboardsModel.getByIndex(last);
-            window.visible = false;
-
-            // Handle dashboards with custom height
-            var dashHeight = 0;
-            if( window.windowProperties && window.windowProperties.hasOwnProperty("LuneOS_dashheight") )
-            {
-                //If the provide it in GridUnits we need to make sure we deal with it properly.
-                if( window.windowProperties.hasOwnProperty("LuneOS_metrics") && window.windowProperties["LuneOS_metrics"]==="units")
-                {
-                    dashHeight = Units.gu(window.windowProperties["LuneOS_dashheight"]);
-                }
-                //Provided in normal pixels, convert to device pixels
-                else
-                {
-                    dashHeight = Units.length(window.windowProperties["LuneOS_dashheight"]);
-                }
-            }
-            if( dashHeight<=0 ) dashHeight = dashboardCardFixedHeight;
-
-            if( notificationArea.state === "hidden" || notificationArea.state == "open" ) {
-                notificationArea.state = "minimized";
-            }
-            mergedModel.append({"notifType": "dashboard",
-                                "window": window,
-                                "notifObject": null,
-                                "notifHeight": dashHeight});
-        }
-        onRowsAboutToBeRemoved: {
-            var window = listDashboardsModel.getByIndex(last);
-            for( var i=0; i<mergedModel.count; ++i ) {
-                if( mergedModel.get(i).window && mergedModel.get(i).window === window ) {
-                    mergedModel.remove(i);
-                    break;
-                }
-            }
-        }
-    }
-
-    ListModel {
+    NotificationsMergedModel {
         id: mergedModel
-        dynamicRoles: true
-    }
-
-    Component {
-        id: notificationItemDelegate
-
-        NotificationItem {
-            id: notificationItem
-
-            property var notifObject: loaderNotifObject;
-
-            signal clicked()
-            signal closed(int notifIndex)
-
-            title: notifObject.title
-            body: notifObject.body
-
-            Component.onCompleted: {
-                iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.ownerId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
-            }
-
-            onClosed: {
-                notificationMgr.closeById(notifObject.replacesId);
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: launcherInstance.launchApplication(notificationItem.notifObject.launchId,
-                                                              notificationItem.notifObject.launchParams, handleLaunchAppSuccess);
-
-															  
-            }
-
-            function handleLaunchAppSuccess() {
-                if (typeof notifObject.replacesId !== "undefined") {
-                    notificationMgr.closeById(notifObject.replacesId);
-                }
-            }
-        }
-    }
-    Component {
-        id: dashboardDelegate
-
-        Item {
-            id: dashboardItem
-
-            property Item dashboardWindow: loaderWindow;
-
-            signal clicked()
-            signal closed(int notifIndex)
-
-            onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
-
-            children: [ dashboardWindow ]
-
-            Component.onCompleted: {
-                if( dashboardWindow ) {
-                    dashboardWindow.parent = dashboardItem;
-
-                    /* This resizes only the quick item which contains the child surface but
-                                             * doesn't really resize the client window */
-                    dashboardWindow.anchors.fill = dashboardItem;
-                    dashboardWindow.visible = true;
-
-                    /* Resize the real client window to have the right size */
-                    dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
-                }
-            }
-            Component.onDestruction: {
-                if( dashboardWindow ) dashboardWindow.visible = false;
-            }
-
-            onClosed: {
-                dashboardWindow.visible = false;
-                compositorInstance.closeWindowWithId(dashboardWindow.winId); // this will take care of removing the card from mergedModel
-                dashboardWindow = null;
-            }
-        }
     }
 
     // Minimized view
@@ -314,9 +155,13 @@ Rectangle {
                         width: slidingNotificationArea.width
                         height: slidingNotificationArea.delegateHeight
 
-                        sourceComponent: slidingNotificationArea.delegateType === "notification" ? notificationItemDelegate : dashboardDelegate
+                        sourceComponent: slidingNotificationArea.delegateType === "notification" ?
+                                             mergedModel.notificationItemDelegate :
+                                             mergedModel.dashboardDelegate
+
                         property var loaderNotifObject: slidingNotificationArea.delegateNotifObject
                         property Item loaderWindow: slidingNotificationArea.delegateWindow
+                        property QtObject loaderCompositorInstance: compositorInstance
 
                         signal closed()
                         onClosed: {
@@ -392,33 +237,4 @@ Rectangle {
             PropertyChanges { target: notificationArea; height: openListView.height+Units.gu(1) }
         }
     ]
-
-    // have an object that surveys the count of notifications and notify the display if something interesting happens
-    QtObject {
-        property int count: mergedModel.count
-        onCountChanged: {
-            if (count === 0 && __previousCount !== 0) {
-                // notify the display
-                displayService.call("luna://com.palm.display/control/alert",
-                                    JSON.stringify({"status": "banner-deactivated"}), undefined, onDisplayControlError)
-            }
-            else if (count !== 0 && __previousCount === 0){
-                // notify the display
-                displayService.call("luna://com.palm.display/control/alert",
-                                    JSON.stringify({"status": "banner-activated"}), undefined, onDisplayControlError)
-            }
-
-            __previousCount = count;
-        }
-        function onDisplayControlError(message) {
-            console.log("Failed to call display service: " + message);
-        }
-        property int __previousCount: 0
-    }
-    LunaService {
-        id: displayService
-
-        name: "org.webosports.luna"
-        usePrivateBus: true
-    }
 }
