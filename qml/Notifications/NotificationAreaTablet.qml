@@ -43,7 +43,6 @@ Rectangle {
 
     signal clicked;
 
-    height: 0
     color: "transparent"
     /* hidden by default as long as we don't any notifications */
     state: "hidden"
@@ -369,7 +368,6 @@ Rectangle {
             when: (bannerItemsPopups.popupModel.count + mergedModel.count) === 0
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationArea; height: 0 }
         },
         State {
             name: "banner"
