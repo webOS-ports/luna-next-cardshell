@@ -26,9 +26,6 @@ import "Indicators"
 Row {
     id: indicatorsRow
 
-    anchors.margins: Units.gu(1) / 2
-    spacing: Units.gu(1) / 2
-
     BatteryService {
         id: batteryService
     }
@@ -137,14 +134,5 @@ Row {
         percentage: batteryService.percentage
 
         enabled: !batteryService.error
-    }
-
-    Image {
-        id: systemMenuArrow
-        source: "../images/statusbar/menu-arrow.png"
-        anchors.verticalCenter: parent.verticalCenter
-        height: Units.gu(2.6)
-        width: Units.gu(1.5)
-        mipmap: true
     }
 }

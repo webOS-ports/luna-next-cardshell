@@ -15,13 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
 import QtQml.Models 2.1
 
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 import LunaNext.Shell.Notifications 0.1
 import LuneOS.Service 1.0
+import LunaNext.Shell 0.1
 
 import "../Utils"
 
@@ -37,10 +38,12 @@ Rectangle {
     property Item windowManagerInstance
     property int maxDashboardWindowHeight: parent.height/2
     readonly property int dashboardCardFixedHeight: Units.gu(5.6) // this value comes from the CSS of the dashboard cards
-    readonly property int bannerNotificationFixedHeight: Units.gu(2.4) // this value comes from the CSS of the banner
+    readonly property Item boundingRect: visibleMinimizedView
+    property bool blackMode: false
 
-    height: 0
-    color: "black"
+    signal clicked;
+
+    color: "transparent"
     /* hidden by default as long as we don't any notifications */
     state: "hidden"
 
@@ -52,26 +55,72 @@ Rectangle {
         id: mergedModel
     }
 
+    Item {
+        id: visibleMinimizedView
+        anchors.right: minimizedListView.right
+        anchors.top: minimizedListView.top
+        anchors.bottom: minimizedListView.bottom
+        width: minimizedListView.visible? minimizedListView.width+statusBarSeparator.width : 0;
+    }
+
+    Image {
+        id: statusBarSeparator
+        source: "../images/statusbar/status-bar-separator.png"
+        anchors.verticalCenter: minimizedListView.verticalCenter
+        anchors.right: minimizedListView.left
+        height: notificationArea.height
+        width: 2
+        mipmap: true
+        visible: minimizedListView.visible
+    }
+
+    BorderImage {
+        id: minimizedViewOpenBg
+        visible: openListView.visible && !notificationArea.blackMode
+        source: "../images/statusbar/status-bar-menu-dropdown-tab.png"
+        anchors.top: visibleMinimizedView.top
+        anchors.bottom: visibleMinimizedView.bottom
+        width: visibleMinimizedView.width+19
+        x: visibleMinimizedView.x-9
+        smooth: false
+        border.left: 11
+        border.right: 11
+        border.top: 2
+    }
+
     // Minimized view
     Row {
         id: minimizedListView
 
         anchors {
             bottom: parent.bottom
-            left: parent.left
+            top: parent.top
             right: parent.right
-            margins: Units.gu(1)/2
         }
 
-        height: mergedModel.count > 0 ? Units.gu(3) : 0;
+        spacing: Units.gu(1)/2
+        padding: Units.gu(1)/2
+        visible: mergedModel.count > 0
 
         layoutDirection: Qt.RightToLeft
+
+        Image {
+            id: menuArrow
+            source: "../images/statusbar/menu-arrow.png"
+            anchors.verticalCenter: parent.verticalCenter
+            height: Units.gu(2.6)
+            width: Units.gu(1.5)
+            mipmap: true
+            visible: !notificationArea.blackMode
+        }
 
         Repeater {
             model: mergedModel
             delegate: Image {
                     id: notifIconImage
-                    height: minimizedListView.height
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.margins: Units.gu(1)/2
                     width: height
                     fillMode: Image.PreserveAspectFit
 
@@ -107,10 +156,43 @@ Rectangle {
         anchors.fill: minimizedListView
         enabled: minimizedListView.visible
         onClicked: {
-            bannerItemsPopups.popupModel.clear();
+            notificationArea.clicked();
+        }
+    }
+
+    onClicked: {
+        bannerItemsPopups.popupModel.clear();
+        if (notificationArea.state === "minimized") {
             notificationArea.state = "open";
             windowManagerInstance.addTapAction("minimizeNotificationArea", minimizeNotificationArea, null)
         }
+        else if (notificationArea.state === "open") {
+            notificationArea.state = "minimized";
+            windowManagerInstance.removeTapAction("minimizeNotificationArea")
+        }
+    }
+
+    InverseMouseArea {
+        anchors.fill: openListView
+        enabled: openListView.visible
+        sensingArea: root
+        z: -1
+        onClicked: {
+            notificationArea.clicked();
+        }
+    }
+
+    BorderImage {
+        id: openListViewBg
+        source: "../images/menu-dropdown-bg.png"
+        x: openListView.x-11
+        y: openListView.y
+        z: -1
+        width: openListView.width+22
+        height: openListView.height+14
+        smooth: false
+        border { left: 30; top: 10; right: 30; bottom: 30 }
+        visible: openListView.visible
     }
 
     ListView {
@@ -118,18 +200,68 @@ Rectangle {
 
         visible: false
         interactive: height === maxDashboardWindowHeight
-        clip: interactive
+        clip: true
         orientation: ListView.Vertical
         cacheBuffer: maxDashboardWindowHeight
         height: Math.min(maxDashboardWindowHeight, contentHeight);
+        width: Units.gu(30)
         anchors {
-            bottom: parent.bottom
-            left: parent.left
+            top: parent.bottom
             right: parent.right
-            margins: Units.gu(1)/2
         }
 
-        spacing: Units.gu(1) / 2
+        MouseArea {
+            anchors.fill: parent
+            z: -1
+        }
+
+        Item {
+            id: maskTop
+            z:10
+            width: parent.width
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 0
+            opacity: !parent.atYBeginning ? 1.0 : 0.0
+
+            Image {
+                width: parent.width
+                height: Units.gu(3)
+                source: "../images/menu-dropdown-scrollfade-top.png"
+            }
+
+            Image {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y:0
+                width: Units.gu(2.1)
+                height: Units.gu(2.1)
+                source: "../images/menu-arrow-up.png"
+            }
+        }
+
+        Item {
+            id: maskBottom
+            z:10
+            width: parent.width
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: parent.height - scrollfadeBottom.height + 1
+            opacity: !parent.atYEnd? 1.0 : 0.0
+
+            Image {
+                id: scrollfadeBottom
+                width: parent.width
+                height: Units.gu(3)
+                source: "../images/menu-dropdown-scrollfade-bottom.png"
+            }
+
+            Image {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: Units.gu(0.9)
+                width: Units.gu(2.1)
+                height: Units.gu(2.1)
+                source: "../images/menu-arrow-down.png"
+            }
+        }
+        spacing: 2
         model: mergedModel
 
         delegate:
@@ -143,9 +275,21 @@ Rectangle {
                 property int delegateIndex: index
 
                 notifComponent: notificationItemLoaderComponent
+                blockSwipesToLeft: true
 
                 height: delegateHeight
-                width: notificationArea.width - Units.gu(1)
+                width: openListView.width
+                x: 0
+
+                Image {
+                    width: parent.width
+                    height: Units.gu(0.2)
+                    source: "../images/menu-divider.png"
+                    anchors.top: parent.bottom
+                    anchors.topMargin: (openListView.spacing-height)/2.
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    visible: delegateIndex < openListView.model.count-1
+                }
 
                 Component {
                     id: notificationItemLoaderComponent
@@ -178,20 +322,28 @@ Rectangle {
         }
     }
 
+    Image {
+        source: "../images/statusbar/status-bar-separator.png"
+        anchors.verticalCenter: bannerItemsPopups.verticalCenter
+        height: bannerItemsPopups.height
+        x: bannerItemsPopups.x+bannerItemsPopups.width-bannerItemsPopups.visibleWidth - width
+        width: 2
+        mipmap: true
+        visible: bannerItemsPopups.visible
+    }
+
     // Banner popup view
     BannerPopupArea {
         id: bannerItemsPopups
-        visible: height>0
+        visible: notificationArea.state === "banner"
 
         anchors {
             bottom: parent.bottom
-            left: parent.left
             right: parent.right
         }
 
-        height: popupModel.count > 0 ? bannerNotificationFixedHeight : 0;
-        Behavior on height { NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }
-
+        height: parent.height
+        width: Units.gu(30)
 
         Connections {
             target: bannerItemsPopups.popupModel
@@ -216,25 +368,20 @@ Rectangle {
             when: (bannerItemsPopups.popupModel.count + mergedModel.count) === 0
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationArea; height: 0 }
         },
         State {
             name: "banner"
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationArea; height: bannerItemsPopups.height }
         },
         State {
             name: "minimized"
             PropertyChanges { target: minimizedListView; visible: true }
             PropertyChanges { target: openListView; visible: false }
-            PropertyChanges { target: notificationArea; height: minimizedListView.height+Units.gu(1) }
         },
         State {
             name: "open"
-            PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: true }
-            PropertyChanges { target: notificationArea; height: openListView.height+Units.gu(1) }
         }
     ]
 }
