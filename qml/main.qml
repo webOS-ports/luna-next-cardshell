@@ -16,7 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
+import QtQuick 2.6
+import QtQuick.Window 2.2
+import QtWayland.Compositor 1.0
+
 import LunaNext.Common 0.1
 import LunaNext.Compositor 0.1
 
@@ -25,36 +28,52 @@ import LunaNext.Compositor 0.1
 // in accordance with the lifecycle of the apps.
 Compositor {
     id: compositor
+    property QtObject globalCompositor: compositor;
 
-    width: Settings.displayWidth
-    height: Settings.displayHeight
+    property Window outputWindow: compositorOutput
 
-    Component.onCompleted: {
-        compositor.show();
+    // The output defines the screen.
+    property WaylandOutput defaultOutput: WaylandOutput {
+        compositor: globalCompositor
+        sizeFollowsWindow: true
+        window: content
     }
 
-    OrientationHelper {
-        id: orientationHelper
-        automaticOrientation: false
-        transitionEnabled: false
+    property Window content: Window {
+        id: compositorOutput
 
-        Loader {
-            id: mainShellLoader
+        width: Settings.displayWidth
+        height: Settings.displayHeight
+        color: "black"
+        visible: false
 
-            property QtObject compositor: compositor
-            property string cardShellState: mainShellLoader.state
+        OrientationHelper {
+            id: orientationHelper
+            automaticOrientation: false
+            transitionEnabled: false
 
-            anchors.fill: parent
+            Loader {
+                id: mainShellLoader
 
-            focus: true
-            onSourceChanged: Keys.forwardTo = [ mainShellLoader.item ]
+                property QtObject compositor: compositor
+                property string cardShellState: mainShellLoader.state
+
+                anchors.fill: parent
+
+                focus: true
+                onSourceChanged: Keys.forwardTo = [ mainShellLoader.item ]
+            }
+
+            BootLoader {
+                shellLoader: mainShellLoader
+
+                anchors.fill: parent
+                z: 1 // above the main shell
+            }
         }
+    }
 
-        BootLoader {
-            shellLoader: mainShellLoader
-
-            anchors.fill: parent
-            z: 1 // above the main shell
-        }
+    Component.onCompleted: {
+        content.show();
     }
 }
