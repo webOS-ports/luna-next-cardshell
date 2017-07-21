@@ -267,6 +267,7 @@ Item {
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 sourceComponent: Settings.tabletUi? tweaksClock : undefined;
+                visible: statusBar.state!=="lockscreen"
             }
 
             Image {
