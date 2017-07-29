@@ -175,17 +175,17 @@ Item {
         if (!request || !request.state)
             return buildErrorResponse("Invalid parameters.");
 
-        if (compositorInstance.visible && request.state === "on")
+        if (compositorInstance.defaultOutput.window.visible && request.state === "on")
             return buildErrorResponse("Already enabled");
-        else if (!compositorInstance.visible && request.state === "off")
+        else if (!compositorInstance.defaultOutput.window.visible && request.state === "off")
             return buildErrorResponse("Already disabled");
 
         if (request.state === "on") {
             DisplayController.displayOn();
-            compositorInstance.show();
+            compositorInstance.defaultOutput.window.show();
         }
         else if (request.state === "off") {
-            compositorInstance.hide();
+            compositorInstance.defaultOutput.window.hide();
             DisplayController.displayOff();
         }
         else
