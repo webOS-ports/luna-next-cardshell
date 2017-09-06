@@ -133,12 +133,10 @@ Item {
     /* Pinch to spread cards */
     PinchArea {
         anchors.fill: parent
-       // enabled: cardGroupListViewItem.interactiveList
-        property bool interactive: cardGroupListViewItem.interactiveList
+        enabled: cardGroupListViewItem.interactiveList
         property real _initialRatio: 0.1
         property bool _isCardAloneInGroup: true
         onPinchStarted: {
-            if(!interactive) return false;
             var currentGroup = listCardGroupsModel.get(internalListView.currentIndex);
             _isCardAloneInGroup = (currentGroup.windowList.count === 1);
             if(_isCardAloneInGroup) {
@@ -151,15 +149,13 @@ Item {
         }
         onPinchFinished: {}
         onPinchUpdated: {
-            if(interactive) {
-                var newRatio = _initialRatio*pinch.scale;
-                if(_isCardAloneInGroup) {
-                    // pinch to zoom
-                    cardGroupListViewItem.cardScale = Math.max(0.2, Math.min(0.7, newRatio));
-                } else {
-                    // pinch to spread
-                    listCardGroupsModel.get(internalListView.currentIndex).spreadRatio = Math.max(0.1, Math.min(0.6, newRatio));
-                }
+            var newRatio = _initialRatio*pinch.scale;
+            if(_isCardAloneInGroup) {
+                // pinch to zoom
+                cardGroupListViewItem.cardScale = Math.max(0.2, Math.min(0.7, newRatio));
+            } else {
+                // pinch to spread
+                listCardGroupsModel.get(internalListView.currentIndex).spreadRatio = Math.max(0.1, Math.min(0.6, newRatio));
             }
         }
 
