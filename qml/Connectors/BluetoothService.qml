@@ -21,7 +21,7 @@ pragma Singleton
 
 import QtQuick 2.0
 import Connman 0.2
-import org.nemomobile.dbus 2.0
+import Nemo.DBus 2.0
 
 Item {
     id: bluetoothService
