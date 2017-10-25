@@ -69,19 +69,22 @@ Rectangle {
     }
 
     DeviceKeyHandler {
-        property Item gestureItem: cardsArea.gestureAreaInstance
+        property Item gestureItem: cardsArea.state==="normal"? cardsArea.gestureAreaInstance : null;
 
         onHomePressed: {
             console.log("Key: Home");
-            gestureItem.tapGesture();
+            if (gestureItem !== null)
+                gestureItem.tapGesture();
         }
         onEndPressed: {
             console.log("Key: End");
-            gestureItem.swipeUpGesture(0);
+            if (gestureItem !== null)
+                gestureItem.swipeUpGesture(0);
         }
         onEscapePressed: {
             console.log("Key: Escape");
-            gestureItem.swipeLeftGesture(0);
+            if (gestureItem !== null)
+                gestureItem.swipeLeftGesture(0);
         }
         onF6Pressed: {
             console.log("Key: F6");
