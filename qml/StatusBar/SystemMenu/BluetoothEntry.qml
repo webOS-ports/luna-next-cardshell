@@ -1,6 +1,7 @@
 /* @@@LICENSE
 *
-*      Copyright (c) 2009-2013 LG Electronics, Inc.
+* Copyright (C) 2013 Christophe Chapuis <chris.chapuis@gmail.com>
+* Copyright (c) 2009-2013 LG Electronics, Inc.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -20,12 +21,12 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 
 Item {
+    id: btEntryId
+
     property string name
-    property bool   connected:      false
-    property int    cod:            0
-    property string address:        ""
-    property string connStatus:     ""
-    property string status:         ""
+    property bool   connected:          false
+    property bool   connecting:         false
+    property bool   lastConnectFailed:  false
 
     property int iconSpacing : Units.gu(0.4)
     property int rightMarging: Units.gu(0.8)
@@ -47,9 +48,9 @@ Item {
 
         Text {
             id: statusText
-            visible: status != ""
+            visible: btEntryId.connecting
             y: mainText.y + mainText.baselineOffset + 1
-            text: status;
+            text: btEntryId.connecting ? "Connecting..." : lastConnectFailed ? "Unable to connect" : "";
             color: "#AAA";
             font.pixelSize: Units.gu(1) //10
             font.family: "Prelude"
