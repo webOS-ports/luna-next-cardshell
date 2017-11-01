@@ -20,6 +20,7 @@
 
 import QtQuick 2.5
 import LunaNext.Common 0.1
+import LuneOS.Bluetooth 0.1
 import "../Connectors"
 import "Indicators"
 
