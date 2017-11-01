@@ -24,10 +24,11 @@ import LunaNext.Common 0.1
 Item {
     id: appMenu
 
-    width: Units.gu(10)
+    width: appMenuRow.width + appMenuRow.anchors.leftMargin - appMenuSeparator.width/2
     state: "hidden"
     visible: false
 
+    property real fontSize: FontUtils.sizeToPixels("medium")
     property string activeWindowAppId: ""
     property string activeWindowTitle: defaultAppMenuTitle
     readonly property string defaultAppMenuTitle: "App Menu"
@@ -89,12 +90,11 @@ Item {
     }
 
     Row {
+        id: appMenuRow
         anchors.left: parent.left
-        anchors.leftMargin: Units.gu(1)
+        anchors.leftMargin: parent.height*0.25
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        anchors.topMargin: parent.height * 0.2
-        anchors.bottomMargin: parent.height * 0.2
         spacing: Units.gu(1) / 2
 
         Text {
@@ -102,7 +102,8 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             color: "white"
             font.family: Settings.fontStatusBar
-            font.pixelSize: parent.height;
+            verticalAlignment: Text.AlignVCenter
+            font.pixelSize: appMenu.fontSize
             font.bold: true
             text: defaultAppMenuTitle
         }
@@ -115,6 +116,16 @@ Item {
             fillMode: Image.PreserveAspectFit
             height: Units.gu(2.6)
             width: Units.gu(1.5)
+        }
+
+        Image {
+            id: appMenuSeparator
+            source: "../images/statusbar/status-bar-separator.png"
+            anchors.verticalCenter: parent.verticalCenter
+            height: parent.height
+            width: 2
+            mipmap: true
+            opacity: Settings.tabletUi
         }
     }
 

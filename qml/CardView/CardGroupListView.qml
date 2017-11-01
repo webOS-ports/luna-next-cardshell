@@ -170,6 +170,8 @@ Item {
             highlightRangeMode: ListView.StrictlyEnforceRange
             highlightFollowsCurrentItem: true
             highlightMoveDuration: 0
+            maximumFlickVelocity: width*10
+            flickDeceleration: 0
 
             model: groupsDataModel
             spacing: Units.gu(2)
@@ -177,6 +179,7 @@ Item {
             smooth: !internalListView.moving
             focus: true
             interactive: cardGroupListViewItem.interactiveList
+            snapMode: ListView.SnapOneItem
 
             onCurrentIndexChanged: {
                 if( internalListView.currentIndex>=0 )
