@@ -20,7 +20,8 @@
 
 import QtQuick 2.5
 import LunaNext.Common 0.1
-import LuneOS.Bluetooth 0.1
+// LuneOS Bluetooth wrapper
+import LuneOS.Bluetooth 0.2
 import "../Connectors"
 import "Indicators"
 
@@ -42,7 +43,7 @@ Row {
     WiFiService {
         id: wifiService
     }
-    
+
     RecorderIndicator {
         id: recorderIndicator
 
@@ -99,9 +100,9 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: BluetoothService.powered
-        connected: BluetoothService.connected
-        isTurningOn: BluetoothService.isTurningOn
+        enabled: BluetoothManager.powered
+        connected: BluetoothManager.bluetoothOperational
+        isTurningOn: BluetoothManager.initializing
     }
 
     WanStatusIndicator {
