@@ -19,7 +19,6 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
-import LuneOS.Bluetooth 0.1
 import "../../Connectors"
 
 Item {
@@ -266,16 +265,6 @@ Item {
                     onPrefsTriggered: {
                         //TODO needs page in Settings
                         launcherInstance.launchApplication("org.webosports.app.settings",{"page":"Bluetooth"});
-                    }
-
-                    onOnOffTriggered: {
-                        if (BluetoothService.powered) {
-                            BluetoothService.setPowered(false);
-                        }
-                        else {
-                            if (!BluetoothService.isTurningOn)
-                                BluetoothService.setPowered(true);
-                        }
                     }
 
                     onMenuCloseRequest: {

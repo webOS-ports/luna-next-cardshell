@@ -19,7 +19,8 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LuneOS.Bluetooth 0.1
+// LuneOS Bluetooth wrapper
+import LuneOS.Bluetooth 0.2
 
 Drawer {
     id: bluetoothMenu
@@ -29,7 +30,11 @@ Drawer {
     property bool closeOnConnect: false
     property string deviceAddressInError: ""
 
-    readonly property ListModel bluetoothList: BluetoothService.deviceModel
+    BluetoothDevicesModel {
+        id: bluetoothList
+        filterRole: 256 + 109 /*PairedRole*/
+        filterRegExp: /true/
+    }
 
     // ------------------------------------------------------------
     // External interface to the Bluetooth Element is defined here:
@@ -42,12 +47,12 @@ Drawer {
     signal itemSelected()
 
     property string bluetoothToggleStr:
-        BluetoothService.isTurningOn ? "Turning on Bluetooth..." :
-        BluetoothService.powered ? "Turn off Bluetooth" :
-                                      "Turn on Bluetooth";
+        BluetoothManager.bluetoothOperational ? "Turn off Bluetooth" :
+        BluetoothManager.initializing ? "Turning on Bluetooth..." :
+                                 "Turn on Bluetooth";
     property string bluetoothStateStr:
-        BluetoothService.isTurningOn ? "INIT" :
-        BluetoothService.powered ? "ON":"OFF";
+        BluetoothManager.bluetoothOperational ? "ON" :
+        BluetoothManager.initializing ? "INIT":"OFF";
 
     // ------------------------------------------------------------
 
@@ -56,22 +61,13 @@ Drawer {
     onDrawerOpened:  {
         closeOnConnect = false;
         menuOpened();
-        BluetoothService.startDiscovery();
+
+        BluetoothManager.discoveringMode = true;
+
         resetStatusTimer.stop();
     }
-    Connections {
-        target: BluetoothService
-        onPoweredChanged: {
-            if(BluetoothService.powered) {
-                if(bluetoothMenu.isOpen()) {
-                    BluetoothService.startDiscovery();
-                }
-            }
-        }
-    }
-
     onDrawerClosed: {
-        BluetoothService.stopDiscovery();
+        BluetoothManager.discoveringMode = false;
         menuClosed()
     }
 
@@ -98,7 +94,7 @@ Drawer {
                         y: Units.gu(-1.7) 
                         width: Units.gu(3.2)
                         height: Units.gu(3.2)
-                        on: BluetoothService.isTurningOn && bluetoothMenu.isOpen();
+                        on: !BluetoothManager.bluetoothOperational && BluetoothManager.powered && bluetoothMenu.isOpen();
                     }
 
                     Text {
@@ -137,8 +133,11 @@ Drawer {
                          font.family: "Prelude"
                      }
             onAction: {
-                if(BluetoothService.powered && !BluetoothService.isTurningOn)
+                BluetoothManager.powered = !BluetoothManager.powered;
+
+                if(!BluetoothManager.powered) {
                     menuCloseRequest(300);
+                }
 
                 onOffTriggered()
             }
@@ -146,12 +145,9 @@ Drawer {
 
         MenuDivider  { }
 
-        ListView {
+        Repeater {
             id: bluetoothListView
             width: parent.width
-            height: (bluetoothOnOff.height + separator.height) * bluetoothList.count
-            interactive: false
-            spacing: 0
             model: bluetoothList
             delegate: bluetoothListDelegate
         }
@@ -179,32 +175,43 @@ Drawer {
             spacing: 0
             width: parent.width
 
-            property BluetoothDevice delegateDevice: device
+            property variant delegateDevice: model
 
             MenuListEntry {
                 id: entry
                 selectable: true
-                forceSelected: delegateDevice.connecting
+                forceSelected: btDeviceData.connecting
 
                 content: BluetoothEntry {
                             id: btDeviceData
-                            x: ident + internalIdent;
-                            width: bluetoothMenu.width-x;
-                            name:         delegateDevice.name;
-                            connected:    delegateDevice.connected;
-                            connecting:   delegateDevice.connecting;
-                            lastConnectFailed: delegateDevice.lastConnectFailed;
+                            x: ident + internalIdent
+                            width: bluetoothMenu.width-x
+                            name:         delegateDevice.FriendlyName || delegateDevice.Name
+                            connected:    delegateDevice.Connected
+                            connecting:   BluetoothManager.connectingDevice && BluetoothManager.connectingDevice.address === delegateDevice.Address
+                            lastConnectFailed: false
                          }
 
                 onAction: {
-                    if (BluetoothService.powered) {
-                        console.log("Bluetooth Device Selected. Name = " + delegateDevice.name + ", connected = " + delegateDevice.connected + ", connecting = " + delegateDevice.connecting);
-                        if(!delegateDevice.connected && !delegateDevice.connecting)
-                            delegateDevice.connectDevice();
-                        else {
-                            delegateDevice.disconnectDevice();
-                            // close whatever happens
-                            menuCloseRequest(350);
+                    console.log("Bluetooth Device Selected. Name = " + delegateDevice.Name + ", connected = " + delegateDevice.Connected);
+                    if(delegateDevice.Connected ||
+                       (BluetoothManager.connectingDevice &&
+                        BluetoothManager.connectingDevice.address === delegateDevice.Address))
+                    {
+                        BluetoothManager.disconnectDeviceAddress(btDevice.Address);
+                        // close whatever happens
+                        menuCloseRequest(350);
+                    }
+                    else
+                    {
+                        var pendingCall = BluetoothManager.connectDeviceAddress(btDevice.Address);
+                        if(pendingCall) {
+                            pendingCall.finished.connect(function(call) {
+                                if(call.error !== 0)
+                                {
+                                    btDeviceData.lastConnectFailed = true;
+                                }
+                            });
                         }
                     }
                 }
