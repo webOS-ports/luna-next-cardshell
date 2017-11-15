@@ -17,16 +17,32 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
-import LuneOS.Service 1.0
 import LunaNext.Common 0.1
+// Connman
+import Connman 0.2
 
 Drawer {
     id: wifiMenu
     property int ident:         0
     property int internalIdent: 0
 
-    property bool isWifiOn: true
-    property bool coloseOnConnect: false
+    property alias isWifiOn: wifiList.powered
+    readonly property string _wifiState: wifiList.powered ? "ON" : "OFF"
+    property bool closeOnConnect: false
+
+    TechnologyModel {
+        id: wifiList
+        name: "wifi"
+    }
+
+    UserAgent {
+        id: connmanUserAgent
+        onUserInputRequested: //(string servicePath, variant /*QVariantMap*/ fields);
+        {
+            // No need to continue with system menu, delegate this to the wifi prefs app
+            wifiMenu.userInputRequested(servicePath);
+        }
+    }
 
     // ------------------------------------------------------------
     // External interface to the WiFi Element is defined here:
@@ -36,195 +52,7 @@ Drawer {
     signal menuClosed()
     signal onOffTriggered()
     signal prefsTriggered()
-    signal itemSelected(int index, string name, int profileId, string securityType, string connState)
-
-    function setWifiState(isOn, state) {
-        if(!isWifiOn && isOn) {
-            if(wifiMenu.state == "DRAWER_OPEN") {
-                wifiSpinner.on = true;
-            }
-        }
-
-        isWifiOn = isOn
-        wifiTitleState.text = state
-
-        if(!isWifiOn) {
-            wifiSpinner.on = false;
-            clearWifiList();
-        }
-    }
-
-    function addWifiNetworkEntry(name, profId, sigBars, secType, connectionStatus, isConnected) {
-        wifiList.append({"wifiName": name,
-                         "profId":profId,
-                         "sigBars": sigBars,
-                         "secType": secType,
-                         "connectionStatus": connectionStatus,
-                         "isConnected": isConnected,
-                         "listIndex": wifiList.count,
-                         "itemStatus": "",
-                         "boldStatus": false,
-                         "showSelected": false
-                        });
-        wifiListView.height = (wifiOnOff.height+separator.height) * wifiList.count;
-    }
-
-    function clearWifiList() {
-        wifiList.clear()
-        wifiListView.height = 1
-    }
-
-    function wifiConnectStateUpdate(connected, ssid, state) {
-        var index = 0;
-        var entry;
-
-        if(isWifiOn) {
-            if(ssid !== "") {
-                for(index = 0; index < wifiList.count; index++) {
-                    entry = wifiList.get(index)
-                    entry.boldStatus = false;
-                    if(entry.wifiName === ssid) {
-                        if(state === "userSelected") {
-                            entry.connectionStatus = "connecting";
-                            entry.isConnected = false;
-                            entry.itemStatus = runtime.getLocalizedString("Connecting...");
-                            entry.showSelected = true;
-                        } else if((state === "associated") || (state === "associating")) {
-                            entry.connectionStatus = state;
-                            entry.isConnected = false;
-                            entry.itemStatus = runtime.getLocalizedString("Connecting...");
-                        } else if((state === "ipFailed") || (state === "associationFailed")) {
-                            entry.connectionStatus = state;
-                            entry.isConnected = false;
-                            if(state === "ipFailed") {
-                                entry.itemStatus = runtime.getLocalizedString("IP configuration failed");
-                                entry.boldStatus = true;
-                            } else {
-                                entry.itemStatus = runtime.getLocalizedString("Association failed");
-                            }
-                        } else if(state === "ipConfigured") {
-                            entry.connectionStatus = state;
-                            entry.isConnected = true;
-                            entry.itemStatus = "";
-                            if(index != 0) {
-                                // move the connected item to the top
-                                wifiList.move(index, 0, 1);
-                            }
-
-                            if(coloseOnConnect) {
-                                menuCloseRequest(1000);
-                                coloseOnConnect = false;
-                            }
-                        } else if(state === "notAssociated") {
-                            entry.connectionStatus = "";
-                            entry.isConnected = false;
-                            entry.itemStatus = "";
-                        }
-                    } else {
-                        entry.isConnected = false;
-                        entry.itemStatus = "";
-                        entry.connectionStatus = "";
-                        entry.showSelected = false;
-                    }
-                }
-            } else if (!connected){
-                for(index = 0; index < wifiList.count; index++) {
-                    entry = wifiList.get(index)
-                    entry.isConnected = false;
-                    entry.boldStatus = false;
-                }
-            }
-        }
-    }
-
-    /*
-    Connections {
-        target: NativeSystemMenuHandler
-
-        onWifiListUpdated:  {
-            wifiSpinner.on = false;
-        }
-    }
-    */
-
-    function joinWifi(ssid) {
-        service.call("luna://com.palm.wifi/connect",
-                     JSON.stringify(
-                         {"ssid":ssid,"security":{"simpleSecurity":{"passKey":""}}
-                         }),
-                     function(message) {
-                         var response = JSON.parse(message.payload);
-                         console.log("WiFi connect response: " + JSON.stringify(response));
-                     },
-                     function(error) {
-                         console.log("Could not join wifi network: " + error)
-                     });
-        console.log("join done I think");
-    }
-
-    function enableWifi(enable) {
-        service.call("luna://com.palm.wifi/setstate",
-                     JSON.stringify({"state":enable ? "enabled" : "disabled"}),
-                     function(message) {
-                         //var response = JSON.parse(message.payload);
-                         //setWifiState(enable, enable ? "ON" : "OFF");
-                         updateWifiStatus();
-                     },
-                     function(error) {
-                         console.log("Could not switch wifi state: " + error);
-                     });
-    }
-
-    function findWifiNetworks() {
-        clearWifiList();
-        service.call("luna://com.palm.wifi/findnetworks",
-                     JSON.stringify({}),
-                     function(message) {
-                         var response = JSON.parse(message.payload);
-                         for (var i = 0; i < response.foundNetworks.length; i++) {
-                             var name = response.foundNetworks[i].networkInfo.ssid;
-                             var profId = response.foundNetworks[i].networkInfo.profileId;
-                             var sigBars = response.foundNetworks[i].networkInfo.signalBars;
-                             var secType = response.foundNetworks[i].networkInfo.availableSecurityTypes[0];
-                             var connectionStatus = response.foundNetworks[i].networkInfo.connectState;
-                             var isConnected = connectionStatus === "ipConfigured";
-                             addWifiNetworkEntry(name, profId, sigBars, secType, connectionStatus, isConnected);
-                         }
-                         wifiSpinner.on = false;
-                     },
-                     function(error) {
-                         console.log("Could not find networks: " + error);
-                     });
-    }
-
-    function updateWifiStatus() {
-        service.subscribe("luna://com.palm.wifi/getstatus",
-                     JSON.stringify({"subscribe":true}),
-                     function(message) {
-                         var response = JSON.parse(message.payload);
-                         switch(response.status) {
-                         case "connectionStateChanged":
-                             setWifiState(true, response.networkInfo.ssid);
-                             break;
-                         case "serviceEnabled":
-                             setWifiState(true, "ON");
-                             break;
-                         case "serviceDisabled":
-                             setWifiState(false, "OFF");
-                         }
-                     },
-                     function(error) {
-                         console.log("Could not retrieve mute status: " + error);
-                     });
-    }
-
-    LunaService {
-        id: service
-        name: "org.webosports.luna"
-        usePrivateBus: true
-        onInitialized: updateWifiStatus()
-    }
-
+    signal userInputRequested(string servicePath)
     // ------------------------------------------------------------
 
 
@@ -261,7 +89,7 @@ Drawer {
                         height: Units.gu(3.2)
                         x: wifiTitle.width + Units.gu(1.8); 
                         anchors.verticalCenter: parent.verticalCenter
-                        on:false
+                        on: wifiList.scanning
                     }
 
                     Text {
@@ -269,7 +97,7 @@ Drawer {
                         x: wifiMenu.width - width - Units.gu(1.4); 
                         anchors.verticalCenter: parent.verticalCenter
                         //text: runtime.getLocalizedString("init");
-                        text: "init"
+                        text: _wifiState
                         width: wifiMenu.width - wifiTitle.width - Units.gu(6.0)
                         horizontalAlignment: Text.AlignRight
                         elide: Text.ElideRight;
@@ -302,26 +130,20 @@ Drawer {
                          }
 
             onAction: {
-                onOffTriggered()
-                wifiSpinner.on = !isWifiOn;
-                if(isWifiOn) {
-                    enableWifi(false);
+                isWifiOn = !isWifiOn
+                if(!isWifiOn) {
                     menuCloseRequest(300);
                 } else {
-                    enableWifi(true);
-                    coloseOnConnect = true;
+                    closeOnConnect = true;
                 }
             }
         }
 
         MenuDivider {}
 
-        ListView {
+        Repeater {
             id: wifiListView
             width: parent.width
-            interactive: false
-            spacing: 0
-            height: Units.gu(0.1)
             model: wifiList
             delegate: wifiListDelegate
         }
@@ -335,7 +157,6 @@ Drawer {
                 color: "#FFF"; font.bold: false; font.pixelSize: FontUtils.sizeToPixels("medium"); font.family: "Prelude"}
                 //color: "#FFF"; font.bold: false; font.pixelSize: 18; font.family: "Prelude"}
             onAction: {
-                clearWifiList()
                 prefsTriggered()
                 menuCloseRequest(300);
             }
@@ -347,44 +168,46 @@ Drawer {
         Column {
             spacing: 0
             width: parent.width
-            property int index: listIndex
+
+            property NetworkService delegateService: modelData
+
+            Connections {
+                target: delegateService
+                onConnectedChanged: {
+                    if(delegateService.connected && closeOnConnect) {
+                        menuCloseRequest(1000);
+                        closeOnConnect = false;
+                    }
+                }
+            }
 
             MenuListEntry {
                 id: entry
                 selectable: true
-                forceSelected: showSelected
+                forceSelected: delegateService.connected
 
                 content: WifiEntry {
                             id: wifiNetworkData
                             x: ident + internalIdent;
                             width: wifiMenu.width-x;
-                            name:         wifiName;
-                            profileId:    profId;
-                            signalBars:   sigBars;
-                            securityType: secType;
-                            connStatus:   connectionStatus;
-                            status:       itemStatus;
-                            statusInBold: boldStatus;
-                            connected:    isConnected;
+                            name:         delegateService.name;
+                            strength:     delegateService.strength;
+                            securityType: delegateService.securityType;
+                            status:       delegateService.state;
+                            connected:    delegateService.connected;
                          }
                 onAction: {
-                    itemSelected(index,
-                                 wifiNetworkData.name,
-                                 wifiNetworkData.profileId,
-                                 wifiNetworkData.securityType,
-                                 wifiNetworkData.connStatus)
-
-                    if((wifiNetworkData.connStatus == "ipConfigured") ||
-                       (wifiNetworkData.connStatus == "associated") ||
-                       (wifiNetworkData.connStatus == "ipFailed") ||
-                       (wifiNetworkData.connStatus == "associationFailed")  ) {
-                        menuCloseRequest(300);
-                    } else if((wifiNetworkData.profileId == 0) && (wifiNetworkData.securityType != "")) {
-                        menuCloseRequest(300);
+                    if(delegateService.connected) {
+                        delegateService.requestDisconnect();
+                    }
+                    else {
+                        // if this service needs a password and we don't have it yet,
+                        // connman will ask the user through the UserAgent down below
+                        delegateService.requestConnect();
                     }
 
                     menuCloseRequest(300);
-                    coloseOnConnect = true;
+                    closeOnConnect = true;
                 }
             }
 
@@ -393,21 +216,15 @@ Drawer {
 
     }
 
-    ListModel {
-        id: wifiList
-    }
-
     onMenuOpened: {
-        coloseOnConnect = false;
+        closeOnConnect = false;
         if(isWifiOn) {
-            wifiSpinner.on = true
-            findWifiNetworks();
+            wifiList.requestScan();
         }
     }
 
     onMenuClosed: {
-        coloseOnConnect = false;
-        wifiSpinner.on = false
+        closeOnConnect = false;
     }
 }
 

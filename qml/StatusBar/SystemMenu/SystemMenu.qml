@@ -201,19 +201,13 @@ Item {
                     maxViewHeight : maxHeight - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin;
 
                     onPrefsTriggered: {
-                        launcherInstance.launchApplication("org.webosports.app.settings",{"page":"WiFi"});
+                        launcherInstance.launchApplication("org.webosports.app.settings.wifi",{});
                     }
 
-                    onItemSelected: {
+                    onUserInputRequested: {
                         var target = {};
-                        target["ssid"] = name;
-                        target["securityType"] = securityType;
-                        target["connectState"] = connState;
-                        if (securityType.length <= 0) {
-                            wifi.joinWifi(name);
-                        } else {
-                            launcherInstance.launchApplication("org.webosports.app.settings",{"target":target});
-                        }
+                        target["servicePath"] = servicePath;
+                        launcherInstance.launchApplication("org.webosports.app.settings.wifi",{"target":target});
                     }
 
                     onMenuCloseRequest: {
@@ -264,7 +258,7 @@ Item {
 
                     onPrefsTriggered: {
                         //TODO needs page in Settings
-                        launcherInstance.launchApplication("org.webosports.app.settings",{"page":"Bluetooth"});
+                        launcherInstance.launchApplication("org.webosports.app.settings.bluetooth",{});
                     }
 
                     onMenuCloseRequest: {

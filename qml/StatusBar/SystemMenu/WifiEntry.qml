@@ -19,15 +19,29 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 
+// Connman
+import Connman 0.2
+
 Item {
-    property string name
-    property int    profileId:      0
-    property int    signalBars:     0
-    property string securityType:   ""
-    property string connStatus:     ""
+    property string name:           ""
+    property int    strength:       0
+    property int    securityType:   NetworkService.SecurityNone
     property string status:         ""
-    property bool   statusInBold:   false
     property bool   connected:      false
+
+    readonly property bool _statusInBold: state === "ipFailed"
+    property string _statusString: {
+        if((state === "userSelected") || (state === "associated") || (state === "associating")) {
+            return "Connecting...";
+        } else if(state === "ipFailed") {
+            return "IP configuration failed";
+        } else if(state === "associationFailed") {
+            return "Association failed";
+        } else {
+            return "";
+        }
+    }
+    readonly property int _signalBars: Math.floor(strength/25)
 
     property int iconSpacing : Units.gu(0.4)
     property int rightMarging: Units.gu(0.8)
@@ -49,9 +63,9 @@ Item {
             id: statusText
             visible: status != ""
             y: mainText.y + mainText.baselineOffset + 1
-            text: status;
+            text: _statusString;
             color: "#AAA";
-            font.bold: statusInBold;
+            font.bold: _statusInBold;
             font.pixelSize: FontUtils.sizeToPixels("x-small") //10
             font.family: "Prelude"
             font.capitalization: Font.AllUppercase
@@ -63,7 +77,7 @@ Item {
         x: parent.width - width - iconSpacing - rightMarging
         anchors.verticalCenter: parent.verticalCenter
 
-        source: "../../images/statusbar/wifi-" + signalBars + ".png"
+        source: "../../images/statusbar/wifi-" + _signalBars + ".png"
         height: Units.gu(1.8) 
         width: Units.gu(2) 
     }
@@ -72,7 +86,7 @@ Item {
         id: lock
         x: sigStrength.x - width - iconSpacing
         anchors.verticalCenter: parent.verticalCenter
-        visible: securityType != ""
+        visible: securityType !== NetworkService.SecurityNone
         source: "../../images/statusbar/system-menu-lock.png"
         height: Units.gu(2.3)
         width: Units.gu(2) 
