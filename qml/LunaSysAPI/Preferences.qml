@@ -55,7 +55,7 @@ Item {
 
             // subscribe to preference change events so that we know when something has changed
             // and we can notify the relevant parts of the UI about this
-            systemService.subscribe("luna://com.palm.systemservice/getPreferences",
+            systemService.subscribe("luna://com.webos.service.systemservice/getPreferences",
                                     JSON.stringify({"keys": keysToWatch,"subscribe":true}),
                                     handlePreferencesChanged,
                                     handleError);
@@ -97,7 +97,7 @@ Item {
         function setPreference(key, value) {
             var params = {};
             params[key] = value;
-            systemService.call("luna://com.palm.systemservice/setPreferences",
+            systemService.call("luna://com.webos.service.systemservice/setPreferences",
                                     JSON.stringify(params),
                                     function (message) { },
                                     handleError);

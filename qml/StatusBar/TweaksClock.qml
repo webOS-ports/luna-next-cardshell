@@ -33,7 +33,7 @@ Item {
     function probeTimeFormat()
     {
         timeFormatQuery.subscribe(
-                    "luna://com.palm.systemservice/getPreferences",
+                    "luna://com.webos.service.systemservice/getPreferences",
                     JSON.stringify({"subscribe":true, "keys":["timeFormat"]}),
                     onTimeFormatChanged, onTimeFormatError)
     }
