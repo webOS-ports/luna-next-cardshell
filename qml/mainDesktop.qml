@@ -25,7 +25,11 @@ import LunaNext.Compositor 0.1
 // The compositor is exposed by the LunaNext module.
 // It manages the creation/destruction of windows
 // in accordance with the lifecycle of the apps.
-Compositor {
+Window {
+  width: 0
+  height: 0
+
+  Compositor {
     id: compositor
     property QtObject globalCompositor: compositor;
 
@@ -37,7 +41,6 @@ Compositor {
         width: Settings.displayWidth
         height: Settings.displayHeight
         color: "black"
-        visible: false
 
         OrientationHelper {
             id: orientationHelper
@@ -64,8 +67,9 @@ Compositor {
             }
         }
     }
+  }
 
-    Component.onCompleted: {
-        content.show();
-    }
+  Component.onCompleted: {
+      compositorOutput.showNormal();
+  }
 }
