@@ -53,7 +53,7 @@ Item {
 
                 // subscribe to preference change events so that we know when something has changed
                 // and we can notify the relevant parts about this
-                systemService.call("luna://com.palm.systemservice/getPreferences",
+                systemService.call("luna://com.webos.service.systemservice/getPreferences",
                                         JSON.stringify({"keys": keysToWatch,"subscribe":true}),
                                         handlePreferencesResponse,
                                         handleError);

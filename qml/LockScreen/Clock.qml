@@ -38,7 +38,7 @@ Item {
     function probePrefs()
     {
         prefsQuery.subscribe(
-                            "luna://com.palm.systemservice/getPreferences",
+                            "luna://com.webos.service.systemservice/getPreferences",
                             JSON.stringify({"subscribe":true, "keys":["timeFormat", "locale"]}),
                             onPrefsChanged, onPrefsError)
     }
