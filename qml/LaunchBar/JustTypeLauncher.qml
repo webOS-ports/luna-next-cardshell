@@ -53,8 +53,10 @@ Item {
             }
             ScriptAction {
                 script: {
-                    if (_wrappedWindow)
+                    if (_wrappedWindow) {
                         _wrappedWindow.forceVisible();
+                        _wrappedWindow.takeFocus();
+                    }
                 }
             }
         }
