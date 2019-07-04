@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2013 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2019 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -36,7 +37,7 @@ Item {
         id: playFeedback
         name: "org.webosports.luna"
         usePrivateBus: true
-        service: "luna://org.webosports.audio"
+        service: "luna://com.webos.service.audio/systemsounds/"
         method: "playFeedback"
     }
 
@@ -67,9 +68,9 @@ Item {
 
     ServiceStatus {
         id: audioServiceStatus
-        serviceName: "org.webosports.audio"
+        serviceName: "com.webos.service.audio"
         onConnected: {
-            audioService.subscribe("luna://org.webosports.audio/getStatus",
+            audioService.subscribe("luna://com.webos.service.audio/status",
                                    "{\"subscribe\":true}",
                                    onAudioStatusChanged, onError);
         }

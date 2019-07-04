@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2014 Simon Busch <morphis@gravedo.de>
+ * Copyright (C) 2019 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,15 +30,15 @@ Item {
     }
 
     function handleVolumeUp() {
-        audioService.call("luna://org.webosports.audio/volumeUp", "{}", null, null);
+        audioService.call("luna://com.webos.service.audio/volumeUp", "{}", null, null);
     }
 
     function handleVolumeDown() {
-        audioService.call("luna://org.webosports.audio/volumeDown", "{}", null, null);
+        audioService.call("luna://com.webos.service.audio/volumeDown", "{}", null, null);
     }
 
     function setMute(mute) {
-        audioService.call("luna://org.webosports.audio/setMute", JSON.stringify({"mute":mute}), null, null);
+        audioService.call("luna://com.webos.service.audio/setMuted", JSON.stringify({"mute":mute}), null, null);
     }
 
     LunaService {

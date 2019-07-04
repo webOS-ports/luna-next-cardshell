@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Alan Stice <alan@alanstice.com>
+ * Copyright (C) 2019 Herman van Hazendonk <github.com@herrie.org>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,10 +33,10 @@ MenuListEntry {
 
     LunaService {
         id: service
-        name: "org.webosports.luna"
+        name: "com.webos.service.audio"
         usePrivateBus: true
         onInitialized: {
-            service.subscribe("luna://org.webosports.audio/getStatus",
+            service.subscribe("luna://com.webos.service.audio/status",
                  JSON.stringify({"subscribe": true}),
                  function(message) {
                      var response = JSON.parse(message.payload);
@@ -80,7 +81,7 @@ MenuListEntry {
                 active: volumeElement.active
 
                 onValueChanged: {
-                    service.call("luna://org.webosports.audio/setVolume",
+                    service.call("luna://com.webos.service.audio/setVolume",
                                  JSON.stringify({"volume": Math.floor(volumeValue * 100)}),
                                  function(message) { }, function(error) { });
                 }
