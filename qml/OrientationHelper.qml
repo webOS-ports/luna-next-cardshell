@@ -16,15 +16,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
-import QtQuick.Window 2.0
+import QtQuick 2.9
+import QtSensors 5.11
 import "LunaSysAPI"
-
-
 
 Item {
     Preferences {
         id: preferences
+    }
+
+    OrientationSensor {
+        id: sensor
+
+        property int sensorOrientationAngle: 0
+
+        onReadingChanged: {
+          if (reading.orientation === OrientationReading.TopUp) {
+             sensorOrientationAngle = 0;
+          }
+          else if (reading.orientation === OrientationReading.LeftUp) {
+             sensorOrientationAngle = 90;
+          }
+          else if (reading.orientation === OrientationReading.TopDown) {
+             sensorOrientationAngle = 180;
+          }
+          else if (reading.orientation === OrientationReading.RightUp) {
+             sensorOrientationAngle = 270;
+          }
+        }
     }
 
     id: orientationHelperItem
@@ -33,7 +52,7 @@ Item {
 
     property real __lockedRotationAngle: 0
     property bool automaticOrientation: false
-    property int orientationAngle: !locked ? Screen.angleBetween(Screen.primaryOrientation, Screen.orientation) : __lockedRotationAngle;
+    property int orientationAngle: !locked ? sensor.sensorOrientationAngle : __lockedRotationAngle;
     property bool transitionEnabled: false
     property bool rotationLock: false
     property bool locked: rotationLock || preferences.rotationLock
@@ -83,8 +102,7 @@ Item {
     ]
 
     Component.onCompleted: {
-        Screen.orientationUpdateMask = Qt.LandscapeOrientation | Qt.PortraitOrientation |
-                                       Qt.InvertedLandscapeOrientation | Qt.InvertedPortraitOrientation;
+        sensor.start();
     }
 
     function setOrientation(angle) {
