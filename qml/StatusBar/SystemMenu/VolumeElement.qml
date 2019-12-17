@@ -35,7 +35,7 @@ MenuListEntry {
         name: "org.webosports.luna"
         usePrivateBus: true
         onInitialized: {
-            service.subscribe("luna://org.webosports.audio/getStatus",
+            service.subscribe("luna://org.webosports.service.audio/getStatus",
                  JSON.stringify({"subscribe": true}),
                  function(message) {
                      var response = JSON.parse(message.payload);
@@ -80,7 +80,7 @@ MenuListEntry {
                 active: volumeElement.active
 
                 onValueChanged: {
-                    service.call("luna://org.webosports.audio/setVolume",
+                    service.call("luna://org.webosports.service.audio/setVolume",
                                  JSON.stringify({"volume": Math.floor(volumeValue * 100)}),
                                  function(message) { }, function(error) { });
                 }

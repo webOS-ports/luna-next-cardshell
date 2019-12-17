@@ -29,15 +29,15 @@ Item {
     }
 
     function handleVolumeUp() {
-        audioService.call("luna://org.webosports.audio/volumeUp", "{}", null, null);
+        audioService.call("luna://org.webosports.service.audio/volumeUp", "{}", null, null);
     }
 
     function handleVolumeDown() {
-        audioService.call("luna://org.webosports.audio/volumeDown", "{}", null, null);
+        audioService.call("luna://org.webosports.service.audio/volumeDown", "{}", null, null);
     }
 
     function setMute(mute) {
-        audioService.call("luna://org.webosports.audio/setMute", JSON.stringify({"mute":mute}), null, null);
+        audioService.call("luna://org.webosports.service.audio/setMute", JSON.stringify({"mute":mute}), null, null);
     }
 
     LunaService {
