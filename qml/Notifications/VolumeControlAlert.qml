@@ -36,7 +36,7 @@ Item {
         id: playFeedback
         name: "org.webosports.luna"
         usePrivateBus: true
-        service: "luna://org.webosports.audio"
+        service: "luna://org.webosports.service.audio"
         method: "playFeedback"
     }
 
@@ -67,9 +67,9 @@ Item {
 
     ServiceStatus {
         id: audioServiceStatus
-        serviceName: "org.webosports.audio"
+        serviceName: "org.webosports.service.audio"
         onConnected: {
-            audioService.subscribe("luna://org.webosports.audio/getStatus",
+            audioService.subscribe("luna://org.webosports.service.audio/getStatus",
                                    "{\"subscribe\":true}",
                                    onAudioStatusChanged, onError);
         }
