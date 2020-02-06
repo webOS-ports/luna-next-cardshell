@@ -51,7 +51,7 @@ Item {
     }
 
     clip: true
-    visible: true
+    visible: enabled
 
     Image {
         id: indicatorImage
@@ -95,11 +95,6 @@ Item {
             when: !enabled
         }
     ]
-
-    Component.onCompleted: {
-        // initialize the visible property directly without doing any transition animation
-        visible = enabled ? true : false;
-    }
 
     transitions: [
         Transition {
