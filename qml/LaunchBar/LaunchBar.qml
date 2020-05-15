@@ -33,7 +33,9 @@ Item {
 
     Connections {
         target: appsModel
-        onAppsModelRefreshed: launchBarItem.refreshConfig();
+        function onAppsModelRefreshed () {
+            launchBarItem.refreshConfig();
+        }
     }
 
     signal startLaunchApplication(string appId, string appParams)

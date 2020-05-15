@@ -50,7 +50,9 @@ Rectangle {
 
         Connections {
             target: AppTweaks
-            onShowTapRippleTweakValueChanged: updateShowTapRippleTweak();
+            function onShowTapRippleTweakValueChanged() {
+                updateShowTapRippleTweak();
+            }
         }
 
         function updateShowTapRippleTweak() {

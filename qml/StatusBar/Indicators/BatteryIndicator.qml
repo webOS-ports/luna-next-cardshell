@@ -37,7 +37,9 @@ BaseIndicator {
 
     Connections {
         target: AppTweaks
-        onBatteryIndicatorTypeValueChanged: updateBatteryIndicator();
+        function onBatteryIndicatorTypeValueChanged() {
+            updateBatteryIndicator();
+        }
 
         function updateBatteryIndicator()
         {
@@ -60,7 +62,9 @@ BaseIndicator {
 
     Connections {
         target: AppTweaks
-        onBatteryPercentageColorOptionsValueChanged: updateBatteryPercentageColor();
+        function onBatteryPercentageColorOptionsValueChanged() {
+            updateBatteryPercentageColor();
+        }
 
         function updateBatteryPercentageColor()
         {

@@ -208,31 +208,31 @@ Item {
 
     Connections {
         target: windowManagerInstance
-        onSwitchToMaximize: {
+        function onSwitchToMaximize() {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "maximizedCard"
             cardViewItem.visible = true;
         }
-        onSwitchToFullscreen: {
+        function onSwitchToFullscreen() {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "fullscreenCard"
             cardViewItem.visible = true;
         }
-        onSwitchToCardView: {
+        function onSwitchToCardView() {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "cardList"
             cardViewItem.visible = true;
         }
-        onSwitchToLauncherView: {
+        function onSwitchToLauncherView() {
             gestureAreaConnections.target = null
             cardViewItem.state = "cardList"
             cardViewItem.visible = true;
         }
-        onSwitchToLockscreen: {
+        function onSwitchToLockscreen() {
             gestureAreaConnections.target = null
             cardViewItem.visible = false;
         }
-        onSwitchToDockMode: {
+        function onSwitchToDockMode() {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "cardList"
             cardViewItem.visible = false;
@@ -243,7 +243,7 @@ Item {
     Connections {
         id: gestureAreaConnections
         target: gestureAreaInstance
-        onTapGesture: {
+        function onTapGesture() {
             if( 0 === windowManagerInstance.nbRegisteredTapActionsBeforeTap ) {
                 if( cardViewItem.isCurrentCardActive() ) {
                     cardViewItem.setCurrentCardState(WindowState.Carded);
@@ -253,27 +253,36 @@ Item {
                 }
             }
         }
-        onSwipeUpGesture:{
+        function onSwipeUpGesture() {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.setCurrentCardState(WindowState.Carded);
             }
         }
-        onSwipeLeftGesture:{
-            if( cardViewItem.isCurrentCardActive() )
+        function onSwipeLeftGesture() {
+            if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviBack);
+            }
         }
-        onSwipeRightGesture:{
-            if( cardViewItem.isCurrentCardActive() )
+        function onSwipeRightGesture() {
+            if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviNext);
+            }
         }
     }
 
     ///////// private section //////////
     Connections {
         target: compositorInstance
-        onWindowAdded: __handleWindowAdded(window)
-        onWindowRaised: { cardViewItem.setCurrentCard(window); cardViewItem.setCurrentCardState(WindowState.Maximized); }
-        onWindowRemoved: __handleWindowRemoved(window)
+        function onWindowAdded() {
+            __handleWindowAdded(window);
+        }
+        function onWindowRaised() {
+            cardViewItem.setCurrentCard(window);
+            cardViewItem.setCurrentCardState(WindowState.Maximized);
+        }
+        function onWindowRemoved() {
+            __handleWindowRemoved(window);
+        }
     }
 
     function __handleWindowAdded(window) {

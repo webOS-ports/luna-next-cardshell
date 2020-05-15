@@ -195,13 +195,13 @@ Rectangle {
 
         Connections {
             target: bannerItemsPopups.popupModel
-            onCountChanged: {
+            function onCountChanged() {
                 if( bannerItemsPopups.popupModel.count > 0 )
                     notificationArea.state = "banner";
                 else if( mergedModel.count > 0 )
                     notificationArea.state = "minimized";
             }
-            onRowsAboutToBeRemoved: {
+            function onRowsAboutToBeRemoved() {
                 if( !bannerItemsPopups.popupModel.get(last).sticky )
                 {
                     mergedModel.notificationMgr.closeById(bannerItemsPopups.popupModel.get(last).object.replacesId);

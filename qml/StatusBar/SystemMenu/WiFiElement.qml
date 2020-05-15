@@ -173,7 +173,7 @@ Drawer {
 
             Connections {
                 target: delegateService
-                onConnectedChanged: {
+                function onConnectedChanged() {
                     if(delegateService.connected && closeOnConnect) {
                         menuCloseRequest(1000);
                         closeOnConnect = false;

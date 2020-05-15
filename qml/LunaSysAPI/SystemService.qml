@@ -149,7 +149,9 @@ Item {
 
     Connections {
         target: cardViewInstance
-        onCurrentCardChanged: sendFocusWindowChanged(cardViewInstance.currentActiveWindow(), cardViewInstance.isCurrentCardActive());
+        function onCurrentCardChanged() {
+            sendFocusWindowChanged(cardViewInstance.currentActiveWindow(), cardViewInstance.isCurrentCardActive());
+        }
     }
 
     function sendFocusWindowChanged(window, hasFocus) {

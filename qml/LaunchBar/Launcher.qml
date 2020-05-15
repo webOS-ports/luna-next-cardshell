@@ -165,12 +165,16 @@ Item {
 
     Connections {
         target: launchBarInstance
-        onStartLaunchApplication: launchApplication(appId, appParams)
+        function onStartLaunchApplication(appId, appParams) {
+            launchApplication(appId, appParams)
+        }
     }
 
     Connections {
         target: fullLauncherInstance
-        onStartLaunchApplication: launchApplication(appId, appParams)
+        function onStartLaunchApplication(appId, appParams) {
+            launchApplication(appId, appParams)
+        }
     }
 
     function handleLaunchAppError(message) {
@@ -185,27 +189,27 @@ Item {
 
     Connections {
         target: windowManagerInstance
-        onSwitchToLockscreen: {
+        function onSwitchToLockscreen() {
             gestureAreaConnections.target = null;
             state = "hidden";
         }
-        onSwitchToDockMode: {
+        function onSwitchToDockMode() {
             gestureAreaConnections.target = null;
             state = "hidden";
         }
-        onSwitchToMaximize: {
+        function onSwitchToMaximize() {
             gestureAreaConnections.target = null;
             state = "hidden";
         }
-        onSwitchToFullscreen: {
+        function onSwitchToFullscreen() {
             gestureAreaConnections.target = null;
             state = "hidden";
         }
-        onSwitchToCardView: {
+        function onSwitchToCardView() {
             gestureAreaConnections.target = gestureAreaInstance;
             state = "launchbar";
         }
-        onSwitchToLauncherView: {
+        function onSwitchToLauncherView() {
             gestureAreaConnections.target = gestureAreaInstance;
             if( !launcherActive ) {
                 state = "fullLauncher";
@@ -217,7 +221,7 @@ Item {
     Connections {
         id: gestureAreaConnections
         target: gestureAreaInstance
-        onSwipeUpGesture:{
+        function onSwipeUpGesture (){
             if( state === "launchbar" ) {
                 state = "fullLauncher";
             }
@@ -225,7 +229,7 @@ Item {
                 state = "launchbar";
             }
         }
-        onSwipeLeftGesture:{
+        function onSwipeLeftGesture (){
             state = "launchbar";
         }
     }

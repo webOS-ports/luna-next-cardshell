@@ -59,7 +59,7 @@ Item {
     Connections {
         id: gestureAreaConnections
         target: gestureAreaInstance
-        onTapGesture: {
+        function onTapGesture() {
             nbRegisteredTapActionsBeforeTap = WindowManagerServices.nbRegisteredTapActions();
             doNextTapAction();
         }

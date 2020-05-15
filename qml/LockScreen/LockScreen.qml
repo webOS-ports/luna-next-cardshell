@@ -49,11 +49,21 @@ Item {
     property string _stateBeforeLock: "cardview"
     Connections {
         target: windowManagerInstance
-        onSwitchToDockMode: _stateBeforeLock = "dockmode";
-        onSwitchToMaximize: _stateBeforeLock = "minimize";
-        onSwitchToFullscreen: _stateBeforeLock = "fullscreen";
-        onSwitchToCardView: _stateBeforeLock = "cardview";
-        onSwitchToLauncherView: _stateBeforeLock = "launcherview";
+        function onSwitchToDockMode() {
+            _stateBeforeLock = "dockmode";
+        }
+        function onSwitchToMaximize() { 
+            _stateBeforeLock = "minimize";
+        }
+        function onSwitchToFullscreen() { 
+            _stateBeforeLock = "fullscreen";
+        }
+        function onSwitchToCardView() {
+            _stateBeforeLock = "cardview";
+        }
+        function onSwitchToLauncherView() {
+            _stateBeforeLock = "launcherview";
+        }
     }
 
     function lockDisplay() {
