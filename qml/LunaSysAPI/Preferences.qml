@@ -49,6 +49,7 @@ Item {
         name: "org.webosports.luna"
 
         property variant keysToWatch: ["wallpaper","airplaneMode","rotationLock","muteSound","ringtone","notificationtone","alerttone","locale"]
+        property bool firstReadDone: false
 
         onInitialized: {
             console.log("Calling preferences service ...");
@@ -88,6 +89,8 @@ Item {
             if (response.hasOwnProperty("locale")) {
                 preferences.locale = response.locale.languageCode+"_"+response.locale.countryCode;
             }
+
+            firstReadDone = true;
         }
 
         function handleError(message) {
@@ -95,6 +98,11 @@ Item {
         }
 
         function setPreference(key, value) {
+            if(!firstReadDone) {
+                console.log("Trying to set preferences before reading them first: ignoring.");
+                return;
+            }
+
             var params = {};
             params[key] = value;
             systemService.call("luna://com.webos.service.systemservice/setPreferences",
