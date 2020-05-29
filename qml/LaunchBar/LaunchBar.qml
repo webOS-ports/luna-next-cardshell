@@ -117,7 +117,7 @@ Item {
             Item {
                 id: launcherIconDelegate
 
-                anchors.verticalCenter: launchBarListView.verticalCenter
+                anchors.verticalCenter: parent ? parent.verticalCenter : undefined
                 height: launcherIcon.height
                 width: launcherIcon.width
 
