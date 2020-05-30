@@ -31,41 +31,15 @@ Item {
     property int bars: 0
     property int rssi: 0
 
-    Timer {
-        id: resubscribeTimer
-        interval: 500
-        repeat: false
-        running: false
-        onTriggered: {
-            probeTelephonyService();
-        }
-    }
-
     ServiceStatus {
         serviceName: "com.palm.telephony"
         onConnected: {
             console.log("TelephonyService: service connected");
-            probeTelephonyService();
+            subscribeTelephonyService();
         }
         onDisconnected: {
             console.log("TelephonyService: service disconnected");
         }
-    }
-
-    function handleTelephonyServiceProbeResponse(message) {
-        var response = JSON.parse(message.payload);
-
-        if (!response.returnValue &&
-             response.errorText === "Backend not initialized") {
-            resubscribeTimer.start();
-            return;
-        }
-
-        subscribeTelephonyService();
-    }
-
-    function probeTelephonyService() {
-        powerQuery.call(JSON.stringify({}), handleTelephonyServiceProbeResponse, function (errorMessage) { });
     }
 
     function subscribeTelephonyService() {
