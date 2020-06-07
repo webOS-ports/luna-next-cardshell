@@ -172,8 +172,12 @@ Item {
 
                 Connections {
                     target: AppTweaks
-                    onEnableCustomCarrierStringValueChanged: updateCarrierString()
-                    onCustomCarrierStringValueChanged: updateCarrierString()
+                    function onEnableCustomCarrierStringValueChanged() {
+                        updateCarrierString()
+                    }
+                    function onCustomCarrierStringValueChanged() {
+                        updateCarrierString()
+                    }
                     function updateCarrierString() {
                         if (AppTweaks.enableCustomCarrierStringValue === true) {
                             //Only show custom carrier text in case we have the option enabled in Tweaks
@@ -295,7 +299,7 @@ Item {
 
         Connections {
             target: lockScreen
-            onLockedChanged: {
+            function onLockedChanged() {
                 if (lockScreen.locked) {
                     systemMenu.visibleBeforeLock = systemMenu.isVisible();
                     systemMenu.visible = false;
@@ -308,7 +312,7 @@ Item {
 
         Connections {
             target: gestureHandlerInstance
-            onScreenEdgeFlickEdgeTop: {
+            function onScreenEdgeFlickEdgeTop(timeout, pos) {
                 if (!timeout && windowManagerInstance.gesturesEnabled === true) {
                     if (appMenu.contains(mapToItem(appMenu, pos.x, pos.y)))
                         appMenu.toggleState()
@@ -389,22 +393,22 @@ Item {
 
     Connections {
         target: windowManagerInstance
-        onSwitchToLockscreen: {
+        function onSwitchToLockscreen () {
             state = "lockscreen"
         }
-        onSwitchToDockMode: {
+        function onSwitchToDockMode () {
             state = "dockmode"
         }
-        onSwitchToMaximize: {
+        function onSwitchToMaximize (window) {
             state = "application-visible"
         }
-        onSwitchToFullscreen: {
+        function onSwitchToFullscreen (window) {
             state = "hidden"
         }
-        onSwitchToCardView: {
+        function onSwitchToCardView () {
             state = "default"
         }
-        onSwitchToLauncherView: {
+        function onSwitchToLauncherView () {
             state = "launcher-visible"
             if (systemMenu.isVisible())
                 systemMenu.toggleState()

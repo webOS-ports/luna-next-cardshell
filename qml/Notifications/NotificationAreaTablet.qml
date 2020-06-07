@@ -347,15 +347,16 @@ Rectangle {
 
         Connections {
             target: bannerItemsPopups.popupModel
-            onCountChanged: {
-                if( bannerItemsPopups.popupModel.count > 0 )
+            function onCountChanged() {
+                if( bannerItemsPopups.popupModel.count > 0 ) {
                     notificationArea.state = "banner";
-                else if( mergedModel.count > 0 )
+                }
+                else if( mergedModel.count > 0 ) {
                     notificationArea.state = "minimized";
+                }
             }
-            onRowsAboutToBeRemoved: {
-                if( !bannerItemsPopups.popupModel.get(last).sticky )
-                {
+            function onRowsAboutToBeRemoved(parent, first, last) {
+                if( !bannerItemsPopups.popupModel.get(last).sticky ) {
                     mergedModel.notificationMgr.closeById(bannerItemsPopups.popupModel.get(last).object.replacesId);
                 }
             }

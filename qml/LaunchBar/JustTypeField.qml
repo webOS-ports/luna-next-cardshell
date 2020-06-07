@@ -105,22 +105,22 @@ Item {
 
     Connections {
         target: windowManagerInstance
-        onSwitchToLockscreen: {
+        function onSwitchToLockscreen() {
             state = "hidden";
         }
-        onSwitchToDockMode: {
+        function onSwitchToDockMode() {
             state = "hidden";
         }
-        onSwitchToMaximize: {
+        function onSwitchToMaximize(window) {
             state = "hidden";
         }
-        onSwitchToFullscreen: {
+        function onSwitchToFullscreen(window) {
             state = "hidden";
         }
-        onSwitchToCardView: {
+        function onSwitchToCardView() {
             state = "visible";
         }
-        onSwitchToLauncherView: {
+        function onSwitchToLauncherView() {
             state = "hidden";
         }
     }

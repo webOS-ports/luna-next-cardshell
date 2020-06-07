@@ -346,7 +346,9 @@ Item {
 
                 Connections {
                     target: commonAppsModel
-                    onAppsModelRefreshed: gridTabModel.refreshConfig();
+                    function onAppsModelRefreshed() {
+                        gridTabModel.refreshConfig();
+                    }
                 }
 
                 delegate: DraggableAppIcon {
@@ -383,7 +385,11 @@ Item {
 
                 Connections {
                     target: fullLauncher
-                    onIsEditionActiveChanged: if( !fullLauncher.isEditionActive ) fullLauncherGridView.saveCurrentLayout();
+                    function onIsEditionActiveChanged () {
+                        if( !fullLauncher.isEditionActive ) {
+                            fullLauncherGridView.saveCurrentLayout();
+                        }
+                    }
                 }
 
                 function saveCurrentLayout() {

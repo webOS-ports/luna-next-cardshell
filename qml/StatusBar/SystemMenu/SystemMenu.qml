@@ -311,7 +311,7 @@ Item {
                     Connections {
                         target: preferences
 
-                        onRotationLockAngleChanged: {
+                        function onRotationLockAngleChanged() {
                             if (preferences.rotationLock) {
                                 setRotationLockText("Turn off Rotation Lock", true);
                                 orientationHelper.__lockedRotationAngle = preferences.rotationLockAngle;
@@ -352,7 +352,7 @@ Item {
                     Connections {
                         target: preferences
 
-                        onMuteSoundChanged: {
+                        function onMuteSoundChanged() {
                             if (!preferences.muteSound) {
                                 setMuteControlText("Mute Sound", false);
                                 volumeControl.setMute(false);

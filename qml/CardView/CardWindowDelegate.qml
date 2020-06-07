@@ -64,21 +64,18 @@ Item {
 
     Connections {
         target: windowUserData
-        onStateChanged: {
-            if( windowUserData.state === "card" )
-            {
+        function onStateChanged() {
+            if( windowUserData.state === "card" ) {
                 toMaximizeAnimation.stop();
                 toFullscreenAnimation.stop();
                 toCardAnimation.start();
             }
-            else if( windowUserData.state === "maximized" )
-            {
+            else if( windowUserData.state === "maximized" ) {
                 toCardAnimation.stop();
                 toFullscreenAnimation.stop();
                 toMaximizeAnimation.start();
             }
-            else if( windowUserData.state === "fullscreen" )
-            {
+            else if( windowUserData.state === "fullscreen" ) {
                 toCardAnimation.stop();
                 toMaximizeAnimation.stop();
                 toFullscreenAnimation.start();

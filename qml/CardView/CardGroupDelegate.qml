@@ -87,13 +87,13 @@ Item {
 
                     Connections {
                         target: windowUserData
-                        onClicked: {
+                        function onClicked() {
                             // maximize window (only if the group if the active one)
                             if( isCurrentItem ) {
                                 cardGroupDelegateItem.cardSelect(window);
                             }
                         }
-                        onStartDrag: {
+                        function onStartDrag() {
                             console.log("startDrag with window " + window);
                             cardGroupDelegateItem.cardDragStart(window);
                         }

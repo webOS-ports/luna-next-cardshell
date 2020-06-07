@@ -49,7 +49,9 @@ Item {
 
     Connections {
         target: AppTweaks
-        onDragNDropTweakValueChanged: updateDragNDropTweak();
+        function onDragNDropTweakValueChanged() {
+            updateDragNDropTweak();
+        }
 
         function updateDragNDropTweak()
         {

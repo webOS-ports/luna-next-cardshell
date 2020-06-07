@@ -369,15 +369,16 @@ Item {
 
             Connections {
                 target: Settings.tabletUi? bannerItemsPopups.popupModel : null;
-                onCountChanged: {
+                function onCountChanged() {
                     if (delegateIndex < bannerItemsPopups.popupModel.count-1) {
                         itemDelegate.opacity = 0.5;
                         if (timerAnimation.running) {
                             timerAnimation.stop();
                             timerAnimation.triggered();
                         }
-                        else
+                        else {
                             timerAnimation.interval = 0;
+                        }
                     }
                 }
             }
