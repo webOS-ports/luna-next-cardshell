@@ -201,7 +201,7 @@ Rectangle {
                 else if( mergedModel.count > 0 )
                     notificationArea.state = "minimized";
             }
-            function onRowsAboutToBeRemoved() {
+            function onRowsAboutToBeRemoved(parent, first, last) {
                 if( !bannerItemsPopups.popupModel.get(last).sticky )
                 {
                     mergedModel.notificationMgr.closeById(bannerItemsPopups.popupModel.get(last).object.replacesId);

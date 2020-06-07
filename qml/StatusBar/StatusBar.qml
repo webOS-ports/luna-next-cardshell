@@ -312,7 +312,7 @@ Item {
 
         Connections {
             target: gestureHandlerInstance
-            function onScreenEdgeFlickEdgeTop() {
+            function onScreenEdgeFlickEdgeTop(timeout, pos) {
                 if (!timeout && windowManagerInstance.gesturesEnabled === true) {
                     if (appMenu.contains(mapToItem(appMenu, pos.x, pos.y)))
                         appMenu.toggleState()
@@ -399,10 +399,10 @@ Item {
         function onSwitchToDockMode () {
             state = "dockmode"
         }
-        function onSwitchToMaximize () {
+        function onSwitchToMaximize (window) {
             state = "application-visible"
         }
-        function onSwitchToFullscreen () {
+        function onSwitchToFullscreen (window) {
             state = "hidden"
         }
         function onSwitchToCardView () {

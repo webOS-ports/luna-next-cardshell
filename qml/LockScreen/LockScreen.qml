@@ -52,10 +52,10 @@ Item {
         function onSwitchToDockMode() {
             _stateBeforeLock = "dockmode";
         }
-        function onSwitchToMaximize() { 
+        function onSwitchToMaximize(window) {
             _stateBeforeLock = "minimize";
         }
-        function onSwitchToFullscreen() { 
+        function onSwitchToFullscreen(window) {
             _stateBeforeLock = "fullscreen";
         }
         function onSwitchToCardView() {

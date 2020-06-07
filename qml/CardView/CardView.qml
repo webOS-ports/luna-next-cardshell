@@ -208,12 +208,12 @@ Item {
 
     Connections {
         target: windowManagerInstance
-        function onSwitchToMaximize() {
+        function onSwitchToMaximize(window) {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "maximizedCard"
             cardViewItem.visible = true;
         }
-        function onSwitchToFullscreen() {
+        function onSwitchToFullscreen(window) {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "fullscreenCard"
             cardViewItem.visible = true;
@@ -253,17 +253,17 @@ Item {
                 }
             }
         }
-        function onSwipeUpGesture() {
+        function onSwipeUpGesture(modifiers) {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.setCurrentCardState(WindowState.Carded);
             }
         }
-        function onSwipeLeftGesture() {
+        function onSwipeLeftGesture(modifiers) {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviBack);
             }
         }
-        function onSwipeRightGesture() {
+        function onSwipeRightGesture(modifiers) {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviNext);
             }
@@ -273,14 +273,14 @@ Item {
     ///////// private section //////////
     Connections {
         target: compositorInstance
-        function onWindowAdded() {
+        function onWindowAdded(window) {
             __handleWindowAdded(window);
         }
-        function onWindowRaised() {
+        function onWindowRaised(window) {
             cardViewItem.setCurrentCard(window);
             cardViewItem.setCurrentCardState(WindowState.Maximized);
         }
-        function onWindowRemoved() {
+        function onWindowRemoved(window) {
             __handleWindowRemoved(window);
         }
     }

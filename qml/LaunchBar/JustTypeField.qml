@@ -111,10 +111,10 @@ Item {
         function onSwitchToDockMode() {
             state = "hidden";
         }
-        function onSwitchToMaximize() {
+        function onSwitchToMaximize(window) {
             state = "hidden";
         }
-        function onSwitchToFullscreen() {
+        function onSwitchToFullscreen(window) {
             state = "hidden";
         }
         function onSwitchToCardView() {

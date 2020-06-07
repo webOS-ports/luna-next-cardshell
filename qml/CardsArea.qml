@@ -154,7 +154,7 @@ WindowManager {
 
     Connections {
         target: gestureAreaInstance
-        function onSwipeRightGesture() {
+        function onSwipeRightGesture(modifiers) {
             screenShooter.capture("");
             screenShooterGradient.startShootEffect();
         }
@@ -162,7 +162,7 @@ WindowManager {
 
     Connections {
         target: gestureHandlerInstance
-        function onScreenEdgeFlickEdgeBottom() {
+        function onScreenEdgeFlickEdgeBottom(timeout, pos) {
             if (!timeout && gestureAreaInstance.visible === false
                     && gesturesEnabled === true)
                 gestureAreaInstance.swipeUpGesture(0);

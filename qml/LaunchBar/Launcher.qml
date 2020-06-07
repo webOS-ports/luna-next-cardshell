@@ -197,11 +197,11 @@ Item {
             gestureAreaConnections.target = null;
             state = "hidden";
         }
-        function onSwitchToMaximize() {
+        function onSwitchToMaximize(window) {
             gestureAreaConnections.target = null;
             state = "hidden";
         }
-        function onSwitchToFullscreen() {
+        function onSwitchToFullscreen(window) {
             gestureAreaConnections.target = null;
             state = "hidden";
         }
@@ -221,7 +221,7 @@ Item {
     Connections {
         id: gestureAreaConnections
         target: gestureAreaInstance
-        function onSwipeUpGesture (){
+        function onSwipeUpGesture(modifiers) {
             if( state === "launchbar" ) {
                 state = "fullLauncher";
             }
@@ -229,7 +229,7 @@ Item {
                 state = "launchbar";
             }
         }
-        function onSwipeLeftGesture (){
+        function onSwipeLeftGesture(modifiers) {
             state = "launchbar";
         }
     }
