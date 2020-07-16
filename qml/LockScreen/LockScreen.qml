@@ -23,7 +23,7 @@ import LunaNext.Common 0.1
 Item {
     id: lockScreen
 
-    visible: locked && !isFirstUse
+    visible: locked
 
     property Item windowManagerInstance;
 
