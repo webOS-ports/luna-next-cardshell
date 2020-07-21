@@ -31,6 +31,7 @@ Item {
     ServiceStatus {
         serviceName: "com.palm.connectionmanager"
         onConnected: {
+            console.log("herrie connectionmanager onconnected")
             getConnMgrWanStatus.subscribe(JSON.stringify({"subscribe":true}));
         }
     }
@@ -43,6 +44,7 @@ Item {
         method: "getStatus"
 
         onResponse: function (message) {
+            console.log("Herrie test")
             var response = JSON.parse(message.payload);
 
             if (!response.returnValue) {

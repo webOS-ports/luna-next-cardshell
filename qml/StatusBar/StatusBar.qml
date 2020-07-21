@@ -27,6 +27,8 @@ import "../AppTweaks"
 
 import "SystemMenu"
 
+import Meego.QOfono 0.2
+import Connman 0.2
 
 /// The status bar can be divided in three main regions: app menu, title, system indicators/system menu
 /// [-- app menu -- / -- (custom) carrier name -- |   --- title ---    |  -- indicators --]
@@ -50,7 +52,7 @@ Item {
 
     signal showPowerMenu()
 
-    function probeNetworkStatus()
+    /*function probeNetworkStatus()
     {
         networkStatusQuery.subscribe(
                     "luna://com.palm.telephony/networkStatusQuery",
@@ -76,12 +78,50 @@ Item {
 
     function onError(message) {
         console.log("Failed to call networkStatus service: " + message)
-    }
+    }*/
 
     Rectangle {
         id: background
         anchors.fill: parent
         color: (!Settings.tabletUi || statusBar.blackMode)?"black":"transparent";
+
+        OfonoManager {
+                id: manager
+            }
+
+        OfonoNetworkRegistration{
+            id: cellularDataTechnology
+            modemPath: manager.defaultModem
+            onTechnologyChanged: {
+                formatValue()
+            }
+        }
+
+        NetworkTechnology {
+            id: cellularNetworkTechnology
+            path: "/net/connman/technology/cellular"
+        }
+
+        function formatValue() {
+                /*if(cellularDataTechnology.technology == "2") {
+                    dataStatus.source = "/usr/share/lipstick-glacier-home-qt5/qml/theme/data_gprs.png"
+                }else if(cellularDataTechnology.technology == "2.5" || cellularDataTechnology.technology == "gprs") {
+                    dataStatus.source = "/usr/share/lipstick-glacier-home-qt5/qml/theme/data_egprs.png"
+                }else if(cellularDataTechnology.technology == "3" || cellularDataTechnology.technology == "umts") {
+                    dataStatus.source = "/usr/share/lipstick-glacier-home-qt5/qml/theme/data_utms.png"
+                }else if(cellularDataTechnology.technology == "3.5" || cellularDataTechnology.technology == "hspa") {
+                    dataStatus.source = "/usr/share/lipstick-glacier-home-qt5/qml/theme/data_hspa.png"
+                }else if(cellularDataTechnology.technology == "4" || cellularDataTechnology.technology == "lte") {
+                    dataStatus.source = "/usr/share/lipstick-glacier-home-qt5/qml/theme/data_lte.png"
+                }
+
+                if(cellularDataTechnology.technology == "unknown" || cellularDataTechnology.technology == "") {
+                    dataStatus.visible = false
+                }else {
+                    dataStatus.visible = true
+                }*/
+            console.log("Herrie data status changed")
+            }
 
         Rectangle {
             anchors.fill: parent
@@ -152,7 +192,7 @@ Item {
                 usePrivateBus: true
 
                 onInitialized: {
-                    probeNetworkStatus()
+                    //probeNetworkStatus()
                 }
 
             }

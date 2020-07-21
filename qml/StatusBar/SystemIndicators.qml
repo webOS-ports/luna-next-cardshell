@@ -125,6 +125,16 @@ Row {
         bars: telephonyService.bars
     }
 
+    SimIndicator {
+        id: simIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: true
+       // bars: telephonyService.bars
+    }
+
     BatteryIndicator {
         id: batteryIndicator
 

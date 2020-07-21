@@ -19,6 +19,7 @@
 import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
+import Connman 0.2
 
 Item {
     id: preferences
@@ -35,11 +36,20 @@ Item {
     property string notificationtoneFullPath: "/usr/palm/sounds/notification.wav"
     property string locale: "en_us"
 
+    NetworkManager {
+        id: networkManager
+    }
+
     //
     // private
     //
 
-    onAirplaneModeChanged: systemService.setPreference("airplaneMode", preferences.airplaneMode)
+    onAirplaneModeChanged: 
+    {
+        console.log("Herrie airplaineModeChange: "+ preferences.airplaneMode);
+        systemService.setPreference("airplaneMode", preferences.airplaneMode);
+        networkManager.offlineMode=preferences.airplaneMode;
+    }
     onRotationLockAngleChanged: systemService.setPreference("rotationLock", preferences.rotationLockAngle)
     onMuteSoundChanged: systemService.setPreference("muteSound", preferences.muteSound)
 

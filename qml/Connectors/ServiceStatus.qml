@@ -36,7 +36,7 @@ Item {
         method: "signal/registerServerStatus"
 
         onInitialized: {
-            console.log("RegisterServerStatus");
+            console.log("RegisterServerStatus "+serviceStatus.serviceName);
             registerServerStatus.subscribe(JSON.stringify({"serviceName": serviceStatus.serviceName}));
         }
 

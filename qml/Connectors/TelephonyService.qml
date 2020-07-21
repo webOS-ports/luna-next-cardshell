@@ -40,6 +40,7 @@ Item {
         onDisconnected: {
             console.log("TelephonyService: service disconnected");
         }
+        Component.onCompleted: {console.log("herrie Servicestatustelehony");}
     }
 
     function subscribeTelephonyService() {
