@@ -99,7 +99,7 @@ BaseIndicator {
     }
 
     function __getIconForBatteryLevel(level, isCharging) {
-        var baseName = "../../images/statusbar/battery-";
+        var baseName = "../../images/statusbar/battery/battery-";
         var normalizedLevel = 0;
 
         if (level > 11 && !isCharging) {

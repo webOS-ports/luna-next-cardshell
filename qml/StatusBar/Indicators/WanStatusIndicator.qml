@@ -22,7 +22,7 @@ import LunaNext.Common 0.1
 BaseIndicator {
     id: wanStatusIndicator
 
-    property string technology: "none" // none, gsm, edge, umts, hsdpa, hsupa, hspa, umts
+    property string technology: "none" // none, gsm, edge, umts, hsdpa, hsupa, hspa, lte 
 
     imageSource: getIconForTechnology(technology)
 
@@ -46,10 +46,13 @@ BaseIndicator {
         case "hspa":
             name = "hsdpa-plus";
             break;
+        case "lte":
+            name = "4g";
+            break;
         default:
             break;
         }
 
-        return "../../images/statusbar/network-" + name + "-connected.png";
+        return "../../images/statusbar/network/network-" + name + "-connected.png";
     }
 }

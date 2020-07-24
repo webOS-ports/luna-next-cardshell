@@ -27,7 +27,7 @@ BaseIndicator {
     imageSource: __getIconForSignalBars(signalBars)
 
     function __getIconForSignalBars(level) {
-        var baseName = "../../images/statusbar/wifi-";
+        var baseName = "../../images/statusbar/wifi/wifi-";
 
         var normalizedLevel = level;
         if (level > 3) {

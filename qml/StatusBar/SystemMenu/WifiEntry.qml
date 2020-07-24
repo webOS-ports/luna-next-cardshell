@@ -77,7 +77,7 @@ Item {
         x: parent.width - width - iconSpacing - rightMarging
         anchors.verticalCenter: parent.verticalCenter
 
-        source: "../../images/statusbar/wifi-" + _signalBars + ".png"
+        source: "../../images/statusbar/wifi/wifi-" + _signalBars + ".png"
         height: Units.gu(1.8) 
         width: Units.gu(2) 
     }

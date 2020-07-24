@@ -65,8 +65,8 @@ Row {
 
         enabled: airplaneModeService.active
     }
-	
-	RotationLockIndicator {
+
+    RotationLockIndicator {
         id: rotationLockIndicator
 
         anchors.top: indicatorsRow.top
@@ -74,8 +74,8 @@ Row {
 
         enabled: preferences.rotationLock
     }
-	
-	MuteSoundIndicator {
+
+    MuteSoundIndicator {
         id: muteSoundIndicator
 
         anchors.top: indicatorsRow.top

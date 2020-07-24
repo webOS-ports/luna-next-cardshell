@@ -27,7 +27,7 @@ BaseIndicator {
     imageSource: __getIconForStrengthValue(bars)
 
     function __getIconForStrengthValue(value) {
-        var baseName = "../../images/statusbar/rssi-";
+        var baseName = "../../images/statusbar/network/rssi-";
 
         var normalizedValue = bars;
         if (value > 5)
