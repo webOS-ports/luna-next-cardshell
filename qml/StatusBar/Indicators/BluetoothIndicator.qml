@@ -26,8 +26,8 @@ BaseIndicator {
     property bool connected: false
     property bool isTurningOn: false
 
-    imageSource: connected ? "../../images/statusbar/bluetooth-connected.png" :
-                      isTurningOn ? "../../images/statusbar/bluetooth-connecting.png" :
-                                    "../../images/statusbar/bluetooth-on.png"
+    imageSource: connected ? "../../images/statusbar/bluetooth/bluetooth-connected.png" :
+                      isTurningOn ? "../../images/statusbar/bluetooth/bluetooth-connecting.png" :
+                                    "../../images/statusbar/bluetooth/bluetooth-on.png"
 }
 
