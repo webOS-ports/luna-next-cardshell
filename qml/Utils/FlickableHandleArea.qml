@@ -1,4 +1,5 @@
-import QtQuick 2.0;
+import QtQuick 2.0
+import QtQml 2.15
 
 Item {
     id: flickableHandleArea
@@ -17,6 +18,7 @@ Item {
         property: "contentY"
         value: contentOffset - handleItem.y
         when: !!contentOffset
+        restoreMode: Binding.RestoreBinding
     }
 
     Item {
