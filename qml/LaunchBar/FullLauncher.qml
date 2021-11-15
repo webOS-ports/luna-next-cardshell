@@ -19,6 +19,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 1.1
 import QtQuick.Controls.Styles 1.1
+import QtQml 2.15
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
 import LuneOS.Components 1.0
@@ -528,6 +529,7 @@ Item {
                 property: "contentY"
                 value: flkMouseArea.contentY
                 when: !!tabContentList.currentItem.launcherGridView
+                restoreMode: Binding.RestoreBinding
             }
 
             /* Drag area of the grids */

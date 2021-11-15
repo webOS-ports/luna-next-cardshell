@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml 2.15
 
 Item {
     id: swipeableRoot
@@ -43,6 +44,7 @@ Item {
             target: flickableArea
             property: "contentY"
             value: 0
+            restoreMode: Binding.RestoreBinding
         }
 
         // handling of card swipe-out, either by drag or by flick
