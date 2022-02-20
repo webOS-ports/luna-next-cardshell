@@ -20,6 +20,7 @@ import QtQuick 2.0
 
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
+import WebOSCompositor 1.0
 
 import "../Utils"
 
@@ -51,16 +52,17 @@ FocusScope {
     // Drag management
     Drag.active: false
     Drag.source: cardWrapperItem
-
+/*
     CardWindowSplash {
         id: splash
-        appIcon: wrappedWindow !== null ? wrappedWindow.appIcon : ""
+        appIcon: wrappedWindow !== null ? wrappedWindow.customImageFilePath : ""
         anchors.fill: parent;
+	state: "hidden"
         z: 10
     }
-
+*/
     function windowVisibleChanged() {
-        if(wrappedWindow.mapped) {
+        if(wrappedWindow.exposed) {
             splash.state = "hidden";
             wrappedWindow.mappedChanged.disconnect(windowVisibleChanged);
         }
@@ -89,9 +91,9 @@ FocusScope {
                 window.anchors.fill = childWrapper;
 
                 /* Resize the real client window to have the right size */
-                window.changeSize(Qt.size(cardView.defaultWindowWidth, cardView.defaultWindowHeight));
+//                window.changeSize(Qt.size(cardView.defaultWindowWidth, cardView.defaultWindowHeight));
 
-                window.mappedChanged.connect(windowVisibleChanged);
+                window.exposedChanged.connect(windowVisibleChanged);
             }
         }
     }
@@ -198,6 +200,9 @@ FocusScope {
     }
     
     function syncClientWindowSize() {
+	console.log("syncClientWindowSize: TODO: investigate card size");
+	return;
+
         if( cardWrapperItem.windowState !== WindowState.Carded && wrappedWindow ) {
             /* Resize the real client window to have the right size */
             wrappedWindow.changeSize(Qt.size(cardWrapperItem.width, cardWrapperItem.height));

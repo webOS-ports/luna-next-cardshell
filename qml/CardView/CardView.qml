@@ -2,6 +2,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
 import WebOSCoreCompositor 1.0
+import WebOSCompositor 1.0
 
 import "../Utils"
 
@@ -27,11 +28,12 @@ Item {
 
     WindowModel {
         id: cardsModel
+        surfaceSource: compositorInstance.surfaceModel
 //        windowTypeFilter: WindowType.Card
 
         onRowsAboutToBeRemoved: {
             if( !cardViewItem.keepCurrentCardMaximized &&
-                cardsModel.getByIndex(last).userData.windowState !== WindowState.Carded ) cardViewItem.setCurrentCardState(WindowState.Carded);
+                cardsModel.get(last).userData.windowState !== WindowState.Carded ) cardViewItem.setCurrentCardState(WindowState.Carded);
         }
     }
 
@@ -274,20 +276,20 @@ Item {
     ///////// private section //////////
     Connections {
         target: compositorInstance
-        function onWindowAdded(window) {
+        function onSurfaceMapped(window) {
             __handleWindowAdded(window);
         }
         function onWindowRaised(window) {
             cardViewItem.setCurrentCard(window);
             cardViewItem.setCurrentCardState(WindowState.Maximized);
         }
-        function onWindowRemoved(window) {
+        function onSurfaceUnmapped(window) {
             __handleWindowRemoved(window);
         }
     }
 
     function __handleWindowAdded(window) {
-        if( window.windowType === WindowType.Card ) {
+        if( window.type === "_WEBOS_WINDOW_TYPE_CARD" ) {
             // Create the window container
             var windowWrapperComponent = Qt.createComponent("CardWindowWrapper.qml");
             var windowWrapper = windowWrapperComponent.createObject(cardViewItem, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2,
@@ -300,7 +302,7 @@ Item {
     }
 
     function __handleWindowRemoved(window) {
-        if( window.windowType === WindowType.Card ) {
+        if( window.type === "_WEBOS_WINDOW_TYPE_CARD" ) {
             var windowWrapper = window.userData;
             if( !!windowWrapper ) {
                 windowWrapper.setWrappedWindow(null);
@@ -316,8 +318,8 @@ Item {
 
         // switch the state to maximized
         window.userData.windowState = WindowState.Maximized;
-        if( !!window )
-            window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
+//        if( !!window )
+//            window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
     }
     function __setToFullscreen(window) {
         // set the card as the active one

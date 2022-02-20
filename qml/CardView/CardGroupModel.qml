@@ -18,10 +18,11 @@ ListModel {
 
     property WindowModel listCardsModel: WindowModel {
 //        windowTypeFilter: WindowType.Card
+        surfaceSource: compositor.surfaceModel
 
-        onRowsAboutToBeRemoved: removeWindow(listCardsModel.getByIndex(last));
+        onRowsAboutToBeRemoved: removeWindow(listCardsModel.get(last));
         onRowsInserted: {
-            var newWindow = listCardsModel.getByIndex(last);
+            var newWindow = listCardsModel.get(last);
             var groupIndexForInsertion = listCardGroupsModel.count;
             if( newWindow.parentWinId ) {
                 var windowFound = false;
