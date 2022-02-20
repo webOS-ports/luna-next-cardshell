@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
+import WebOSCoreCompositor 1.0
 
 import "../Utils"
 
@@ -26,7 +27,7 @@ Item {
 
     WindowModel {
         id: cardsModel
-        windowTypeFilter: WindowType.Card
+//        windowTypeFilter: WindowType.Card
 
         onRowsAboutToBeRemoved: {
             if( !cardViewItem.keepCurrentCardMaximized &&

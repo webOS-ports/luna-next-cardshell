@@ -18,15 +18,16 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
+import WebOSCoreCompositor 1.0
 
 Item {
     id: overlaysManagerItem
-    property Compositor compositorInstance
+    property Item compositorInstance
 
     WindowModel {
         id: listOverlaysModel
-        windowTypeFilter: WindowType.Overlay
+//        windowTypeFilter: WindowType.Overlay
 
         onRowsInserted: {
             appendOverlayWindow(listOverlaysModel.getByIndex(listOverlaysModel.count-1));

@@ -20,7 +20,7 @@ import QtQuick 2.6
 import QtQuick.Window 2.2
 
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 
 // The compositor is exposed by the LunaNext module.
 // It manages the creation/destruction of windows

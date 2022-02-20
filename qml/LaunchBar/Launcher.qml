@@ -19,7 +19,8 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
+import WebOSCoreCompositor 1.0
 import LunaNext.Shell.Notifications 0.1
 
 import "../LunaSysAPI" as LunaSysAPI
@@ -236,7 +237,7 @@ Item {
 
     WindowModel {
         id: launcherListModel
-        windowTypeFilter: WindowType.Launcher
+        //windowTypeFilter: WindowType.Launcher
 
         onRowsInserted: {
             initJustTypeLauncherApp(launcherListModel.getByIndex(last));

@@ -1,0 +1,4 @@
+module WebOSCompositor
+
+ViewsRoot 1.0 qml/CardShell.qml
+

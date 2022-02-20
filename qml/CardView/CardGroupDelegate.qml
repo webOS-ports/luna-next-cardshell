@@ -1,6 +1,6 @@
 import QtQuick 2.0
 
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 
 import "../Utils"
 

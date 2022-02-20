@@ -21,7 +21,7 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 import LuneOS.Components 1.0
 import LunaNext.Performance 0.1
 
@@ -142,16 +142,6 @@ WindowManager {
         id: volumeControl
     }
 
-    ScreenShooter {
-        id: screenShooter
-    }
-
-    ScreenShooterGradient {
-        id: screenShooterGradient
-        anchors.fill: parent
-		z: 11
-    }
-
     Connections {
         target: gestureAreaInstance
         function onSwipeRightGesture(modifiers) {
@@ -171,7 +161,6 @@ WindowManager {
 
     SystemService {
         id: systemService
-        screenShooter: screenShooter
         cardViewInstance: cardViewInstance
         compositorInstance: compositor
 

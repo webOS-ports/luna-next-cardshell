@@ -17,8 +17,9 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 import LunaNext.Shell.Notifications 0.1
+import WebOSCoreCompositor 1.0
 import LuneOS.Service 1.0
 
 import "../Utils"
@@ -29,13 +30,13 @@ Rectangle {
 
     property int maxHeight: 0
     property Item windowManagerItem
-    property Compositor compositorInstance
+    property Item compositorInstance
 
     color: "black"
 
     WindowModel {
         id: listPopupAlertsModel
-        windowTypeFilter: WindowType.PopupAlert
+    //    windowTypeFilter: WindowType.PopupAlert
     }
 
     Component {
