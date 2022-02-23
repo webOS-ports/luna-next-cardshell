@@ -37,7 +37,7 @@ Item {
 
     LunaService {
         id: getConnMgrWanStatus
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://com.palm.connectionmanager"
         method: "getStatus"
@@ -68,7 +68,7 @@ Item {
 
     LunaService {
         id: getWanStatus
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://com.palm.wan"
         method: "getstatus"

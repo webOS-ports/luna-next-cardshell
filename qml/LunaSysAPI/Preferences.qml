@@ -46,7 +46,7 @@ Item {
     LunaService {
         id: systemService
 
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
 
         property variant keysToWatch: ["wallpaper","airplaneMode","rotationLock","muteSound","ringtone","notificationtone","alerttone","locale"]
         property bool firstReadDone: false

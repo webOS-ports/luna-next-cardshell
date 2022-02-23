@@ -202,7 +202,7 @@ ListModel {
         property int __previousCount: 0
     }
     property LunaService displayService: LunaService {
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 }

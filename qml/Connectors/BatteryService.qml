@@ -62,7 +62,7 @@ Item {
 
     LunaService {
         id: lunaService
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
 
         onInitialized: {

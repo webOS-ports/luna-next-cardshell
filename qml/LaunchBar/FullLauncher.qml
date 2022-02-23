@@ -650,7 +650,7 @@ Item {
     // ls2 management
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
     // ls2 db8 management

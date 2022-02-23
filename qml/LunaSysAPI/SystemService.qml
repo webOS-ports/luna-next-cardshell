@@ -41,7 +41,7 @@ Item {
 
     LunaService {
         id: systemServicePrivate
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         onInitialized: {
             systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
@@ -58,7 +58,7 @@ Item {
 
     LunaService {
         id: systemServicePublic
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         onInitialized: {
             systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
             systemServicePublic.registerMethod("/", "enableFullScreenMode", handleEnableFullScreenMode);

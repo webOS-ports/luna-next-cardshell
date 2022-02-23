@@ -27,7 +27,7 @@ Item {
 
     LunaService {
         id: getStatus
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://com.palm.connectionmanager"
         method: "getStatus"

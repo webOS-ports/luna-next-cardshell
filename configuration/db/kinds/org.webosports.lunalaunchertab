@@ -1,6 +1,6 @@
 {
 	"id":"org.webosports.lunalaunchertab:1",
-	"owner":"org.webosports.luna",
+	"owner":"com.webos.surfacemanager-cardshell",
 	"indexes":[	{"name":"rev","props":[{"name":"_rev"}]},
 				{"name": "tab", "props": [{"name": "tab"}] },
 				{"name": "pos", "props": [{"name": "pos"}] },

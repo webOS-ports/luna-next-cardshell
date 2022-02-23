@@ -1,7 +1,7 @@
 [	
 	{	"type"		: "db.kind"
 	,	"object"	: "org.webosports.lunalaunchertab:1"
-	,	"caller"	: "org.webosports.luna"
+	,	"caller"	: "com.webos.surfacemanager-cardshell"
 	,	"operations":
 		{	"create": "allow"
 		,	"read"	: "allow"

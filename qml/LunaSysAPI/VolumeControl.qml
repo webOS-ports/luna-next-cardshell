@@ -42,7 +42,7 @@ Item {
 
     LunaService {
         id: audioService
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 }

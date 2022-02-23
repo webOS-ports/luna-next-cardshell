@@ -37,14 +37,14 @@ Item {
 
     LunaService {
         id: service
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 
     LunaService {
             id: systemService
 
-            name: "org.webosports.luna"
+            name: "com.webos.surfacemanager-cardshell"
 
             property variant keysToWatch: ["ringtone","alerttone","notificationtone","locale"]
 

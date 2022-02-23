@@ -33,7 +33,7 @@ Item {
 
     LunaService {
         id: systemService
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         onInitialized: {
             console.log("Calling boot status service ...");

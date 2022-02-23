@@ -6,7 +6,7 @@ import LuneOS.Service 1.0
 QtObject {
 
     property LunaService service: LunaService {
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 
