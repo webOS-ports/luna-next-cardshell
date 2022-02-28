@@ -18,6 +18,8 @@
 import QtQuick 2.0
 import QtQml.Models 2.1
 
+import WebOSCoreCompositor 1.0 
+
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
 import LunaNext.Shell.Notifications 0.1
@@ -63,7 +65,7 @@ ListModel {
         }
     }
     property WindowModel listDashboardsModel : WindowModel {
-        windowTypeFilter: WindowType.Dashboard
+//        windowTypeFilter: WindowType.Dashboard
 
         onRowsInserted: {
             var window = listDashboardsModel.getByIndex(last);

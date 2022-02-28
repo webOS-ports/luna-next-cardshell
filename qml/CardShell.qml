@@ -38,7 +38,7 @@ Rectangle {
     id: root
 
     color: "black"
-    state: cardShellState // inherited from the main shell Loader
+    state: "normal" // cardShellState // inherited from the main shell Loader
 
     Preferences {
         id: preferences
@@ -111,18 +111,22 @@ Rectangle {
         fingerSize: Units.gu(5)
         minimalFlickLength: Units.gu(10)
         timeout: 2000
-        height: orientationHelper.height
-        width: orientationHelper.width
+        height: root.height
+        width: root.width
+
+       function convertRawPos(pos) {
+           return mapFromItem(root, pos.x, pos.y);
+       }
 
         signal screenEdgeFlickEdgeLeft(bool timeout,point pos)
         signal screenEdgeFlickEdgeRight(bool timeout, point pos)
         signal screenEdgeFlickEdgeTop(bool timeout,point pos)
         signal screenEdgeFlickEdgeBottom(bool timeout, point pos)
 
-        onTouchBegin: orientationHelper.setLocked(true);
-        onTouchEnd: orientationHelper.setLocked(false);
+//        onTouchBegin: orientationHelper.setLocked(true);
+//        onTouchEnd: orientationHelper.setLocked(false);
         onGestureEvent: {
-            var screenPos = orientationHelper.convertRawPos(pos);
+            var screenPos = convertRawPos(pos);
 
             switch (gestureType) {
             case GestureHandler.TapGesture:

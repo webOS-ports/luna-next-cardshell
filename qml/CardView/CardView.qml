@@ -279,10 +279,10 @@ Item {
         function onSurfaceMapped(window) {
             __handleWindowAdded(window);
         }
-        function onWindowRaised(window) {
-            cardViewItem.setCurrentCard(window);
-            cardViewItem.setCurrentCardState(WindowState.Maximized);
-        }
+//        function onWindowRaised(window) {
+//            cardViewItem.setCurrentCard(window);
+//            cardViewItem.setCurrentCardState(WindowState.Maximized);
+//        }
         function onSurfaceUnmapped(window) {
             __handleWindowRemoved(window);
         }

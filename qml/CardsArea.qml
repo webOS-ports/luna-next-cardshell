@@ -73,8 +73,8 @@ WindowManager {
     onSwitchToCardView: {
         // we're back to card view so no card should have the focus
         // for the keyboard anymore
-        if( compositor )
-            compositor.clearKeyboardFocus();
+    //    if( compositor )
+    //        compositor.clearKeyboardFocus();
         focus = true;
     }
 

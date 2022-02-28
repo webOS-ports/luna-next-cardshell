@@ -23,7 +23,7 @@ import WebOSCoreCompositor 1.0
 
 Item {
     id: overlaysManagerItem
-    property Item compositorInstance
+    property var compositorInstance
 
     WindowModel {
         id: listOverlaysModel

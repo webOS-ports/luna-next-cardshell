@@ -30,7 +30,7 @@ Rectangle {
 
     property int maxHeight: 0
     property Item windowManagerItem
-    property Item compositorInstance
+    property var compositorInstance
 
     color: "black"
 
