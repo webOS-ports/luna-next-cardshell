@@ -29,7 +29,13 @@ Item {
     WindowModel {
         id: cardsModel
         surfaceSource: compositorInstance.surfaceModel
-//        windowTypeFilter: WindowType.Card
+        windowType: "_WEBOS_WINDOW_TYPE_CARD"
+        acceptFunction: "filter"
+
+        function filter(surfaceItem) {
+            return surfaceItem.type === windowType &&
+                   surfaceItem.appId !== "com.palm.launcher";
+        }
 
         onRowsAboutToBeRemoved: {
             if( !cardViewItem.keepCurrentCardMaximized &&
@@ -289,7 +295,8 @@ Item {
     }
 
     function __handleWindowAdded(window) {
-        if( window.type === "_WEBOS_WINDOW_TYPE_CARD" ) {
+        if( window.type === "_WEBOS_WINDOW_TYPE_CARD" &&
+            window.appId !== "com.palm.launcher" ) {
             // Create the window container
             var windowWrapperComponent = Qt.createComponent("CardWindowWrapper.qml");
             var windowWrapper = windowWrapperComponent.createObject(cardViewItem, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2,
@@ -302,7 +309,8 @@ Item {
     }
 
     function __handleWindowRemoved(window) {
-        if( window.type === "_WEBOS_WINDOW_TYPE_CARD" ) {
+        if( window.type === "_WEBOS_WINDOW_TYPE_CARD" &&
+            window.appId !== "com.palm.launcher" ) {
             var windowWrapper = window.userData;
             if( !!windowWrapper ) {
                 windowWrapper.setWrappedWindow(null);

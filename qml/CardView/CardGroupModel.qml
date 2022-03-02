@@ -17,8 +17,14 @@ ListModel {
     signal cardRemoved()
 
     property WindowModel listCardsModel: WindowModel {
-//        windowTypeFilter: WindowType.Card
         surfaceSource: compositor.surfaceModel
+        windowType: "_WEBOS_WINDOW_TYPE_CARD"
+        acceptFunction: "filter"
+
+        function filter(surfaceItem) {
+            return surfaceItem.type === windowType &&
+                   surfaceItem.appId !== "com.palm.launcher";
+        }
 
         onRowsAboutToBeRemoved: removeWindow(listCardsModel.get(last));
         onRowsInserted: {
