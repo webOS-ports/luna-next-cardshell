@@ -239,7 +239,7 @@ Item {
         enabled: !__justTypeLauncherWindow
         target: compositor
         function onSurfaceMapped(item) {
-            if (item.type === "_WEBOS_WINDOW_TYPE_CARD" &&
+            if (item.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" &&
                 item.appId === "com.palm.launcher") 
             {
                 initJustTypeLauncherApp(item);
