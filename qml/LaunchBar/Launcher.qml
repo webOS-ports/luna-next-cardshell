@@ -158,9 +158,9 @@ Item {
     ]
 
     function launchApplication(id, params, successCB) {
-        console.log("launching app " + id + " with params " + params);
+        console.log("launching app " + id + " with params " + JSON.stringify(params));
         state = "launchbar";
-        lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",
+        lunaNextLS2Service.call("luna://com.webos.service.applicationManager/launch",
             JSON.stringify({"id": id, "params": params}), successCB, handleLaunchAppError)
     }
 

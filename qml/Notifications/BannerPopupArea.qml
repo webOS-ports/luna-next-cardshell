@@ -116,7 +116,7 @@ Item {
         }
 
         // relative path. first check in the app folder
-        service.call("luna://com.palm.applicationManager/getAppBasePath",
+        service.call("luna://com.webos.service.applicationManager/getAppBasePath",
                      JSON.stringify({"appId":appId}),
                      handleGetAppInfoResponse, handleGetAppInfoError);
 

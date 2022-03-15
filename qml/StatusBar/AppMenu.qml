@@ -37,7 +37,7 @@ Item {
     onActiveWindowAppIdChanged: {
         // now, if the appId is valid, fetch the app name
         if (activeWindowAppId.length > 0) {
-            service.call("luna://com.palm.applicationManager/getAppInfo",
+            service.call("luna://com.webos.service.applicationManager/getAppInfo",
                          JSON.stringify({"appId":activeWindowAppId}),
                          handleGetAppInfoResponse, handleGetAppInfoError);
         }
@@ -72,7 +72,7 @@ Item {
         if (activeWindowAppId.length === 0)
             return;
         var params = {"id":activeWindowAppId, "params":"{\"palm-command\":\"open-app-menu\"}"};
-        service.call("luna://com.palm.applicationManager/launch", JSON.stringify(params),
+        service.call("luna://com.webos.service.applicationManager/launch", JSON.stringify(params),
                      function(message) { }, function(error) { });
     }
 

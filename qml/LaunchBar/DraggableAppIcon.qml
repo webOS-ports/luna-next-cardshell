@@ -38,7 +38,7 @@ Item {
     property bool modelRemovable: false
     property bool modelHideable: false // don't use this right now
 
-    signal startLaunchApplication(string appId, string appParams)
+    signal startLaunchApplication(string appId, var appParams)
     signal removeAppLauncher(string appId)
     signal hideAppLauncher(string appId)
 

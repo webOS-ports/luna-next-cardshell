@@ -49,7 +49,7 @@ Item {
 
     property bool isEditionActive: false
 
-    signal startLaunchApplication(string appId, string appParams)
+    signal startLaunchApplication(string appId, var appParams)
 
     state: "hidden"
     visible: false
@@ -356,7 +356,7 @@ Item {
                     modelTitle: model.title
                     modelIcon: model.icon
                     modelId: model.id
-                    modelParams:  (typeof model.params === "undefined") ? "" : model.params
+                    modelParams:  (typeof model.params === "undefined") ? ({}) : model.params
                     modelIndex: index
                     modelRemovable: !!model.removable
                     modelHideable: false

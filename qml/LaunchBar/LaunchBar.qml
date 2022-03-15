@@ -38,7 +38,7 @@ Item {
         }
     }
 
-    signal startLaunchApplication(string appId, string appParams)
+    signal startLaunchApplication(string appId, var appParams)
     signal toggleLauncherDisplay
 
     state: "visible"
@@ -144,7 +144,7 @@ Item {
 
                     glow: dragArea.held
 
-                    onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, "");
+                    onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, {});
 
                     states: State {
                         when: dragArea.held
