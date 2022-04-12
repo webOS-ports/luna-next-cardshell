@@ -318,8 +318,8 @@ Item {
 
         // switch the state to maximized
         window.userData.windowState = WindowState.Maximized;
-//        if( !!window )
-//            window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
+        if( !!window )
+            window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
     }
     function __setToFullscreen(window) {
         // set the card as the active one

@@ -91,7 +91,7 @@ FocusScope {
                 window.anchors.fill = childWrapper;
 
                 /* Resize the real client window to have the right size */
-//                window.changeSize(Qt.size(cardView.defaultWindowWidth, cardView.defaultWindowHeight));
+                window.changeSize(Qt.size(cardView.defaultWindowWidth, cardView.defaultWindowHeight));
 
                 window.exposedChanged.connect(windowVisibleChanged);
             }
@@ -200,9 +200,6 @@ FocusScope {
     }
     
     function syncClientWindowSize() {
-	console.log("syncClientWindowSize: TODO: investigate card size");
-	return;
-
         if( cardWrapperItem.windowState !== WindowState.Carded && wrappedWindow ) {
             /* Resize the real client window to have the right size */
             wrappedWindow.changeSize(Qt.size(cardWrapperItem.width, cardWrapperItem.height));
