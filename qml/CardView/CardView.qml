@@ -72,8 +72,8 @@ Item {
     }
 
     function removeCard(window) {
-        console.log("CardView.removeCard(" + window +"): calling closeWindowWithId(" + window.winId + ")");
-        compositorInstance.closeWindowWithId(window.winId);
+        console.log("CardView.removeCard(" + window +"): calling closeWindow");
+        compositorInstance.closeWindow(window);
     }
 
     function setCurrentCard(window) {
