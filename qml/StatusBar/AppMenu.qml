@@ -71,7 +71,7 @@ Item {
     function toggleState() {
         if (activeWindowAppId.length === 0)
             return;
-        var params = {"id":activeWindowAppId, "params":"{\"palm-command\":\"open-app-menu\"}"};
+        var params = {"id":activeWindowAppId, "params":{"palm-command":"open-app-menu"}};
         service.call("luna://com.webos.service.applicationManager/launch", JSON.stringify(params),
                      function(message) { }, function(error) { });
     }
