@@ -38,7 +38,7 @@ Rectangle {
     id: root
 
     color: "black"
-    state: "normal" // cardShellState // inherited from the main shell Loader
+    state: cardShellState // inherited from the main shell Loader
 
     Preferences {
         id: preferences
