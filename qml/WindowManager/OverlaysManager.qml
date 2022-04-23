@@ -27,10 +27,11 @@ Item {
 
     WindowModel {
         id: listOverlaysModel
-//        windowTypeFilter: WindowType.Overlay
+        surfaceSource: compositorInstance.surfaceModel
+        windowType: "_WEBOS_WINDOW_TYPE_KEYBOARD"
 
         onRowsInserted: {
-            appendOverlayWindow(listOverlaysModel.getByIndex(listOverlaysModel.count-1));
+            appendOverlayWindow(listOverlaysModel.get(last));
         }
     }
 
