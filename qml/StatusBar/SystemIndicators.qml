@@ -50,7 +50,9 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: compositor.recording
+        // FIXME We don't have this yet in luna-surfacemanager it seems. Disable it for now.
+        // enabled: compositor.recording
+        enabled: false
     }
 
     AirplaneModeService {
