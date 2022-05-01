@@ -99,7 +99,7 @@ ListModel {
             return;
 
         // register handler for possible launch point change events
-        service.subscribe("luna://com.webos.service.applicationManager/launchPointChanges",
+        service.subscribe("luna://com.palm.applicationManager/launchPointChanges",
             JSON.stringify({"subscribe":true}), handleLaunchPointChanges, handleError);
 
         refresh();
