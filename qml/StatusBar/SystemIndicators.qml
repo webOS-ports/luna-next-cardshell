@@ -44,7 +44,7 @@ Row {
         id: wifiService
     }
 
-    RecorderIndicator {
+/*    RecorderIndicator {
         id: recorderIndicator
 
         anchors.top: indicatorsRow.top
@@ -53,7 +53,7 @@ Row {
         // FIXME We don't have this yet in luna-surfacemanager it seems. Disable it for now.
         // enabled: compositor.recording
         enabled: false
-    }
+    }*/
 
     AirplaneModeService {
         id: airplaneModeService

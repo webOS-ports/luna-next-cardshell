@@ -261,7 +261,7 @@ Item {
                 cardViewItem.setCurrentCardState(WindowState.Carded);
             }
         }
-        function onSwipeLeftGesture(modifiers) {
+/*        function onSwipeLeftGesture(modifiers) {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviBack);
             }
@@ -270,7 +270,7 @@ Item {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviNext);
             }
-        }
+        }*/
     }
 
     ///////// private section //////////
