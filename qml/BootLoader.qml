@@ -19,16 +19,17 @@
 import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
-import QtMultimedia 5.2
+import QtMultimedia 6.3
 
 Item {
     property Loader shellLoader
 
     property bool wentThroughFirstUse: false
 
-    Audio {
+    MediaPlayer {
         id: bootSound
         source: "/usr/palm/sounds/boot.mp3"
+        audioOutput: AudioOutput {}
     }
 
     LunaService {
