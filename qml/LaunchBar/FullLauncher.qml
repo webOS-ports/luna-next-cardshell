@@ -17,8 +17,8 @@
  */
 
 import QtQuick 2.0
-import QtQuick.Controls 1.1
-import QtQuick.Controls.Styles 1.1
+import QtQuick.Controls 2.3
+//import QtQuick.Controls.Styles 1.1
 import QtQml 2.15
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
@@ -193,7 +193,7 @@ Item {
             checked: tabRowDelegate.ListView.isCurrentItem
 
             property bool highlight: false
-
+/*
             style: ButtonStyle {
                 id: tabButtonStyle
                 property string neutralButtonImage: Qt.resolvedUrl("../images/launcher/tab-bg.png");
@@ -214,7 +214,7 @@ Item {
                     verticalAlignment: Text.AlignVCenter
                 }
             }
-
+*/
             onClicked: {
                 tabRowDelegate.ListView.view.currentIndex = index;
             }
@@ -244,7 +244,7 @@ Item {
         anchors.right: tabRowList.right; anchors.rightMargin: 8
         anchors.verticalCenter: tabRowList.verticalCenter
         visible: fullLauncher.isEditionActive && !draggedLauncherIcon.draggingActive
-        style: ButtonStyle {
+/*        style: ButtonStyle {
             id: tabFooterButtonStyle
             property string doneButtonImage: Qt.resolvedUrl("../images/launcher/edit-button-done.png");
             property string doneButtonImagePressed: Qt.resolvedUrl("../images/launcher/edit-button-done-pressed.png");
@@ -261,7 +261,7 @@ Item {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
             }
-        }
+        }*/
         onClicked: {
             fullLauncher.isEditionActive = false;
         }
