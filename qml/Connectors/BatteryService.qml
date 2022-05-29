@@ -21,7 +21,7 @@
 import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
-import QtMultimedia 5.2
+import QtMultimedia 6.3
 
 Item {
     id: batteryService
@@ -37,14 +37,16 @@ Item {
     // Because powerd doesn't respond in error state, start there
     property bool error: true
 
-    Audio {
+    MediaPlayer {
         id: chargedSound
         source: "/usr/palm/sounds/battery_full.mp3"
+	audioOutput: AudioOutput {}
     }
 
-    Audio {
+    MediaPlayer {
         id: batteryLowSound
         source: "/usr/palm/sounds/battery_low.mp3"
+	audioOutput: AudioOutput {}
     }
 
     onPercentageChanged: {
