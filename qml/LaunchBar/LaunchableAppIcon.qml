@@ -61,9 +61,7 @@ Item {
             height: iconSize
             anchors.horizontalCenter: parent.horizontalCenter
             visible: glow
-            fast: true
             radius: 4
-            samples: 16
             color: "white"
             transparentBorder: true
             source: appIconImage
