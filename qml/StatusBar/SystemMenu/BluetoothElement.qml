@@ -33,7 +33,7 @@ Drawer {
     BluetoothDevicesModel {
         id: bluetoothList
         filterRole: 256 + 109 /*PairedRole*/
-        filterRegExp: /true/
+        filterRegularExpression: /true/
     }
 
     // ------------------------------------------------------------
