@@ -19,6 +19,7 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
+import QtQml.Models 2.2
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
@@ -111,7 +112,7 @@ Item {
     }
 */
     // list of icons
-    VisualDataModel {
+    DelegateModel {
         id: launcherListModel
         model: ListModel {
         }

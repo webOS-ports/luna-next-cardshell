@@ -16,6 +16,7 @@
  */
 
 import QtQuick 2.0
+import QtQml.Models 2.2
 import QtGraphicalEffects 1.0
 
 import LunaNext.Common 0.1
@@ -66,7 +67,7 @@ Item {
         }
     }
 
-    VisualDataModel {
+    DelegateModel {
         id: groupsDataModel
 
         model: CardGroupModel {
