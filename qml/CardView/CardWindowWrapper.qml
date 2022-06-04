@@ -17,6 +17,7 @@
  */
 
 import QtQuick 2.0
+import QtGraphicalEffects 1.0
 
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
@@ -105,11 +106,11 @@ FocusScope {
         cornerRadius: cardWrapperItem.cornerRadius
     }
     // Rounded corners (shader version)
-    CornerShader {
-        id: cornerShader
-        anchors.fill: childWrapper
-        sourceItem: useShaderCorner ? childWrapper : null
-        radius: cornerRadius
+    OpacityMask {
+        anchors.fill: cardWrapperItem
+        source: useShaderCorner ? childWrapper : null
+        invert: true
+        maskSource: cornerStaticMask
         visible: useShaderCorner
     }
 
