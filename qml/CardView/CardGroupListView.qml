@@ -17,7 +17,6 @@
 
 import QtQuick 2.0
 import QtQml.Models 2.2
-import QtGraphicalEffects 1.0
 
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0

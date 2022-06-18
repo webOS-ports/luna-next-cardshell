@@ -16,7 +16,10 @@
  */
 
 import QtQuick 2.5
-import QtGraphicalEffects 1.0
+//For future migration
+import Qt5Compat.GraphicalEffects
+//Should be replaced with https://doc.qt.io/qt-6/qml-qtquick-shapes-radialgradient.html#centerRadius-prop
+//import QtQuick.Shapes 1.3
 import LunaNext.Common 0.1
 
 Item {
@@ -41,6 +44,7 @@ Item {
         onStopped: screenShooterGradient.visible = false;
     }
 
+    //FIXME migrate to: https://doc.qt.io/qt-6/qml-qtquick-shapes-radialgradient.html#centerRadius-prop
 	RadialGradient {
         horizontalRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
         verticalRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
