@@ -2,7 +2,6 @@ import QtQuick 2.0
 import QtQml.Models 2.2
 
 import WebOSCompositorBase 1.0
-import WebOSCompositor 1.0
 
 import "../Utils"
 
