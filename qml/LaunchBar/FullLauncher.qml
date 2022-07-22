@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import QtQuick.Controls 2.3
+import QtQuick.Controls.LuneOS 2.0
 //import QtQuick.Controls.Styles 1.1
 import QtQml 2.15
 import LunaNext.Common 0.1
@@ -193,28 +193,17 @@ Item {
             checked: tabRowDelegate.ListView.isCurrentItem
 
             property bool highlight: false
-/*
-            style: ButtonStyle {
-                id: tabButtonStyle
-                property string neutralButtonImage: Qt.resolvedUrl("../images/launcher/tab-bg.png");
-                property string neutralButtonImagePressed: Qt.resolvedUrl("../images/launcher/tab-selected-bg.png");
-                property string neutralButtonImageHighlight: Qt.resolvedUrl("../images/launcher/tab-highlight.png");
 
-                background: BorderImage {
-                    property int borderSize: tabButtonStyle.control.checked ? 20 : 4
-                    border { top: 20; bottom: 20; left: borderSize; right: borderSize }
-                    source: tabButtonStyle.control.highlight ? neutralButtonImageHighlight : tabButtonStyle.control.checked ? neutralButtonImagePressed: neutralButtonImage;
-                }
-                label: Text {
-                    color: "white"
-                    text: tabButtonStyle.control.text
-                    font.family: Settings.fontStatusBar
-                    font.pixelSize: tabRowDelegate.height*0.6
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
+            background: BorderImage {
+                readonly property string neutralButtonImage: Qt.resolvedUrl("../images/launcher/tab-bg.png");
+                readonly property string neutralButtonImagePressed: Qt.resolvedUrl("../images/launcher/tab-selected-bg.png");
+                readonly property string neutralButtonImageHighlight: Qt.resolvedUrl("../images/launcher/tab-highlight.png");
+
+                property int borderSize: tabRowDelegate.checked ? 20 : 4
+                border { top: 20; bottom: 20; left: borderSize; right: borderSize }
+                source: tabRowDelegate.highlight ? neutralButtonImageHighlight : tabRowDelegate.checked ? neutralButtonImagePressed: neutralButtonImage;
             }
-*/
+
             onClicked: {
                 tabRowDelegate.ListView.view.currentIndex = index;
             }
@@ -244,24 +233,17 @@ Item {
         anchors.right: tabRowList.right; anchors.rightMargin: 8
         anchors.verticalCenter: tabRowList.verticalCenter
         visible: fullLauncher.isEditionActive && !draggedLauncherIcon.draggingActive
-/*        style: ButtonStyle {
-            id: tabFooterButtonStyle
-            property string doneButtonImage: Qt.resolvedUrl("../images/launcher/edit-button-done.png");
-            property string doneButtonImagePressed: Qt.resolvedUrl("../images/launcher/edit-button-done-pressed.png");
 
-            background: BorderImage {
-                border { top: 10; bottom: 10; left: 10; right: 10 }
-                source: tabFooterButtonStyle.control.pressed ? doneButtonImagePressed: doneButtonImage;
-            }
-            label: Text {
-                color: "white"
-                text: tabFooterButtonStyle.control.text
-                font.family: Settings.fontStatusBar
-                font.pixelSize: tabRowFooter.height*0.6
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
-        }*/
+        LuneOSButton.mainColor: LuneOSButton.blueColor
+
+        background: BorderImage {
+            readonly property string doneButtonImage: Qt.resolvedUrl("../images/launcher/edit-button-done.png");
+            readonly property string doneButtonImagePressed: Qt.resolvedUrl("../images/launcher/edit-button-done-pressed.png");
+
+            border { top: 10; bottom: 10; left: 10; right: 10 }
+            source: tabRowFooter.pressed ? doneButtonImagePressed: doneButtonImage;
+        }
+
         onClicked: {
             fullLauncher.isEditionActive = false;
         }
