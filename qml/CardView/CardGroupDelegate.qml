@@ -4,6 +4,7 @@ import QtQml.Models 2.2
 import WebOSCompositorBase 1.0
 
 import "../Utils"
+import "../WindowStateStub.js" as WindowState
 
 Item {
     id: cardGroupDelegateItem

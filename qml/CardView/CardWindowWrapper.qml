@@ -23,6 +23,7 @@ import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
 
 import "../Utils"
+import "../WindowStateStub.js" as WindowState
 
 FocusScope {
     id: cardWrapperItem

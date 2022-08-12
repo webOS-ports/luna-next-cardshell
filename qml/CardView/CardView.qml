@@ -4,6 +4,7 @@ import WebOSCompositorBase 1.0
 import WebOSCoreCompositor 1.0
 
 import "../Utils"
+import "../WindowStateStub.js" as WindowState
 
 Item {
     id: cardViewItem
