@@ -37,7 +37,7 @@ Rectangle {
         fillMode: Image.Stretch
     }
 
-    DelegateModel{
+    ObjectModel{
         id: clockList
         AnalogClock{
             width: clocksListView.width; height: clocksListView.height
