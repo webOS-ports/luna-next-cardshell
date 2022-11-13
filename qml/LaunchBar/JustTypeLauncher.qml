@@ -76,7 +76,7 @@ Item {
         window.anchors.fill = justTypeLauncher;
 
         /* Resize the real client window to have the right size */
-       // _syncWrappedWindowSize();
+        _syncWrappedWindowSize();
     }
 
     function _syncWrappedWindowSize() {
