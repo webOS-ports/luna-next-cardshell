@@ -41,7 +41,7 @@ Rectangle {
 
         function filter(surfaceItem) {
             // TBC: is this check correct ?
-            return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" && surfaceItem.appId !== "com.palm.launcher");
+            return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" && surfaceItem.appId === "com.palm.systemui");
         }
         //    windowTypeFilter: WindowType.PopupAlert
     }
