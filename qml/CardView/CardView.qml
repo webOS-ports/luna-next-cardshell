@@ -90,7 +90,11 @@ Item {
 
     function setCurrentCardState(windowState) {
         var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
-        if( !lCurrentActiveWindow ) return;
+        if( !lCurrentActiveWindow ) {
+        	// no active window, force return to card view
+        	windowManagerInstance.switchToCardView();
+        	return;
+        }
 
         if( windowState === WindowState.Carded ) {
             if( state !== "cardList" )
