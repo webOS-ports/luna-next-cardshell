@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import QtMultimedia 5.5
+import QtMultimedia 6.3
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
@@ -268,11 +268,12 @@ Item {
 
             property int delegateIndex: index
 
-            Audio {
+            MediaPlayer {
                 id: notifsound
                 source: getSoundFilePath(object.soundFilePath, object.soundFile, object.soundClass, object.ownerId)
                 //FIXME: We need to be able to set playback duration, seems duration in Audio is readonly and we'll need a Timer or NumberAnimation for this?
                 //duration: getSoundFileDuration (object.duration)
+                audioOutput: AudioOutput {}
             }
 
             Row {
