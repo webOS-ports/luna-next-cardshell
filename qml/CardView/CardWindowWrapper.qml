@@ -108,7 +108,7 @@ FocusScope {
     // Rounded corners (shader version)
     OpacityMask {
         anchors.fill: cardWrapperItem
-        source: useShaderCorner ? childWrapper : null
+        source: childWrapper
         invert: true
         maskSource: cornerStaticMask
         visible: useShaderCorner
