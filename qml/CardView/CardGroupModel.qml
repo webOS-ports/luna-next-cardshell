@@ -114,7 +114,8 @@ ListModel {
 
     function createNewGroup(window, insertAt) {
         // create a new group with only one window
-        listCardGroupsModel.insert(insertAt, {"windowList": [ { "window":window } ], "currentCardInGroup": 0, "spreadRatio": 0.1});
+        listCardGroupsModel.insert(insertAt, {"windowList": [], "currentCardInGroup": 0, "spreadRatio": 0.1});
+        listCardGroupsModel.get(insertAt).windowList.append( { "window":window } );
     }
 
     function removeWindow(window) {
