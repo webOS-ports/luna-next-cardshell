@@ -20,8 +20,10 @@ ListModel {
         surfaceSource: compositor.surfaceModel
         windowType: "_WEBOS_WINDOW_TYPE_CARD"
 
-        onRowsAboutToBeRemoved: removeWindow(listCardsModel.get(last));
-        onRowsInserted: {
+        onRowsAboutToBeRemoved: (index, first, last) => {
+            removeWindow(listCardsModel.get(last));
+        }
+        onRowsInserted: (index, first, last) => {
             var newWindow = listCardsModel.get(last);
             var groupIndexForInsertion = listCardGroupsModel.count;
             if( newWindow.parentWinId ) {

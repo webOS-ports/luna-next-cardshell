@@ -72,7 +72,7 @@ Item {
         model: CardGroupModel {
             id: listCardGroupsModel
 
-            onNewCardInserted: {
+            onNewCardInserted: (group, index, newWindow) => {
                 if( !containerForDraggedCard.visible ) { // don't activate the new card group during drag'n'drop
                     internalListView.delayedCardSelect(newWindow);
                 }
@@ -102,15 +102,15 @@ Item {
             y: 0
             z: ListView.isCurrentItem ? 1 : 0
 
-            onCardSelect: {
+            onCardSelect: (window) => {
                 //listCardGroupsModel.setWindowInFront(window, index)
                 cardGroupListViewItem.cardSelect(window);
             }
-            onCardRemove: {
+            onCardRemove: (window) => {
                 cardGroupListViewItem.updateKeysForwardTo(false);
                 cardGroupListViewItem.cardRemove(window);
             }
-            onCardDragStart: {
+            onCardDragStart: (window) => {
                 if( !enableDragnDrop ) {
                     console.log("Drag'n'drop is currently disabled.");
                 }

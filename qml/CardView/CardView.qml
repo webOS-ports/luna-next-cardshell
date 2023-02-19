@@ -31,7 +31,7 @@ Item {
         surfaceSource: compositorInstance.surfaceModel
         windowType: "_WEBOS_WINDOW_TYPE_CARD"
 
-        onRowsAboutToBeRemoved: {
+        onRowsAboutToBeRemoved: (index, first, last) => {
             if( !cardViewItem.keepCurrentCardMaximized &&
                 cardsModel.get(last).userData.windowState !== WindowState.Carded ) cardViewItem.setCurrentCardState(WindowState.Carded);
         }
@@ -44,8 +44,8 @@ Item {
         maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin
         isCardedViewActive: cardViewItem.state === "cardList"
 
-        onCardRemove: cardViewItem.removeCard(window);
-        onCardSelect: {
+        onCardRemove: (window) => { cardViewItem.removeCard(window); }
+        onCardSelect: (window) => {
             setCurrentCard(window);
             if(window.userData.isFullScreenMode) {
                 setCurrentCardState(WindowState.Fullscreen);

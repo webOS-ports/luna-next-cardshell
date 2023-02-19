@@ -145,7 +145,7 @@ Item {
 
                     glow: dragArea.held
 
-                    onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, {});
+                    onStartLaunchApplication: (appId) => { launchBarItem.startLaunchApplication(appId, {}); }
 
                     states: State {
                         when: dragArea.held
@@ -179,7 +179,7 @@ Item {
                 DropArea {
                     anchors { fill: parent; margins: 10 }
 
-                    onEntered: {
+                    onEntered: (drag) => {
                         if( drag.source !== launcherIconDelegate ) {
                             launcherListModel.items.move(
                                     drag.source.VisualDataModel.itemsIndex,

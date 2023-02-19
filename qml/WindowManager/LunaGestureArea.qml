@@ -77,16 +77,16 @@ Item {
         id: gestureAreaInput
         anchors.fill: parent
 
-        onSwipeRightGesture: {
+        onSwipeRightGesture: (modifiers) => {
             glowLeftToRight.start();
             gestureAreaItem.swipeRightGesture(modifiers);
         }
-        onSwipeLeftGesture: {
+        onSwipeLeftGesture: (modifiers) => {
             glowRightToLeft.start();
             gestureAreaItem.swipeLeftGesture(modifiers);
         }
-        onSwipeUpGesture: gestureAreaItem.swipeUpGesture(modifiers);
-        onSwipeDownGesture: gestureAreaItem.swipeDownGesture(modifiers);
+        onSwipeUpGesture: (modifiers) => { gestureAreaItem.swipeUpGesture(modifiers); }
+        onSwipeDownGesture: (modifiers) =>  { gestureAreaItem.swipeDownGesture(modifiers); }
 
         onClicked: gestureAreaItem.tapGesture();
     }
