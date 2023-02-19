@@ -16,10 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
+import QtQuick 2.9
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
+import WebOSCoreCompositor 1.0
 import LunaNext.Shell.Notifications 0.1
 
 import "../LunaSysAPI" as LunaSysAPI
@@ -38,7 +39,7 @@ Item {
 
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 
@@ -157,9 +158,9 @@ Item {
     ]
 
     function launchApplication(id, params, successCB) {
-        console.log("launching app " + id + " with params " + params);
+        console.log("launching app " + id + " with params " + JSON.stringify(params));
         state = "launchbar";
-        lunaNextLS2Service.call("luna://com.palm.applicationManager/launch",
+        lunaNextLS2Service.call("luna://com.webos.service.applicationManager/launch",
             JSON.stringify({"id": id, "params": params}), successCB, handleLaunchAppError)
     }
 
@@ -234,12 +235,15 @@ Item {
         }
     }
 
-    WindowModel {
-        id: launcherListModel
-        windowTypeFilter: WindowType.Launcher
-
-        onRowsInserted: {
-            initJustTypeLauncherApp(launcherListModel.getByIndex(last));
+    Connections {
+        enabled: !__justTypeLauncherWindow
+        target: compositor
+        function onSurfaceMapped(item) {
+            if (item.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" &&
+                item.appId === "com.palm.launcher") 
+            {
+                initJustTypeLauncherApp(item);
+            }
         }
     }
 

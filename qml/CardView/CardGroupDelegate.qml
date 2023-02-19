@@ -1,8 +1,10 @@
 import QtQuick 2.0
+import QtQml.Models 2.2
 
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 
 import "../Utils"
+import "../WindowStateStub.js" as WindowState
 
 Item {
     id: cardGroupDelegateItem
@@ -26,7 +28,7 @@ Item {
     signal cardDragStart(Item window);
     signal cardDragStop();
 
-    VisualDataModel {
+    DelegateModel {
         id: groupDataModel
 
         model: groupModel

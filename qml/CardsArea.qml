@@ -21,9 +21,8 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 import LuneOS.Components 1.0
-import LunaNext.Performance 0.1
 
 import "CardView"
 import "DockMode"
@@ -73,8 +72,8 @@ WindowManager {
     onSwitchToCardView: {
         // we're back to card view so no card should have the focus
         // for the keyboard anymore
-        if( compositor )
-            compositor.clearKeyboardFocus();
+    //    if( compositor )
+    //        compositor.clearKeyboardFocus();
         focus = true;
     }
 
@@ -103,19 +102,19 @@ WindowManager {
 
         sourceComponent: systemService.fpsVisible ? fpsTextComponent : null;
     }
-
-    /* Component already uses an Loader internally so need to do that again here */
+/*
+    // Component already uses an Loader internally so need to do that again here 
     PerformanceOverlay {
         id: performanceOverlay
         z: 1000
         active: false
         onActiveChanged: {
-            /* User can disable performance UI by clicking on it */
+            // User can disable performance UI by clicking on it 
             if (active !== systemService.performanceUIVisible)
                 systemService.performanceUIVisible = active;
         }
     }
-
+*/
 
     Item {
         id: background
@@ -142,16 +141,6 @@ WindowManager {
         id: volumeControl
     }
 
-    ScreenShooter {
-        id: screenShooter
-    }
-
-    ScreenShooterGradient {
-        id: screenShooterGradient
-        anchors.fill: parent
-		z: 11
-    }
-
     Connections {
         target: gestureAreaInstance
         function onSwipeRightGesture(modifiers) {
@@ -171,7 +160,6 @@ WindowManager {
 
     SystemService {
         id: systemService
-        screenShooter: screenShooter
         cardViewInstance: cardViewInstance
         compositorInstance: compositor
 

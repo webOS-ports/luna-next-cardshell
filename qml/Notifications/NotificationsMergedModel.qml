@@ -18,8 +18,10 @@
 import QtQuick 2.0
 import QtQml.Models 2.1
 
+import WebOSCoreCompositor 1.0 
+
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 import LunaNext.Shell.Notifications 0.1
 import LuneOS.Service 1.0
 
@@ -63,7 +65,7 @@ ListModel {
         }
     }
     property WindowModel listDashboardsModel : WindowModel {
-        windowTypeFilter: WindowType.Dashboard
+//        windowTypeFilter: WindowType.Dashboard
 
         onRowsInserted: {
             var window = listDashboardsModel.getByIndex(last);
@@ -202,7 +204,7 @@ ListModel {
         property int __previousCount: 0
     }
     property LunaService displayService: LunaService {
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 }

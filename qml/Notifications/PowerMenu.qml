@@ -21,7 +21,7 @@
 import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
-import QtMultimedia 5.4
+import QtMultimedia 6.3
 import "../Utils"
 
 Item {
@@ -37,9 +37,10 @@ Item {
         root.visible = true;
     }
 
-    Audio {
+    MediaPlayer {
         id: shutdownSound
         source: "/usr/palm/sounds/shutdown.mp3"
+	audioOutput: AudioOutput {}
     }
 
     Rectangle {
@@ -141,7 +142,7 @@ Item {
     LunaService {
         id: powerKeyService
 
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 }

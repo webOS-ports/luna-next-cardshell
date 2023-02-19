@@ -50,7 +50,7 @@ Item {
 
     LunaService {
         id: powerQuery
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://com.palm.telephony"
         method: "powerQuery"
@@ -74,7 +74,7 @@ Item {
 
     LunaService {
         id: networkStatusQuery
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://com.palm.telephony"
         method: "networkStatusQuery"
@@ -102,7 +102,7 @@ Item {
 
     LunaService {
         id: signalStrengthQuery
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://com.palm.telephony"
         method: "signalStrengthQuery"

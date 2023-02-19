@@ -19,7 +19,7 @@ MouseArea {
     property var _timeStamp
     property bool _swipeInitiated: false
 
-    onPressed: {
+    onPressed: (mouse) => {
         _pressedX = mouse.x;
         _pressedY = mouse.y;
         _timeStamp = Date.now();
@@ -28,12 +28,12 @@ MouseArea {
         // mouse.accepted = true;
     }
 
-    onPressAndHold: {
+    onPressAndHold: (mouse) => {
         // just defining the function, so that mouse.wasHeld is true
         mouse.accepted = false;
     }
 
-    onPositionChanged: {
+    onPositionChanged: (mouse) => {
         if (mouse.wasHeld) return;  // if the intent is a long press, ignore the movements
 
         var xDiff = mouse.x - _pressedX;
@@ -57,7 +57,7 @@ MouseArea {
         }
     }
 
-    onReleased: {
+    onReleased: (mouse) => {
         if (mouse.wasHeld) return; // don't interfere with long press events
 
         // Evaluate how much time has passed since the last call to onPositionChanged

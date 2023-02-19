@@ -6,13 +6,12 @@ include(webOS/webOS)
 webos_modules_init(1 0 0 QUALIFIER RC3)
 webos_component(0 1 0)
 
-set(LUNA_NEXT_SHELL_DIR ${WEBOS_INSTALL_WEBOS_PREFIX}/luna-next/shells)
-
 set(CARDSHELL_FILES
-	manifest.json)
+	manifest.json
+	qmldir)
 
 set(CARDSHELL_DIRS
 	qml)
 
-install (FILES ${CARDSHELL_FILES} DESTINATION ${LUNA_NEXT_SHELL_DIR}/card)
-install (DIRECTORY ${CARDSHELL_DIRS} DESTINATION ${LUNA_NEXT_SHELL_DIR}/card)
+install (FILES ${CARDSHELL_FILES} DESTINATION ${LUNA_NEXT_SHELL_DIR})
+install (DIRECTORY ${CARDSHELL_DIRS} DESTINATION ${LUNA_NEXT_SHELL_DIR})

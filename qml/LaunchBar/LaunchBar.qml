@@ -19,9 +19,10 @@
 
 import QtQuick 2.0
 import QtQuick.Layouts 1.0
+import QtQml.Models 2.2
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 
 import "../LunaSysAPI" as LunaSysAPI
 
@@ -38,7 +39,7 @@ Item {
         }
     }
 
-    signal startLaunchApplication(string appId, string appParams)
+    signal startLaunchApplication(string appId, var appParams)
     signal toggleLauncherDisplay
 
     state: "visible"
@@ -111,7 +112,7 @@ Item {
     }
 */
     // list of icons
-    VisualDataModel {
+    DelegateModel {
         id: launcherListModel
         model: ListModel {
         }
@@ -144,7 +145,7 @@ Item {
 
                     glow: dragArea.held
 
-                    onStartLaunchApplication: launchBarItem.startLaunchApplication(appId, "");
+                    onStartLaunchApplication: (appId) => { launchBarItem.startLaunchApplication(appId, {}); }
 
                     states: State {
                         when: dragArea.held
@@ -178,7 +179,7 @@ Item {
                 DropArea {
                     anchors { fill: parent; margins: 10 }
 
-                    onEntered: {
+                    onEntered: (drag) => {
                         if( drag.source !== launcherIconDelegate ) {
                             launcherListModel.items.move(
                                     drag.source.VisualDataModel.itemsIndex,
@@ -240,7 +241,7 @@ Item {
 
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
     function __handleDBError(message) {

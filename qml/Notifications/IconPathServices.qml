@@ -6,7 +6,7 @@ import LuneOS.Service 1.0
 QtObject {
 
     property LunaService service: LunaService {
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 
@@ -66,7 +66,7 @@ QtObject {
 
 
         //Get the app folder so we can make an absolute path if needed
-        service.call("luna://com.palm.applicationManager/getAppBasePath",
+        service.call("luna://com.webos.service.applicationManager/getAppBasePath",
                      JSON.stringify({"appId":window.appId}),
                      handleGetAppInfoResponse2, handleGetAppInfoError2);
     }
@@ -81,7 +81,7 @@ QtObject {
         }
         else {
             //Do lookup of the appIcon
-            service.call("luna://com.palm.applicationManager/getAppInfo",
+            service.call("luna://com.webos.service.applicationManager/getAppInfo",
                          JSON.stringify({"appId":appId}),
                          handleGetAppInfoResponse, handleGetAppInfoError);
 

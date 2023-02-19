@@ -17,8 +17,9 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 import LunaNext.Shell.Notifications 0.1
+import WebOSCoreCompositor 1.0
 import LuneOS.Service 1.0
 
 import "../Utils"
@@ -29,13 +30,20 @@ Rectangle {
 
     property int maxHeight: 0
     property Item windowManagerItem
-    property Compositor compositorInstance
+    property var compositorInstance
 
     color: "black"
 
     WindowModel {
         id: listPopupAlertsModel
-        windowTypeFilter: WindowType.PopupAlert
+        surfaceSource: compositorInstance.surfaceModel
+        acceptFunction: "filter"
+
+        function filter(surfaceItem) {
+            // TBC: is this check correct ?
+            return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" && surfaceItem.appId === "com.palm.systemui");
+        }
+        //    windowTypeFilter: WindowType.PopupAlert
     }
 
     Component {
@@ -43,6 +51,7 @@ Rectangle {
         Item {
             id: alertItem
 
+            property Item window: surfaceItem
             y: rootAlertsArea.height - height
             width: rootAlertsArea.width
             height: window ? window.height : 0
@@ -71,7 +80,7 @@ Rectangle {
                     }
 
                     if( windowManagerItem ) {
-                        windowManagerItem.addTapAction("hideAlertWindow", function (winId) { compositorInstance.closeWindowWithId(winId); }, window.winId);
+                        windowManagerItem.addTapAction("hideAlertWindow", function () { compositorInstance.closeWindow(window); });
                     }
                 }
             }
@@ -135,7 +144,7 @@ Rectangle {
     LunaService {
         id: displayService
 
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 }

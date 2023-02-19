@@ -1,0 +1,4 @@
+module WebOSCompositor
+
+ViewsRoot 1.0 qml/LuneOSViewRoot.qml
+WindowState 1.0 qml/WindowStateStub.js

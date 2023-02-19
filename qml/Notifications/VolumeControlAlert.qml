@@ -34,7 +34,7 @@ Item {
 
     LunaService {
         id: playFeedback
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://org.webosports.service.audio"
         method: "playFeedback"
@@ -81,7 +81,7 @@ Item {
     LunaService {
         id: audioService
 
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 

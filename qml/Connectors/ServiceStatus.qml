@@ -30,7 +30,7 @@ Item {
 
     LunaService {
         id: registerServerStatus
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://com.palm.bus"
         method: "signal/registerServerStatus"

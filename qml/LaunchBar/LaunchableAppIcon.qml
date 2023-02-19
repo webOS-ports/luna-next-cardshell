@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import QtGraphicalEffects 1.0
+import Qt5Compat.GraphicalEffects
 import LunaNext.Common 0.1
 
 Item {
@@ -26,13 +26,13 @@ Item {
     property string appIcon
     property string appTitle
     property string appId
-    property string appParams: ""
+    property var appParams: ({})
     property bool showTitle: false
 
     property real iconSize: 64
     property bool glow: false
 
-    signal startLaunchApplication(string appId, string appParams)
+    signal startLaunchApplication(string appId, var appParams)
 
     height: appIconColumn.height
 
@@ -61,9 +61,7 @@ Item {
             height: iconSize
             anchors.horizontalCenter: parent.horizontalCenter
             visible: glow
-            fast: true
             radius: 4
-            samples: 16
             color: "white"
             transparentBorder: true
             source: appIconImage

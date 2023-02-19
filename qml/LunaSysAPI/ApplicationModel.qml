@@ -36,7 +36,7 @@ ListModel {
 
     property QtObject lunaNextLS2Service: LunaService {
         id: service
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
     }
 
@@ -46,7 +46,7 @@ ListModel {
     }
 
     function refresh() {
-        service.call("luna://com.palm.applicationManager/listLaunchPoints",
+        service.call("luna://com.webos.service.applicationManager/listLaunchPoints",
             "{}", fillFromJSONResult, handleError);
     }
 
@@ -68,8 +68,14 @@ ListModel {
         applicationModel.clear();
         if(result.returnValue && result.launchPoints !== undefined) {
             for(var i=0; i<result.launchPoints.length; i++) {
-                if( !isFilteredOut(result.launchPoints[i]) )
-                    applicationModel.append(result.launchPoints[i]);
+                let launchPoint = result.launchPoints[i];
+                if( !isFilteredOut(launchPoint) )
+                    applicationModel.append({ id: launchPoint.id,
+                                              appId: launchPoint.appId,
+                                              launchPointId: launchPoint.launchPointId,
+                                              title: launchPoint.title,
+                                              removable: launchPoint.removable,
+                                              icon: launchPoint.icon });
             }
         }
 
@@ -105,7 +111,7 @@ ListModel {
 
     Component.onCompleted: {
         service.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-            JSON.stringify({"serviceName":"com.palm.applicationManager"}),
+            JSON.stringify({"serviceName":"com.webos.service.applicationManager"}),
             handleApplicationManagerStatusChanged, handleError);
     }
 }

@@ -18,7 +18,8 @@
 
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
+import WebOSCoreCompositor 1.0
 
 Item {
     id: simPinWindowAreaItem
@@ -29,7 +30,7 @@ Item {
 
     WindowModel {
         id: listPinWindowModel
-        windowTypeFilter: WindowType.Pin
+//        windowTypeFilter: WindowType.Pin
 
         onRowsInserted: {
             appendPinWindow(listPinWindowModel.getByIndex(listPinWindowModel.count-1));

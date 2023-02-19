@@ -40,7 +40,7 @@ Item {
 
     LunaService {
         id: setDisplayState
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://com.palm.display"
         method: "control/setState"
@@ -48,7 +48,7 @@ Item {
 
     LunaService {
         id: service
-        name: "org.webosports.luna"
+        name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         onInitialized: {
             service.subscribe("luna://com.palm.display/control/lockStatus", "{\"subscribe\":true}", handleLockStatus, handleError);

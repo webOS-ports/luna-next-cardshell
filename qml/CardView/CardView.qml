@@ -1,8 +1,10 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
+import WebOSCoreCompositor 1.0
 
 import "../Utils"
+import "../WindowStateStub.js" as WindowState
 
 Item {
     id: cardViewItem
@@ -26,11 +28,12 @@ Item {
 
     WindowModel {
         id: cardsModel
-        windowTypeFilter: WindowType.Card
+        surfaceSource: compositorInstance.surfaceModel
+        windowType: "_WEBOS_WINDOW_TYPE_CARD"
 
-        onRowsAboutToBeRemoved: {
+        onRowsAboutToBeRemoved: (index, first, last) => {
             if( !cardViewItem.keepCurrentCardMaximized &&
-                cardsModel.getByIndex(last).userData.windowState !== WindowState.Carded ) cardViewItem.setCurrentCardState(WindowState.Carded);
+                cardsModel.get(last).userData.windowState !== WindowState.Carded ) cardViewItem.setCurrentCardState(WindowState.Carded);
         }
     }
 
@@ -41,8 +44,8 @@ Item {
         maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin
         isCardedViewActive: cardViewItem.state === "cardList"
 
-        onCardRemove: cardViewItem.removeCard(window);
-        onCardSelect: {
+        onCardRemove: (window) => { cardViewItem.removeCard(window); }
+        onCardSelect: (window) => {
             setCurrentCard(window);
             if(window.userData.isFullScreenMode) {
                 setCurrentCardState(WindowState.Fullscreen);
@@ -69,8 +72,8 @@ Item {
     }
 
     function removeCard(window) {
-        console.log("CardView.removeCard(" + window +"): calling closeWindowWithId(" + window.winId + ")");
-        compositorInstance.closeWindowWithId(window.winId);
+        console.log("CardView.removeCard(" + window +"): calling closeWindow");
+        compositorInstance.closeWindow(window);
     }
 
     function setCurrentCard(window) {
@@ -87,7 +90,11 @@ Item {
 
     function setCurrentCardState(windowState) {
         var lCurrentActiveWindow = cardViewItem.currentActiveWindow();
-        if( !lCurrentActiveWindow ) return;
+        if( !lCurrentActiveWindow ) {
+        	// no active window, force return to card view
+        	windowManagerInstance.switchToCardView();
+        	return;
+        }
 
         if( windowState === WindowState.Carded ) {
             if( state !== "cardList" )
@@ -258,7 +265,7 @@ Item {
                 cardViewItem.setCurrentCardState(WindowState.Carded);
             }
         }
-        function onSwipeLeftGesture(modifiers) {
+/*        function onSwipeLeftGesture(modifiers) {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviBack);
             }
@@ -267,26 +274,26 @@ Item {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviNext);
             }
-        }
+        }*/
     }
 
     ///////// private section //////////
     Connections {
         target: compositorInstance
-        function onWindowAdded(window) {
+        function onSurfaceMapped(window) {
             __handleWindowAdded(window);
         }
-        function onWindowRaised(window) {
-            cardViewItem.setCurrentCard(window);
-            cardViewItem.setCurrentCardState(WindowState.Maximized);
-        }
-        function onWindowRemoved(window) {
+//        function onWindowRaised(window) {
+//            cardViewItem.setCurrentCard(window);
+//            cardViewItem.setCurrentCardState(WindowState.Maximized);
+//        }
+        function onSurfaceUnmapped(window) {
             __handleWindowRemoved(window);
         }
     }
 
     function __handleWindowAdded(window) {
-        if( window.windowType === WindowType.Card ) {
+        if( window.type === "_WEBOS_WINDOW_TYPE_CARD" ) {
             // Create the window container
             var windowWrapperComponent = Qt.createComponent("CardWindowWrapper.qml");
             var windowWrapper = windowWrapperComponent.createObject(cardViewItem, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2,
@@ -299,7 +306,7 @@ Item {
     }
 
     function __handleWindowRemoved(window) {
-        if( window.windowType === WindowType.Card ) {
+        if( window.type === "_WEBOS_WINDOW_TYPE_CARD" ) {
             var windowWrapper = window.userData;
             if( !!windowWrapper ) {
                 windowWrapper.setWrappedWindow(null);

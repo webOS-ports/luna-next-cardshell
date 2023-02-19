@@ -25,7 +25,7 @@ Item {
 
     // common property values
     property string owner: "luna-next-cardshell"
-    property string serviceName: "org.webosports.luna"
+    property string serviceName: "com.webos.surfacemanager-cardshell"
 
     // aliases for each tweak
     property alias dateTimeTweakValue: dateTimeTweak.value

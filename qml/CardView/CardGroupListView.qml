@@ -16,10 +16,10 @@
  */
 
 import QtQuick 2.0
-import QtGraphicalEffects 1.0
+import QtQml.Models 2.2
 
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 import LuneOS.Components 1.0
 
 import "../Utils"
@@ -66,13 +66,13 @@ Item {
         }
     }
 
-    VisualDataModel {
+    DelegateModel {
         id: groupsDataModel
 
         model: CardGroupModel {
             id: listCardGroupsModel
 
-            onNewCardInserted: {
+            onNewCardInserted: (group, index, newWindow) => {
                 if( !containerForDraggedCard.visible ) { // don't activate the new card group during drag'n'drop
                     internalListView.delayedCardSelect(newWindow);
                 }
@@ -102,15 +102,15 @@ Item {
             y: 0
             z: ListView.isCurrentItem ? 1 : 0
 
-            onCardSelect: {
+            onCardSelect: (window) => {
                 //listCardGroupsModel.setWindowInFront(window, index)
                 cardGroupListViewItem.cardSelect(window);
             }
-            onCardRemove: {
+            onCardRemove: (window) => {
                 cardGroupListViewItem.updateKeysForwardTo(false);
                 cardGroupListViewItem.cardRemove(window);
             }
-            onCardDragStart: {
+            onCardDragStart: (window) => {
                 if( !enableDragnDrop ) {
                     console.log("Drag'n'drop is currently disabled.");
                 }
@@ -166,9 +166,8 @@ Item {
 
             anchors.fill: parent
 
-            property real currentItemWidth: currentItem ? currentItem.width : 0
-            preferredHighlightBegin: width/2-currentItemWidth/2
-            preferredHighlightEnd: width/2+currentItemWidth/2
+            preferredHighlightBegin: cardGroupListViewItem.isCardedViewActive ? width/2-cardWindowWidth/2 : 0
+            preferredHighlightEnd: cardGroupListViewItem.isCardedViewActive ? width/2+cardWindowWidth/2 : width
             highlightRangeMode: ListView.StrictlyEnforceRange
             highlightFollowsCurrentItem: true
             highlightMoveDuration: 0

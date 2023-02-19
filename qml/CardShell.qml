@@ -22,7 +22,7 @@ import QtQuick 2.0
 import LuneOS.Components 1.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 
 import "CardView"
 import "StatusBar"
@@ -111,18 +111,22 @@ Rectangle {
         fingerSize: Units.gu(5)
         minimalFlickLength: Units.gu(10)
         timeout: 2000
-        height: orientationHelper.height
-        width: orientationHelper.width
+        height: root.height
+        width: root.width
+
+       function convertRawPos(pos) {
+           return mapFromItem(root, pos.x, pos.y);
+       }
 
         signal screenEdgeFlickEdgeLeft(bool timeout,point pos)
         signal screenEdgeFlickEdgeRight(bool timeout, point pos)
         signal screenEdgeFlickEdgeTop(bool timeout,point pos)
         signal screenEdgeFlickEdgeBottom(bool timeout, point pos)
 
-        onTouchBegin: orientationHelper.setLocked(true);
-        onTouchEnd: orientationHelper.setLocked(false);
+//        onTouchBegin: orientationHelper.setLocked(true);
+//        onTouchEnd: orientationHelper.setLocked(false);
         onGestureEvent: {
-            var screenPos = orientationHelper.convertRawPos(pos);
+            var screenPos = convertRawPos(pos);
 
             switch (gestureType) {
             case GestureHandler.TapGesture:

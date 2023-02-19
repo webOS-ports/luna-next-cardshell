@@ -1,6 +1,7 @@
 import QtQuick 2.0
 
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
+import WebOSCoreCompositor 1.0
 
 /*
  * The CardGroupModel describes how the cards are organized into groups.
@@ -16,11 +17,14 @@ ListModel {
     signal cardRemoved()
 
     property WindowModel listCardsModel: WindowModel {
-        windowTypeFilter: WindowType.Card
+        surfaceSource: compositor.surfaceModel
+        windowType: "_WEBOS_WINDOW_TYPE_CARD"
 
-        onRowsAboutToBeRemoved: removeWindow(listCardsModel.getByIndex(last));
-        onRowsInserted: {
-            var newWindow = listCardsModel.getByIndex(last);
+        onRowsAboutToBeRemoved: (index, first, last) => {
+            removeWindow(listCardsModel.get(last));
+        }
+        onRowsInserted: (index, first, last) => {
+            var newWindow = listCardsModel.get(last);
             var groupIndexForInsertion = listCardGroupsModel.count;
             if( newWindow.parentWinId ) {
                 var windowFound = false;
@@ -110,7 +114,8 @@ ListModel {
 
     function createNewGroup(window, insertAt) {
         // create a new group with only one window
-        listCardGroupsModel.insert(insertAt, {"windowList": [ { "window":window } ], "currentCardInGroup": 0, "spreadRatio": 0.1});
+        listCardGroupsModel.insert(insertAt, {"windowList": [], "currentCardInGroup": 0, "spreadRatio": 0.1});
+        listCardGroupsModel.get(insertAt).windowList.append( { "window":window } );
     }
 
     function removeWindow(window) {

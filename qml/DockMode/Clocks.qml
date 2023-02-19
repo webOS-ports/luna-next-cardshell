@@ -19,8 +19,10 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import QtQml.Models 2.2
+
 import LunaNext.Common 0.1
-import LunaNext.Compositor 0.1
+import WebOSCompositorBase 1.0
 
 Rectangle {
     id: clock
@@ -35,7 +37,7 @@ Rectangle {
         fillMode: Image.Stretch
     }
 
-    VisualItemModel{
+    ObjectModel{
         id: clockList
         AnalogClock{
             width: clocksListView.width; height: clocksListView.height
