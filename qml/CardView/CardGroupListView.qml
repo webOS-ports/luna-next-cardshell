@@ -166,8 +166,8 @@ Item {
 
             anchors.fill: parent
 
-            preferredHighlightBegin: cardGroupListViewItem.isCardedViewActive ? width/2-cardWindowWidth/2 : 0
-            preferredHighlightEnd: cardGroupListViewItem.isCardedViewActive ? width/2+cardWindowWidth/2 : width
+            preferredHighlightBegin: width/2-cardWindowWidth/2
+            preferredHighlightEnd: width/2+cardWindowWidth/2
             highlightRangeMode: ListView.StrictlyEnforceRange
             highlightFollowsCurrentItem: true
             highlightMoveDuration: 0
@@ -204,7 +204,7 @@ Item {
                 internalListView.currentIndex = newIndex
             }
 
-            Keys.onPressed: {
+            Keys.onPressed: (event) => {
                 if (cardGroupListViewItem.isCardedViewActive) {
                     if (event.key === Qt.Key_Left) {
                         event.accepted = true;
