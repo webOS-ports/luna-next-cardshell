@@ -125,7 +125,7 @@ Rectangle {
 
 //        onTouchBegin: orientationHelper.setLocked(true);
 //        onTouchEnd: orientationHelper.setLocked(false);
-        onGestureEvent: {
+        onGestureEvent: (gestureType, pos, timeout) => {
             var screenPos = convertRawPos(pos);
 
             switch (gestureType) {
