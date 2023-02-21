@@ -95,7 +95,7 @@ MouseArea {
                 swipeCanceled();
             }
             else if( !mouse.wasHeld ) {
-                clicked(mouse);
+                clicked();
             }
         }
 
