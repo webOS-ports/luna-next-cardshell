@@ -83,7 +83,7 @@ Item {
         onClicked: justTypeFieldItem.showJustType(0)
     }
 
-    Keys.onPressed: {
+    Keys.onPressed: (event) => {
         if(visible && opacity>0 && __isDisplayableKey(event.key) ) {
                         showJustType(event.key);
                         event.accepted = true;
