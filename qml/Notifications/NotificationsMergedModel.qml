@@ -53,7 +53,7 @@ ListModel {
                                     "notifHeight": dashboardCardFixedHeight});
             }
         }
-        onRowsAboutToBeRemoved: {
+        onRowsAboutToBeRemoved: (index, first, last) => {
             var notifObject = notificationModel.get(last);
             for( var i=0; i<mergedModel.count; ++i ) {
                 if( mergedModel.get(i).notifObject &&
@@ -65,10 +65,16 @@ ListModel {
         }
     }
     property WindowModel listDashboardsModel : WindowModel {
-//        windowTypeFilter: WindowType.Dashboard
+        surfaceSource: compositorInstance.surfaceModel
+        acceptFunction: "filter"
 
-        onRowsInserted: {
-            var window = listDashboardsModel.getByIndex(last);
+        function filter(surfaceItem) {
+            // TBC: is this check correct ?
+            return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_FLOATING" /* && windowProperties["LuneOS_window"] === "dashboard" */);
+        }
+
+        onRowsInserted: (index, first, last) => {
+            var window = listDashboardsModel.get(last);
             window.visible = false;
 
             // Handle dashboards with custom height
@@ -96,8 +102,8 @@ ListModel {
                                 "notifObject": null,
                                 "notifHeight": dashHeight});
         }
-        onRowsAboutToBeRemoved: {
-            var window = listDashboardsModel.getByIndex(last);
+        onRowsAboutToBeRemoved: (index, first, last) => {
+            var window = listDashboardsModel.get(last);
             for( var i=0; i<mergedModel.count; ++i ) {
                 if( mergedModel.get(i).window && mergedModel.get(i).window === window ) {
                     mergedModel.remove(i);
