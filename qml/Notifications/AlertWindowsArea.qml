@@ -72,6 +72,15 @@ Rectangle {
                     window.anchors.right = alertItem.right;
                     window.y = 0;
 
+                    //If the app provides window height in GridUnits we need to make sure we deal with it properly.
+                    if( window.height>0 && window.windowProperties )
+                    {
+                        if( window.windowProperties.hasOwnProperty("LuneOS_metrics") && window.windowProperties["LuneOS_metrics"]==="units")
+                        {
+                            window.height = Units.gu(window.height/Units.length(1.0));
+                        }
+                    }
+
                     // be careful here: at this point in time, window.height is usually not yet set
                     if(window.height>0) {
                         window.changeSize(Qt.size(alertItem.width, window.height));
