@@ -12,7 +12,7 @@ QtObject {
 
     function setIconUrlFromWindow(window, setterFct) {
         //Deal with the mini/smallIcons both relative and absolute
-        var myIconUrl = "";
+        var myIconUrl = Qt.resolvedUrl("../images/default-app-icon.png").toString();
         //Enyo might set a smallIcon for the dashboard which will appear as LuneOS_icon
         if(window.windowProperties.hasOwnProperty("LuneOS_icon")) {
             myIconUrl = window.windowProperties["LuneOS_icon"];
@@ -20,7 +20,7 @@ QtObject {
         else if(window.miniIcon){
             myIconUrl = window.miniIcon;
         }
-        else {
+        else if(window.appIcon) {
             myIconUrl = window.appIcon;
         }
 
@@ -51,10 +51,8 @@ QtObject {
 
         function handleGetAppInfoResponse2(message) {
             var response = JSON.parse(message.payload);
-            if (response.returnValue && typeof response.basePath === 'string') {
-                var basePathWithoutEndSlash = response.basePath.match(/(.*)[\/\\]/);
-                var appFolder = basePathWithoutEndSlash ? basePathWithoutEndSlash[1] : '.';
-
+            if (response.returnValue && typeof response.appInfo.folderPath === 'string') {
+                var appFolder = response.appInfo.folderPath;
                 setterFct(__resolveRelative(myIconUrl, appFolder));
             }
         }
@@ -66,13 +64,13 @@ QtObject {
 
 
         //Get the app folder so we can make an absolute path if needed
-        service.call("luna://com.webos.service.applicationManager/getAppBasePath",
-                     JSON.stringify({"appId":window.appId}),
+        service.call("luna://com.webos.service.applicationManager/getAppInfo",
+                     JSON.stringify({"id":window.appId}),
                      handleGetAppInfoResponse2, handleGetAppInfoError2);
     }
 
     function setIconUrlOrDefault(path, appId, setterFct) {
-        var mypath = "";
+        var mypath = Qt.resolvedUrl("../images/default-app-icon.png").toString();
         if(path){
             mypath = path.toString();
         }
@@ -82,26 +80,22 @@ QtObject {
         else {
             //Do lookup of the appIcon
             service.call("luna://com.webos.service.applicationManager/getAppInfo",
-                         JSON.stringify({"appId":appId}),
+                         JSON.stringify({"id":appId}),
                          handleGetAppInfoResponse, handleGetAppInfoError);
 
             function handleGetAppInfoResponse(message) {
                 var response = JSON.parse(message.payload);
                 if(mypath.length > 1 && mypath.slice(-1)!=="/" && mypath[0]!=="/" && mypath.substring(0,7)!=="file://") {
-                    if (response.returnValue && typeof response.appInfo.main === 'string'){
-                        var basePathWithoutEndSlash = response.appInfo.main.match(/(.*)[\/\\]/);
-                        var appFolder = basePathWithoutEndSlash ? basePathWithoutEndSlash[1] : '.';
-                        mypath = appFolder+"/"+mypath;
+                    if (response.returnValue && typeof response.appInfo.folderPath === 'string'){
+                        mypath = response.appInfo.folderPath+"/"+mypath;
                     }
                 } else {
-                    if(!FileUtils.exists(mypath)) {
-                        if (response.returnValue && (response.appInfo.icon || response.appInfo.miniicon)) {
-                            if(response.appInfo.icon) {
-                                //Use appIcon by default, fall back to miniicon when needed.
-                                mypath = response.appInfo.icon;
-                            } else {
-                                mypath = response.appInfo.miniicon;
-                            }
+                    if (response.returnValue && (response.appInfo.icon || response.appInfo.miniicon)) {
+                        if(response.appInfo.icon) {
+                            //Use appIcon by default, fall back to miniicon when needed.
+                            mypath = response.appInfo.folderPath+"/"+response.appInfo.icon;
+                        } else {
+                            mypath = response.appInfo.folderPath+"/"+response.appInfo.miniicon;
                         }
                     }
                 }
