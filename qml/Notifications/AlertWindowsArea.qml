@@ -41,7 +41,8 @@ Rectangle {
 
         function filter(surfaceItem) {
             // TBC: is this check correct ?
-            return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" && surfaceItem.appId === "com.palm.systemui");
+            return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" &&
+                    surfaceItem.windowProperties["LuneOS_window"] === "popupalert");
         }
         //    windowTypeFilter: WindowType.PopupAlert
     }
