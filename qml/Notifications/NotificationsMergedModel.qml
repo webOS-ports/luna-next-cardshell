@@ -181,7 +181,7 @@ ListModel {
 
             onClosed: {
                 dashboardWindow.visible = false;
-                compositorInstance.closeWindowWithId(dashboardWindow.winId); // this will take care of removing the card from mergedModel
+                compositorInstance.closeWindow(dashboardWindow); // this will take care of removing the card from mergedModel
                 dashboardWindow = null;
             }
         }

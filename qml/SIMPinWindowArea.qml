@@ -38,7 +38,7 @@ Item {
     }
 
     function discardSIMPinWindow() {
-        if( __simPinWindow ) compositor.closeWindowWithId(__simPinWindow.winId);
+        if( __simPinWindow ) compositor.closeWindow(__simPinWindow);
     }
 
     function appendPinWindow(window) {

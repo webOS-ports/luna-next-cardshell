@@ -45,7 +45,7 @@ Item {
         MouseArea {
             anchors.fill: overlayBackgroundArea
             onClicked: {
-                compositorInstance.closeWindowWithId(overlayBackgroundArea.associatedPopupWindow.winId);
+                compositorInstance.closeWindow(overlayBackgroundArea.associatedPopupWindow);
                 overlayBackgroundArea.associatedPopupWindow = null;
             }
         }
