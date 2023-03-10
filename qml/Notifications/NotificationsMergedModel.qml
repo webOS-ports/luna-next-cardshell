@@ -22,7 +22,6 @@ import WebOSCoreCompositor 1.0
 
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
-import LunaNext.Shell.Notifications 0.1
 import LuneOS.Service 1.0
 
 import "../Utils"
@@ -32,14 +31,15 @@ ListModel {
     dynamicRoles: true
 
     property IconPathServices iconPathServices: IconPathServices {}
-    property NotificationManager notificationMgr: NotificationManager {}
-    property NotificationListModel notificationModel: NotificationListModel {
+    property NotificationService notificationService: NotificationService {}
+    property Connections toastsListModelCnx: Connections {
+        target: notificationService.toastModel
         // the signal itemAdded is declared in C++, without a qmltype declaration,
         // so QML isn't able to guess the name of the signal argument.
-        onItemAdded: {
-            var notifObject = arguments[0];
+        function onRowsInserted(index, first, last) {
+            var notifObject = notificationService.toastModel.get(last);
 
-            var createStickyNotification = ( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 );
+            var createStickyNotification = true; // ( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 );
 
             // Banner in all cases
             bannerItemsPopups.popupModel.append({"object" : notifObject, "sticky": createStickyNotification});
@@ -53,7 +53,7 @@ ListModel {
                                     "notifHeight": dashboardCardFixedHeight});
             }
         }
-        onRowsAboutToBeRemoved: (index, first, last) => {
+        function onRowsAboutToBeRemoved(index, first, last) {
             var notifObject = notificationModel.get(last);
             for( var i=0; i<mergedModel.count; ++i ) {
                 if( mergedModel.get(i).notifObject &&
@@ -122,11 +122,11 @@ ListModel {
             signal clicked()
             signal closed(int notifIndex)
 
-            title: notifObject.title
-            body: notifObject.body
+            title: notifObject.title || notifObject.message
+            body: notifObject.message
 
             Component.onCompleted: {
-                iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.ownerId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
+                iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
             }
 
             onClosed: {

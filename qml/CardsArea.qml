@@ -168,10 +168,6 @@ WindowManager {
         }
     }
 
-    NotificationService {
-        id: notificationService
-    }
-
     CardView {
         id: cardViewInstance
 
