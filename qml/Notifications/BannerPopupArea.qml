@@ -299,7 +299,7 @@ Item {
                     id: notifTitle
                     height: parent.height
                     width: parent.width - freshItemIcon.width
-                    text: object.title.length > 0 ? object.body.length > 0 ? object.title + ": " + object.body : object.title : object.body
+                    text: object.title.length > 0 ? object.message.length > 0 ? object.title + ": " + object.message : object.title : object.message
                     font.pixelSize: FontUtils.sizeToPixels("small")
                     font.bold: false
                     color: "white"

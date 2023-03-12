@@ -49,6 +49,10 @@ Rectangle {
 
     NotificationsMergedModel {
         id: mergedModel
+
+        onAddBannerNotification: (notifObject) => {
+           bannerItemsPopups.popupModel.append({"object": notifObject});
+        }
     }
 
     // Minimized view
@@ -190,23 +194,6 @@ Rectangle {
 
         height: popupModel.count > 0 ? bannerNotificationFixedHeight : 0;
         Behavior on height { NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }
-
-
-        Connections {
-            target: bannerItemsPopups.popupModel
-            function onCountChanged() {
-                if( bannerItemsPopups.popupModel.count > 0 )
-                    notificationArea.state = "banner";
-                else if( mergedModel.count > 0 )
-                    notificationArea.state = "minimized";
-            }
-            function onRowsAboutToBeRemoved(parent, first, last) {
-                if( !bannerItemsPopups.popupModel.get(last).sticky )
-                {
-                    mergedModel.notificationMgr.closeById(bannerItemsPopups.popupModel.get(last).object.replacesId);
-                }
-            }
-        }
     }
 
     states: [
@@ -219,18 +206,21 @@ Rectangle {
         },
         State {
             name: "banner"
+            when: bannerItemsPopups.popupModel.count>0
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
             PropertyChanges { target: notificationArea; height: bannerItemsPopups.height }
         },
         State {
             name: "minimized"
+            when: bannerItemsPopups.popupModel.count===0 && !openListView.visible
             PropertyChanges { target: minimizedListView; visible: true }
             PropertyChanges { target: openListView; visible: false }
             PropertyChanges { target: notificationArea; height: minimizedListView.height+Units.gu(1) }
         },
         State {
             name: "open"
+            when: bannerItemsPopups.popupModel.count===0
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: true }
             PropertyChanges { target: notificationArea; height: openListView.height+Units.gu(1) }

@@ -30,6 +30,12 @@ ListModel {
     id: mergedModel
     dynamicRoles: true
 
+    signal addBannerNotification(var notif);
+
+    function getToastIdFromNotif(notifObject) {
+        return notifObject.sourceId+"-"+notifObject.timestamp;
+    }
+
     property IconPathServices iconPathServices: IconPathServices {}
     property NotificationService notificationService: NotificationService {}
     property Connections toastsListModelCnx: Connections {
@@ -39,10 +45,10 @@ ListModel {
         function onRowsInserted(index, first, last) {
             var notifObject = notificationService.toastModel.get(last);
 
-            var createStickyNotification = true; // ( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 );
+            var createStickyNotification = ( typeof notifObject.schedule !== 'undefined' && notifObject.schedule.expire > Date.now()/1000 );
 
             // Banner in all cases
-            bannerItemsPopups.popupModel.append({"object" : notifObject, "sticky": createStickyNotification});
+            addBannerNotification(notifObject);
 
             // If the notification's duration is long enough, also add it to the notification list
             if( createStickyNotification ) {
@@ -54,10 +60,11 @@ ListModel {
             }
         }
         function onRowsAboutToBeRemoved(index, first, last) {
-            var notifObject = notificationModel.get(last);
+            let notifObject = notificationService.toastModel.get(last);
+            let toastId = getToastIdFromNotif(notifObject);
             for( var i=0; i<mergedModel.count; ++i ) {
                 if( mergedModel.get(i).notifObject &&
-                    mergedModel.get(i).notifObject.replacesId === notifObject.replacesId ) {
+                    getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
                     mergedModel.remove(i);
                     break;
                 }
@@ -130,21 +137,23 @@ ListModel {
             }
 
             onClosed: {
-                notificationMgr.closeById(notifObject.replacesId);
+                notificationLunaService.call(
+                            "luna://com.webos.notification/closeToast",
+                            JSON.stringify({"toastId": getToastIdFromNotif(notifObject)}));
             }
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: launcherInstance.launchApplication(notificationItem.notifObject.launchId,
-                                                              notificationItem.notifObject.launchParams, handleLaunchAppSuccess);
+                onClicked: launcherInstance.launchApplication(notificationItem.notifObject.action.launchParams.id,
+                                                              notificationItem.notifObject.action.launchParams, handleLaunchAppSuccess);
 
 															  
             }
 
             function handleLaunchAppSuccess() {
-                if (typeof notifObject.replacesId !== "undefined") {
-                    notificationMgr.closeById(notifObject.replacesId);
-                }
+                notificationLunaService.call(
+                            "luna://com.webos.notification/closeToast",
+                            JSON.stringify({"toastId": getToastIdFromNotif(notifObject)}));
             }
         }
     }
@@ -208,6 +217,9 @@ ListModel {
             console.log("Failed to call display service: " + message);
         }
         property int __previousCount: 0
+    }
+    property LunaService notificationLunaService: LunaService {
+        name: "com.webos.surfacemanager"
     }
     property LunaService displayService: LunaService {
         name: "com.webos.surfacemanager-cardshell"
