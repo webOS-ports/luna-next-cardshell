@@ -213,7 +213,7 @@ Item {
                 {
                     "windowManagerInstance": statusBar.windowManagerInstance,
                     "compositorInstance": statusBar.compositorInstance,
-                    "maxDashboardWindowHeight": windowManagerInstance.screenheight*0.67,
+                    "maxDashboardWindowHeight": Qt.binding(() => {return windowManagerInstance.height*0.67;}),
                     "blackMode": statusBar.blackMode,
                 });
             }

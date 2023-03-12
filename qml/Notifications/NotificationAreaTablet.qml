@@ -20,7 +20,6 @@ import QtQml.Models 2.1
 
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
-import LunaNext.Shell.Notifications 0.1
 import LuneOS.Service 1.0
 import LunaNext.Shell 0.1
 
@@ -53,6 +52,10 @@ Rectangle {
 
     NotificationsMergedModel {
         id: mergedModel
+
+        onAddBannerNotification: (notifObject) => {
+           bannerItemsPopups.popupModel.append({"object": notifObject});
+        }
     }
 
     Item {
@@ -309,7 +312,7 @@ Rectangle {
 
                         signal closed()
                         onClosed: {
-                            item.closed(slidingNotificationArea.delegateIndex);
+                            item.closed();
                         }
                     }
                 }
@@ -344,23 +347,6 @@ Rectangle {
 
         height: parent.height
         width: Units.gu(30)
-
-        Connections {
-            target: bannerItemsPopups.popupModel
-            function onCountChanged() {
-                if( bannerItemsPopups.popupModel.count > 0 ) {
-                    notificationArea.state = "banner";
-                }
-                else if( mergedModel.count > 0 ) {
-                    notificationArea.state = "minimized";
-                }
-            }
-            function onRowsAboutToBeRemoved(parent, first, last) {
-                if( !bannerItemsPopups.popupModel.get(last).sticky ) {
-                    mergedModel.notificationMgr.closeById(bannerItemsPopups.popupModel.get(last).object.replacesId);
-                }
-            }
-        }
     }
 
     states: [
@@ -372,16 +358,19 @@ Rectangle {
         },
         State {
             name: "banner"
+            when: bannerItemsPopups.popupModel.count>0
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
         },
         State {
             name: "minimized"
+            when: bannerItemsPopups.popupModel.count===0 && !openListView.visible
             PropertyChanges { target: minimizedListView; visible: true }
             PropertyChanges { target: openListView; visible: false }
         },
         State {
             name: "open"
+            when: bannerItemsPopups.popupModel.count===0
             PropertyChanges { target: openListView; visible: true }
         }
     ]

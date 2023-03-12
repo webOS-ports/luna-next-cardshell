@@ -45,7 +45,9 @@ ListModel {
         function onRowsInserted(index, first, last) {
             var notifObject = notificationService.toastModel.get(last);
 
-            var createStickyNotification = ( typeof notifObject.schedule !== 'undefined' && notifObject.schedule.expire > Date.now()/1000 );
+            // a notification is a banner with a lifespan > 10s
+            var createStickyNotification = ( notifObject.schedule && notifObject.schedule.expire &&
+                                             notifObject.schedule.expire > Date.now()/1000 + 10 );
 
             // Banner in all cases
             addBannerNotification(notifObject);
@@ -127,13 +129,24 @@ ListModel {
             property var notifObject: loaderNotifObject;
 
             signal clicked()
-            signal closed(int notifIndex)
+            signal closed()
+
+            Timer {
+                id: expiryTimer
+                interval: notifObject.schedule.expire - Date.now()/1000
+                repeat: false
+                running: false
+                onTriggered: notificationItem.closed()
+            }
 
             title: notifObject.title || notifObject.message
             body: notifObject.message
 
             Component.onCompleted: {
                 iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
+
+//                expiryTimer.interval = notifObject.schedule.expire - Date.now()/1000
+//                if (expiryTimer.interval>0) expiryTimer.start();
             }
 
             onClosed: {
@@ -151,9 +164,7 @@ ListModel {
             }
 
             function handleLaunchAppSuccess() {
-                notificationLunaService.call(
-                            "luna://com.webos.notification/closeToast",
-                            JSON.stringify({"toastId": getToastIdFromNotif(notifObject)}));
+                notificationItem.closed();
             }
         }
     }
@@ -165,7 +176,7 @@ ListModel {
             property QtObject compositorInstance: loaderCompositorInstance;
 
             signal clicked()
-            signal closed(int notifIndex)
+            signal closed()
 
             onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
 

@@ -168,7 +168,7 @@ Rectangle {
 
                         signal closed()
                         onClosed: {
-                            item.closed(slidingNotificationArea.delegateIndex);
+                            item.closed();
                         }
                     }
                 }
