@@ -45,9 +45,8 @@ ListModel {
         function onRowsInserted(index, first, last) {
             var notifObject = notificationService.toastModel.get(last);
 
-            // a notification is a banner with a lifespan > 10s
-            var createStickyNotification = ( notifObject.schedule && notifObject.schedule.expire &&
-                                             notifObject.schedule.expire > Date.now()/1000 + 10 );
+            // a notification is a non-light toast
+            var createStickyNotification = ( notifObject.type && notifObject.type !== "light" );
 
             // Banner in all cases
             addBannerNotification(notifObject);
@@ -133,9 +132,9 @@ ListModel {
 
             Timer {
                 id: expiryTimer
-                interval: notifObject.schedule.expire - Date.now()/1000
+                interval: Math.max(5000, notifObject.schedule.expire*1000 - Date.now())
                 repeat: false
-                running: false
+                running: true
                 onTriggered: notificationItem.closed()
             }
 
@@ -144,9 +143,8 @@ ListModel {
 
             Component.onCompleted: {
                 iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
-
-//                expiryTimer.interval = notifObject.schedule.expire - Date.now()/1000
-//                if (expiryTimer.interval>0) expiryTimer.start();
+                // work on a copy, to avoid warning when model is destroyed
+                notifObject = JSON.parse(JSON.stringify(loaderNotifObject));
             }
 
             onClosed: {
