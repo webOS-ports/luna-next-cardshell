@@ -22,7 +22,6 @@ import WebOSCoreCompositor 1.0
 
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
-import LunaNext.Shell.Notifications 0.1
 import LuneOS.Service 1.0
 
 import "../Utils"
@@ -31,18 +30,26 @@ ListModel {
     id: mergedModel
     dynamicRoles: true
 
+    signal addBannerNotification(var notif);
+
+    function getToastIdFromNotif(notifObject) {
+        return notifObject.sourceId+"-"+notifObject.timestamp;
+    }
+
     property IconPathServices iconPathServices: IconPathServices {}
-    property NotificationManager notificationMgr: NotificationManager {}
-    property NotificationListModel notificationModel: NotificationListModel {
+    property NotificationService notificationService: NotificationService {}
+    property Connections toastsListModelCnx: Connections {
+        target: notificationService.toastModel
         // the signal itemAdded is declared in C++, without a qmltype declaration,
         // so QML isn't able to guess the name of the signal argument.
-        onItemAdded: {
-            var notifObject = arguments[0];
+        function onRowsInserted(index, first, last) {
+            var notifObject = notificationService.toastModel.get(last);
 
-            var createStickyNotification = ( typeof notifObject.expireTimeout !== 'undefined' && notifObject.expireTimeout > 1 );
+            // a notification is a non-light toast
+            var createStickyNotification = ( notifObject.type && notifObject.type !== "light" );
 
             // Banner in all cases
-            bannerItemsPopups.popupModel.append({"object" : notifObject, "sticky": createStickyNotification});
+            addBannerNotification(notifObject);
 
             // If the notification's duration is long enough, also add it to the notification list
             if( createStickyNotification ) {
@@ -53,11 +60,12 @@ ListModel {
                                     "notifHeight": dashboardCardFixedHeight});
             }
         }
-        onRowsAboutToBeRemoved: (index, first, last) => {
-            var notifObject = notificationModel.get(last);
+        function onRowsAboutToBeRemoved(index, first, last) {
+            let notifObject = notificationService.toastModel.get(last);
+            let toastId = getToastIdFromNotif(notifObject);
             for( var i=0; i<mergedModel.count; ++i ) {
                 if( mergedModel.get(i).notifObject &&
-                    mergedModel.get(i).notifObject.replacesId === notifObject.replacesId ) {
+                    getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
                     mergedModel.remove(i);
                     break;
                 }
@@ -120,31 +128,41 @@ ListModel {
             property var notifObject: loaderNotifObject;
 
             signal clicked()
-            signal closed(int notifIndex)
+            signal closed()
 
-            title: notifObject.title
-            body: notifObject.body
+            Timer {
+                id: expiryTimer
+                interval: Math.max(5000, notifObject.schedule.expire*1000 - Date.now())
+                repeat: false
+                running: true
+                onTriggered: notificationItem.closed()
+            }
+
+            title: notifObject.title || notifObject.message
+            body: notifObject.message
 
             Component.onCompleted: {
-                iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.ownerId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
+                iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
+                // work on a copy, to avoid warning when model is destroyed
+                notifObject = JSON.parse(JSON.stringify(loaderNotifObject));
             }
 
             onClosed: {
-                notificationMgr.closeById(notifObject.replacesId);
+                notificationLunaService.call(
+                            "luna://com.webos.notification/closeToast",
+                            JSON.stringify({"toastId": getToastIdFromNotif(notifObject)}));
             }
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: launcherInstance.launchApplication(notificationItem.notifObject.launchId,
-                                                              notificationItem.notifObject.launchParams, handleLaunchAppSuccess);
+                onClicked: launcherInstance.launchApplication(notificationItem.notifObject.action.launchParams.id,
+                                                              notificationItem.notifObject.action.launchParams, handleLaunchAppSuccess);
 
 															  
             }
 
             function handleLaunchAppSuccess() {
-                if (typeof notifObject.replacesId !== "undefined") {
-                    notificationMgr.closeById(notifObject.replacesId);
-                }
+                notificationItem.closed();
             }
         }
     }
@@ -156,7 +174,7 @@ ListModel {
             property QtObject compositorInstance: loaderCompositorInstance;
 
             signal clicked()
-            signal closed(int notifIndex)
+            signal closed()
 
             onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
 
@@ -208,6 +226,9 @@ ListModel {
             console.log("Failed to call display service: " + message);
         }
         property int __previousCount: 0
+    }
+    property LunaService notificationLunaService: LunaService {
+        name: "com.webos.surfacemanager"
     }
     property LunaService displayService: LunaService {
         name: "com.webos.surfacemanager-cardshell"

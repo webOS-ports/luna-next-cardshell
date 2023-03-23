@@ -18,7 +18,6 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
-import LunaNext.Shell.Notifications 0.1
 import WebOSCoreCompositor 1.0
 import LuneOS.Service 1.0
 
