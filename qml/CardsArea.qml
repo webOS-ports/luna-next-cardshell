@@ -278,6 +278,7 @@ WindowManager {
         anchors.right: parent.right
 
         windowManagerInstance: windowManager
+        compositorInstance: compositor
 
         visible: !lockScreen.visible && simPinWindowArea.simPinWindowPresent
 

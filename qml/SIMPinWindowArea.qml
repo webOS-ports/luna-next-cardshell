@@ -25,11 +25,19 @@ Item {
     id: simPinWindowAreaItem
 
     property bool simPinWindowPresent: listPinWindowModel.count>0
+    property var compositorInstance
     property Item windowManagerInstance
     property Item __simPinWindow
 
     WindowModel {
         id: listPinWindowModel
+        surfaceSource: compositorInstance.surfaceModel
+        acceptFunction: "filter"
+
+        function filter(surfaceItem) {
+            return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" &&
+                    surfaceItem.windowProperties["LuneOS_window"] === "pin");
+        }
 //        windowTypeFilter: WindowType.Pin
 
         onRowsInserted: {
