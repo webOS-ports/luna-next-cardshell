@@ -43,7 +43,6 @@ Rectangle {
             return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" &&
                     surfaceItem.windowProperties["LuneOS_window"] === "popupalert");
         }
-        //    windowTypeFilter: WindowType.PopupAlert
     }
 
     Component {
@@ -51,7 +50,7 @@ Rectangle {
         Item {
             id: alertItem
 
-            property Item window: surfaceItem
+            property Item window: listPopupAlertsModel.get(index /* index is set by Repeater */)
             y: rootAlertsArea.height - height
             width: rootAlertsArea.width
             height: window ? window.height : 0
@@ -116,14 +115,14 @@ Rectangle {
         anchors.left: rootAlertsArea.left
         anchors.right: rootAlertsArea.right
         anchors.bottom: rootAlertsArea.bottom
-        model: listPopupAlertsModel
+        model: listPopupAlertsModel.count
         delegate: alertComponent
 
-        onItemAdded: {
+        onItemAdded: (index, item) => {
             if( item.height > rootAlertsArea.maxHeight )
                 rootAlertsArea.maxHeight = item.height;
         }
-        onItemRemoved: {
+        onItemRemoved: (index, item) => {
             computeNewRootHeight();
         }
     }
