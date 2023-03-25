@@ -101,7 +101,7 @@ Rectangle {
         var newMaxHeight = 0;
         var currentMaxHeight = 0;
         for( i=0; i < listPopupAlertsModel.count; ++i ) {
-            currentMaxHeight = listPopupAlertsModel.getByIndex(i).height;
+            currentMaxHeight = listPopupAlertsModel.get(i).height;
             if( currentMaxHeight > newMaxHeight )
                 newMaxHeight = currentMaxHeight;
         }
