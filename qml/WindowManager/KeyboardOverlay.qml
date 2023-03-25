@@ -22,16 +22,16 @@ import WebOSCompositorBase 1.0
 import WebOSCoreCompositor 1.0
 
 Item {
-    id: overlaysManagerItem
+    id: keyboardOverlayItem
     property var compositorInstance
 
     WindowModel {
-        id: listOverlaysModel
+        id: listKeyboardsModel
         surfaceSource: compositorInstance.surfaceModel
         windowType: "_WEBOS_WINDOW_TYPE_KEYBOARD"
 
-        onRowsInserted: {
-            appendOverlayWindow(listOverlaysModel.get(last));
+        onRowsInserted: (index, first, last) => {
+            appendKeyboardWindow(listKeyboardsModel.get(last));
         }
     }
 
@@ -55,25 +55,25 @@ Item {
     onHeightChanged: updateOverlaySizes();
 
     function updateOverlaySizes() {
-        console.log("new overlay window size = " + overlaysManagerItem.width +"x"+ overlaysManagerItem.height);
-        for( var i = 0; i < listOverlaysModel.count; ++i ) {
-            var window = listOverlaysModel.getByIndex(i);
+        console.log("new keyboard overlay window size = " + keyboardOverlayItem.width +"x"+ keyboardOverlayItem.height);
+        for( var i = 0; i < listKeyboardsModel.count; ++i ) {
+            var window = listKeyboardsModel.getByIndex(i);
             if(!window.isPopup) {
-                window.changeSize(Qt.size(overlaysManagerItem.width, overlaysManagerItem.height));
+                window.changeSize(Qt.size(keyboardOverlayItem.width, keyboardOverlayItem.height));
             }
         }
     }
 
-    function appendOverlayWindow(window) {
-        console.log("OverlayManager: adding " + window);
+    function appendKeyboardWindow(window) {
+        console.log("KeyboardOverlay: adding " + window);
 
-        window.parent = overlaysManagerItem;
+        window.parent = keyboardOverlayItem;
         if(!window.isPopup) {
-            window.anchors.fill = overlaysManagerItem;
-            window.changeSize(Qt.size(overlaysManagerItem.width, overlaysManagerItem.height));
+            window.anchors.fill = keyboardOverlayItem;
+            window.changeSize(Qt.size(keyboardOverlayItem.width, keyboardOverlayItem.height));
         }
         else {
-            window.anchors.centerIn = overlaysManagerItem;
+            window.anchors.centerIn = keyboardOverlayItem;
             overlayBackgroundArea.associatedPopupWindow = window;
         }
     }

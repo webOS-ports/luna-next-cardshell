@@ -242,7 +242,7 @@ WindowManager {
         z: 4 // just under the keyboard
     }
 
-    OverlaysManager {
+    KeyboardOverlay {
         id: overlaysManagerInstance
 
         anchors.top: statusBarInstance.bottom
