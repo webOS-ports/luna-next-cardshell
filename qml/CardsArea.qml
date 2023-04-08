@@ -141,6 +141,16 @@ WindowManager {
         id: volumeControl
     }
 
+    ScreenShooter {
+        id: screenShooter
+    }
+
+    ScreenShooterGradient {
+        id: screenShooterGradient
+        anchors.fill: parent
+        z: 11
+    }
+
     Connections {
         target: gestureAreaInstance
         function onSwipeRightGesture(modifiers) {
