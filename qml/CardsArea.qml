@@ -141,6 +141,16 @@ WindowManager {
         id: volumeControl
     }
 
+    ScreenShooter {
+        id: screenShooter
+    }
+
+    ScreenShooterGradient {
+        id: screenShooterGradient
+        anchors.fill: parent
+        z: 11
+    }
+
     Connections {
         target: gestureAreaInstance
         function onSwipeRightGesture(modifiers) {
@@ -242,7 +252,7 @@ WindowManager {
         z: 4 // just under the keyboard
     }
 
-    OverlaysManager {
+    KeyboardOverlay {
         id: overlaysManagerInstance
 
         anchors.top: statusBarInstance.bottom

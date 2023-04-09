@@ -178,14 +178,10 @@ FocusScope {
     Connections {
         target: cardView
         function onDefaultWindowWidthChanged() {
-            if( cardWrapperItem.windowState === WindowState.Carded ) {
-                syncClientWindowSize();
-            }
+            syncClientWindowSize();
         }
         function onDefaultWindowHeightChanged() {
-            if( cardWrapperItem.windowState === WindowState.Carded ) {
-                syncClientWindowSize();
-            }
+            syncClientWindowSize();
         }
     }
 
