@@ -37,7 +37,7 @@ Item {
         name: "com.webos.surfacemanager-cardshell"
         usePrivateBus: true
         service: "luna://org.webosports.service.audio"
-        method: "playFeedback"
+        method: "systemsounds/playFeedback"
     }
 
     Timer {
