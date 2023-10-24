@@ -268,7 +268,7 @@ Item {
             //Icons are depending on Settings.tabletUi, which we check and we'll populate the list accordingly
             if(Settings.tabletUi)
             {
-                launcherListModel.model.append({appId: "org.webosports.app.browser",   icon: "/usr/palm/applications/org.webosports.app.browser/icon.png"});
+                launcherListModel.model.append({appId: "com.webos.app.enactbrowser",   icon: "/usr/palm/applications/com.webos.app.enactbrowser/icon.png"});
                 launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
                 launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/launcher/icon-"+Qt.formatDate(new Date, "d")+".png"});
                 launcherListModel.model.append({appId: "org.webosports.app.messaging", icon: "/usr/palm/applications/org.webosports.app.messaging/icon.png"});
