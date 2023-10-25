@@ -51,7 +51,7 @@ Item {
 
             sourceSize.height: height
             sourceSize.width: width
-            source: launchableAppIcon.appIcon
+            source: FileUtils.exists(launchableAppIcon.appIcon) ? launchableAppIcon.appIcon : Qt.resolvedUrl("../images/default-app-icon.png")
 
             visible: !glow
         }
