@@ -20,39 +20,39 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 
 Column {
-	id: drawer
-        property MenuListEntry drawerHeader
-        property Item drawerBody
+    id: drawer
+    property MenuListEntry drawerHeader
+    property Item drawerBody
 
-        property bool active: true
+    property bool active: true
 
-        property int  maxViewHeight: 0
+    property int  maxViewHeight: 0
 
-        state: "DRAWER_CLOSED"
+    state: "DRAWER_CLOSED"
 
-        signal drawerOpened()
-        signal drawerClosed()
-        signal requestViewAdjustment(int offset)
-        signal drawerFinishedClosingAnimation()
+    signal drawerOpened()
+    signal drawerClosed()
+    signal requestViewAdjustment(int offset)
+    signal drawerFinishedClosingAnimation()
 
-        function isOpen() {
-            return (drawer.state == "DRAWER_OPEN");
-        }
+    function isOpen() {
+        return (drawer.state == "DRAWER_OPEN");
+    }
 
-        function adjustViewIfNecessary() {
-            if(maxViewHeight > 0) {
-                var totalHeight = drawerHeader.height + body.childrenRect.height;
+    function adjustViewIfNecessary() {
+        if(maxViewHeight > 0) {
+            var totalHeight = drawerHeader.height + body.childrenRect.height;
 
-                if((drawer.y + totalHeight) > maxViewHeight) {
-                    var offset = Math.min(((drawer.y + totalHeight) - maxViewHeight), drawer.y);
-                    requestViewAdjustment(offset);
-                }
+            if((drawer.y + totalHeight) > maxViewHeight) {
+                var offset = Math.min(((drawer.y + totalHeight) - maxViewHeight), drawer.y);
+                requestViewAdjustment(offset);
             }
         }
+    }
 
-        spacing: 0
+    spacing: 0
 
-        Rectangle {
+    Rectangle {
         id: header
         width: parent.width
         height: drawerHeader.height

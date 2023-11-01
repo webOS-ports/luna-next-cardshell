@@ -34,8 +34,8 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         visible: pad.moving
         mipmap: true
-	width: Units.gu(50)
-	height: Units.gu(30)
+        width: Units.gu(50)
+        height: Units.gu(30)
     }
 
     DropArea {
@@ -66,8 +66,8 @@ Item {
     Image {
         id: pad
         source: pad.on ? "../images/lockscreen/screen-lock-padlock-on.png" : "../images/lockscreen/screen-lock-padlock-off.png"
-		height: Units.gu(12)
-		width: Units.gu(12)
+        height: Units.gu(12)
+        width: Units.gu(12)
         mipmap: true
 
         property bool on: false
@@ -103,7 +103,7 @@ Item {
             onReleased: {
                 pad.checkForUnlockPosition();
                 pad.resetPosition();
-		pad.on = false;
+                pad.on = false;
                 unlockText.visible = false;
             }
             onPressed: {

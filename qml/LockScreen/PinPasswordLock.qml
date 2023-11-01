@@ -75,8 +75,8 @@ Item {
         width: parent.width;
         height: parent.height;
         //border { left: Units.gu(35/10); top: Units.gu(40/10); right: Units.gu(35/10); bottom: Units.gu(40/10) }
-		border { left: 35; top: 40; right: 35; bottom: 40 }
-		smooth: true
+        border { left: 35; top: 40; right: 35; bottom: 40 }
+        smooth: true
     }
 
     Text {

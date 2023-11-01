@@ -40,13 +40,13 @@ Item {
     MediaPlayer {
         id: chargedSound
         source: "/usr/palm/sounds/battery_full.mp3"
-	audioOutput: AudioOutput {}
+        audioOutput: AudioOutput {}
     }
 
     MediaPlayer {
         id: batteryLowSound
         source: "/usr/palm/sounds/battery_low.mp3"
-	audioOutput: AudioOutput {}
+        audioOutput: AudioOutput {}
     }
 
     onPercentageChanged: {

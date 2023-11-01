@@ -40,7 +40,7 @@ Item {
     MediaPlayer {
         id: shutdownSound
         source: "/usr/palm/sounds/shutdown.mp3"
-	audioOutput: AudioOutput {}
+        audioOutput: AudioOutput {}
     }
 
     Rectangle {

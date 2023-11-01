@@ -74,7 +74,7 @@ Item {
         font.bold: true;
         font.pixelSize: FontUtils.sizeToPixels("large")//18
         //font.letterSpacing is disabled due to LNC crash on TP currently
-	//font.letterSpacing: 2
+        //font.letterSpacing: 2
         font.family: "Prelude"
     }
     Text {

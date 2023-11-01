@@ -69,26 +69,26 @@ Rectangle {
         anchors.centerIn: parent
         anchors.verticalCenterOffset: isLandscape ? Units.gu(-40) : Units.gu(-30)
         Image { 
-			id: clockdot1; 
-			height: Units.gu(1.0); 
-			width: Units.gu(1.0); 
-			fillMode: Image.Stretch; 
+            id: clockdot1; 
+            height: Units.gu(1.0); 
+            width: Units.gu(1.0); 
+            fillMode: Image.Stretch; 
             source: "../images/dockmode/time/indicator/"+(clocksListView.currentIndex==0 ? "on" : "off") + ".png"
-		}
+        }
         Image { 
-			id: clockdot2; 
-			height: Units.gu(1.0); 
-			width: Units.gu(1.0); 
-			fillMode: Image.Stretch; 
+            id: clockdot2; 
+            height: Units.gu(1.0); 
+            width: Units.gu(1.0); 
+            fillMode: Image.Stretch; 
             source: "../images/dockmode/time/indicator/"+(clocksListView.currentIndex==1 ? "on" : "off") + ".png"
-		}
+        }
         Image { 
-			id: clockdot3; 
-			height: Units.gu(1.0); 
-			width: Units.gu(1.0); 
-			fillMode: Image.Stretch; 
+            id: clockdot3; 
+            height: Units.gu(1.0); 
+            width: Units.gu(1.0); 
+            fillMode: Image.Stretch; 
             source: "../images/dockmode/time/indicator/"+(clocksListView.currentIndex==2 ? "on" : "off") + ".png"
-		}
+        }
     }
 }
 

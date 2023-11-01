@@ -157,8 +157,6 @@ ListModel {
                 anchors.fill: parent
                 onClicked: launcherInstance.launchApplication(notificationItem.notifObject.action.launchParams.id,
                                                               notificationItem.notifObject.action.launchParams, handleLaunchAppSuccess);
-
-															  
             }
 
             function handleLaunchAppSuccess() {
