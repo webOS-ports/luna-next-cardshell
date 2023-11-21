@@ -126,13 +126,14 @@ ListModel {
             id: notificationItem
 
             property var notifObject: loaderNotifObject;
+            property int expiryDiff: notifObject ? notifObject.schedule.expire*1000 - Date.now() : 0;
 
             signal clicked()
             signal closed()
 
             Timer {
                 id: expiryTimer
-                interval: Math.max(5000, notifObject.schedule.expire*1000 - Date.now())
+                interval: Math.max(5000, expiryDiff)
                 repeat: false
                 running: true
                 onTriggered: notificationItem.closed()
@@ -150,7 +151,9 @@ ListModel {
             onClosed: {
                 notificationLunaService.call(
                             "luna://com.webos.notification/closeToast",
-                            JSON.stringify({"toastId": getToastIdFromNotif(notifObject)}));
+                            JSON.stringify({"toastId": getToastIdFromNotif(notifObject)}), undefined, onCloseNotifError);
+
+                mergedModel.remove(notificationItem.index);
             }
 
             MouseArea {
@@ -159,6 +162,10 @@ ListModel {
                                                               notificationItem.notifObject.action.launchParams, handleLaunchAppSuccess);
 
 															  
+            }
+
+            function onCloseNotifError(message) {
+                console.warn("Failed to close toast: " + message);
             }
 
             function handleLaunchAppSuccess() {
@@ -228,10 +235,9 @@ ListModel {
         property int __previousCount: 0
     }
     property LunaService notificationLunaService: LunaService {
-        name: "com.webos.surfacemanager"
+        name: "com.webos.surfacemanager-cardshell"
     }
     property LunaService displayService: LunaService {
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 }
