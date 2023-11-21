@@ -265,16 +265,23 @@ Item {
                 cardViewItem.setCurrentCardState(WindowState.Carded);
             }
         }
-/*        function onSwipeLeftGesture(modifiers) {
+        function onSwipeLeftGesture(modifiers) {
             if( cardViewItem.isCurrentCardActive() ) {
-                cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviBack);
+                var seat = compositor.defaultSeat
+                seat.sendKeyEvent(Qt.Key_Escape, true);
+                seat.sendKeyEvent(Qt.Key_Escape, false);
             }
         }
+        /*
         function onSwipeRightGesture(modifiers) {
             if( cardViewItem.isCurrentCardActive() ) {
-                cardViewItem.currentActiveWindow().postEvent(EventType.CoreNaviNext);
+                var seat = compositor.defaultSeat
+                // 0xE0E3 comes from https://github.com/webOS-ports/luna-next/blob/master/plugins/compositor/eventtype.cpp#L33
+                seat.sendKeyEvent(0xE0E3, true);
+                seat.sendKeyEvent(0xE0E3, false);
             }
-        }*/
+        }
+        */
     }
 
     ///////// private section //////////
