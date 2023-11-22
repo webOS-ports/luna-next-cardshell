@@ -47,7 +47,7 @@ Rectangle {
 
     Component {
         id: alertComponent
-        Item {
+        FocusScope {
             id: alertItem
 
             property Item window: listPopupAlertsModel.get(index /* index is set by Repeater */)
@@ -90,6 +90,8 @@ Rectangle {
                     if( windowManagerItem ) {
                         windowManagerItem.addTapAction("hideAlertWindow", function () { compositorInstance.closeWindow(window); });
                     }
+
+                    alertItem.focus = true;
                 }
             }
         }
