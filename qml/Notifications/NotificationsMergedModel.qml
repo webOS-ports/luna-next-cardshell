@@ -230,6 +230,5 @@ ListModel {
     }
     property LunaService displayService: LunaService {
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 }

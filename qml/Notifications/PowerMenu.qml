@@ -143,6 +143,5 @@ Item {
         id: powerKeyService
 
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 }

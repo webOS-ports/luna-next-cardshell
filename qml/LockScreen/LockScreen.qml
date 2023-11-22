@@ -114,7 +114,6 @@ Item {
     LunaService {
         id: service
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
         onInitialized: {
             service.subscribe("luna://com.palm.systemmanager/getDeviceLockMode", "{\"subscribe\":true}", handleDeviceLockMode, handleError);
             service.subscribe("luna://com.palm.display/control/lockStatus", "{\"subscribe\":true}", handleLockStatus, handleError);

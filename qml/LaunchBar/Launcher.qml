@@ -39,7 +39,6 @@ Item {
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 
     Keys.forwardTo: [ justTypeFieldInstance, fullLauncherInstance ]

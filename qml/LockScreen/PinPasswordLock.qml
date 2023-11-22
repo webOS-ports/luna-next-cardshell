@@ -158,7 +158,6 @@ Item {
     LunaService {
         id: service
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 
     function submitPassword(password, isPin) {

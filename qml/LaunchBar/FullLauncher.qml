@@ -633,7 +633,6 @@ Item {
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
     // ls2 db8 management
     function __handleDBError(message) {
@@ -648,7 +647,6 @@ Item {
     // ls2 launchPoint removal
     function removeApplication(id) {
         console.log("Removing app " + id);
-        
         lunaNextLS2Service.call("luna://com.webos.appInstallService/remove",
             JSON.stringify({"id": id}), undefined, handleRemoveAppError)
     }

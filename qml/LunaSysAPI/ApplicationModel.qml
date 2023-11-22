@@ -37,7 +37,6 @@ ListModel {
     property QtObject lunaNextLS2Service: LunaService {
         id: service
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 
     function applyFilter(newFilter) {

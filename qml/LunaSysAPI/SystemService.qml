@@ -37,7 +37,6 @@ Item {
     LunaService {
         id: systemServicePrivate
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
         onInitialized: {
             systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
             systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);

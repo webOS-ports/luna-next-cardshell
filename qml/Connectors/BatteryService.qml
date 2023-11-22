@@ -65,7 +65,6 @@ Item {
     LunaService {
         id: lunaService
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
 
         onInitialized: {
             lunaService.subscribe("luna://com.palm.bus/signal/registerServerStatus",

@@ -149,7 +149,6 @@ Item {
                 id: networkStatusQuery
 
                 name: "com.webos.surfacemanager-cardshell"
-                usePrivateBus: true
 
                 onInitialized: {
                     probeNetworkStatus()

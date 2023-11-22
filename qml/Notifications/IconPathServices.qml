@@ -7,7 +7,6 @@ QtObject {
 
     property LunaService service: LunaService {
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 
     function setIconUrlFromWindow(window, setterFct) {

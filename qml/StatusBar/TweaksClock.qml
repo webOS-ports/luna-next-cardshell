@@ -51,7 +51,6 @@ Item {
         id: timeFormatQuery
 
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
 
         onInitialized: {
             probeTimeFormat()

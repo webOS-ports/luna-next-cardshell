@@ -59,7 +59,6 @@ MenuListEntry {
     LunaService {
         id: service
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
         onInitialized: updateBrightness()
     }
 

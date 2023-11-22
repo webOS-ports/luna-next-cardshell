@@ -242,7 +242,6 @@ Item {
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
     function __handleDBError(message) {
         console.log("Could not fulfill DB operation : " + message)

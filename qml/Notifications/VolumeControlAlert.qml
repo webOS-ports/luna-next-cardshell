@@ -35,7 +35,6 @@ Item {
     LunaService {
         id: playFeedback
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
         service: "luna://org.webosports.service.audio"
         method: "playFeedback"
     }
@@ -82,7 +81,6 @@ Item {
         id: audioService
 
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 
     function onAudioStatusChanged(message) {

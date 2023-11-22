@@ -43,6 +43,5 @@ Item {
     LunaService {
         id: audioService
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 }

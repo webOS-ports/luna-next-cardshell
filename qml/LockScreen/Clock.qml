@@ -89,9 +89,7 @@ Item {
 
     LunaService {
         id: prefsQuery
-
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
 
         onInitialized: {
             probePrefs()
