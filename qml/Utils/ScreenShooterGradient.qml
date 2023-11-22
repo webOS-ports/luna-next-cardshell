@@ -45,7 +45,7 @@ Item {
     }
 
     //FIXME migrate to: https://doc.qt.io/qt-6/qml-qtquick-shapes-radialgradient.html#centerRadius-prop
-	RadialGradient {
+    RadialGradient {
         horizontalRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
         verticalRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
         anchors.fill: parent

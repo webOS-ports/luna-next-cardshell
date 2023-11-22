@@ -23,7 +23,7 @@ import "../Utils"
 
 Item {
     id: gestureAreaItem
-	property bool enableGestureArea: true
+    property bool enableGestureArea: true
 
     signal tapGesture
     signal swipeUpGesture(int modifiers)

@@ -31,5 +31,3 @@ Image {
         running: spinner.on; from: 0; to: 360; loops: Animation.Infinite; duration: 3000
     }
 }
-
-	

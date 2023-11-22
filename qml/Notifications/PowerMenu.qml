@@ -40,7 +40,7 @@ Item {
     MediaPlayer {
         id: shutdownSound
         source: "/usr/palm/sounds/shutdown.mp3"
-	audioOutput: AudioOutput {}
+        audioOutput: AudioOutput {}
     }
 
     Rectangle {
@@ -143,6 +143,5 @@ Item {
         id: powerKeyService
 
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 }

@@ -40,13 +40,13 @@ Item {
     MediaPlayer {
         id: chargedSound
         source: "/usr/palm/sounds/battery_full.mp3"
-	audioOutput: AudioOutput {}
+        audioOutput: AudioOutput {}
     }
 
     MediaPlayer {
         id: batteryLowSound
         source: "/usr/palm/sounds/battery_low.mp3"
-	audioOutput: AudioOutput {}
+        audioOutput: AudioOutput {}
     }
 
     onPercentageChanged: {
@@ -65,7 +65,6 @@ Item {
     LunaService {
         id: lunaService
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
 
         onInitialized: {
             lunaService.subscribe("luna://com.palm.bus/signal/registerServerStatus",

@@ -35,7 +35,6 @@ Item {
     LunaService {
         id: playFeedback
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
         service: "luna://org.webosports.service.audio"
         method: "playFeedback"
     }
@@ -82,11 +81,10 @@ Item {
         id: audioService
 
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 
     function onAudioStatusChanged(message) {
-		var response = JSON.parse(message.payload);
+        var response = JSON.parse(message.payload);
 
         if (!_hadFirstAudioStatus) {
             _hadFirstAudioStatus = true;
@@ -98,8 +96,8 @@ Item {
         // we don't indicate volume changes when sound is muted
         if (response.mute) {
             image.source = "../images/bell_off.png"
-			image.width = Units.gu(9.6)
-			image.height = Units.gu(9.6)
+            image.width = Units.gu(9.6)
+            image.height = Units.gu(9.6)
         }
         else {
             var normalizedVolume = 0;
@@ -108,8 +106,8 @@ Item {
             if (normalizedVolume < 0)
                 normalizedVolume = 0;
             image.source = ("../images/notification-music-indicator-" + normalizedVolume + ".png");
-			image.width = Units.gu(24)
-			image.height = Units.gu(7.2)
+            image.width = Units.gu(24)
+            image.height = Units.gu(7.2)
         }
 
         root.visible = true;

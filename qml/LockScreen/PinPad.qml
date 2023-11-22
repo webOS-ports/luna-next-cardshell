@@ -27,12 +27,12 @@ Item {
 
     Image {
         id: gridDividers
-	width: pinPad.width
-	fillMode: Image.PreserveAspectFit
+        width: pinPad.width
+        fillMode: Image.PreserveAspectFit
         source: "../images/pin/pin-grid.png"
         property int topOffset: Units.gu(4/10)
         property int bottomOffset: Units.gu(6/10)
-	smooth: true
+        smooth: true
     }
 
     Grid {

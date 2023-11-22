@@ -47,7 +47,7 @@ Item {
         else if (textVisible) {
             return indicatorTextWidth;
         }
-		return 0;
+        return 0;
     }
 
     clip: true

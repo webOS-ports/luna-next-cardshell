@@ -40,7 +40,7 @@ Item {
         height: parent.height;
         border { left: Units.gu(10/10); top: Units.gu(10/10); right: Units.gu(10/10); bottom: Units.gu(10/10) }
         opacity: active ? 1.0 : inactiveOpacity
-	smooth: true
+        smooth: true
     }
 
     Text {

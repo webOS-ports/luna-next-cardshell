@@ -155,6 +155,5 @@ Rectangle {
         id: displayService
 
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
     }
 }

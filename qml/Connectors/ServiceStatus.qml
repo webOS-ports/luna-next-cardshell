@@ -31,7 +31,6 @@ Item {
     LunaService {
         id: registerServerStatus
         name: "com.webos.surfacemanager-cardshell"
-        usePrivateBus: true
         service: "luna://com.palm.bus"
         method: "signal/registerServerStatus"
 

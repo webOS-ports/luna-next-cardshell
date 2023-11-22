@@ -57,12 +57,12 @@ Drawer {
             coloseOnConnect = false;
         }
 
-	vpnListView.height = (vpnPrefs.height+separator.height) * vpnList.count
+        vpnListView.height = (vpnPrefs.height+separator.height) * vpnList.count
     }
 
     function clearVpnList() {
         vpnList.clear()
-	vpnListView.height = Units.gu(0.1)
+        vpnListView.height = Units.gu(0.1)
     }
 
     function forceDisconnectAllProfiles() {
@@ -126,9 +126,9 @@ Drawer {
         MenuDivider { id: separator }
 
         ListView {
-	    id: vpnListView
+            id: vpnListView
             width: parent.width
-	    height: 1
+            height: 1
             interactive: false
             spacing: 0
             model: vpnList
@@ -139,13 +139,13 @@ Drawer {
             id: vpnPrefs
             selectable: true
             content: Text {
-		x: ident + internalIdent;
-        text: "VPN Preferences";
-		color: "#FFF";
-		font.bold: false;
-		font.pixelSize: FontUtils.sizeToPixels("medium") //18;
-		font.family: "Prelude"
-	    }
+                x: ident + internalIdent;
+                text: "VPN Preferences";
+                color: "#FFF";
+                font.bold: false;
+                font.pixelSize: FontUtils.sizeToPixels("medium") //18;
+                font.family: "Prelude"
+            }
             onAction: {
                 prefsTriggered();
                 menuCloseRequest(300);
@@ -166,14 +166,14 @@ Drawer {
                 forceSelected: showSelected
 
                 content: VpnEntry {
-                            id: vpnData
-                            x: ident + internalIdent;
-                            width: vpnMenu.width-x;
-                            name: entryText;
-                            connected: isConnected;
-                            connStatus: connectionStatus;
-                            vpnProfileInfo: vpnInfo;
-                         }
+                    id: vpnData
+                    x: ident + internalIdent;
+                    width: vpnMenu.width-x;
+                    name: entryText;
+                    connected: isConnected;
+                    connStatus: connectionStatus;
+                    vpnProfileInfo: vpnInfo;
+                }
 
                 onAction: {
                     itemSelected(vpnData.name, vpnData.connStatus, vpnData.vpnProfileInfo)
@@ -197,4 +197,3 @@ Drawer {
         id: vpnList
     }
 }
-
