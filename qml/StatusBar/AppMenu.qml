@@ -38,7 +38,7 @@ Item {
         // now, if the appId is valid, fetch the app name
         if (activeWindowAppId.length > 0) {
             service.call("luna://com.webos.service.applicationManager/getAppInfo",
-                         JSON.stringify({"appId":activeWindowAppId}),
+                         JSON.stringify({"id":activeWindowAppId}),
                          handleGetAppInfoResponse, handleGetAppInfoError);
         }
         else
@@ -56,10 +56,11 @@ Item {
 
     function determineActiveWindowAppId() {
         var appId = "";
-        if (launcherInstance.state === "justTypeLauncher")
+        if (launcherInstance.state === "justTypeLauncher") {
             appId = "com.palm.launcher";
-        else
-            appId = cardViewInstance.getAppIdForFocusApplication();
+        } else {
+            appId = cardViewInstance.getAppIdForFocusApplication(); 
+        }
         return appId;
     }
 
@@ -78,10 +79,11 @@ Item {
 
     function handleGetAppInfoResponse(message) {
         var response = JSON.parse(message.payload);
-        if (response.returnValue && response.appInfo && response.appInfo.appmenu)
-            activeWindowTitle = response.appInfo.appmenu;
-        else
+        if (response.returnValue && response.appInfo && (response.appInfo.appmenu || response.appInfo.title)) {
+            activeWindowTitle = response.appInfo.appmenu ? response.appInfo.appmenu : response.appInfo.title;
+        } else {
             activeWindowTitle = defaultAppMenuTitle;
+        }
     }
 
     function handleGetAppInfoError(error) {
