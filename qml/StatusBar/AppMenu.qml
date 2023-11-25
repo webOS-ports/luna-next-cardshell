@@ -59,6 +59,12 @@ Item {
             appId = "com.palm.launcher";
         } else {
             appId = cardViewInstance.getAppIdForFocusApplication(); 
+
+            if (appId === "") {
+                // try to get the app id anyway
+                service.call("luna://com.webos.applicationManager/running", "{}",
+                             handleRunningResponse, handleGetAppInfoError);
+            }
         }
         return appId;
     }
@@ -82,6 +88,19 @@ Item {
             activeWindowTitle = response.appInfo.appmenu ? response.appInfo.appmenu : response.appInfo.title;
         } else {
             activeWindowTitle = defaultAppMenuTitle;
+        }
+    }
+
+    function handleRunningResponse(message) {
+        var response = JSON.parse(message.payload);
+        var lCurrentActiveWindow = cardViewInstance.currentActiveWindow()
+        if (lCurrentActiveWindow && lCurrentActiveWindow.processId && response.returnValue && response.running) {
+            for (let runningApp of response.running) {
+                if (runningApp.processid === lCurrentActiveWindow.processId) {
+                    lCurrentActiveWindow.updateProperties({}, "appId", runningApp.id); // cache the found appId
+                    activeWindowAppId = runningApp.id;
+                }
+            }
         }
     }
 
