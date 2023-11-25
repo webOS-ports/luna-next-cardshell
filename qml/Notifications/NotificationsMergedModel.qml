@@ -51,7 +51,7 @@ ListModel {
             // Banner in all cases
             addBannerNotification(notifObject);
 
-            // If the notification's duration is long enough, also add it to the notification list
+            // If the notification's isn't "light", also add it to the notification list
             if( createStickyNotification ) {
                 // Sticky notification
                 mergedModel.append({"notifType": "notification",
@@ -126,14 +126,14 @@ ListModel {
             id: notificationItem
 
             property var notifObject: loaderNotifObject;
-            property int expiryDiff: notifObject ? notifObject.schedule.expire*1000 - Date.now() : 0;
+            property var expiryDiff: notifObject ? notifObject.schedule.expire*1000 - Date.now() : 0;
 
             signal clicked()
             signal closed()
 
             Timer {
                 id: expiryTimer
-                interval: Math.max(5000, expiryDiff)
+                interval: Math.max(5000, Math.min(expiryDiff, 2000000000 /*never exceed max int32 value*/))
                 repeat: false
                 running: true
                 onTriggered: notificationItem.closed()
