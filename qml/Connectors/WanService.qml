@@ -50,11 +50,8 @@ Item {
                 return;
             }
 
-            if (response.cellular.onInternet)
-                wanService.online = (response.cellular.onInternet === "yes");
-
-            if (response.cellular.state)
-                wanService.connected = (response.cellular.state === "connected");
+            wanService.online = !!response.cellular.enabled;
+            wanService.connected = !!response.wan.onInternet;
         }
     }
 
