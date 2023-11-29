@@ -25,6 +25,7 @@ BaseIndicator {
     property string technology: "none" // none, gsm, edge, umts, hsdpa, hsupa, hspa, lte 
 
     imageSource: getIconForTechnology(technology)
+    imageVisible: technology !== "none"
 
     function getIconForTechnology(value) {
         if (value.length === 0)
