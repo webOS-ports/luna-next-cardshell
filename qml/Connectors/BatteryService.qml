@@ -91,9 +91,9 @@ Item {
             batteryLevel = -1;
         else {
             /* query initial values */
-            lunaService.call("luna://com.palm.power/com/palm/power/chargerStatusQuery",
+            lunaService.call("luna://com.webos.service.battery/com/palm/power/chargerStatusQuery",
                              "{}", handlePowerdUsbDockStatus, handleError);
-            lunaService.call("luna://com.palm.power/com/palm/power/batteryStatusQuery",
+            lunaService.call("luna://com.webos.service.battery/com/palm/power/batteryStatusQuery",
                              "{}", handlePowerdBatteryEvent, handleError);
         }
     }
