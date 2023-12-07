@@ -59,7 +59,7 @@ MenuListEntry {
             service.subscribe("luna://com.palm.bus/signal/addmatch",
                                   JSON.stringify({"category":"/com/palm/power","method":"batteryStatus"}),
                                   updateBatteryStatus, handleError);
-            service.call("luna://com.palm.power/com/palm/power/batteryStatusQuery",
+            service.call("luna://com.webos.service.battery/com/palm/power/batteryStatusQuery",
                               "{}",
                               updateBatteryStatus,
                               handleError);
