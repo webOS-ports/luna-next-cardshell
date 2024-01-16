@@ -30,7 +30,7 @@ Item {
     property int percentage: 0
     property bool charging: false
 
-    property bool powerdAvailable: false
+    property bool batterydAvailable: false
 
     property bool _playSoundWhenCharged: false
 
@@ -68,8 +68,8 @@ Item {
 
         onInitialized: {
             lunaService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-                                  "{\"serviceName\":\"com.palm.power\"}",
-                                  handlePowerdServiceStatus, handleError);
+                                  "{\"serviceName\":\"com.webos.service.battery\"}",
+                                  handleBatterydServiceStatus, handleError);
             lunaService.subscribe("luna://com.palm.bus/signal/addmatch",
                                   "{\"category\":\"/com/palm/power\",\"method\":\"batteryStatus\"}",
                                   handlePowerdBatteryEvent, handleError);
@@ -83,11 +83,11 @@ Item {
         console.log("Service error: " + message);
     }
 
-    function handlePowerdServiceStatus(message) {
+    function handleBatterydServiceStatus(message) {
         var response = JSON.parse(message.payload);
 
-        powerdAvailable = response.connected;
-        if (!powerdAvailable)
+        batterydAvailable = response.connected;
+        if (!batterydAvailable)
             batteryLevel = -1;
         else {
             /* query initial values */
