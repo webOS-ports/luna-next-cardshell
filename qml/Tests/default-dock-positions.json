@@ -1,21 +1,21 @@
 [
-	{
-		"type": "tablet",
-		"items": [
+    {
+        "type": "tablet",
+        "items": [
             "org.webosports.tests.dummyWindow_default",
             "org.webosports.tests.fakeDashboardWindow_default",
             "org.webosports.tests.fakePopupAlertWindow_default",
             "org.webosports.tests.dummyWindow2_default",
             "org.webosports.tests.dummyWindow2_default"
         ]
-	},
-	{
-		"type": "phone",
-		"items": [
+    },
+    {
+        "type": "phone",
+        "items": [
             "org.webosports.tests.dummyWindow_default",
             "org.webosports.tests.fakeDashboardWindow_default",
             "org.webosports.tests.fakePopupAlertWindow_default",
             "org.webosports.tests.dummyWindow2_default"
-		]
-	}
+        ]
+    }
 ]

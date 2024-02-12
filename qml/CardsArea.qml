@@ -299,7 +299,7 @@ WindowManager {
         id: lockScreen
 
         z: 700
-		
+
         windowManagerInstance: windowManager
 
         isFirstUse: false
