@@ -58,7 +58,7 @@ FocusScope {
         id: splash
         appIcon: wrappedWindow !== null ? wrappedWindow.customImageFilePath : ""
         anchors.fill: parent;
-	state: "hidden"
+        state: "hidden"
         z: 10
     }
 */
