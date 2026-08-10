@@ -31,6 +31,7 @@ ListModel {
     dynamicRoles: true
 
     signal addBannerNotification(var notif);
+    signal removeBannerNotification(var notif);
 
     function getToastIdFromNotif(notifObject) {
         return notifObject.sourceId+"-"+notifObject.timestamp;
@@ -63,6 +64,12 @@ ListModel {
         function onRowsAboutToBeRemoved(index, first, last) {
             let notifObject = notificationService.toastModel.get(last);
             let toastId = getToastIdFromNotif(notifObject);
+
+            // The banner popup is a separate model, so removing the sticky
+            // entry below is not enough: a banner still on screen when its
+            // toast is withdrawn would sit there until its own timer expired.
+            removeBannerNotification(notifObject);
+
             for( var i=0; i<mergedModel.count; ++i ) {
                 if( mergedModel.get(i).notifObject &&
                     getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
