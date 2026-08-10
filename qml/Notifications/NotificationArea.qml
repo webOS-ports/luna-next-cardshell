@@ -53,6 +53,15 @@ Rectangle {
         onAddBannerNotification: (notifObject) => {
            bannerItemsPopups.popupModel.append({"object": notifObject});
         }
+
+        onRemoveBannerNotification: (notifObject) => {
+           let toastId = mergedModel.getToastIdFromNotif(notifObject);
+           for (var i = bannerItemsPopups.popupModel.count - 1; i >= 0; i--) {
+               let entry = bannerItemsPopups.popupModel.get(i).object;
+               if (entry && mergedModel.getToastIdFromNotif(entry) === toastId)
+                   bannerItemsPopups.popupModel.remove(i);
+           }
+        }
     }
 
     // Minimized view
