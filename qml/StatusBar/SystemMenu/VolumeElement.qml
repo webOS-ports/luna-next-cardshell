@@ -28,17 +28,25 @@ MenuListEntry {
     selectable: false
 
     property int margin: 0
+    property string soundOutput: "pcm_output"
     property int spacing: Units.gu(0.5)
 
     LunaService {
         id: service
         name: "com.webos.surfacemanager-cardshell"
         onInitialized: {
-            service.subscribe("luna://org.webosports.service.audio/getStatus",
+            // org.webosports.service.audio is the audio-service LuneOS no longer
+            // ships, so this subscription never delivered anything and the slider
+            // sat wherever it was. audiod nests the fields under volumeStatus.
+            service.subscribe("luna://com.webos.service.audio/master/getVolume",
                  JSON.stringify({"subscribe": true}),
                  function(message) {
-                     var response = JSON.parse(message.payload);
-                     volumeValue = response.volume / 100;
+                     var payload = JSON.parse(message.payload);
+                     var response = payload.hasOwnProperty("volumeStatus") ? payload.volumeStatus : payload;
+                     if (response.hasOwnProperty("soundOutput") && response.soundOutput.length > 0)
+                         volumeElement.soundOutput = response.soundOutput;
+                     if (response.hasOwnProperty("volume"))
+                         volumeValue = response.volume / 100;
                  },
                  function(error) {
                      console.log("Could not retrieve audio: " + error);
@@ -79,8 +87,10 @@ MenuListEntry {
                 active: volumeElement.active
 
                 onValueChanged: {
-                    service.call("luna://org.webosports.service.audio/setVolume",
-                                 JSON.stringify({"volume": Math.floor(volumeValue * 100)}),
+                    // audiod requires soundOutput here (REQUIRED_2 with volume).
+                    service.call("luna://com.webos.service.audio/master/setVolume",
+                                 JSON.stringify({"soundOutput": volumeElement.soundOutput,
+                                                 "volume": Math.floor(volumeValue * 100)}),
                                  function(message) { }, function(error) { });
                 }
 
