@@ -35,8 +35,10 @@ Item {
     LunaService {
         id: playFeedback
         name: "com.webos.surfacemanager-cardshell"
-        service: "luna://org.webosports.service.audio"
-        method: "playFeedback"
+        // org.webosports.service.audio is the audio-service LuneOS no longer
+        // ships; audiod serves the sounds under its own name.
+        service: "luna://com.webos.service.audio"
+        method: "systemsounds/playFeedback"
     }
 
     Timer {
@@ -66,9 +68,9 @@ Item {
 
     ServiceStatus {
         id: audioServiceStatus
-        serviceName: "org.webosports.service.audio"
+        serviceName: "com.webos.service.audio"
         onConnected: {
-            audioService.subscribe("luna://org.webosports.service.audio/getStatus",
+            audioService.subscribe("luna://com.webos.service.audio/master/getVolume",
                                    "{\"subscribe\":true}",
                                    onAudioStatusChanged, onError);
         }
@@ -84,7 +86,10 @@ Item {
     }
 
     function onAudioStatusChanged(message) {
-        var response = JSON.parse(message.payload);
+        var payload = JSON.parse(message.payload);
+        // audiod nests the fields under volumeStatus, where the old
+        // audio-service had them at the top level. Accept either.
+        var response = payload.hasOwnProperty("volumeStatus") ? payload.volumeStatus : payload;
 
         if (!_hadFirstAudioStatus) {
             _hadFirstAudioStatus = true;
@@ -94,7 +99,7 @@ Item {
         playFeedback.call(JSON.stringify({"name":"AdjustVolume"}));
 
         // we don't indicate volume changes when sound is muted
-        if (response.mute) {
+        if (response.muted) {
             image.source = "../images/bell_off.png"
             image.width = Units.gu(9.6)
             image.height = Units.gu(9.6)
