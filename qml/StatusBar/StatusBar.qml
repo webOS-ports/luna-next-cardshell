@@ -41,6 +41,10 @@ Item {
     property Item wifiService
 
     property string carrierName: "LuneOS"
+    // operator reported for the default voice SIM, and the combined list when
+    // more than one SIM is up; updateCarrierName() picks between them
+    property string singleSimCarrierName: "LuneOS"
+    property string multiSimCarrierName: ""
     property string defaultColor: "#FF515558"
     property real fontSize: carrierText.font.pixelSize
 
@@ -69,13 +73,73 @@ Item {
         else if(response.extended.state==="noservice")
             return;
         else if (response.extended.registration && response.extended.state !== "noservice") {
-            carrierName = response.extended.networkName
-            carrierText.text = carrierName
+            singleSimCarrierName = response.extended.networkName
+            updateCarrierName()
         }
     }
 
     function onError(message) {
         console.log("Failed to call networkStatus service: " + message)
+    }
+
+    function probeSimList()
+    {
+        simListQuery.subscribe(
+                    "luna://com.palm.telephony/simListQuery",
+                    "{\"subscribe\":true}",
+                    onSimListChanged, onSimListError)
+    }
+
+    /*
+     * With two SIMs a single operator name hides half of what the device is
+     * connected to, so the carrier area lists them all, e.g. "Vodafone | KPN".
+     */
+    function onSimListChanged(message) {
+        var response = JSON.parse(message.payload)
+
+        if (!response.returnValue || !response.sims) {
+            multiSimCarrierName = ""
+            updateCarrierName()
+            return;
+        }
+
+        var names = []
+
+        if (response.simCount >= 2) {
+            for (let i = 0; i < response.sims.length; i++) {
+                let sim = response.sims[i]
+
+                if (!sim.present || !sim.powered)
+                    continue;
+
+                names.push(sim.operatorName && sim.operatorName.length > 0 ? sim.operatorName
+                                                                          : sim.name)
+            }
+        }
+
+        multiSimCarrierName = names.length > 0 ? names.join(" | ") : ""
+        updateCarrierName()
+    }
+
+    /*
+     * The carrier area has three possible sources, in order of precedence: a
+     * custom string from Tweaks, the combined operator list when more than one
+     * SIM is up, and the single operator reported by networkStatusQuery.
+     * Both subscriptions funnel through here so that whichever answers last
+     * cannot clobber the other.
+     */
+    function updateCarrierName() {
+        carrierName = multiSimCarrierName.length > 0 ? multiSimCarrierName
+                                                     : singleSimCarrierName
+
+        if (AppTweaks.enableCustomCarrierStringValue === true)
+            carrierText.text = AppTweaks.customCarrierStringValue
+        else
+            carrierText.text = carrierName
+    }
+
+    function onSimListError(message) {
+        console.log("Failed to call simListQuery service: " + message)
     }
 
     Rectangle {
@@ -156,6 +220,16 @@ Item {
 
             }
 
+            LunaService {
+                id: simListQuery
+
+                name: "com.webos.surfacemanager-cardshell"
+
+                onInitialized: {
+                    probeSimList()
+                }
+            }
+
             Text {
                 id: carrierText
                 anchors.fill: parent
@@ -178,13 +252,8 @@ Item {
                         updateCarrierString()
                     }
                     function updateCarrierString() {
-                        if (AppTweaks.enableCustomCarrierStringValue === true) {
-                            //Only show custom carrier text in case we have the option enabled in Tweaks
-                            carrierText.text = AppTweaks.customCarrierStringValue
-                        } else {
-                            //Otherwise show the regular "Carrier"
-                            carrierText.text = carrierName
-                        }
+                        // single place that decides what the carrier area shows
+                        statusBar.updateCarrierName()
                     }
                 }
             }

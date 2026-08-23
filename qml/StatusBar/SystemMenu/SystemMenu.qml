@@ -33,6 +33,10 @@ Item {
 
     property bool airplaneModeInProgress: false
 
+    TelephonyService {
+        id: telephonyServiceConnector
+    }
+
     width: Units.gu(40)
     height: maxHeight
     state: "hidden"
@@ -85,6 +89,7 @@ Item {
         airplaneModeInProgress = ((state === 1) || (state === 2));
 
         if(airplaneModeInProgress) {
+            sim.close();
             wifi.close();
             vpn.close();
             bluetooth.close();
@@ -190,6 +195,29 @@ Item {
                     visible: volume.visible
                     widthOffset: dividerWidthOffset
                 }
+
+                SimElement {
+                    id: sim
+                    objectName: "simMenu"
+                    ident: headerIdent;
+                    internalIdent: subItemIdent;
+                    active: !airplaneModeInProgress;
+                    maxViewHeight : maxHeight - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin;
+
+                    telephonyService: telephonyServiceConnector
+
+                    onMenuCloseRequest: {
+                        closeMenuTimer.interval = delayMs;
+                        closeMenuTimer.start();
+                    }
+
+                    onRequestViewAdjustment: {
+                        viewAnimation.to = flickableArea.contentItem.y - offset;
+                        viewAnimation.start();
+                    }
+                }
+
+                MenuDivider {visible: sim.visible; widthOffset: dividerWidthOffset}
 
                 WiFiElement {
                     id: wifi
@@ -495,6 +523,7 @@ Item {
     }
 
     function resetMenu () {
+        sim.close();
         wifi.close();
         bluetooth.close();
         vpn.close();

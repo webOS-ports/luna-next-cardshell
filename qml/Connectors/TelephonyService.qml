@@ -19,17 +19,33 @@
 import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
-import QOfono 0.2
-import Connman 0.2
 
 Item {
     id: telephonyService
 
+    // ---------------------------------------------------------------
+    // State of the SIM that currently serves voice. These are the
+    // properties the shell used before dual SIM support existed and
+    // they keep meaning exactly the same thing for a single SIM device.
+    // ---------------------------------------------------------------
     property bool powered: false
     property bool connected: false
     property string registration: "noservice"
     property int bars: 0
     property int rssi: 0
+
+    // ---------------------------------------------------------------
+    // Multi SIM state
+    //
+    // The slot list and everything that only makes sense against it lives in
+    // MultiSimModel; this connector just keeps it fed and offers the calls
+    // that change telephonyd state.
+    // ---------------------------------------------------------------
+    property alias sims: simsModel
+
+    MultiSimModel {
+        id: simsModel
+    }
 
     ServiceStatus {
         serviceName: "com.palm.telephony"
@@ -39,13 +55,81 @@ Item {
         }
         onDisconnected: {
             console.log("TelephonyService: service disconnected");
+            resetState();
         }
     }
 
     function subscribeTelephonyService() {
-        powerQuery.subscribe(JSON.stringify({"subscribe":true}));
-        networkStatusQuery.subscribe(JSON.stringify({"subscribe":true}));
-        signalStrengthQuery.subscribe(JSON.stringify({"subscribe":true}));
+        // simListQuery carries the per slot state for every SIM and is
+        // re-posted by telephonyd on every relevant change, so it is the only
+        // subscription needed to keep the model up to date.
+        simListQuery.subscribe(JSON.stringify({"subscribe": true}));
+
+        // The legacy subscriptions have no simId, which telephonyd routes to
+        // whichever SIM is the current voice default. Keeping them means the
+        // aggregate properties above stay correct even on a single SIM device
+        // where simListQuery may never report anything interesting.
+        powerQuery.subscribe(JSON.stringify({"subscribe": true}));
+        networkStatusQuery.subscribe(JSON.stringify({"subscribe": true}));
+        signalStrengthQuery.subscribe(JSON.stringify({"subscribe": true}));
+    }
+
+    function resetState() {
+        telephonyService.powered = false;
+        telephonyService.connected = false;
+        telephonyService.registration = "noservice";
+        telephonyService.bars = 0;
+        telephonyService.rssi = 0;
+        simsModel.reset();
+    }
+
+    function handleCallError(errorMessage) {
+        console.log("ERROR: com.palm.telephony call failed: " + errorMessage);
+    }
+
+    // role is one of "voice", "sms", "data"
+    function setDefaultSim(role, simId) {
+        var request = {};
+        request[role] = simId;
+        telephonyCall.call("luna://com.palm.telephony/defaultSimSet",
+                           JSON.stringify(request), null, handleCallError);
+    }
+
+    function setSimName(simId, name) {
+        telephonyCall.call("luna://com.palm.telephony/simNameSet",
+                           JSON.stringify({"simId": simId, "name": name}), null, handleCallError);
+    }
+
+    // Turn the radio of a single slot on or off.
+    function setSimPower(simId, on) {
+        telephonyCall.call("luna://com.palm.telephony/powerSet",
+                           JSON.stringify({"simId": simId, "state": on ? "on" : "off", "save": true}),
+                           null, handleCallError);
+    }
+
+    LunaService {
+        id: telephonyCall
+        name: "com.webos.surfacemanager-cardshell"
+    }
+
+    LunaService {
+        id: simListQuery
+        name: "com.webos.surfacemanager-cardshell"
+        service: "luna://com.palm.telephony"
+        method: "simListQuery"
+
+        onResponse: function (message) {
+            var response = JSON.parse(message.payload);
+
+            if (!response.returnValue)
+                return;
+
+            simsModel.update(response);
+        }
+
+        onError: function (errorMessage) {
+            console.log("ERROR: could not subscribe with com.palm.telephony/simListQuery: " + errorMessage);
+        }
     }
 
     LunaService {

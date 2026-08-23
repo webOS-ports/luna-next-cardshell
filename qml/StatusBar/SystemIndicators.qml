@@ -113,18 +113,60 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
+        // packet data runs on one SIM at a time, so this reflects the SIM
+        // currently selected as the data SIM
         enabled: telephonyService.powered && wanService.connected && !wifiService.online
         technology: wanService.technology
     }
 
-    TelephonySignalIndicator {
-        id: telephonySignalIndicator
+    /*
+     * One set of signal bars per SIM slot. On a single SIM device this renders
+     * exactly the one indicator the status bar always had, without the slot
+     * badge; with two SIMs each set of bars gets a small "1"/"2" next to it and
+     * the slot carrying data is highlighted.
+     */
+    Repeater {
+        id: telephonySignalIndicators
 
-        anchors.top: indicatorsRow.top
-        anchors.bottom: indicatorsRow.bottom
+        model: telephonyService.sims
 
-        enabled: telephonyService.powered
-        bars: telephonyService.bars
+        delegate: Item {
+            id: simIndicatorDelegate
+
+            readonly property bool showBadge: telephonyService.sims.multiSim && model.powered
+
+            anchors.top: indicatorsRow.top
+            anchors.bottom: indicatorsRow.bottom
+
+            // the badge is drawn into the empty corner above the low bars, so
+            // the signal icon keeps its full size and a slot takes no more
+            // width than the icon itself
+            width: simSignalIndicator.width
+
+            TelephonySignalIndicator {
+                id: simSignalIndicator
+
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+
+                enabled: model.powered
+                bars: model.bars
+            }
+
+            SimSlotIndicator {
+                id: simSlotBadge
+
+                anchors.top: parent.top
+                anchors.left: parent.left
+
+                height: parent.height * 0.55
+
+                enabled: simIndicatorDelegate.showBadge
+                label: "" + (model.simId + 1)
+                highlighted: model.defaultForData
+            }
+        }
     }
 
     BatteryIndicator {
