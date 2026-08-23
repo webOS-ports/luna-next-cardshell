@@ -40,10 +40,10 @@ Drawer {
         if (!telephonyService)
             return "";
 
-        var voice = telephonyService.defaultVoiceSim;
-        var label = telephonyService.labelForSim(voice);
+        var voice = telephonyService.sims.defaultVoiceSim;
+        var label = telephonyService.sims.labelForSim(voice);
 
-        if (telephonyService.simCount > 1)
+        if (telephonyService.sims.multiSim)
             return label.length > 0 ? label : "DUAL SIM";
 
         return label;
@@ -54,17 +54,17 @@ Drawer {
     width: parent.width
 
     // nothing here is meaningful with a single slot
-    visible: telephonyService && telephonyService.multiSim
+    visible: telephonyService && telephonyService.sims.multiSim
 
     function _roleLabel(role) {
         if (!telephonyService)
             return "";
 
-        var simId = role === "voice" ? telephonyService.defaultVoiceSim :
-                    role === "sms"   ? telephonyService.defaultSmsSim :
-                                       telephonyService.defaultDataSim;
+        var simId = role === "voice" ? telephonyService.sims.defaultVoiceSim :
+                    role === "sms"   ? telephonyService.sims.defaultSmsSim :
+                                       telephonyService.sims.defaultDataSim;
 
-        var label = telephonyService.labelForSim(simId);
+        var label = telephonyService.sims.labelForSim(simId);
 
         return label.length > 0 ? label : "None";
     }
@@ -78,25 +78,13 @@ Drawer {
         if (!telephonyService)
             return;
 
-        var current = role === "voice" ? telephonyService.defaultVoiceSim :
-                      role === "sms"   ? telephonyService.defaultSmsSim :
-                                         telephonyService.defaultDataSim;
+        var current = role === "voice" ? telephonyService.sims.defaultVoiceSim :
+                      role === "sms"   ? telephonyService.sims.defaultSmsSim :
+                                         telephonyService.sims.defaultDataSim;
 
-        var count = telephonyService.sims.count;
-        if (count === 0)
-            return;
-
-        var start = telephonyService.indexOfSim(current);
-        if (start < 0)
-            start = 0;
-
-        for (let step = 1; step <= count; step++) {
-            let candidate = telephonyService.sims.get((start + step) % count);
-            if (candidate.present && candidate.simId !== current) {
-                telephonyService.setDefaultSim(role, candidate.simId);
-                return;
-            }
-        }
+        var next = telephonyService.sims.nextPresentSim(current);
+        if (next >= 0)
+            telephonyService.setDefaultSim(role, next);
     }
 
     drawerHeader:

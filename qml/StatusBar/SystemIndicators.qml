@@ -133,7 +133,7 @@ Row {
         delegate: Item {
             id: simIndicatorDelegate
 
-            readonly property bool showBadge: telephonyService.multiSim && model.powered
+            readonly property bool showBadge: telephonyService.sims.multiSim && model.powered
 
             anchors.top: indicatorsRow.top
             anchors.bottom: indicatorsRow.bottom
@@ -167,20 +167,6 @@ Row {
                 highlighted: model.defaultForData
             }
         }
-    }
-
-    /*
-     * Fallback for the window between the shell starting and telephonyd
-     * answering simListQuery, where the slot list is still empty.
-     */
-    TelephonySignalIndicator {
-        id: telephonySignalIndicator
-
-        anchors.top: indicatorsRow.top
-        anchors.bottom: indicatorsRow.bottom
-
-        enabled: telephonyService.simCount === 0 && telephonyService.powered
-        bars: telephonyService.bars
     }
 
     BatteryIndicator {
