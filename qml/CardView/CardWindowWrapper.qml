@@ -178,10 +178,10 @@ FocusScope {
     Connections {
         target: cardView
         function onDefaultWindowWidthChanged() {
-            syncClientWindowSize();
+            Qt.callLater(syncClientWindowSize);
         }
         function onDefaultWindowHeightChanged() {
-            syncClientWindowSize();
+            Qt.callLater(syncClientWindowSize);
         }
     }
 

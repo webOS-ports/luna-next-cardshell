@@ -46,6 +46,14 @@ Item {
             value: 0
             restoreMode: Binding.RestoreBinding
         }
+        // On resize (device rotation), the Flickable's bounds fixup can move
+        // contentY away from 0 while contentHeight/margins still hold their old
+        // values; the Binding above won't re-assert since its value didn't change.
+        // Defer the reset until after the whole binding cascade has settled.
+        function resetCardPosition() {
+            if (!moving && !swipeoutCard.triggered) contentY = 0;
+        }
+        onHeightChanged: Qt.callLater(resetCardPosition)
 
         // handling of card swipe-out, either by drag or by flick
         SmoothedAnimation {
