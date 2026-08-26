@@ -70,7 +70,8 @@ ListModel {
                 let launchPoint = result.launchPoints[i];
                 if( !isFilteredOut(launchPoint) )
                     applicationModel.append({ id: launchPoint.id,
-                                              appId: launchPoint.appId,
+                                              // SAM's listLaunchPoints has no appId field; the app id is in id
+                                              appId: launchPoint.appId || launchPoint.id,
                                               launchPointId: launchPoint.launchPointId,
                                               title: launchPoint.title,
                                               removable: launchPoint.removable,
