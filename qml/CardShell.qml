@@ -119,8 +119,16 @@ Rectangle {
         signal screenEdgeFlickEdgeTop(bool timeout,point pos)
         signal screenEdgeFlickEdgeBottom(bool timeout, point pos)
 
-        onTouchBegin: orientationHelper.setLocked(true);
-        onTouchEnd: orientationHelper.setLocked(false);
+        // The touchEnd event can get lost (e.g. when the touch sequence is
+        // canceled or grabbed elsewhere), which would leave rotation locked
+        // until the next tap; release the lock after a sane gesture duration.
+        Timer {
+            id: rotationLockFailsafe
+            interval: 5000
+            onTriggered: orientationHelper.setLocked(false);
+        }
+        onTouchBegin: { orientationHelper.setLocked(true); rotationLockFailsafe.restart(); }
+        onTouchEnd: { orientationHelper.setLocked(false); rotationLockFailsafe.stop(); }
         onGestureEvent: (gestureType, pos, timeout) => {
             var screenPos = orientationHelper.convertRawPos(pos);
 

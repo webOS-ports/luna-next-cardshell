@@ -44,9 +44,12 @@ Item {
     property real cornerRadius: 20
     property real animationDuration: 100
 
-    /* Advertise the wrapped window that the screen size has changed */
-    onFullscreenHeightChanged:  if( windowUserData ) windowUserData.syncClientWindowSize();
-    onFullWidthChanged: if( windowUserData ) windowUserData.syncClientWindowSize();
+    /* Advertise the wrapped window that the screen size has changed.
+     * Defer the sync so the new geometry has propagated down to the
+     * card wrapper before its size is read. */
+    onMaximizedHeightChanged: if( windowUserData ) Qt.callLater(windowUserData.syncClientWindowSize);
+    onFullscreenHeightChanged:  if( windowUserData ) Qt.callLater(windowUserData.syncClientWindowSize);
+    onFullWidthChanged: if( windowUserData ) Qt.callLater(windowUserData.syncClientWindowSize);
 
     Component.onCompleted: {
         y = Qt.binding( function() { return cardY; } );
