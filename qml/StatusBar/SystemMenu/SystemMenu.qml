@@ -17,13 +17,20 @@
 * LICENSE@@@ */
 
 import QtQuick 2.0
+import QtQuick.Window 2.2
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 import "../../Connectors"
 
 Item {
     id: systemMenu
-    property int  maxHeight: Units.gu(40)
+    // The menu was a fixed gu(40) square. On a small panel (e.g. 480px wide)
+    // that overflows the screen and hangs off both edges, since it is placed
+    // at x = parent.width - width. Clamp both axes to the real screen so the
+    // menu fits at any resolution/grid unit; on roomy screens gu(40) still
+    // wins and nothing changes.
+    property int  preferredWidth: Units.gu(40)
+    property int  maxHeight: Math.min(Units.gu(40), Screen.height - Units.gu(4))
     property int  headerIdent: Units.gu (1.4) 
     property int  subItemIdent: Units.gu (1.6) 
     property int  dividerWidthOffset: Units.gu(0.7)
@@ -37,7 +44,7 @@ Item {
         id: telephonyServiceConnector
     }
 
-    width: Units.gu(40)
+    width: Math.min(preferredWidth, Screen.width - Units.gu(2))
     height: maxHeight
     state: "hidden"
 
