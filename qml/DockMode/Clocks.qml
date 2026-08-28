@@ -56,6 +56,10 @@ Rectangle {
     ListView {
         id: clocksListView
         anchors.fill: parent
+        // Without clipping the horizontal list paints its neighbouring
+        // delegates outside the view, so a second (and third) clock bleed
+        // onto the dock. Only the snapped clock should be visible.
+        clip: true
         focus: true
         highlightRangeMode: ListView.StrictlyEnforceRange
         orientation: ListView.Horizontal

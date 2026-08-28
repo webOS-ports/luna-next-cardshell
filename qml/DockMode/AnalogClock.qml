@@ -116,6 +116,10 @@ Item {
 
      Image {
          id: hourHand
+         // Hands are a full 508px canvas (pivot centred); the face is scaled to
+         // width*0.75, so scale each hand by the same factor or it overshoots the
+         // dial on a small screen. sourceSize is the natural 508px.
+         scale: face.width / face.sourceSize.width
          source: "../images/dockmode/time/analog/"+type[glass]+"/hour.png"
          anchors.centerIn: parent
          parent: face
@@ -132,6 +136,10 @@ Item {
 
      Image {
          id: minuteHand
+         // Hands are a full 508px canvas (pivot centred); the face is scaled to
+         // width*0.75, so scale each hand by the same factor or it overshoots the
+         // dial on a small screen. sourceSize is the natural 508px.
+         scale: face.width / face.sourceSize.width
          source: "../images/dockmode/time/analog/"+type[glass]+"/minute.png"
          anchors.centerIn: parent
          parent: face
@@ -149,6 +157,10 @@ Item {
 
      Image {
          id: secondHand
+         // Hands are a full 508px canvas (pivot centred); the face is scaled to
+         // width*0.75, so scale each hand by the same factor or it overshoots the
+         // dial on a small screen. sourceSize is the natural 508px.
+         scale: face.width / face.sourceSize.width
          source: glass ? "" : "../images/dockmode/time/analog/"+type[glass]+"/second.png"
          anchors.centerIn: parent
          parent: face

@@ -25,6 +25,16 @@ import WebOSCompositorBase 1.0
 Item {
     id: digitalclock
 
+    // The flip-tile PNGs are a fixed 150px wide, so the time row (four tiles
+    // plus separators) is ~650px and the date row is wider still. On a narrow
+    // dock (e.g. a 480px phone) that overflows the delegate and spills into the
+    // neighbouring clocks. Shrink the whole face to fit the delegate width;
+    // scale stays 1.0 on screens wide enough to hold it, so other devices are
+    // unaffected.
+    scale: Math.min(1.0, (width * 0.92) /
+                    Math.max(1, timeRow.implicitWidth, dateRow.implicitWidth))
+    transformOrigin: Item.Center
+
     //constants
     property int timeOffset: Units.gu(-0.4) 
     property int dateOffset: Units.gu(-0.4) 
@@ -96,6 +106,7 @@ Item {
     }
 
     Row {
+        id: timeRow
         spacing: 0
         anchors.centerIn: parent
         anchors.verticalCenterOffset: Units.gu(-4.8)
@@ -142,6 +153,7 @@ Item {
     }
 
     Row {
+        id: dateRow
         spacing: 2
         anchors.centerIn: parent
         anchors.verticalCenterOffset: Units.gu(13.6)
