@@ -35,6 +35,7 @@ import "Notifications"
 import "Connectors"
 import "LockScreen"
 import "AppTweaks"
+import "NFC"
 
 // The window manager manages the switch between different window modes
 //     (card, maximized, fullscreen, ...)
@@ -149,6 +150,19 @@ WindowManager {
         id: screenShooterGradient
         anchors.fill: parent
         z: 11
+    }
+
+    // Legacy webOS's Touch to Share ripple, ported to trigger on real NFC
+    // tag presence instead
+    NfcGlow {
+        id: nfcGlowInstance
+        anchors.fill: parent
+        z: 11
+    }
+
+    // Acts on a scanned tag's content (open a link, call a number, ...)
+    NfcAutoDispatch {
+        id: nfcAutoDispatchInstance
     }
 
     Connections {
