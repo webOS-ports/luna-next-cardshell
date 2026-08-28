@@ -160,6 +160,11 @@ WindowManager {
         z: 11
     }
 
+    // Acts on a scanned tag's content (open a link, call a number, ...)
+    NfcAutoDispatch {
+        id: nfcAutoDispatchInstance
+    }
+
     Connections {
         target: gestureAreaInstance
         function onSwipeRightGesture(modifiers) {
