@@ -17,6 +17,7 @@
  */
 
 import QtQuick 2.5
+import Qt5Compat.GraphicalEffects
 import LunaNext.Common 0.1
 
 Item {
@@ -25,6 +26,42 @@ Item {
     signal unlock
 
     anchors.fill: parent
+
+    // Fingerprint feedback: light the padlock up exactly like a press, tinted
+    // green for a recognized finger and red for an unrecognized one.
+    // Colors are the affirmative/negative pair used by the phone app
+    // (org.webosports.app.phone MessageAlert.qml).
+    function fingerprintFeedback(success) {
+        pad.on = true;
+        fpGlow.color = success ? "#2aa100" : "#be0003";
+        fpGlow.visible = true;
+        fpFeedbackTimer.restart();
+    }
+
+    // Shown once fingerprint unlock has been disabled for too many failed
+    // reads. Cleared when the pad is dragged (a real unlock attempt) so it
+    // does not linger over the pin pad.
+    function showFingerprintLockout(deviceLockMode) {
+        fpLockoutText.text = (deviceLockMode === "pin")
+            ? "Too many attempts. Enter your PIN to unlock."
+            : (deviceLockMode === "password")
+                ? "Too many attempts. Enter your password to unlock."
+                : "Too many attempts. Fingerprint unlock disabled.";
+        fpLockoutText.visible = true;
+    }
+
+    Timer {
+        id: fpFeedbackTimer
+        interval: 600
+        repeat: false
+        onTriggered: {
+            fpGlow.visible = false;
+            if (!padDragArea.drag.active) {
+                pad.on = false;
+                unlockText.visible = false;
+            }
+        }
+    }
 
     Image {
         id: targetScrim
@@ -109,7 +146,34 @@ Item {
             onPressed: {
                 pad.on = true;
                 unlockText.visible = true;
+                fpLockoutText.visible = false;
             }
         }
+    }
+
+    Text {
+        id: fpLockoutText
+        visible: false
+        width: parent.width - Units.gu(4)
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+        text: ""
+        color: "white"
+        font.pixelSize: FontUtils.sizeToPixels("medium")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: pad.top
+        anchors.bottomMargin: Units.gu(3)
+    }
+
+    // Halo around the (lit) padlock; the artwork itself stays untinted.
+    Glow {
+        id: fpGlow
+        anchors.fill: pad
+        source: pad
+        visible: false
+        radius: Units.gu(1.6)
+        samples: 33
+        spread: 0.3
+        color: "#2aa100"
     }
 }

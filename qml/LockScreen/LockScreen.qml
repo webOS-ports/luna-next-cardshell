@@ -34,6 +34,121 @@ Item {
 
     property string deviceLockMode: "none"
 
+    // Fingerprint unlock, backed by com.webos.service.fingerprint
+    // (webos-fingerprint-adapter -> droidian-fpd -> Android biometrics HAL).
+    // While the lockscreen is shown and fingerprints are enrolled we keep an
+    // identify request pending; a match unlocks the display just like a
+    // correct passcode. After maxFingerprintAttempts failed reads we stop
+    // listening until the next lock, forcing the PIN/password path.
+    property bool fingerprintAvailable: false
+    property int fingerprintCount: 0
+    property int fingerprintFailedAttempts: 0
+    readonly property int maxFingerprintAttempts: 5
+
+    readonly property bool fingerprintActive: locked && fingerprintAvailable &&
+                                              fingerprintCount > 0 &&
+                                              fingerprintFailedAttempts < maxFingerprintAttempts
+    property var _identifyCall: null
+
+    onFingerprintActiveChanged: {
+        if (fingerprintActive)
+            startFingerprintIdentify();
+        else
+            stopFingerprintIdentify();
+    }
+
+    function startFingerprintIdentify() {
+        if (_identifyCall)
+            return;
+        _identifyCall = service.subscribe("luna://com.webos.service.fingerprint/identify",
+                                          "{\"subscribe\":true}",
+                                          handleFingerprintIdentify, handleFingerprintError);
+    }
+
+    function stopFingerprintIdentify() {
+        identifyRestartTimer.stop();
+        if (_identifyCall) {
+            _identifyCall.cancel();
+            _identifyCall = null;
+            // make sure the sensor isn't left armed
+            service.call("luna://com.webos.service.fingerprint/abort", "{}", null, null);
+        }
+    }
+
+    function _endIdentify() {
+        // Never cancel the subscription synchronously from inside its own
+        // result callback - defer to the next event loop turn.
+        var call = _identifyCall;
+        _identifyCall = null;
+        if (call)
+            Qt.callLater(function() { call.cancel(); });
+    }
+
+    function handleFingerprintIdentify(message) {
+        var response = JSON.parse(message.payload);
+        if (response.identified === true) {
+            _endIdentify();
+            fingerprintFailedAttempts = 0;
+            // flash the padlock green, then unlock just after so the
+            // feedback is actually visible
+            padLock.fingerprintFeedback(true);
+            unlockFeedbackTimer.restart();
+        }
+        else if (response.identified === false && response.finished === false) {
+            // A rejected touch: fpd stays armed, so DON'T cancel/re-arm.
+            // Flash red every time, but rate-limit the lockout counter so
+            // several captures within one press don't burn attempts.
+            padLock.fingerprintFeedback(false);
+            if (!missCooldown.running) {
+                fingerprintFailedAttempts++;
+                missCooldown.restart();
+                if (fingerprintFailedAttempts >= maxFingerprintAttempts)
+                    padLock.showFingerprintLockout(deviceLockMode);
+            }
+        }
+        else if (response.identified === false) {
+            // Terminal end (cancel / 30s timeout, errorText "Aborted"): not a
+            // failed read, just re-arm if we are still meant to be listening.
+            _endIdentify();
+            if (fingerprintActive)
+                identifyRestartTimer.restart();
+        }
+    }
+
+    function handleFingerprintError(message) {
+        console.log("Fingerprint identify error: " + message.payload);
+        _endIdentify();
+        if (fingerprintActive)
+            identifyRestartTimer.restart();
+    }
+
+    Timer {
+        id: fingerprintStatusRetry
+        interval: 3000
+        repeat: false
+        onTriggered: service.subscribeFingerprintStatus()
+    }
+
+    Timer {
+        id: missCooldown
+        interval: 1200
+        repeat: false
+    }
+
+    Timer {
+        id: unlockFeedbackTimer
+        interval: 300
+        repeat: false
+        onTriggered: lockScreen.unlockDisplay()
+    }
+
+    Timer {
+        id: identifyRestartTimer
+        interval: 500
+        repeat: false
+        onTriggered: if (lockScreen.fingerprintActive) lockScreen.startFingerprintIdentify();
+    }
+
     onLockedChanged: {
         if(!locked) {
             if( _stateBeforeLock === "dockmode" ) windowManagerInstance.switchToDockMode();
@@ -43,6 +158,7 @@ Item {
             else if( _stateBeforeLock === "launcherview" ) windowManagerInstance.switchToLauncherView();
         }
         else {
+            fingerprintFailedAttempts = 0;
             windowManagerInstance.switchToLockscreen();
         }
     }
@@ -117,6 +233,34 @@ Item {
         onInitialized: {
             service.subscribe("luna://com.palm.systemmanager/getDeviceLockMode", "{\"subscribe\":true}", handleDeviceLockMode, handleError);
             service.subscribe("luna://com.palm.display/control/lockStatus", "{\"subscribe\":true}", handleLockStatus, handleError);
+            // webos-fingerprint-adapter is only present on devices with a
+            // fingerprint sensor; on others this subscription simply fails
+            // and fingerprintAvailable stays false.
+            subscribeFingerprintStatus();
+        }
+
+        function subscribeFingerprintStatus() {
+            service.subscribe("luna://com.webos.service.fingerprint/getStatus", "{\"subscribe\":true}", handleFingerprintStatus, handleFingerprintStatusError);
+        }
+
+        function handleFingerprintStatus(message) {
+            var response = JSON.parse(message.payload);
+            if (response.returnValue === false) {
+                lockScreen.fingerprintAvailable = false;
+                // the adapter went away (e.g. it was restarted); retry so
+                // fingerprint unlock comes back on its own rather than staying
+                // dead until the next shell restart
+                fingerprintStatusRetry.restart();
+                return;
+            }
+            lockScreen.fingerprintAvailable = (response.available === true);
+            lockScreen.fingerprintCount = response.fingerprints ? response.fingerprints.length : 0;
+        }
+
+        function handleFingerprintStatusError(message) {
+            console.log("Fingerprint service not available: " + message);
+            lockScreen.fingerprintAvailable = false;
+            fingerprintStatusRetry.restart();
         }
 
         function handleLockStatus(message) {
