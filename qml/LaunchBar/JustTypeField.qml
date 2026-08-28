@@ -23,6 +23,10 @@ Item {
     id: justTypeFieldItem
     property Item windowManagerInstance
 
+    // an invisible item doesn't receive mouse/touch events, so the field
+    // can't be triggered while it is hidden behind a maximized window
+    visible: opacity > 0
+
     signal showJustType(int pressedKey)
 
     Image {
@@ -80,6 +84,7 @@ Item {
     }
     MouseArea {
         anchors.fill: parent
+        enabled: justTypeFieldItem.state === "visible"
         onClicked: justTypeFieldItem.showJustType(0)
     }
 
