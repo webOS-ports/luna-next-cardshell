@@ -12,7 +12,22 @@ Item {
     Flickable {
         id: flickableArea
 
-        width: swipeableRoot.width
+        /*
+         * As wide as what it holds, whenever that is wider than the card.
+         *
+         * A maximized window grows past the card's width and is centred, so it
+         * draws across the whole screen -- but a Flickable only delivers a
+         * press within its own bounds, which left everything outside a centred
+         * column the width of a card untouchable. Kept centred on the card, so
+         * the list positions its delegates exactly as before; while the window
+         * is carded this is the card's own width and nothing changes.
+         */
+        readonly property real widthOfContent:
+            cardLoader.item ? Math.max(swipeableRoot.width, cardLoader.item.width)
+                            : swipeableRoot.width
+
+        width: widthOfContent
+        x: (swipeableRoot.width - width) / 2
         height: swipeableRoot.height
 
         flickableDirection: Flickable.VerticalFlick
@@ -24,7 +39,7 @@ Item {
         bottomMargin: swipeableRoot.height
 
         Item {
-            width: swipeableRoot.width
+            width: flickableArea.width
             height: swipeableRoot.height
 
             Loader {
