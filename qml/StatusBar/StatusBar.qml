@@ -407,8 +407,11 @@ Item {
             id: systemMenuLoader
             anchors.top: parent.bottom
             enabled: !statusBar.blackMode
-            x: (item && item.centered) ? Math.round((parent.width - width) / 2)
-                                       : parent.width - width + (item ? item.edgeOffset : 0)
+            // use item.width, not the Loader's own width, to keep the x
+            // binding free of self-geometry (avoids a binding loop warning)
+            x: !item ? 0
+               : item.centered ? Math.round((parent.width - item.width) / 2)
+                               : parent.width - item.width + item.edgeOffset
             source: AppTweaks.newDeviceMenuTweakValue ? "SystemMenu/NewDeviceMenu.qml" : "SystemMenu/SystemMenu.qml"
 
             onLoaded: item.visible = false
