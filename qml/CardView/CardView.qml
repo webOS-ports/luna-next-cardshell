@@ -213,27 +213,35 @@ Item {
         }
     ]
 
+    // The lockscreen is transparent in the middle, so the card view must stay
+    // hidden while the screen is locked even if a card is opened, focused or
+    // closed in the meantime; on unlock the lockscreen replays the last
+    // switchTo* signal, which makes the card view visible again.
+    function __showCardView() {
+        cardViewItem.visible = !windowManagerInstance.isScreenLocked();
+    }
+
     Connections {
         target: windowManagerInstance
         function onSwitchToMaximize(window) {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "maximizedCard"
-            cardViewItem.visible = true;
+            __showCardView();
         }
         function onSwitchToFullscreen(window) {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "fullscreenCard"
-            cardViewItem.visible = true;
+            __showCardView();
         }
         function onSwitchToCardView() {
             gestureAreaConnections.target = gestureAreaInstance
             cardViewItem.state = "cardList"
-            cardViewItem.visible = true;
+            __showCardView();
         }
         function onSwitchToLauncherView() {
             gestureAreaConnections.target = null
             cardViewItem.state = "cardList"
-            cardViewItem.visible = true;
+            __showCardView();
         }
         function onSwitchToLockscreen() {
             gestureAreaConnections.target = null
