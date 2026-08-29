@@ -16,7 +16,7 @@
 *
 * LICENSE@@@ */
 
-import QtQuick 2.0
+import QtQuick 2.5
 import LunaNext.Common 0.1
 
 Item {
@@ -24,7 +24,15 @@ Item {
     property real  setValue : 0.5
     property bool  active:  true
 
-    property int   railEdgeOffset: 8 
+    // themable parts, so the New Device Menu can use the legacy
+    // glossy blue look while the classic menu keeps its own assets
+    property string trackImageSource: "../../images/statusbar/slider-track.png"
+    property string progressImageSource: "../../images/statusbar/slider-track-progress.png"
+    property string handleImageSource: "../../images/statusbar/slider-handle.png"
+    property int    trackHeight: Units.gu(2.4)
+    property int    handleSize: Units.gu(3)
+
+    property int   railEdgeOffset: 8
     property int   railBorderWidth: 11
 
     property int   handleGrabTolerance: 12 
@@ -143,29 +151,31 @@ Item {
 
     BorderImage {
         id: bar
-        source: "../../images/statusbar/slider-track.png"
+        source: trackImageSource
         width: parent.width
-        height: Units.gu(2.4)
+        height: trackHeight
         border { left: railBorderWidth; top: 0; right: railBorderWidth; bottom: 0 }
         anchors.verticalCenter: parent.verticalCenter
     }
 
     BorderImage {
         id: barProgress
-        source: "../../images/statusbar/slider-track-progress.png"
+        visible: progressImageSource !== ""
+        source: progressImageSource
         width: Math.max(((parent.width - handle.width/2) * setValue + handle.width/2), 2*railBorderWidth)
-        height: Units.gu(2.4)
+        height: trackHeight
         border { left: railBorderWidth; top: 0; right: railBorderWidth; bottom: 0 }
         anchors.verticalCenter: parent.verticalCenter
     }
 
     Image {
         id: handle
-        source: "../../images/statusbar/slider-handle.png"
+        source: handleImageSource
         x: railEdgeOffset + ((slider.width - 2*railEdgeOffset) * setValue) - width/2
         y: slider.height/2 - height/2
-        width: Units.gu(3)
-        height: Units.gu(3)
+        width: handleSize
+        height: handleSize
+        mipmap: true
     }
 
 }
