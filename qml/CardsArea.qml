@@ -66,6 +66,9 @@ WindowManager {
 
     gestureAreaInstance: gestureAreaInstance
     property bool gesturesEnabled: !lockScreen.locked && !dockMode.visible && state === "normal"
+    function isScreenLocked() {
+        return lockScreen.locked;
+    }
 
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, volumeControl ]
