@@ -35,8 +35,13 @@ Item {
     property int  subItemIdent: Units.gu (1.6) 
     property int  dividerWidthOffset: Units.gu(0.7)
     property int  itemIdent:     subItemIdent + headerIdent
-    property int  edgeOffset: Units.gu(1.1) 
+    property int  edgeOffset: Units.gu(1.1)
     property bool flickableOverride: false
+
+    // interface bits shared with NewDeviceMenu, used by the StatusBar
+    // to position the menu and restore it after the lockscreen
+    property bool centered: false
+    property bool visibleBeforeLock: false
 
     property bool airplaneModeInProgress: false
 

@@ -38,6 +38,7 @@ Item {
     property alias customCarrierStringValue: customCarrierString.value
     property alias tabTitleCaseTweakValue: tabTitleCaseTweak.value
     property alias tabIndicatorNumberTweakValue: tabIndicatorNumberTweak.value
+    property alias newDeviceMenuTweakValue: newDeviceMenuTweak.value
 
     //// tweak definitions
 
@@ -89,6 +90,13 @@ Item {
         serviceName: appTweaks.serviceName
         key: "batteryPercentageColor"
         defaultValue: String("white"); // without this cast, it would become a "color" type
+    }
+    Tweak {
+        id: newDeviceMenuTweak
+        owner: appTweaks.owner
+        serviceName: appTweaks.serviceName
+        key: "useNewDeviceMenu"
+        defaultValue: false
     }
     Tweak {
         id: enableCustomCarrierString

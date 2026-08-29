@@ -162,6 +162,15 @@
             },
 			{
                 "group": "Status Bar",
+                "restart": "none",
+                "label": "Use New Device Menu",
+                "help": "Replace the classic system menu with the tabbed New Device Menu",
+                "key": "useNewDeviceMenu",
+                "type": "ToggleButton",
+                "value": false
+            },
+			{
+                "group": "Status Bar",
                 "restart": "luna",
                 "label": "Use Custom Carrier String",
                 "help": "Enables the use of your own text as the carrier string.",

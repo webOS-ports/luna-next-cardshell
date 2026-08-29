@@ -52,6 +52,11 @@ Item {
     property bool blackMode: windowManagerInstance.state==="firstuse" || state==="dockmode"
     property QtObject compositorInstance
 
+    // The classic tree-based system menu and the tabbed "New Device
+    // Menu" implement the same external interface; the tweak picks
+    // which one gets loaded into systemMenuLoader.
+    property Item systemMenu: systemMenuLoader.item
+
     signal showPowerMenu()
 
     function probeNetworkStatus()
@@ -289,7 +294,7 @@ Item {
 
         BorderImage {
             id: systemMenuOpenBg
-            visible: Settings.tabletUi && systemMenu.visible && statusBar.state!=="dockmode"
+            visible: Settings.tabletUi && systemMenu && systemMenu.visible && !systemMenu.centered && statusBar.state!=="dockmode"
             source: "../images/statusbar/status-bar-menu-dropdown-tab.png"
             anchors.top: parent.top
             anchors.bottom: parent.bottom
@@ -325,7 +330,7 @@ Item {
                 height: statusBar.height
                 width: 2
                 mipmap: true
-                opacity: Settings.tabletUi && !systemMenu.visible
+                opacity: Settings.tabletUi && !(systemMenu && systemMenu.visible)
                 visible: statusBar.state!=="lockscreen"
             }
 
@@ -360,7 +365,7 @@ Item {
             anchors.right: parent.right
             width: systemIndicators.width
             onClicked: {
-                if (!lockScreen.locked && !dockMode.visible && windowManagerInstance.state === "normal")
+                if (systemMenu && !lockScreen.locked && !dockMode.visible && windowManagerInstance.state === "normal")
                     systemMenu.toggleState()
             }
         }
@@ -368,6 +373,8 @@ Item {
         Connections {
             target: lockScreen
             function onLockedChanged() {
+                if (!systemMenu)
+                    return;
                 if (lockScreen.locked) {
                     systemMenu.visibleBeforeLock = systemMenu.isVisible();
                     systemMenu.visible = false;
@@ -384,8 +391,8 @@ Item {
                 if (!timeout && windowManagerInstance.gesturesEnabled === true) {
                     if (appMenu.contains(mapToItem(appMenu, pos.x, pos.y)))
                         appMenu.toggleState()
-                    else if (!statusBar.blackMode) {
-                        if (!Settings.tabletUi && systemMenu.contains(mapToItem(systemMenu, pos.x, systemMenu.y)))
+                    else if (!statusBar.blackMode && systemMenu) {
+                        if (!Settings.tabletUi && systemMenuLoader.contains(mapToItem(systemMenuLoader, pos.x, systemMenuLoader.y)))
                             systemMenu.toggleState()
                         else if (Settings.tabletUi && systemIndicatorsBoundingRect.contains(mapToItem(systemIndicatorsBoundingRect, pos.x, pos.y)))
                             systemMenu.toggleState()
@@ -396,20 +403,29 @@ Item {
             }
         }
 
-        SystemMenu {
-            id: systemMenu
+        Loader {
+            id: systemMenuLoader
             anchors.top: parent.bottom
-            visible: false
             enabled: !statusBar.blackMode
-            x: parent.width - systemMenu.width + systemMenu.edgeOffset
-            property bool visibleBeforeLock: false
+            // use item.width, not the Loader's own width, to keep the x
+            // binding free of self-geometry (avoids a binding loop warning)
+            x: !item ? 0
+               : item.centered ? Math.round((parent.width - item.width) / 2)
+                               : parent.width - item.width + item.edgeOffset
+            source: AppTweaks.newDeviceMenuTweakValue ? "SystemMenu/NewDeviceMenu.qml" : "SystemMenu/SystemMenu.qml"
 
-            onCloseSystemMenu: {
-                systemMenu.resetMenu()
-                systemMenu.toggleState()
+            onLoaded: item.visible = false
+
+            Connections {
+                target: systemMenuLoader.item
+                function onCloseSystemMenu() {
+                    systemMenu.resetMenu()
+                    systemMenu.toggleState()
+                }
+                function onShowPowerMenu() {
+                    statusBar.showPowerMenu();
+                }
             }
-
-            onShowPowerMenu: statusBar.showPowerMenu();
         }
 
         Timer {
@@ -478,7 +494,7 @@ Item {
         }
         function onSwitchToLauncherView () {
             state = "launcher-visible"
-            if (systemMenu.isVisible())
+            if (systemMenu && systemMenu.isVisible())
                 systemMenu.toggleState()
         }
     }
