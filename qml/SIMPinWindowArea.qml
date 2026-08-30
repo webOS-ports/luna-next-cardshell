@@ -41,7 +41,7 @@ Item {
 //        windowTypeFilter: WindowType.Pin
 
         onRowsInserted: {
-            appendPinWindow(listPinWindowModel.getByIndex(listPinWindowModel.count-1));
+            appendPinWindow(listPinWindowModel.get(listPinWindowModel.count-1));
         }
     }
 
