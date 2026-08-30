@@ -162,7 +162,7 @@
             },
 			{
                 "group": "Status Bar",
-                "restart": "none",
+                "restart": "luna",
                 "label": "Use New Device Menu",
                 "help": "Replace the classic system menu with the tabbed New Device Menu",
                 "key": "useNewDeviceMenu",
