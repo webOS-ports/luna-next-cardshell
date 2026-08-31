@@ -117,6 +117,7 @@ Item {
     property bool gpsOn: false
     property bool googleServicesOn: false
     property bool flashlightOn: false
+    property bool flashlightAvailable: false
     property bool roamOnly: false
     property bool networkSubMenuOpen: false
     property string dataNetworkMode: "AUTO"
@@ -175,6 +176,22 @@ Item {
                  },
                  function(error) {
                      console.log("Could not retrieve audio: " + error);
+                 });
+
+            // Subscribed rather than polled: torchd posts on every change, and
+            // the torch can go off without us asking - it does on service stop.
+            service.subscribe("luna://org.webosports.service.torch/getStatus",
+                 JSON.stringify({"subscribe": true}),
+                 function(message) {
+                     var response = JSON.parse(message.payload);
+                     if (response.hasOwnProperty("available"))
+                         deviceMenu.flashlightAvailable = response.available;
+                     if (response.hasOwnProperty("on"))
+                         deviceMenu.flashlightOn = response.on;
+                 },
+                 function(error) {
+                     // No torchd, or no torch on this device: leave the entry inactive.
+                     deviceMenu.flashlightAvailable = false;
                  });
 
             refreshStatus();
@@ -245,16 +262,6 @@ Item {
                          var response = JSON.parse(message.payload);
                          if (response.extended && response.extended.mode)
                              deviceMenu.roamOnly = (response.extended.mode === "roamonly");
-                     },
-                     function(error) { });
-
-        // Homebrew flashlight service from the original patch; simply
-        // stays "Off" when the service isn't around.
-        service.call("luna://ca.canucksoftware.systoolsmgr/flashState", "{}",
-                     function(message) {
-                         var response = JSON.parse(message.payload);
-                         if (response.hasOwnProperty("value"))
-                             deviceMenu.flashlightOn = (response.value > 0);
                      },
                      function(error) { });
     }
@@ -569,15 +576,22 @@ Item {
 
                     NewMenuToggleEntry {
                         text: "Flashlight"
-                        statusText: flashlightOn ? "On" : "Off"
+                        // Distinguishes "no torch here" from "torch is off", which
+                        // the old homebrew call could not: it reported Off either way.
+                        statusText: !flashlightAvailable ? "Unavailable"
+                                                        : (flashlightOn ? "On" : "Off")
+                        active: flashlightAvailable
                         onAction: {
-                            var newValue = flashlightOn ? 0 : 100;
-                            service.call("luna://ca.canucksoftware.systoolsmgr/flashOn",
-                                         JSON.stringify({"value": newValue}),
-                                         function(message) {
-                                             deviceMenu.flashlightOn = (newValue > 0);
-                                         },
-                                         function(error) { });
+                            if (!flashlightAvailable)
+                                return;
+                            // No optimistic update: the subscription above carries the
+                            // new state back, so the menu never claims a toggle worked
+                            // when the device refused it.
+                            service.call("luna://org.webosports.service.torch/toggle", "{}",
+                                         function(message) { },
+                                         function(error) {
+                                             console.log("Flashlight toggle failed: " + error);
+                                         });
                         }
                     }
                 }
