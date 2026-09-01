@@ -43,7 +43,24 @@ Item {
     property bool centered: false
     property bool visibleBeforeLock: false
 
-    property bool airplaneModeInProgress: false
+    // Follows the shared AirplaneModeService: while it is switching the radios
+    // the per-radio entries below go insensitive, the way webOS did it.
+    readonly property bool airplaneModeInProgress: airplaneModeService.inProgress
+
+    // Collapse the per-radio submenus as soon as a transition starts, so that
+    // none of them is left open showing state that is about to disappear.
+    Connections {
+        target: airplaneModeService
+        function onInProgressChanged() {
+            if (!airplaneModeService.inProgress)
+                return;
+
+            sim.close();
+            wifi.close();
+            vpn.close();
+            bluetooth.close();
+        }
+    }
 
     TelephonyService {
         id: telephonyServiceConnector
@@ -95,18 +112,12 @@ Item {
         }
     }
 
-    function setAirplaneModeStatus(newText, state) {
-        airplane.modeText = newText;
-        airplane.airplaneOn = ((state === 2) || (state === 3));
-        airplaneModeInProgress = ((state === 1) || (state === 2));
-
-        if(airplaneModeInProgress) {
-            sim.close();
-            wifi.close();
-            vpn.close();
-            bluetooth.close();
-        }
-    }
+    /*
+     * Kept for interface compatibility with NewDeviceMenu and with anything
+     * still calling it: the airplane entry is driven by bindings onto
+     * AirplaneModeService now, so there is nothing left to push in here.
+     */
+    function setAirplaneModeStatus(newText, state) { }
 
     function updateChangedFields() {
         if(rotation.delayUpdate) {
@@ -322,16 +333,12 @@ Item {
                     objectName: "airplaneMode"
                     selectable: !airplaneModeInProgress;
 
+                    // The label and the icon follow whatever the radios are
+                    // actually doing, including a change made from elsewhere.
+                    modeText:    airplaneModeService.modeText
+                    airplaneOn:  airplaneModeService.active
+
                     onAction: {
-
-                        if (airplaneOn) {
-                            setAirplaneModeStatus("Turn on Airplane Mode", 0);
-                            preferences.airplaneMode = false;
-                        } else {
-                            setAirplaneModeStatus("Turn off Airplane Mode", 3);
-                            preferences.airplaneMode = true;
-                        }
-
                         airplaneModeTriggered()
 
                         closeMenuTimer.interval = 250;

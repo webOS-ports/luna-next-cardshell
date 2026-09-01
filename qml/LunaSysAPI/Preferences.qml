@@ -23,6 +23,9 @@ import LunaNext.Common 0.1
 Item {
     id: preferences
 
+    // Read only here: airplane mode is owned by AirplaneModeService, which
+    // writes this preference itself once the radios have actually been
+    // switched. Writing it back from this side would only echo that.
     property bool airplaneMode: false
     property bool rotationLock: rotationLockAngle!==rotationInvalid
     property int rotationLockAngle: rotationInvalid
@@ -39,7 +42,6 @@ Item {
     // private
     //
 
-    onAirplaneModeChanged: systemService.setPreference("airplaneMode", preferences.airplaneMode)
     onRotationLockAngleChanged: systemService.setPreference("rotationLock", preferences.rotationLockAngle)
     onMuteSoundChanged: systemService.setPreference("muteSound", preferences.muteSound)
 
