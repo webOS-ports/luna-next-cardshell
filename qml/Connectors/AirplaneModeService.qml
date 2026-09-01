@@ -155,13 +155,34 @@ Item {
          */
         telephony.call("luna://com.palm.telephony/simListQuery", "{}",
                        __applyToSims,
-                       function (message) {
-                           // No telephonyd, or no modem at all: a WiFi only
-                           // device is a perfectly normal case here.
-                           console.log("AirplaneModeService: simListQuery failed: " + message.payload);
-                           __telephonyPending = false;
-                           __settleIfDone();
+                       __applyToDefaultSim);
+    }
+
+    /*
+     * simListQuery only exists in telephonyd builds that know about more than
+     * one SIM. Older ones answer "Unknown method", so fall back to the original
+     * powerSet, which has no simId and is routed to the default voice SIM. If
+     * there is no telephonyd at all - a WiFi only device is a perfectly normal
+     * case here - this call fails too and the leg simply finishes.
+     */
+    function __applyToDefaultSim(message) {
+        console.log("AirplaneModeService: simListQuery unavailable (" + message.payload +
+                    "), falling back to the single SIM powerSet");
+
+        __simsPending++;
+
+        telephony.call("luna://com.palm.telephony/powerSet",
+                       JSON.stringify({"state": __target ? "off" : "on", "save": true}),
+                       __simFinished,
+                       function (errorMessage) {
+                           console.log("AirplaneModeService: powerSet failed: " + errorMessage.payload);
+                           __simFinished(errorMessage);
                        });
+
+        // Cleared only after the count above went up, so that inProgress
+        // cannot momentarily read false in between.
+        __telephonyPending = false;
+        __settleIfDone();
     }
 
     function __applyToSims(message) {
