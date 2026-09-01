@@ -425,6 +425,11 @@ Item {
                 function onShowPowerMenu() {
                     statusBar.showPowerMenu();
                 }
+                // Both menu implementations only announce the request; the
+                // radios are switched in one place, AirplaneModeService.
+                function onAirplaneModeTriggered() {
+                    airplaneModeService.toggle();
+                }
             }
         }
 

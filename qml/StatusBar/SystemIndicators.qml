@@ -55,9 +55,8 @@ Row {
         enabled: false
     }*/
 
-    AirplaneModeService {
-        id: airplaneModeService
-    }
+    // airplaneModeService is the shell wide one from CardShell.qml, so this
+    // indicator reflects exactly the state the system menu applies.
 
     FlightmodeStatusIndicator {
         id: flightmodeStatusIndicator

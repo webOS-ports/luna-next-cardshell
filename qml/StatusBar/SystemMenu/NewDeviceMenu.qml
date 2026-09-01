@@ -390,6 +390,9 @@ Item {
                     NewMenuToggleEntry {
                         text: "Wi-Fi"
                         statusText: wifiList.powered ? "On" : "Off"
+                        // ConnMan refuses to power a technology up while
+                        // offline mode is being applied, so do not offer it.
+                        active: !airplaneModeService.inProgress
                         showSpinner: true
                         spinning: wifiList.scanning
                         onAction: {
@@ -429,6 +432,7 @@ Item {
                         text: "Bluetooth"
                         statusText: BluetoothManager.bluetoothOperational ? "On" :
                                     BluetoothManager.initializing ? "Init" : "Off"
+                        active: !airplaneModeService.inProgress
                         showSpinner: true
                         spinning: !BluetoothManager.bluetoothOperational && BluetoothManager.powered
                         onAction: {
@@ -695,9 +699,14 @@ Item {
 
                     NewMenuToggleEntry {
                         text: "Airplane Mode"
-                        statusText: preferences.airplaneMode ? "On" : "Off"
+                        // Reflects what the radios are doing, not what was
+                        // last written to the airplaneMode preference.
+                        statusText: airplaneModeService.inProgress ? "..."
+                                                                   : airplaneModeService.active ? "On" : "Off"
+                        active: !airplaneModeService.inProgress
+                        showSpinner: true
+                        spinning: airplaneModeService.inProgress
                         onAction: {
-                            preferences.airplaneMode = !preferences.airplaneMode;
                             airplaneModeTriggered();
                             closeMenuTimer.interval = 250;
                             closeMenuTimer.start();

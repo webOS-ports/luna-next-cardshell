@@ -44,6 +44,12 @@ Rectangle {
         id: preferences
     }
 
+    // Shared by the status bar indicator and by both system menu
+    // implementations, so that exactly one object applies airplane mode.
+    AirplaneModeService {
+        id: airplaneModeService
+    }
+
     Loader {
         id: reticleItem
         property bool showReticle: true
