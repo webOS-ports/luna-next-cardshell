@@ -132,7 +132,13 @@ Item {
          * written straight to NetworkManager.offlineMode: the adapter tears
          * down WiFi tethering first, which ConnMan on its own does not.
          */
-        connectionManager.call("luna://com.palm.connectionmanager/setstate",
+        /*
+         * com.webos.service.connectionmanager, not the com.palm alias: the
+         * adapter registers both, but only this one is mapped to an access
+         * control group, so a call to the alias is refused for anything that
+         * is not running as root.
+         */
+        connectionManager.call("luna://com.webos.service.connectionmanager/setstate",
                                JSON.stringify({"offlineMode": enabled ? "enabled" : "disabled"}),
                                __connmanFinished,
                                function (message) {
