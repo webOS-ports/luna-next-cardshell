@@ -118,11 +118,11 @@ Item {
     property bool __settled: true
 
     /*
-     * Per SIM power state as it was just before airplane mode was turned on,
-     * so that a slot the user had deliberately switched off does not come back
-     * on when airplane mode is turned off again. This only lives as long as the
-     * shell does; after a restart in airplane mode we fall back to powering
-     * every slot on, which is what the legacy implementation always did.
+     * Fallback path only: per slot power state as it was just before airplane
+     * mode was turned on, so that a slot the user had deliberately switched off
+     * does not come back on when airplane mode is turned off again. Only lives
+     * as long as the shell does. A telephonyd with airplaneModeSet keeps this
+     * itself, and keeps it across a reboot.
      */
     property var __simPowerBeforeAirplane: ({})
 
@@ -147,6 +147,37 @@ Item {
     }
 
     function __applyToTelephony(enabled) {
+        __telephonyPending = true;
+
+        /*
+         * telephonyd owns airplane mode as a flag layered over the per slot
+         * power state, so it restores exactly the slots which were on before,
+         * and reapplies the whole thing itself after a reboot. One call, and
+         * no slot bookkeeping needed on this side.
+         */
+        telephony.call("luna://com.palm.telephony/airplaneModeSet",
+                       JSON.stringify({"state": enabled ? "on" : "off"}),
+                       __telephonyFinished,
+                       __airplaneModeSetFailed);
+    }
+
+    function __telephonyFinished(message) {
+        __telephonyPending = false;
+        __settleIfDone();
+    }
+
+    /*
+     * Only an older telephonyd that has never heard of airplaneModeSet is worth
+     * falling back for. Any other failure has already touched the radios, and
+     * running the fallback on top of it would just switch them twice.
+     */
+    function __airplaneModeSetFailed(message) {
+        if (message.payload.indexOf("Unknown method") < 0) {
+            console.log("AirplaneModeService: airplaneModeSet failed: " + message.payload);
+            __telephonyFinished(message);
+            return;
+        }
+
         /*
          * One shot query rather than a subscription: the slot list is only
          * needed at the moment the user flips the switch, and holding another
