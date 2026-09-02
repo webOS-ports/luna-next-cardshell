@@ -115,7 +115,7 @@ Item {
     // Service connections and state
 
     property bool gpsOn: false
-    property bool googleServicesOn: false
+    property bool networkLocationOn: false
     property bool flashlightOn: false
     property bool flashlightAvailable: false
     property bool roamOnly: false
@@ -211,19 +211,27 @@ Item {
                      },
                      function(error) { });
 
-        service.call("luna://com.palm.location/getUseGps", "{}",
+        // com.palm.location resolves to com.webos.service.location, but only the
+        // OSE API is actually there: getUseGps/getLocationServicePrefs are
+        // legacy methods that answer "Unknown method", so these read nothing and
+        // both toggles came up showing whatever they defaulted to. The OSE
+        // service models the same two things as handlers - "gps" and "network" -
+        // queried with getState.
+        service.call("luna://com.webos.service.location/getState",
+                     JSON.stringify({"Handler": "gps"}),
                      function(message) {
                          var response = JSON.parse(message.payload);
-                         if (response.hasOwnProperty("useGps"))
-                             deviceMenu.gpsOn = !!response.useGps;
+                         if (response.hasOwnProperty("state"))
+                             deviceMenu.gpsOn = !!response.state;
                      },
                      function(error) { });
 
-        service.call("luna://com.palm.location/getLocationServicePrefs", "{}",
+        service.call("luna://com.webos.service.location/getState",
+                     JSON.stringify({"Handler": "network"}),
                      function(message) {
                          var response = JSON.parse(message.payload);
-                         if (response.hasOwnProperty("useGoogle"))
-                             deviceMenu.googleServicesOn = !!response.useGoogle;
+                         if (response.hasOwnProperty("state"))
+                             deviceMenu.networkLocationOn = !!response.state;
                      },
                      function(error) { });
 
@@ -459,8 +467,8 @@ Item {
                         statusText: gpsOn ? "On" : "Off"
                         onAction: {
                             gpsOn = !gpsOn;
-                            service.call("luna://com.palm.location/setUseGps",
-                                         JSON.stringify({"useGps": gpsOn}),
+                            service.call("luna://com.webos.service.location/setState",
+                                         JSON.stringify({"Handler": "gps", "state": gpsOn}),
                                          function(message) { }, function(error) { });
                         }
                     }
@@ -468,12 +476,18 @@ Item {
                     MenuDivider { widthOffset: dividerWidthOffset }
 
                     NewMenuToggleEntry {
-                        text: "Google Services"
-                        statusText: googleServicesOn ? "On" : "Off"
+                        // Named for what it does rather than for who used to
+                        // provide it: this is the location service's "network"
+                        // handler, position derived from WiFi and cell rather
+                        // than from the GNSS chip. Legacy webOS called the same
+                        // switch "Google Services" because Google supplied that
+                        // lookup; nothing here goes to Google any more.
+                        text: "Network Location"
+                        statusText: networkLocationOn ? "On" : "Off"
                         onAction: {
-                            googleServicesOn = !googleServicesOn;
-                            service.call("luna://com.palm.location/setUseGoogle",
-                                         JSON.stringify({"useGoogle": googleServicesOn}),
+                            networkLocationOn = !networkLocationOn;
+                            service.call("luna://com.webos.service.location/setState",
+                                         JSON.stringify({"Handler": "network", "state": networkLocationOn}),
                                          function(message) { }, function(error) { });
                         }
                     }
