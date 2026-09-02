@@ -25,13 +25,21 @@ import "../Utils"
 
 Rectangle {
     id: rootAlertsArea
-    height: maxHeight
+    height: maxHeight + 2 * contentMargin
 
     property int maxHeight: 0
     property Item windowManagerItem
     property var compositorInstance
 
-    color: "black"
+    /* Phone ui fills its bar edge to edge with the alert. Tablet ui floats it,
+     * so the alert needs room to breathe inside a rounded panel - measured off
+     * webOS 3.0.5 on a touchpad, where the 320 wide alert sat in a ~340 wide
+     * panel with the corners rounded by about the same margin.
+     */
+    readonly property real contentMargin: Settings.tabletUi ? Units.length(10) : 0
+
+    color: Settings.tabletUi ? Qt.rgba(0, 0, 0, 0.85) : "black"
+    radius: contentMargin
 
     WindowModel {
         id: listPopupAlertsModel
@@ -51,8 +59,9 @@ Rectangle {
             id: alertItem
 
             property Item window: listPopupAlertsModel.get(index /* index is set by Repeater */)
-            y: rootAlertsArea.height - height
-            width: rootAlertsArea.width
+            x: rootAlertsArea.contentMargin
+            y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
+            width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
             height: window ? window.height : 0
             onHeightChanged: computeNewRootHeight();
 
