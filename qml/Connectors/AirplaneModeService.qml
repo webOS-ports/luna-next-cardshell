@@ -126,28 +126,37 @@ Item {
      */
     property var __simPowerBeforeAirplane: ({})
 
+    /*
+     * Driven over ConnMan's own D-Bus API rather than through
+     * com.webos.service.connectionmanager/setstate.
+     *
+     * The Luna route is refused for the shell - LS_REQUIRES_TRUST on setstate -
+     * even though the shell runs at the oem trust level that
+     * networkconnection.management asks for, so something in the adapter's
+     * access control config is wrong. Worth fixing on its own, but it is not
+     * this component's problem: every other radio control in the shell already
+     * goes straight to ConnMan (the WiFi toggle writes TechnologyModel.powered,
+     * BluetoothManager.powered is an alias onto a ConnMan technology), and this
+     * takes the same road.
+     *
+     * The one thing the adapter did for us was stopping WiFi tethering first,
+     * which ConnMan does not do on its own, so do that here.
+     */
     function __applyToConnman(enabled) {
-        /*
-         * Deliberately routed through the connection manager rather than
-         * written straight to NetworkManager.offlineMode: the adapter tears
-         * down WiFi tethering first, which ConnMan on its own does not.
-         */
-        /*
-         * com.webos.service.connectionmanager, not the com.palm alias: the
-         * adapter registers both, but only this one is mapped to an access
-         * control group, so a call to the alias is refused for anything that
-         * is not running as root.
-         */
-        connectionManager.call("luna://com.webos.service.connectionmanager/setstate",
-                               JSON.stringify({"offlineMode": enabled ? "enabled" : "disabled"}),
-                               __connmanFinished,
-                               function (message) {
-                                   console.log("AirplaneModeService: connectionmanager/setstate failed: " + message.payload);
-                                   __connmanFinished(message);
-                               });
+        if (enabled && wifiTechnology.powered && wifiTechnology.tethering) {
+            console.log("AirplaneModeService: stopping WiFi tethering first");
+            wifiTechnology.tethering = false;
+        }
+
+        if (networkManager.offlineMode === enabled) {
+            __connmanFinished();
+            return;
+        }
+
+        networkManager.offlineMode = enabled;
     }
 
-    function __connmanFinished(message) {
+    function __connmanFinished() {
         __connmanPending = false;
         __settleIfDone();
     }
@@ -302,6 +311,23 @@ Item {
         id: networkManager
     }
 
+    NetworkTechnology {
+        id: wifiTechnology
+        path: networkManager.WifiTechnology
+    }
+
+    /*
+     * The ConnMan leg finishes when ConnMan actually reports the new state,
+     * not when the request was made, so inProgress covers the real transition.
+     */
+    Connections {
+        target: networkManager
+        function onOfflineModeChanged() {
+            if (__connmanPending && networkManager.offlineMode === __target)
+                __connmanFinished();
+        }
+    }
+
     /*
      * ConnMan applies offline mode asynchronously and a modem can take a while
      * to go offline. If either leg never answers, release the UI rather than
@@ -322,11 +348,6 @@ Item {
             __simsPending = 0;
             __settleIfDone();
         }
-    }
-
-    LunaService {
-        id: connectionManager
-        name: "com.webos.surfacemanager-cardshell"
     }
 
     LunaService {
