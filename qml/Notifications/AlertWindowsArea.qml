@@ -70,14 +70,24 @@ Rectangle {
                     window.anchors.right = alertItem.right;
                     window.y = 0;
 
-                    //If the app provides window height in GridUnits we need to make sure we deal with it properly.
-                    if( window.height>0 && window.windowProperties )
-                    {
-                        if( window.windowProperties.hasOwnProperty("LuneOS_metrics") && window.windowProperties["LuneOS_metrics"]==="units")
-                        {
-                            window.height = Units.gu(window.height/Units.length(1.0));
-                        }
-                    }
+                    /* The height is already in device pixels and is used as it stands.
+                     *
+                     * This used to re-read a "LuneOS_metrics" == "units" height as grid
+                     * units, on the assumption that WAM had scaled the requested height by
+                     * the layout scale on the way in. WAM does no such thing: it hands the
+                     * "height=" window feature straight to WebAppBase::Resize(), so the
+                     * surface height we see here is the number the application asked for -
+                     * or 100, the floor Chromium puts under a popup. Converting it anyway
+                     * multiplied it by gridUnit/layoutScale, a ratio unrelated to anything
+                     * either side meant, which is why the same alert came out 743px tall on
+                     * tissot, 748 on sargo and 764 on mindphone - taller there than the
+                     * screen, so it was clipped and appeared to hang from the top instead of
+                     * sitting above the notification area.
+                     *
+                     * An html alert knows its own content height and nothing here does, so
+                     * the size has to be settled before the window is opened; luna-systemui
+                     * scales its css heights by the page zoom for exactly that reason.
+                     */
 
                     // be careful here: at this point in time, window.height is usually not yet set
                     if(window.height>0) {
