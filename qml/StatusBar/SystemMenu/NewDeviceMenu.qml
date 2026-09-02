@@ -118,9 +118,10 @@ Item {
     property bool networkLocationOn: false
     property bool flashlightOn: false
     property bool flashlightAvailable: false
-    property bool roamOnly: false
     property bool networkSubMenuOpen: false
-    property string dataNetworkMode: "AUTO"
+    // Raw telephonyd radio access mode: any, gsm, umts, lte or unknown when
+    // the modem has no RadioSettings interface to ask.
+    property string dataNetworkMode: "unknown"
     property string mediaSoundOutput: "pcm_output"
 
     TelephonyService {
@@ -178,8 +179,24 @@ Item {
                      console.log("Could not retrieve audio: " + error);
                  });
 
-            // Subscribed rather than polled: torchd posts on every change, and
-            // the torch can go off without us asking - it does on service stop.
+            refreshStatus();
+        }
+    }
+
+    /*
+     * torchd is not installed on every LuneOS device and it can start after the
+     * shell does, so the subscription is made whenever it appears on the bus
+     * instead of once at startup: subscribing at startup to a service that is
+     * not there errors out and never retries, which left the entry reading
+     * "Unavailable" for the rest of the session even once torchd was up.
+     *
+     * Subscribed rather than polled: torchd posts on every change, and the
+     * torch can go off without us asking - it does on service stop.
+     */
+    ServiceStatus {
+        serviceName: "org.webosports.service.torch"
+
+        onConnected: {
             service.subscribe("luna://org.webosports.service.torch/getStatus",
                  JSON.stringify({"subscribe": true}),
                  function(message) {
@@ -190,11 +207,14 @@ Item {
                          deviceMenu.flashlightOn = response.on;
                  },
                  function(error) {
-                     // No torchd, or no torch on this device: leave the entry inactive.
+                     // Present but refusing to answer: no torch on this device.
                      deviceMenu.flashlightAvailable = false;
                  });
+        }
 
-            refreshStatus();
+        onDisconnected: {
+            deviceMenu.flashlightAvailable = false;
+            deviceMenu.flashlightOn = false;
         }
     }
 
@@ -251,27 +271,28 @@ Item {
                      },
                      function(error) { });
 
+        // telephonyd answers with the mode strings it also takes back in
+        // ratSet, "lte" among them; mapping anything that is not gsm or umts
+        // onto "AUTO" claimed the radio was unrestricted when it was pinned to
+        // LTE, and hid the fact that a modem without RadioSettings reports
+        // "unknown" and cannot be set at all.
         service.call("luna://com.palm.telephony/ratQuery", "{}",
                      function(message) {
                          var response = JSON.parse(message.payload);
-                         if (response.extended && response.extended.mode) {
-                             if (response.extended.mode === "gsm")
-                                 deviceMenu.dataNetworkMode = "2G";
-                             else if (response.extended.mode === "umts")
-                                 deviceMenu.dataNetworkMode = "3G";
-                             else
-                                 deviceMenu.dataNetworkMode = "AUTO";
-                         }
-                     },
-                     function(error) { });
-
-        service.call("luna://com.palm.telephony/roamModeQuery", "{}",
-                     function(message) {
-                         var response = JSON.parse(message.payload);
                          if (response.extended && response.extended.mode)
-                             deviceMenu.roamOnly = (response.extended.mode === "roamonly");
+                             deviceMenu.dataNetworkMode = response.extended.mode;
                      },
                      function(error) { });
+    }
+
+    function dataNetworkModeLabel(mode) {
+        switch (mode) {
+        case "any":  return "Auto";
+        case "gsm":  return "2G";
+        case "umts": return "3G";
+        case "lte":  return "4G";
+        default:     return "Unknown";
+        }
     }
 
     function setDataNetworkMode(mode) {
@@ -624,6 +645,10 @@ Item {
                     NewMenuToggleEntry {
                         text: "Phone Radio"
                         statusText: telephonyServiceConnector.powered ? "On" : "Off"
+                        // telephonyd owns the modem while airplane mode is on
+                        // and answers powerSet with "Airplane mode is enabled",
+                        // so do not offer a switch that cannot do anything.
+                        active: !airplaneModeService.active && !airplaneModeService.inProgress
                         onAction: {
                             service.call("luna://com.palm.telephony/powerSet",
                                          JSON.stringify({"state": telephonyServiceConnector.powered ? "off" : "on", "save": true}),
@@ -645,7 +670,10 @@ Item {
 
                     NewMenuToggleEntry {
                         text: "Data Network"
-                        statusText: dataNetworkMode
+                        statusText: dataNetworkModeLabel(dataNetworkMode)
+                        // A modem that reports "unknown" has no RadioSettings
+                        // interface, so ratSet has nothing to write to.
+                        active: dataNetworkMode !== "unknown"
                         onAction: networkSubMenuOpen = !networkSubMenuOpen
                     }
 
@@ -654,45 +682,45 @@ Item {
                         width: parent.width
                         visible: networkSubMenuOpen
 
-                        MenuDivider { widthOffset: dividerWidthOffset }
+                        Repeater {
+                            model: [
+                                { mode: "any",  label: "Automatic" },
+                                { mode: "gsm",  label: "Only 2G" },
+                                { mode: "umts", label: "Only 3G" },
+                                { mode: "lte",  label: "Only 4G" }
+                            ]
 
-                        NewMenuToggleEntry {
-                            text: "Automatic"
-                            indent: subIdent
-                            onAction: setDataNetworkMode("any")
-                        }
+                            delegate: Column {
+                                spacing: 0
+                                width: mainMenu.width
 
-                        MenuDivider { widthOffset: dividerWidthOffset }
+                                MenuDivider { widthOffset: dividerWidthOffset }
 
-                        NewMenuToggleEntry {
-                            text: "Only 2G"
-                            indent: subIdent
-                            onAction: setDataNetworkMode("gsm")
-                        }
-
-                        MenuDivider { widthOffset: dividerWidthOffset }
-
-                        NewMenuToggleEntry {
-                            text: "Only 3G"
-                            indent: subIdent
-                            onAction: setDataNetworkMode("umts")
+                                NewMenuToggleEntry {
+                                    text: modelData.label
+                                    indent: subIdent
+                                    statusText: dataNetworkMode === modelData.mode ? "On" : ""
+                                    onAction: setDataNetworkMode(modelData.mode)
+                                }
+                            }
                         }
                     }
 
                     MenuDivider { widthOffset: dividerWidthOffset }
 
                     NewMenuToggleEntry {
-                        text: "Roam Only"
-                        statusText: roamOnly ? "On" : "Off"
-                        onAction: {
-                            var newMode = roamOnly ? "any" : "roamonly";
-                            service.call("luna://com.palm.telephony/roamModeSet",
-                                         JSON.stringify({"mode": newMode}),
-                                         function(message) {
-                                             deviceMenu.roamOnly = (newMode === "roamonly");
-                                         },
-                                         function(error) { });
-                        }
+                        /*
+                         * The legacy patch called com.palm.telephony/roamModeSet
+                         * here, which telephonyd has never implemented - the
+                         * entry read "Off" whatever the setting was and toggling
+                         * it answered "Unknown method". What LuneOS does have is
+                         * the WAN roam guard, so this drives that instead, said
+                         * the way round a user reads it: guard on means data
+                         * roaming off.
+                         */
+                        text: "Data Roaming"
+                        statusText: wanService.roamGuard ? "Off" : "On"
+                        onAction: wanService.setRoamGuard(!wanService.roamGuard)
                     }
 
                     MenuDivider { widthOffset: dividerWidthOffset }
