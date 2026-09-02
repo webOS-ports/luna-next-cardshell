@@ -297,9 +297,28 @@ WindowManager {
     AlertWindowsArea {
         id: alertWindowsAreaInstance
 
-        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
+        /* Phone ui gives alerts a full width bar resting on the notification
+         * area. Tablet ui floats them instead, in a panel hanging from the top
+         * right corner under the status bar - that is where LunaSysMgr put them
+         * too: positionAlertWindowContainer() placed a container
+         * kTabletNotificationContentWidth (320) wide against the top right of
+         * the positive space. The inset is measured off webOS 3.0.5 on a
+         * touchpad rather than taken from kTabletAlertWindowPadding (5), since
+         * that 5 was on top of the transparent border baked into the popup
+         * background image, which the panel drawn here does not have.
+         */
+        readonly property real tabletInset: Units.length(14)
+
+        anchors.top: Settings.tabletUi ? statusBarInstance.bottom : undefined
+        anchors.topMargin: Settings.tabletUi ? tabletInset : 0
+        anchors.bottom: Settings.tabletUi ? undefined
+                                          : (gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom)
+
+        // Placed outright rather than anchored horizontally, so the two layouts
+        // do not have to hand a left anchor back and forth. The width is the
+        // alert itself plus the panel margin it sits in.
+        width: Settings.tabletUi ? Units.length(320) + 2 * contentMargin : parent.width
+        x: Settings.tabletUi ? parent.width - width - tabletInset : 0
 
         visible: !lockScreen.visible
         windowManagerItem: windowManager
