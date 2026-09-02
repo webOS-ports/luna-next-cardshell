@@ -22,37 +22,35 @@ import LunaNext.Common 0.1
 BaseIndicator {
     id: wanStatusIndicator
 
-    property string technology: "none" // none, gsm, edge, umts, hsdpa, hsupa, hspa, lte 
+    // Radio access technology as com.palm.wan/getstatus words it. telephonyd
+    // reports ofono's NetworkRegistration.Technology when no bearer is up, so
+    // this is set from the moment the modem registers.
+    property string technology: "none"
 
     imageSource: getIconForTechnology(technology)
-    imageVisible: technology !== "none"
+    imageVisible: imageSource.length > 0
+
+    // Only technologies we actually have artwork for; anything else leaves the
+    // indicator empty rather than pointing Image at a file that is not there.
+    readonly property var __iconNames: ({
+        "gsm":       "gprs",
+        "gprs":      "gprs",
+        "edge":      "edge",
+        "umts":      "3g",
+        "hsdpa":     "hsdpa",
+        "hsupa":     "hsdpa-plus",
+        "hspa":      "hsdpa-plus",
+        "hspa+":     "hsdpa-plus",
+        "lte":       "4g",
+        "1x":        "1x",
+        "evdo":      "evdo"
+    })
 
     function getIconForTechnology(value) {
-        if (value.length === 0)
-            return "";
+        var name = __iconNames[value];
 
-        var name = value;
-
-        switch (value) {
-        case "none":
+        if (!name)
             return "";
-        case "gsm":
-            name = "gprs";
-            break;
-        case "umts":
-            name = "3g";
-            break;
-        case "hsupa":
-        case "hspa":
-        case "hspa":
-            name = "hsdpa-plus";
-            break;
-        case "lte":
-            name = "4g";
-            break;
-        default:
-            break;
-        }
 
         return "../../images/statusbar/network/network-" + name + "-connected.png";
     }
