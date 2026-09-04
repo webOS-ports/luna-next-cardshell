@@ -45,7 +45,15 @@ Item {
     property int fingerprintFailedAttempts: 0
     readonly property int maxFingerprintAttempts: 5
 
+    // Settings' Fingerprint Unlock switch, in case someone wants their
+    // enrolled prints kept for something else (unlocking an app, say)
+    // without the lock screen itself trying them. Defaults to on so devices
+    // that already had prints enrolled before this preference existed keep
+    // behaving the way they always did.
+    property bool fingerprintUnlockEnabled: true
+
     readonly property bool fingerprintActive: locked && fingerprintAvailable &&
+                                              fingerprintUnlockEnabled &&
                                               fingerprintCount > 0 &&
                                               fingerprintFailedAttempts < maxFingerprintAttempts
     property var _identifyCall: null
@@ -183,11 +191,14 @@ Item {
     }
 
     function lockDisplay() {
-        service.call("luna://com.palm.display/control/setLockStatus", "{\"status\":\"lock\"}", null, null);
+        service.call("luna://com.palm.display/control/setLockStatus", "{\"status\":\"lock\"}",
+                     null, function(message) { console.warn("setLockStatus lock failed: " + message.payload); });
     }
 
     function unlockDisplay() {
-        service.call("luna://com.palm.display/control/setLockStatus", "{\"status\":\"unlock\"}", null, null);
+        service.call("luna://com.palm.display/control/setLockStatus", "{\"status\":\"unlock\"}",
+                     function(message) { console.warn("setLockStatus unlock reply: " + message.payload); },
+                     function(message) { console.warn("setLockStatus unlock failed: " + message.payload); });
     }
 
     function padUnlock() {
@@ -196,6 +207,8 @@ Item {
             unlockDisplay()
         else if (deviceLockMode === "pin" || deviceLockMode === "password")
             lockScreen.state = "pin-password";
+        else if (deviceLockMode === "pattern")
+            lockScreen.state = "pattern";
         else {
             console.log("Invalid device lock mode '" + deviceLockMode + "'");
             lockDisplay();
@@ -205,6 +218,11 @@ Item {
     Clock
     {
         id: lockScreenClock
+        // Fills the whole screen (see Clock.qml), so left unconditionally
+        // visible it sat behind/over whichever pad was actually showing -
+        // PIN, password or pattern. Only the swipe-up padlock screen wants
+        // the clock; entering a passcode does not.
+        visible: lockScreen.state === "pad"
     }
 
 
@@ -233,6 +251,9 @@ Item {
         onInitialized: {
             service.subscribe("luna://com.palm.systemmanager/getDeviceLockMode", "{\"subscribe\":true}", handleDeviceLockMode, handleError);
             service.subscribe("luna://com.palm.display/control/lockStatus", "{\"subscribe\":true}", handleLockStatus, handleError);
+            service.subscribe("luna://com.palm.systemservice/getPreferences",
+                              "{\"keys\":[\"enableFingerprintUnlock\"],\"subscribe\":true}",
+                              handleFingerprintPreference, handleError);
             // webos-fingerprint-adapter is only present on devices with a
             // fingerprint sensor; on others this subscription simply fails
             // and fingerprintAvailable stays false.
@@ -241,6 +262,12 @@ Item {
 
         function subscribeFingerprintStatus() {
             service.subscribe("luna://com.webos.service.fingerprint/getStatus", "{\"subscribe\":true}", handleFingerprintStatus, handleFingerprintStatusError);
+        }
+
+        function handleFingerprintPreference(message) {
+            var response = JSON.parse(message.payload);
+            if (response.enableFingerprintUnlock !== undefined)
+                lockScreen.fingerprintUnlockEnabled = response.enableFingerprintUnlock;
         }
 
         function handleFingerprintStatus(message) {
@@ -264,7 +291,7 @@ Item {
         }
 
         function handleLockStatus(message) {
-            console.log("Got lock status " + message.payload);
+            console.warn("Got lock status " + message.payload);
             var response = JSON.parse(message.payload);
 
             if (response.lockState === "locked")
@@ -298,6 +325,10 @@ Item {
         State {
             name: "pin-password"
             PropertyChanges { target: lockScreen; locked: true }
+        },
+        State {
+            name: "pattern"
+            PropertyChanges { target: lockScreen; locked: true }
         }
     ]
 
@@ -318,6 +349,19 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: (Qt.inputMethod.keyboardRectangle.height/2)*-1
+
+        onUnlock: unlockDisplay()
+        onCanceled: {
+            lockScreen.state = "pad";
+        }
+    }
+
+    PatternLock {
+        id: patternLock
+
+        visible: lockScreen.state === "pattern"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
 
         onUnlock: unlockDisplay()
         onCanceled: {
