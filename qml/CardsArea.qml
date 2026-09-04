@@ -233,6 +233,14 @@ WindowManager {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        // Sat behind the lock screen purely on z-order (1 vs LockScreen's
+        // 700) before this - fine as long as the lock screen's own visuals
+        // are fully opaque everywhere, which is apparently not always true
+        // (intermittently visible behind the padlock screen). Hidden
+        // outright instead, the same defensive way notificationAreaInstance
+        // right below already is.
+        visible: !lockScreen.visible
+
         z: 1 // on top of cardview when no card is active
     }
 
@@ -292,6 +300,7 @@ WindowManager {
         anchors.right: parent.right
 
         windowManagerInstance: windowManager
+        compositorInstance: compositor
 
         z: 5 // fullscreen window, above keyboard
     }
@@ -342,6 +351,11 @@ WindowManager {
         fullLauncherVisible: launcherInstance.fullLauncherVisible
         justTypeLauncherActive: launcherInstance.justTypeLauncherActive
         compositorInstance: compositor
+
+        // Exhibition mode drives the app menu in the status bar: it shows the
+        // page on show, and tapping it opens the exhibition page list.
+        dockModeAppMenuTitle: dockMode.currentPageTitle
+        onDockModeMenuToggled: dockMode.toggleAppMenu();
 
         onShowPowerMenu: windowManager.showPowerMenu();
     }
