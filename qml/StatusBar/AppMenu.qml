@@ -32,7 +32,14 @@ Item {
     property string activeWindowAppId: ""
     property string activeWindowTitle: defaultAppMenuTitle
     readonly property string defaultAppMenuTitle: "App Menu"
-    property string dockModeAppMenuTitle: "Time" // this will need to be more flexible with exhibition apps
+    // Name of the exhibition page on show, fed by DockMode. Legacy's status
+    // bar did the same through DockModeWindowManager's setMaximizedAppTitle.
+    property string dockModeAppMenuTitle: "Time"
+
+    // Raised instead of the app-menu call below when the shell is in
+    // exhibition mode, where this menu picks the exhibition page rather than
+    // opening the focused application's own menu.
+    signal dockModeMenuToggled()
 
     onActiveWindowAppIdChanged: {
         // now, if the appId is valid, fetch the app name
@@ -75,6 +82,11 @@ Item {
     }
 
     function toggleState() {
+        if (appMenu.state === "dockmode") {
+            appMenu.dockModeMenuToggled();
+            return;
+        }
+
         if (activeWindowAppId.length === 0)
             return;
         var params = {"id":activeWindowAppId, "params":{"palm-command":"open-app-menu"}};

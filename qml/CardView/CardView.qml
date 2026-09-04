@@ -4,6 +4,7 @@ import WebOSCompositorBase 1.0
 import WebOSCoreCompositor 1.0
 
 import "../Utils"
+import "../DockMode"
 import "../WindowStateStub.js" as WindowState
 
 Item {
@@ -30,6 +31,20 @@ Item {
         id: cardsModel
         surfaceSource: compositorInstance.surfaceModel
         windowType: "_WEBOS_WINDOW_TYPE_CARD"
+        // Same exclusion as CardGroupModel: a window exhibition mode is
+        // hosting is not a card.
+        acceptFunction: "acceptCard"
+
+        function acceptCard(surfaceItem) {
+            return surfaceItem.type === "_WEBOS_WINDOW_TYPE_CARD" &&
+                   !ExhibitionState.isExhibitionWindow(surfaceItem);
+        }
+
+        property int exhibitionRevision: ExhibitionState.revision
+        onExhibitionRevisionChanged: {
+            cardsModel.locked = true;
+            cardsModel.locked = false;
+        }
 
         onRowsAboutToBeRemoved: (index, first, last) => {
             if( !cardViewItem.keepCurrentCardMaximized &&

@@ -57,6 +57,11 @@ Item {
     // which one gets loaded into systemMenuLoader.
     property Item systemMenu: systemMenuLoader.item
 
+    // Exhibition mode: the page on show, and a tap on the app menu asking for
+    // the exhibition page list. Both are wired up to DockMode by CardsArea.
+    property string dockModeAppMenuTitle: "Time"
+    signal dockModeMenuToggled()
+
     signal showPowerMenu()
 
     function probeNetworkStatus()
@@ -270,6 +275,9 @@ Item {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             fontSize: statusBar.fontSize
+            dockModeAppMenuTitle: statusBar.dockModeAppMenuTitle
+
+            onDockModeMenuToggled: statusBar.dockModeMenuToggled()
         }
 
         Loader {

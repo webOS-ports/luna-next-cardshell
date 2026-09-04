@@ -3,6 +3,8 @@ import QtQuick 2.0
 import WebOSCompositorBase 1.0
 import WebOSCoreCompositor 1.0
 
+import "../DockMode"
+
 /*
  * The CardGroupModel describes how the cards are organized into groups.
  * Each group corresponds to a ListElement of the ListModel, and contains
@@ -19,6 +21,25 @@ ListModel {
     property WindowModel listCardsModel: WindowModel {
         surfaceSource: compositor.surfaceModel
         windowType: "_WEBOS_WINDOW_TYPE_CARD"
+        // An acceptFunction replaces the windowType test entirely, so the
+        // card check has to be repeated here. Windows exhibition mode is
+        // hosting are left out, so a docked application doesn't also sit in
+        // the card stack behind it.
+        acceptFunction: "acceptCard"
+
+        function acceptCard(surfaceItem) {
+            return surfaceItem.type === "_WEBOS_WINDOW_TYPE_CARD" &&
+                   !ExhibitionState.isExhibitionWindow(surfaceItem);
+        }
+
+        // Re-run the filter whenever exhibition mode takes or releases an
+        // app. invalidateFilter() isn't callable from QML, but toggling
+        // locked re-filters on the way back out, which is public API.
+        property int exhibitionRevision: ExhibitionState.revision
+        onExhibitionRevisionChanged: {
+            listCardsModel.locked = true;
+            listCardsModel.locked = false;
+        }
 
         onRowsAboutToBeRemoved: (index, first, last) => {
             removeWindow(listCardsModel.get(last));

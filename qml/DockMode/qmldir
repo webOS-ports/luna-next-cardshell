@@ -1,0 +1,2 @@
+module DockMode
+singleton ExhibitionState 1.0 ExhibitionState.qml
