@@ -27,27 +27,67 @@ Item {
 
     anchors.fill: parent
 
-    // Fingerprint feedback: light the padlock up exactly like a press, tinted
-    // green for a recognized finger and red for an unrecognized one.
+    // Biometric feedback: light the padlock up exactly like a press, tinted
+    // green for a recognized user and red for an unrecognized one. Shared by
+    // fingerprint and face - the visual is identical and deliberately so, since
+    // the lock screen should not advertise which modality just failed.
     // Colors are the affirmative/negative pair used by the phone app
     // (org.webosports.app.phone MessageAlert.qml).
-    function fingerprintFeedback(success) {
+    function biometricFeedback(success) {
         pad.on = true;
         fpGlow.color = success ? "#2aa100" : "#be0003";
         fpGlow.visible = true;
         fpFeedbackTimer.restart();
     }
 
-    // Shown once fingerprint unlock has been disabled for too many failed
-    // reads. Cleared when the pad is dragged (a real unlock attempt) so it
-    // does not linger over the pin pad.
-    function showFingerprintLockout(deviceLockMode) {
+    // Kept so nothing outside this file has to change.
+    function fingerprintFeedback(success) { biometricFeedback(success); }
+
+    // A transient one-line status for an attempt in progress or just finished
+    // ("Looking for your face...", "Face not recognized"). Kept separate from
+    // the lockout message below, which is terminal and must not be wiped by a
+    // timer; if both would show, lockout wins.
+    function showBiometricStatus(message) {
+        if (fpLockoutText.visible)
+            return;
+        fpStatusText.text = message;
+        fpStatusText.visible = message !== "";
+        if (fpStatusText.visible)
+            fpStatusTimer.restart();
+        else
+            fpStatusTimer.stop();
+    }
+
+    function clearBiometricStatus() {
+        fpStatusText.visible = false;
+        fpStatusTimer.stop();
+    }
+
+    // Shown once a biometric has been disabled for too many failed attempts.
+    // Cleared when the pad is dragged (a real unlock attempt) so it does not
+    // linger over the pin pad. `modality` only picks the wording of the last
+    // fallback line; when a passcode is set the message is the same either way.
+    function showBiometricLockout(deviceLockMode, modality) {
         fpLockoutText.text = (deviceLockMode === "pin")
             ? "Too many attempts. Enter your PIN to unlock."
             : (deviceLockMode === "password")
                 ? "Too many attempts. Enter your password to unlock."
-                : "Too many attempts. Fingerprint unlock disabled.";
+                : (modality === "face")
+                    ? "Too many attempts. Face unlock disabled."
+                    : "Too many attempts. Fingerprint unlock disabled.";
         fpLockoutText.visible = true;
+        clearBiometricStatus();
+    }
+
+    function showFingerprintLockout(deviceLockMode) {
+        showBiometricLockout(deviceLockMode, "fingerprint");
+    }
+
+    Timer {
+        id: fpStatusTimer
+        interval: 2500
+        repeat: false
+        onTriggered: fpStatusText.visible = false
     }
 
     Timer {
@@ -153,6 +193,20 @@ Item {
 
     Text {
         id: fpLockoutText
+        visible: false
+        width: parent.width - Units.gu(4)
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+        text: ""
+        color: "white"
+        font.pixelSize: FontUtils.sizeToPixels("medium")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: pad.top
+        anchors.bottomMargin: Units.gu(3)
+    }
+
+    Text {
+        id: fpStatusText
         visible: false
         width: parent.width - Units.gu(4)
         horizontalAlignment: Text.AlignHCenter
