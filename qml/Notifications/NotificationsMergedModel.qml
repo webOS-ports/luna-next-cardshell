@@ -165,8 +165,14 @@ ListModel {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: launcherInstance.launchApplication(notificationItem.notifObject.action.launchParams.id,
-                                                              notificationItem.notifObject.action.launchParams, handleLaunchAppSuccess);
+                onClicked: {
+                    // notificationmgr wraps the toast's onclick as
+                    // launchParams = {id, params}; hand the app the inner
+                    // params, not the whole envelope, so it sees the same
+                    // parameters the toast's creator provided
+                    var lp = notificationItem.notifObject.action.launchParams;
+                    launcherInstance.launchApplication(lp.id, lp.params || lp, handleLaunchAppSuccess);
+                }
             }
 
             function onCloseNotifError(message) {
