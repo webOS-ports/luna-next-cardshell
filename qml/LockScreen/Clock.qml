@@ -101,7 +101,11 @@ Item {
         height: Units.gu(8)
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
-        anchors.topMargin: (parent.height * 0.35) - (clockDigits.height * 2)
+        // Clamp: on short landscape screens (e.g. 480px tall) 35% of the
+        // height is less than two clock heights, and a negative margin would
+        // push the digits up over the status bar. Keep at least gu(2) of
+        // breathing room below the bar.
+        anchors.topMargin: Math.max(Units.gu(2), (parent.height * 0.35) - (clockDigits.height * 2))
         children: [
         Image {
             id: firstImage
