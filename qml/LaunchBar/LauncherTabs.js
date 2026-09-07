@@ -24,11 +24,18 @@ var APPS_TAB = "Apps";
 var PREFS_TAB = "Prefs";
 var ANDROID_TAB = "Android";
 
+// appinfo.json categories. LunaCE compares its settingsAppCategoryDesignator
+// (default "Settings") against an app's category with case sensitivity, so
+// match the same way rather than lowercasing.
+var SETTINGS_CATEGORY = "Settings";
+var ANDROID_CATEGORY = "Android";
+
 // Waydroid gives every launchable Android package a webOS app of its own,
 // with the id "waydroid.<packageName>" (the same name hwcomposer puts in the
 // Wayland app_id). "Waydroid" itself is the full-UI launcher, and
 // "id.waydro.container" the container service app.
-function isAndroidApp(appId) {
+function isAndroidApp(appId, category) {
+    if (category === ANDROID_CATEGORY) return true;
     if (!appId) return false;
     return appId.indexOf("waydroid.") === 0 ||
            appId.indexOf("id.waydro.") === 0 ||
@@ -42,10 +49,14 @@ function needsAndroidBadge(appId) {
     return !!appId && appId.indexOf("waydroid.") === 0;
 }
 
-// The settings app was split up into one app per category
-// ("org.webosports.app.settings.wifi", ".bluetooth", ...), and new ones keep
-// being added, so match on the prefix instead of listing them one by one.
-function isPrefsApp(appId) {
+// A declared category is the better signal, but it only covers apps we build
+// ourselves: the main settings app and .faceunlock ship their appinfo from
+// other repos, com.palm.app.backup has none, and third party apps never will.
+// So keep matching the id too - the settings app was split up into one app per
+// category ("org.webosports.app.settings.wifi", ".bluetooth", ...) and new ones
+// keep being added, hence the prefix rather than a list.
+function isPrefsApp(appId, category) {
+    if (category === SETTINGS_CATEGORY) return true;
     if (!appId) return false;
     return appId.indexOf("org.webosports.app.settings") === 0 ||
            appId === "com.palm.app.backup";
@@ -54,10 +65,10 @@ function isPrefsApp(appId) {
 // The tab an app belongs to by rule, or "" when no rule applies and the
 // default layout (/etc/palm/default-launcher-page-layout.json) decides.
 // Rules lose against an explicit placement the user made in the launcher.
-function tabForApp(appId, androidTabEnabled) {
-    if (isAndroidApp(appId))
+function tabForApp(appId, androidTabEnabled, category) {
+    if (isAndroidApp(appId, category))
         return androidTabEnabled ? ANDROID_TAB : "";
-    if (isPrefsApp(appId))
+    if (isPrefsApp(appId, category))
         return PREFS_TAB;
     return "";
 }
