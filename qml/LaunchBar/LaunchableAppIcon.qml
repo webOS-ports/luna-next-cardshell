@@ -20,6 +20,8 @@ import QtQuick 2.0
 import Qt5Compat.GraphicalEffects
 import LunaNext.Common 0.1
 
+import "LauncherTabs.js" as LauncherTabs
+
 Item {
     id: launchableAppIcon
 
@@ -31,6 +33,9 @@ Item {
 
     property real iconSize: 64
     property bool glow: false
+
+    // Android apps run inside Waydroid but keep their own Android icon, so mark them
+    readonly property bool isAndroidApp: LauncherTabs.needsAndroidBadge(launchableAppIcon.appId)
 
     signal startLaunchApplication(string appId, var appParams)
 
@@ -92,6 +97,29 @@ Item {
             font.bold: true
             maximumLineCount: 2
             elide: Text.ElideRight
+        }
+    }
+
+    // Waydroid badge, overlaid on the bottom right corner of the app icon
+    Image {
+        id: androidBadge
+        visible: launchableAppIcon.isAndroidApp
+        source: Qt.resolvedUrl("../images/launcher/waydroid-badge.png")
+
+        width: Math.round(launchableAppIcon.iconSize * 0.36)
+        height: width
+        sourceSize.width: width
+        sourceSize.height: height
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+
+        // appIconImage is not a sibling, so place the badge in the bottom right
+        // corner of the square the icon occupies at the top of the column
+        anchors {
+            horizontalCenter: appIconColumn.horizontalCenter
+            horizontalCenterOffset: Math.round((launchableAppIcon.iconSize - width) / 2)
+            top: appIconColumn.top
+            topMargin: Math.round(launchableAppIcon.iconSize - height)
         }
     }
 
