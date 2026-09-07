@@ -50,10 +50,17 @@ Item {
 
     property bool isEditionActive: false
 
+    // The Android tab is optional: it is only useful on the devices that ship
+    // Waydroid, and without it the Android apps stay on the Apps tab.
+    readonly property bool androidTabEnabled: AppTweaks.androidTabTweakValue === true ||
+                                              AppTweaks.androidTabTweakValue === "true"
+
     // the launcher placements the user made themselves, shared by all tabs
     property LauncherTabConfig launcherTabConfig: LauncherTabConfig {}
 
     signal startLaunchApplication(string appId, var appParams)
+
+    onAndroidTabEnabledChanged: __syncAndroidTab();
 
     onIsEditionActiveChanged: {
         if( !fullLauncher.isEditionActive ) saveLauncherLayout();
@@ -80,6 +87,21 @@ Item {
         }
 
         fullLauncher.launcherTabConfig.setLayouts(layouts);
+    }
+
+    function __syncAndroidTab() {
+        var androidTabIndex = -1;
+        for( var i = 0; i < launcherTabsModel.count; ++i ) {
+            if( launcherTabsModel.get(i).text === LauncherTabs.ANDROID_TAB ) {
+                androidTabIndex = i;
+                break;
+            }
+        }
+
+        if( fullLauncher.androidTabEnabled && androidTabIndex < 0 )
+            launcherTabsModel.insert(1, {text: LauncherTabs.ANDROID_TAB}); // right after Apps
+        else if( !fullLauncher.androidTabEnabled && androidTabIndex >= 0 )
+            launcherTabsModel.remove(androidTabIndex);
     }
 
     state: "hidden"
@@ -251,10 +273,13 @@ Item {
         }
 
         model: ListModel {
+            id: launcherTabsModel
             ListElement { text: "Apps" }
             ListElement { text: "Downloads" }
             ListElement { text: "Favorites" }
             ListElement { text: "Prefs" }
+
+            Component.onCompleted: fullLauncher.__syncAndroidTab();
         }
     }
     Button {
@@ -357,6 +382,7 @@ Item {
                     tabConfig: fullLauncher.launcherTabConfig // one placement config for all tab models
                     launcherTab: tabContentItem.tabId
                     isDefaultTab: tabContentItem.tabId === LauncherTabs.APPS_TAB // apps without any tab indication go to the Apps tab
+                    androidTabEnabled: fullLauncher.androidTabEnabled
                 }
 
                 Connections {

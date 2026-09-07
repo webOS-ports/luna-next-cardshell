@@ -17,9 +17,23 @@
 
 .pragma library
 
-// Titles of the launcher tabs this file has an opinion about.
+// Titles of the launcher tabs this file has an opinion about. Of the four tabs
+// the launcher always shows (Apps, Downloads, Favorites, Prefs) only Android is
+// optional, see the showAndroidTab tweak.
 var APPS_TAB = "Apps";
 var PREFS_TAB = "Prefs";
+var ANDROID_TAB = "Android";
+
+// Waydroid gives every launchable Android package a webOS app of its own,
+// with the id "waydroid.<packageName>" (the same name hwcomposer puts in the
+// Wayland app_id). "Waydroid" itself is the full-UI launcher, and
+// "id.waydro.container" the container service app.
+function isAndroidApp(appId) {
+    if (!appId) return false;
+    return appId.indexOf("waydroid.") === 0 ||
+           appId.indexOf("id.waydro.") === 0 ||
+           appId === "Waydroid";
+}
 
 // The settings app was split up into one app per category
 // ("org.webosports.app.settings.wifi", ".bluetooth", ...), and new ones keep
@@ -33,7 +47,9 @@ function isPrefsApp(appId) {
 // The tab an app belongs to by rule, or "" when no rule applies and the
 // default layout (/etc/palm/default-launcher-page-layout.json) decides.
 // Rules lose against an explicit placement the user made in the launcher.
-function tabForApp(appId) {
+function tabForApp(appId, androidTabEnabled) {
+    if (isAndroidApp(appId))
+        return androidTabEnabled ? ANDROID_TAB : "";
     if (isPrefsApp(appId))
         return PREFS_TAB;
     return "";

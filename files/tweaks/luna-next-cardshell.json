@@ -48,6 +48,15 @@
 			{
                 "group": "launcher",
                 "restart": "none",
+                "label": "Show Android tab",
+                "help": "Show a separate launcher tab holding the Waydroid Android apps",
+                "key": "showAndroidTab",
+                "type": "ToggleButton",
+                "value": false
+            },
+			{
+                "group": "launcher",
+                "restart": "none",
                 "label": "Tab indicators per page",
                 "help": "Define number of tab indicators per page",
                 "key": "tabIndicatorNumber",
