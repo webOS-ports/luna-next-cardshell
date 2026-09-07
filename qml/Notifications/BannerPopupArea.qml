@@ -329,7 +329,11 @@ Item {
 
                     }
                 }
-                PauseAnimation { duration: Settings.tabletUi? 0 : 1500; }
+                // Legacy webOS showed a lone banner for 5 seconds and only
+                // dropped to 2 seconds per banner when more were queued
+                // behind it (BannerMessageHandler's kMaxShowTimeMs /
+                // kMinShowTimeMs); evaluated when the slide-in starts.
+                PauseAnimation { duration: Settings.tabletUi? 0 : (bannerItemsModel.count > 1 ? 2000 : 5000); }
 
                 ScriptAction {
                     script: if (Settings.tabletUi)
@@ -342,7 +346,7 @@ Item {
             Timer {
                 id: timerAnimation
                 running: false
-                interval: 3000
+                interval: bannerItemsModel.count > 1 ? 2000 : 5000
                 onTriggered: {
                     slideOutItemAnimation.start();
                 }
