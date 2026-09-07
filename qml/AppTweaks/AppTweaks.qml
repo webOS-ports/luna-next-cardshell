@@ -38,6 +38,7 @@ Item {
     property alias customCarrierStringValue: customCarrierString.value
     property alias tabTitleCaseTweakValue: tabTitleCaseTweak.value
     property alias tabIndicatorNumberTweakValue: tabIndicatorNumberTweak.value
+    property alias androidTabTweakValue: androidTabTweak.value
     property alias newDeviceMenuTweakValue: newDeviceMenuTweak.value
 
     //// tweak definitions
@@ -127,6 +128,13 @@ Item {
         serviceName: appTweaks.serviceName
         key: "tabIndicatorNumber"
         defaultValue: "default"
+    }
+    Tweak {
+        id: androidTabTweak
+        owner: appTweaks.owner
+        serviceName: appTweaks.serviceName
+        key: "showAndroidTab"
+        defaultValue: false
     }
 
 }

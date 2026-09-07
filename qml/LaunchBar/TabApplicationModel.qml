@@ -18,6 +18,9 @@ ListModel {
 
     property string launcherTab
     property bool isDefaultTab: false
+    property bool androidTabEnabled: false
+
+    onAndroidTabEnabledChanged: refreshConfig();
 
     Component.onCompleted: {
         // Read the default tab configuation file
@@ -76,7 +79,7 @@ ListModel {
                 if( placement.tab === launcherTab ) posInTab = placement.pos;
             }
             else {
-                var ruleTab = LauncherTabs.tabForApp(appObj.id);
+                var ruleTab = LauncherTabs.tabForApp(appObj.id, androidTabEnabled);
                 if( ruleTab.length > 0 ) {
                     if( ruleTab === launcherTab ) posInTab = unorderedPos;
                 }
