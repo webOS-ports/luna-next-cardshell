@@ -35,6 +35,13 @@ function isAndroidApp(appId) {
            appId === "Waydroid";
 }
 
+// True for an Android app that carries its own Android icon, i.e. one that
+// should be badged so it is recognizable as running inside Waydroid. The
+// Waydroid app and its container already show the Waydroid logo themselves.
+function needsAndroidBadge(appId) {
+    return !!appId && appId.indexOf("waydroid.") === 0;
+}
+
 // The settings app was split up into one app per category
 // ("org.webosports.app.settings.wifi", ".bluetooth", ...), and new ones keep
 // being added, so match on the prefix instead of listing them one by one.
