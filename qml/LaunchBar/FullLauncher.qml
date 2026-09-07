@@ -49,7 +49,37 @@ Item {
 
     property bool isEditionActive: false
 
+    // the launcher placements the user made themselves, shared by all tabs
+    property LauncherTabConfig launcherTabConfig: LauncherTabConfig {}
+
     signal startLaunchApplication(string appId, var appParams)
+
+    onIsEditionActiveChanged: {
+        if( !fullLauncher.isEditionActive ) saveLauncherLayout();
+    }
+
+    // Hand the layout of every tab over at once: saving them one by one would
+    // let a tab that had not saved yet rebuild itself from a half-updated
+    // configuration, and lose the app that was just dragged into it.
+    function saveLauncherLayout() {
+        var layouts = [];
+
+        for( var i = 0; i < tabContentList.count; ++i ) {
+            var tabContent = tabContentList.itemAtIndex(i);
+            if( !tabContent ) continue; // delegate not created, leave that tab alone
+
+            var tabModel = tabContent.launcherGridView.model;
+            var appIds = [];
+            for( var j = 0; j < tabModel.count; ++j ) {
+                var appId = tabModel.get(j).id;
+                if( !!appId ) appIds.push(appId); // skip a drag placeholder
+            }
+
+            layouts.push({tab: tabContent.tabId, appIds: appIds});
+        }
+
+        fullLauncher.launcherTabConfig.setLayouts(layouts);
+    }
 
     state: "hidden"
     visible: false
@@ -323,6 +353,7 @@ Item {
                 model: TabApplicationModel {
                     id: gridTabModel
                     appsModel: commonAppsModel // one app model for all tab models
+                    tabConfig: fullLauncher.launcherTabConfig // one placement config for all tab models
                     launcherTab: tabContentItem.tabId
                     isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
                 }
@@ -330,6 +361,13 @@ Item {
                 Connections {
                     target: commonAppsModel
                     function onAppsModelRefreshed() {
+                        gridTabModel.refreshConfig();
+                    }
+                }
+
+                Connections {
+                    target: fullLauncher.launcherTabConfig
+                    function onPlacementsChanged() {
                         gridTabModel.refreshConfig();
                     }
                 }
@@ -364,38 +402,6 @@ Item {
 
                 moveDisplaced: Transition {
                     NumberAnimation { properties: "x, y"; duration: 200 }
-                }
-
-                Connections {
-                    target: fullLauncher
-                    function onIsEditionActiveChanged () {
-                        if( !fullLauncher.isEditionActive ) {
-                            fullLauncherGridView.saveCurrentLayout();
-                        }
-                    }
-                }
-
-                function saveCurrentLayout() {
-                        if( Settings.isTestEnvironment ) return;
-
-                        // first, clean up the DB
-                        __queryDB("del",
-                                  {query:{from:"org.webosports.lunalaunchertab:1",
-                                    where: [ {prop:"tab",op:"=",val:tabContentItem.tabId} ]}},
-                                  function (message) {});
-
-                        // then build up the object to save
-                        var data = [];
-                        for( var i=0; i<gridTabModel.count; ++i ) {
-                            var obj = gridTabModel.get(i);
-                            data.push({_kind: "org.webosports.lunalaunchertab:1",
-                                          pos: i,
-                                          tab:tabContentItem.tabId,
-                                          appId: obj.id});
-                        }
-
-                        // and put it in the DB
-                        __queryDB("put", {objects: data}, function (message) {});
                 }
 
                 /* Drop areas of the grid */
@@ -634,16 +640,6 @@ Item {
         id: lunaNextLS2Service
         name: "com.webos.surfacemanager-cardshell"
     }
-    // ls2 db8 management
-    function __handleDBError(message) {
-        console.log("Could not fulfill DB operation : " + message)
-    }
-
-    function __queryDB(action, params, handleResultFct) {
-        lunaNextLS2Service.call("luna://com.palm.db/" + action, JSON.stringify(params),
-                  handleResultFct, __handleDBError)
-    }
-
     // ls2 launchPoint removal
     function removeApplication(id) {
         console.log("Removing app " + id);
