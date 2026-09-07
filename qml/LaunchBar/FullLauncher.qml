@@ -24,6 +24,7 @@ import LunaNext.Common 0.1
 import LuneOS.Service 1.0
 import LuneOS.Components 1.0
 
+import "LauncherTabs.js" as LauncherTabs
 import "../Utils"
 import "../LunaSysAPI" as LunaSysAPI
 import "../AppTweaks"
@@ -355,7 +356,7 @@ Item {
                     appsModel: commonAppsModel // one app model for all tab models
                     tabConfig: fullLauncher.launcherTabConfig // one placement config for all tab models
                     launcherTab: tabContentItem.tabId
-                    isDefaultTab: tabContentItem.tabId === "Apps" // apps without any tab indication go to the Apps tab
+                    isDefaultTab: tabContentItem.tabId === LauncherTabs.APPS_TAB // apps without any tab indication go to the Apps tab
                 }
 
                 Connections {
