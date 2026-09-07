@@ -79,7 +79,7 @@ ListModel {
                 if( placement.tab === launcherTab ) posInTab = placement.pos;
             }
             else {
-                var ruleTab = LauncherTabs.tabForApp(appObj.id, androidTabEnabled);
+                var ruleTab = LauncherTabs.tabForApp(appObj.id, androidTabEnabled, appObj.category);
                 if( ruleTab.length > 0 ) {
                     if( ruleTab === launcherTab ) posInTab = unorderedPos;
                 }

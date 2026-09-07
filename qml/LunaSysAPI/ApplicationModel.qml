@@ -75,6 +75,10 @@ ListModel {
                                               launchPointId: launchPoint.launchPointId,
                                               title: launchPoint.title,
                                               removable: launchPoint.removable,
+                                              // SAM copies appinfo.json verbatim into the launch
+                                              // point, so a category set there arrives here even
+                                              // though SAM itself makes no use of it
+                                              category: launchPoint.category || "",
                                               icon: launchPoint.icon });
             }
         }
