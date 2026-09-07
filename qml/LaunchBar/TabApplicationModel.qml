@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 
+import "LauncherTabs.js" as LauncherTabs
 import "../LunaSysAPI" as LunaSysAPI
 
 ListModel {
@@ -56,12 +57,15 @@ ListModel {
 
     // refreshes the tab configuration
     function refreshConfig() {
-        // For every app of appsModel, apply the default configuration, and
-        // overload it with the placement the user made themselves. What is
-        // referenced by neither is included only if we are the default tab.
+        // For every app of appsModel, decide whether it belongs on this tab.
+        // A placement the user made themselves wins, then the tab rules of
+        // LauncherTabs.js, then the default configuration file. What none of
+        // them mentions ends up on the default tab.
         tabAppsModel.clear();
         var unsortedAppsArray = [];
         var nbApps = appsModel.count;
+        // everything the configuration does not order goes after the default elements
+        var unorderedPos = nbApps + _defaultTabConfig.length + 1;
         for( var i = 0; i < nbApps; ++i ) {
             var appObj = appsModel.get(i);
             var posInTab = -1;
@@ -72,22 +76,32 @@ ListModel {
                 if( placement.tab === launcherTab ) posInTab = placement.pos;
             }
             else {
-                var posInDefaultTab = _defaultTabConfig.indexOf(appObj.id + "_default");
-                if( posInDefaultTab >= 0 ) {
-                    // put it at the end of the list
-                    posInTab = nbApps + posInDefaultTab;
+                var ruleTab = LauncherTabs.tabForApp(appObj.id);
+                if( ruleTab.length > 0 ) {
+                    if( ruleTab === launcherTab ) posInTab = unorderedPos;
                 }
-                else if( isDefaultTab && _defaultTabExclConfig.indexOf(appObj.id + "_default")<0 ) {
-                    // put it at the very end of the list, after default elements
-                    posInTab = nbApps + _defaultTabConfig.length + 1;
+                else {
+                    var posInDefaultTab = _defaultTabConfig.indexOf(appObj.id + "_default");
+                    if( posInDefaultTab >= 0 ) {
+                        // put it at the end of the list
+                        posInTab = nbApps + posInDefaultTab;
+                    }
+                    else if( isDefaultTab && _defaultTabExclConfig.indexOf(appObj.id + "_default")<0 ) {
+                        // put it at the very end of the list, after default elements
+                        posInTab = unorderedPos;
+                    }
                 }
             }
+
             if( posInTab >= 0 ) {
                 unsortedAppsArray.push( {pos: posInTab, appObj: appObj} );
             }
         }
-        // sort the positions
-        unsortedAppsArray.sort(function(a,b){ return a.pos - b.pos; });
+        // sort the positions, and what shares the same position by title
+        unsortedAppsArray.sort(function(a,b){
+            if( a.pos !== b.pos ) return a.pos - b.pos;
+            return String(a.appObj.title).localeCompare(String(b.appObj.title));
+        });
         // fill the model
         for( var j = 0; j < unsortedAppsArray.length; ++j ) {
             tabAppsModel.append(unsortedAppsArray[j].appObj);
