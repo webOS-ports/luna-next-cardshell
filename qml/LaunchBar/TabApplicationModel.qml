@@ -1,6 +1,5 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
-import LuneOS.Service 1.0
 
 import "../LunaSysAPI" as LunaSysAPI
 
@@ -10,6 +9,11 @@ ListModel {
     property ListModel appsModel: LunaSysAPI.ApplicationModel {
         Component.onCompleted: appsModel.appsModelRefreshed.connect(refreshConfig);
     }
+
+    // The placements the user made themselves, shared by all tabs. A ListModel
+    // cannot hold a Connections, so it is the launcher that calls refreshConfig()
+    // whenever this changes.
+    property LauncherTabConfig tabConfig
 
     property string launcherTab
     property bool isDefaultTab: false
@@ -45,50 +49,29 @@ ListModel {
             }
         }
         xhr.send();
-        // Read the db8 configuration: the db schema the following:
-        //   appId: string
-        //   tab: string
-        //   pos: int
-        if( !Settings.isTestEnvironment ) {
-            __queryDB("find",
-                      {query:{from:"org.webosports.lunalaunchertab:1",
-                              where: [ {prop:"tab",op:"=",val:launcherTab} ],
-                              orderBy: "pos", desc: false}},
-                      __launchTabDBResult);
-        }
-    }
-
-    function __launchTabDBResult(message) {
-        var result = JSON.parse(message.payload);
-        _dbTabConfig = [];
-
-        if( result && result.results && result.results.length ) {
-            for( var i=0; i<result.results.length; ++i ) {
-                var obj = result.results[i];
-                _dbTabConfig.push( obj.appId );
-            }
-        }
-
-        refreshConfig();
     }
 
     property var _defaultTabConfig: []
     property var _defaultTabExclConfig: []
-    property var _dbTabConfig: []
 
     // refreshes the tab configuration
     function refreshConfig() {
-        // for all the apps from appsModel, apply the default configuration,
-        // and overload it with the one coming from db8.
-        // If it is not yet referenced in db8 nor in default, then include it only if we are
-        // the default tab
+        // For every app of appsModel, apply the default configuration, and
+        // overload it with the placement the user made themselves. What is
+        // referenced by neither is included only if we are the default tab.
         tabAppsModel.clear();
         var unsortedAppsArray = [];
         var nbApps = appsModel.count;
         for( var i = 0; i < nbApps; ++i ) {
             var appObj = appsModel.get(i);
-            var posInTab = _dbTabConfig.indexOf(appObj.id);
-            if( posInTab < 0 ) {
+            var posInTab = -1;
+            var placement = !!tabConfig ? tabConfig.placementOf(appObj.id) : undefined;
+
+            if( placement !== undefined ) {
+                // the user dragged that app somewhere: honour it, wherever that is
+                if( placement.tab === launcherTab ) posInTab = placement.pos;
+            }
+            else {
                 var posInDefaultTab = _defaultTabConfig.indexOf(appObj.id + "_default");
                 if( posInDefaultTab >= 0 ) {
                     // put it at the end of the list
@@ -109,19 +92,5 @@ ListModel {
         for( var j = 0; j < unsortedAppsArray.length; ++j ) {
             tabAppsModel.append(unsortedAppsArray[j].appObj);
         }
-    }
-
-    // db8 management
-    property QtObject lunaNextLS2Service: LunaService {
-        id: lunaNextLS2Service
-        name: "com.webos.surfacemanager-cardshell"
-    }
-    function __handleDBError(message) {
-        console.log("Could not fulfill DB operation : " + message)
-    }
-
-    function __queryDB(action, params, handleResultFct) {
-        lunaNextLS2Service.call("luna://com.palm.db/" + action, JSON.stringify(params),
-                  handleResultFct, __handleDBError)
     }
 }
