@@ -345,6 +345,35 @@ Item {
         }
     }
 
+    // Tell the client which state its window is in.
+    //
+    // WindowState here is this shell's own enum and lives entirely in QML;
+    // setting it moves the card and says nothing to the application. The
+    // surface item carries a separate Qt::WindowState that does reach the
+    // client - WebAppWayland::StateChanged() turns it into OnStageActivated or
+    // OnStageDeactivated, which is where Enyo's onWindowActivated,
+    // onWindowDeactivated, onWindowShown and onWindowHidden come from
+    // (luneos-testing#13).
+    //
+    // Minimized also means "off screen" to WAM, which suspends the page for it,
+    // and a suspended card paints nothing. WAM is told once, for this shell as
+    // a whole, that a deactivated window stays on screen -
+    // WAM_SHELL_KEEPS_DEACTIVATED_WINDOWS_SHOWN in webapp-mgr.sh - so nothing
+    // has to be arranged per window here.
+    //
+    // Saying it per window was tried and does not work: the state is also
+    // written by WebOSCompositorBase/views/FullscreenView.qml, so a window can
+    // be minimized by a path this shell never sees, and the appId a per-window
+    // call needs arrives asynchronously, after a window can already have been
+    // deactivated. Every ordering left a card that was still on screen with a
+    // suspended page behind it.
+    function __publishWindowState(window, state) {
+        if (!window || typeof window.state === "undefined")
+            return;
+        if (window.state !== state)
+            window.state = state;
+    }
+
     function __setToMaximized(window) {
         // set the card as the active one
         __setCurrentActiveWindow(window);
@@ -352,6 +381,7 @@ Item {
 
         // switch the state to maximized
         window.userData.windowState = WindowState.Maximized;
+        __publishWindowState(window, Qt.WindowMaximized);
         if( !!window )
             window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
     }
@@ -362,6 +392,7 @@ Item {
 
         // switch the state to fullscreen
         window.userData.windowState = WindowState.Fullscreen;
+        __publishWindowState(window, Qt.WindowFullScreen);
         if( !!window )
             window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height));
     }
@@ -369,6 +400,9 @@ Item {
         // switch the state to card
         window.userData.loseFocus();
         window.userData.windowState = WindowState.Carded;
+        // Carded is Minimized to the client: it no longer holds the stage. It
+        // is still on screen in the card view, hence the true.
+        __publishWindowState(window, Qt.WindowMinimized);
     }
 
     function __setCurrentActiveWindow(window) {
