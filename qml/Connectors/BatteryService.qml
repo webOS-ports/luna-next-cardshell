@@ -30,6 +30,22 @@ Item {
     property int percentage: 0
     property bool charging: false
 
+    /*
+     * Every battery batteryd knows about, primary first, as
+     * { name, role, label, primary, present, charging, percentage, level }.
+     * Empty on a device with a single battery: batteryd only sends the array
+     * when there is more than one, and level/percentage/charging above always
+     * describe the primary one, so nothing has to read this to work.
+     */
+    property var batteries: []
+
+    /*
+     * The batteries that are not the primary one and are actually there - the
+     * PinePhone keyboard's while the phone is docked in it. What the status bar
+     * shows in addition to its usual indicator.
+     */
+    property var auxBatteries: []
+
     property bool batterydAvailable: false
 
     property bool _playSoundWhenCharged: false
@@ -98,16 +114,70 @@ Item {
         }
     }
 
+    // batteryLevel goes from 0 to 12.
+    function __levelForPercentage(percentUi) {
+        return Math.floor((percentUi * 12) / 100);
+    }
+
+    // What to call a battery in the UI. batteryd names the role, not the label,
+    // so a role nobody has taught us about still reads as something.
+    function __labelForRole(role) {
+        if (role === "main" || !role)
+            return "Battery";
+        if (role === "keyboard")
+            return "Keyboard";
+        return role.charAt(0).toUpperCase() + role.slice(1);
+    }
+
     function handlePowerdBatteryEvent(message) {
         var response = JSON.parse(message.payload);
 
-        if (typeof response.percent_ui !== "undefined") {
-            // Got a valid state, remove the error flag to show the indicator
-            batteryService.error = false;
-            // batteryLevel goes from 0 to 12.
-            level = Math.floor((response.percent_ui * 12) / 100);
-            percentage = response.percent_ui
+        /*
+         * Not every payload that reaches here is a battery status. Subscribing
+         * to the addmatch signal is acknowledged with a bare
+         * {"returnValue":true}, and on a cardshell restart that ack races the
+         * reply to batteryStatusQuery. Rebuilding the list below from an ack
+         * emptied it, so whether the keyboard indicator appeared came down to
+         * which of the two arrived last - the same coin flip, one layer up.
+         * percent_ui is in every real status and in nothing else.
+         */
+        if (typeof response.percent_ui === "undefined")
+            return;
+
+        // Got a valid state, remove the error flag to show the indicator
+        batteryService.error = false;
+        level = __levelForPercentage(response.percent_ui);
+        percentage = response.percent_ui
+
+        /*
+         * batteryd sends "batteries" only on a device that has more than one -
+         * a PinePhone (Pro) docked in its keyboard. Its absence means the one
+         * battery already described above, so the lists stay empty and every
+         * consumer of level/percentage carries on unchanged.
+         */
+        var all = [];
+
+        if (response.batteries instanceof Array) {
+            for (var i = 0; i < response.batteries.length; i++) {
+                var battery = response.batteries[i];
+
+                all.push({
+                    "name": battery.name,
+                    "role": battery.role,
+                    "label": __labelForRole(battery.role),
+                    "primary": battery.primary === true,
+                    "present": battery.present === true,
+                    "charging": battery.charging === true,
+                    "percentage": battery.percent_ui,
+                    "level": __levelForPercentage(battery.percent_ui)
+                });
+            }
         }
+
+        batteries = all;
+        auxBatteries = all.filter(function(battery) {
+            return !battery.primary && battery.present;
+        });
     }
 
     function handlePowerdUsbDockStatus(message) {

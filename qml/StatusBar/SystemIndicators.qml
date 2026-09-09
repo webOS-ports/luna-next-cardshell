@@ -177,6 +177,90 @@ Row {
         }
     }
 
+    /*
+     * One indicator per battery that is not the phone's own and is actually
+     * there: the PinePhone (Pro) keyboard's, while the phone is docked in it.
+     * The list is empty on every single-battery device, so the status bar looks
+     * exactly as it always did.
+     *
+     * Same indicator as the phone's own - same size, same icon, same style,
+     * including whatever AppTweaks has made of it - with the role's initial
+     * drawn over the cell. A shorter indicator with a badge beside it read as a
+     * lesser widget rather than as a second battery, and cost width the status
+     * bar does not have. BatteryIndicator only picks up the AppTweaks style on
+     * its change signal, so follow the phone's indicator rather than the
+     * defaults a freshly created one starts at.
+     */
+    Repeater {
+        id: auxBatteryIndicators
+
+        model: batteryService.auxBatteries
+
+        delegate: BatteryIndicator {
+            id: auxBatteryIndicator
+
+            readonly property var battery: modelData
+            readonly property string roleInitial: battery.label.charAt(0).toUpperCase()
+
+            anchors.top: indicatorsRow.top
+            anchors.bottom: indicatorsRow.bottom
+
+            level: battery.level
+            charging: battery.charging
+            percentage: battery.percentage
+
+            imageVisible: batteryIndicator.imageVisible
+            textVisible: batteryIndicator.textVisible
+
+            /*
+             * Where the initial goes depends on whether there is a cell to put
+             * it on. With one, it sits on it. With only a reading - the
+             * percentage-only style - centring it lands squarely on the digits,
+             * so it follows the reading instead. Making it part of the same
+             * string rather than a second item means it is the same size and
+             * colour by construction, and the indicator is wide enough for it
+             * without having to reach inside BaseIndicator for the width.
+             */
+            textValue: imageVisible ? (percentage + "%")
+                                    : (percentage + "% " + roleInitial)
+            textReferenceValue: imageVisible ? "100%" : ("100% " + roleInitial)
+
+            /*
+             * Sized and placed against the cell rather than against the
+             * indicator: with a reading above it the icon is drawn rotated and
+             * squashed into the lower part of the box, so an initial centred on
+             * the whole indicator at half its height stood well clear of the
+             * cell it is supposed to mark. Outlined so it stays legible over
+             * both the full and the empty part of the cell, and over the
+             * charging icon's lighter fill.
+             */
+            Text {
+                id: auxRoleBadge
+
+                readonly property real cellCenterY: auxBatteryIndicator.textVisible
+                                                    ? parent.height * 0.645
+                                                    : parent.height * 0.5
+                readonly property real cellSize: auxBatteryIndicator.textVisible
+                                                 ? parent.height * 0.20
+                                                 : parent.height * 0.45
+
+                visible: auxBatteryIndicator.imageVisible
+
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: cellCenterY - height / 2
+
+                text: auxBatteryIndicator.roleInitial
+
+                color: "white"
+                style: Text.Outline
+                styleColor: "black"
+                font.family: Settings.fontStatusBar
+                font.bold: true
+                font.pixelSize: Math.max(1, Math.round(cellSize))
+            }
+        }
+    }
+
     BatteryIndicator {
         id: batteryIndicator
 
