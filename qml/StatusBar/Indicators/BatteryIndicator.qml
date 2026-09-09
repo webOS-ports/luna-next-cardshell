@@ -33,6 +33,9 @@ BaseIndicator {
 
     imageSource: __getIconForBatteryLevel(level, charging)
     textValue: percentage + "%"
+    // Always as wide as a full charge reads, so the cell keeps one size and the
+    // indicators either side of it keep one position.
+    textReferenceValue: "100%"
     textColor: __getColorForBatteryLevel(level)
 
     Connections {
