@@ -274,10 +274,16 @@ Item {
 
         model: ListModel {
             id: launcherTabsModel
-            ListElement { text: "Apps" }
-            ListElement { text: "Downloads" }
-            ListElement { text: "Favorites" }
-            ListElement { text: "Prefs" }
+
+            // ListElement only takes literal values, so fill the model from the
+            // tab titles in LauncherTabs.js instead of spelling them out again
+            // here. This has to happen while the model is being created, the
+            // views below bind to its content already.
+            readonly property bool filled: {
+                for( var i = 0; i < LauncherTabs.DEFAULT_TABS.length; ++i )
+                    append({text: LauncherTabs.DEFAULT_TABS[i]});
+                return true;
+            }
 
             Component.onCompleted: fullLauncher.__syncAndroidTab();
         }
