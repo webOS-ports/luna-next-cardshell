@@ -35,13 +35,18 @@ Item {
     property string deviceLockMode: "none"
 
     // Fingerprint unlock, backed by com.webos.service.fingerprint
-    // (webos-fingerprint-adapter -> droidian-fpd -> Android biometrics HAL).
+    // (webos-fingerprint-adapter -> biomd -> Android biometrics HAL).
     // While the lockscreen is shown and fingerprints are enrolled we keep an
     // identify request pending; a match unlocks the display just like a
     // correct passcode. After maxFingerprintAttempts failed reads we stop
     // listening until the next lock, forcing the PIN/password path.
     property bool fingerprintAvailable: false
     property int fingerprintCount: 0
+    // See _scheduleBiometricStatusRetry(): whether the service has ever
+    // answered, and how many times we have asked since it last did.
+    property bool fingerprintServiceSeen: false
+    property int fingerprintStatusRetries: 0
+    readonly property int maxBiometricStatusRetries: 5
     property int fingerprintFailedAttempts: 0
     readonly property int maxFingerprintAttempts: 5
 
@@ -52,7 +57,12 @@ Item {
     // behaving the way they always did.
     property bool fingerprintUnlockEnabled: true
 
-    readonly property bool fingerprintActive: locked && fingerprintAvailable &&
+    // deviceLockMode "none" means the padlock swipe unlocks by itself (see
+    // padUnlock()), so there is no passcode for a biometric to stand in for.
+    // Arming the sensor there just holds the HAL awake for an unlock the user
+    // already gets for free.
+    readonly property bool fingerprintActive: locked && deviceLockMode !== "none" &&
+                                              fingerprintAvailable &&
                                               fingerprintUnlockEnabled &&
                                               fingerprintCount > 0 &&
                                               fingerprintFailedAttempts < maxFingerprintAttempts
@@ -147,6 +157,8 @@ Item {
     // factor; until it lands, face unlock should stay out of the default image.
     property bool faceAvailable: false
     property bool faceEnrolled: false
+    property bool faceServiceSeen: false
+    property int faceStatusRetries: 0
     property int faceFailedAttempts: 0
     readonly property int maxFaceAttempts: 5
 
@@ -162,7 +174,10 @@ Item {
     // screen, which is also when they are in front of the camera.
     property bool displayOn: true
 
-    readonly property bool faceActive: locked && displayOn && faceAvailable &&
+    // Same as fingerprintActive: nothing to stand in for without a passcode,
+    // and here it would hold the camera open as well.
+    readonly property bool faceActive: locked && deviceLockMode !== "none" &&
+                                       displayOn && faceAvailable &&
                                        faceUnlockEnabled && faceEnrolled &&
                                        faceFailedAttempts < maxFaceAttempts
     property var _faceIdentifyCall: null
@@ -438,6 +453,36 @@ Item {
             service.subscribe("luna://com.webos.service.faceunlock/getStatus", "{\"subscribe\":true}", handleFaceStatus, handleFaceStatusError);
         }
 
+        /*
+         * luneos-faced and webos-fingerprint-adapter are both optional: a
+         * device without the hardware simply does not ship them. A service
+         * that has never answered is therefore most likely not installed, and
+         * re-subscribing every 3s for the lifetime of the shell buys nothing
+         * while filling the journal with a pair of ls-hubd "service not
+         * listed" errors each time. Give those up after a few tries.
+         *
+         * One that HAS answered is a different case - it exists and is only
+         * restarting - so it keeps being retried indefinitely, which is what
+         * lets the lockscreen pick fingerprint unlock back up on its own.
+         */
+        function _scheduleBiometricStatusRetry(kind) {
+            if (kind === "face") {
+                if (!lockScreen.faceServiceSeen &&
+                    ++lockScreen.faceStatusRetries > lockScreen.maxBiometricStatusRetries) {
+                    console.log("faceunlock is not present on this device; stopping status retries");
+                    return;
+                }
+                faceStatusRetry.restart();
+            } else {
+                if (!lockScreen.fingerprintServiceSeen &&
+                    ++lockScreen.fingerprintStatusRetries > lockScreen.maxBiometricStatusRetries) {
+                    console.log("the fingerprint service is not present on this device; stopping status retries");
+                    return;
+                }
+                fingerprintStatusRetry.restart();
+            }
+        }
+
         function handleBiometricPreferences(message) {
             var response = JSON.parse(message.payload);
             if (response.enableFingerprintUnlock !== undefined)
@@ -450,9 +495,12 @@ Item {
             var response = JSON.parse(message.payload);
             if (response.returnValue === false) {
                 lockScreen.faceAvailable = false;
-                faceStatusRetry.restart();
+                _scheduleBiometricStatusRetry("face");
                 return;
             }
+            // It answered, so it is installed: retry it forever from here on.
+            lockScreen.faceServiceSeen = true;
+            lockScreen.faceStatusRetries = 0;
             lockScreen.faceAvailable = (response.available === true);
             lockScreen.faceEnrolled = (response.enrolled === true);
         }
@@ -460,7 +508,7 @@ Item {
         function handleFaceStatusError(message) {
             console.log("Face unlock service not available: " + message);
             lockScreen.faceAvailable = false;
-            faceStatusRetry.restart();
+            _scheduleBiometricStatusRetry("face");
         }
 
         function handleFingerprintStatus(message) {
@@ -470,9 +518,12 @@ Item {
                 // the adapter went away (e.g. it was restarted); retry so
                 // fingerprint unlock comes back on its own rather than staying
                 // dead until the next shell restart
-                fingerprintStatusRetry.restart();
+                _scheduleBiometricStatusRetry("fingerprint");
                 return;
             }
+            // It answered, so it is installed: retry it forever from here on.
+            lockScreen.fingerprintServiceSeen = true;
+            lockScreen.fingerprintStatusRetries = 0;
             lockScreen.fingerprintAvailable = (response.available === true);
             lockScreen.fingerprintCount = response.fingerprints ? response.fingerprints.length : 0;
         }
@@ -480,7 +531,7 @@ Item {
         function handleFingerprintStatusError(message) {
             console.log("Fingerprint service not available: " + message);
             lockScreen.fingerprintAvailable = false;
-            fingerprintStatusRetry.restart();
+            _scheduleBiometricStatusRetry("fingerprint");
         }
 
         function handleLockStatus(message) {
