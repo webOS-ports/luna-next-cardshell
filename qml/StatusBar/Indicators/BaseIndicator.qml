@@ -31,14 +31,48 @@ Item {
     property bool imageVisible: true
     property bool textVisible: false
 
+    /*
+     * The widest reading this indicator will ever show, e.g. "100%". The icon
+     * beside a reading is drawn from the indicator's width - rotated a quarter
+     * turn, so that width becomes the icon's height, and clipped to it - which
+     * means sizing to the live text redraws the icon at a different size every
+     * time the reading changes width. Two batteries then look like different
+     * hardware for no better reason than one reading 96% and the other 100%,
+     * and a single one changes shape on its way down from 100. Empty keeps the
+     * old behaviour of measuring whatever is currently shown.
+     */
+    property string textReferenceValue: ""
 
-    width: getIndicatorWidth(imageVisible, textVisible, indicatorImage.width, indicatorText.contentWidth)
+    TextMetrics {
+        id: referenceMetrics
+        font: indicatorText.font
+        text: indicatorRoot.textReferenceValue
+    }
+
+    readonly property real __textWidth: Math.max(indicatorText.contentWidth,
+                                                 textReferenceValue.length > 0
+                                                     ? referenceMetrics.width : 0)
+
+
+    width: getIndicatorWidth(imageVisible, textVisible, indicatorImage.width, __textWidth)
 
     function getIndicatorWidth(imageVisible, textVisible, indicatorImageWidth, indicatorTextWidth)
     {
         if (imageVisible){
             if (textVisible){
-                return Math.max(indicatorImageWidth, indicatorTextWidth)
+                /*
+                 * Not Math.max(indicatorImageWidth, ...): with the text shown
+                 * the image is stretched to this very width, so that asked the
+                 * binding about itself. width = max(width, contentWidth) holds
+                 * for every width at or above contentWidth, and which of them
+                 * it settled on came down to evaluation order - two indicators
+                 * running the same code landed on 41 and 65, and since the icon
+                 * is drawn centred while the reading is drawn from the left,
+                 * the wider one had its cell pushed out from under its digits.
+                 * The reading is the only measure here that does not depend on
+                 * the answer, and the icon is drawn to fit whatever it gives.
+                 */
+                return indicatorTextWidth;
             }
             else {
                 return indicatorImageWidth;
@@ -75,7 +109,10 @@ Item {
         font.family: Settings.fontStatusBar
         font.bold: !imageVisible
         text: textValue
-        font.pixelSize: imageVisible?((parent.height/2)*0.95):(parent.height*0.95);
+        // Text-only fills the bar on its own, so it does not need the height an
+        // icon-and-text pair splits between them. At 0.95 a single reading was
+        // already shouting; two of them side by side took a third of the bar.
+        font.pixelSize: imageVisible?((parent.height/2)*0.95):(parent.height*0.62);
         anchors.fill: indicatorRoot
         transform: [
             Rotation { origin.x: indicatorImage.width/2; origin.y: indicatorImage.height/2 }
@@ -101,10 +138,21 @@ Item {
             from: "visible"
             to: "hidden"
             SequentialAnimation {
+                /*
+                 * Fade only. Animating width assigns to it, and that drops the
+                 * width binding for good - after which the indicator keeps
+                 * whatever the animation left, and its icon and its reading are
+                 * laid out against a width that matches neither. Nor can the
+                 * binding simply be restored afterwards: indicatorImage.width
+                 * is itself bound to indicatorRoot.width whenever the text is
+                 * shown, so every width at or above contentWidth is a stable
+                 * fixed point and re-binding freezes the wrong one. The Row
+                 * skips an invisible item, so the collapse the width animation
+                 * used to draw is not needed for the item to get out of the way.
+                 */
                 ParallelAnimation {
                     NumberAnimation { target: indicatorImage; properties: "opacity"; from: 1.0; to: 0.0; duration: 200 }
                     NumberAnimation { target: indicatorText; properties: "opacity"; from: 1.0; to: 0.0; duration: 200 }
-                    NumberAnimation { target: indicatorRoot; properties: "width"; from: indicatorImage.width; to: 0; duration: 400 }
                 }
                 PropertyAction { target: indicatorRoot; properties: "visible"; value: false }
             }
@@ -117,7 +165,6 @@ Item {
                 ParallelAnimation {
                     NumberAnimation { target: indicatorImage; properties: "opacity"; from: 0.0; to: 1.0; duration: 200 }
                     NumberAnimation { target: indicatorText; properties: "opacity"; from: 0.0; to: 1.0; duration: 200 }
-                    NumberAnimation { target: indicatorRoot; properties: "width"; from: 0; to: indicatorImage.width; duration: 400 }
                 }
             }
         }
