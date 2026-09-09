@@ -17,12 +17,16 @@
 
 .pragma library
 
-// Titles of the launcher tabs this file has an opinion about. Of the four tabs
-// the launcher always shows (Apps, Downloads, Favorites, Prefs) only Android is
-// optional, see the showAndroidTab tweak.
+// Titles of the launcher tabs, in the order they are shown. Apps, Downloads,
+// Favorites and Prefs are always there, only Android is optional, see the
+// showAndroidTab tweak - it goes right after Apps when enabled.
 var APPS_TAB = "Apps";
+var DOWNLOADS_TAB = "Downloads";
+var FAVORITES_TAB = "Favorites";
 var PREFS_TAB = "Prefs";
 var ANDROID_TAB = "Android";
+
+var DEFAULT_TABS = [APPS_TAB, DOWNLOADS_TAB, FAVORITES_TAB, PREFS_TAB];
 
 // appinfo.json categories. LunaCE compares its settingsAppCategoryDesignator
 // (default "Settings") against an app's category with case sensitivity, so
