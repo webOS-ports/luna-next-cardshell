@@ -38,11 +38,29 @@ Item {
     property string notificationtoneFullPath: "/usr/palm/sounds/notification.wav"
     property string locale: "en_us"
 
+    /*
+     * How much larger or smaller than normal the interface is drawn.
+     *
+     * Read only from this side: the Accessibility panel writes the
+     * preference, and this mirrors it into the file LunaNext.Common's Units
+     * reads at startup. Units cannot read the preference itself - it is
+     * constructed by a QML plugin that every application loads before it
+     * draws anything, and a bus round trip there would be a startup cost
+     * paid by every application on the device.
+     *
+     * Nothing is re-laid-out here. Everything on screen has already asked
+     * Units how big a grid unit is; moving it underneath would leave half
+     * the screen at one size. The new value is what applications get the
+     * next time they start, which is what the panel tells the user.
+     */
+    property real uiScale: 1.0
+
     //
     // private
     //
 
     onRotationLockAngleChanged: systemService.setPreference("rotationLock", preferences.rotationLockAngle)
+    onUiScaleChanged: Units.persistUiScale(preferences.uiScale)
     onMuteSoundChanged: systemService.setPreference("muteSound", preferences.muteSound)
 
     LunaService {
@@ -50,7 +68,7 @@ Item {
 
         name: "com.webos.surfacemanager-cardshell"
 
-        property variant keysToWatch: ["wallpaper","airplaneMode","rotationLock","muteSound","ringtone","notificationtone","alerttone","locale"]
+        property variant keysToWatch: ["wallpaper","airplaneMode","rotationLock","muteSound","ringtone","notificationtone","alerttone","locale","uiScale"]
         property bool firstReadDone: false
 
         onInitialized: {
@@ -87,6 +105,9 @@ Item {
             }
             if (response.hasOwnProperty("notificationtone")) {
                 preferences.notificationtoneFullPath = response.notificationtone.fullPath;
+            }
+            if (response.hasOwnProperty("uiScale")) {
+                preferences.uiScale = response.uiScale;
             }
             if (response.hasOwnProperty("locale")) {
                 preferences.locale = response.locale.languageCode+"_"+response.locale.countryCode;
