@@ -202,9 +202,34 @@ Item {
             }
         }
 
+        /*
+         * The phone clock sits in the gap between the carrier name and the
+         * indicators, not across the whole bar.
+         *
+         * It used to be anchors.fill: parent with the text centred inside,
+         * so it was painted at the middle of the status bar with no idea
+         * where anything else was. On a tablet there is enough slack either
+         * side for that to look deliberate; on a 720 px phone the centre of
+         * the bar is already underneath the indicator block, so the time was
+         * drawn on top of the mute and wifi icons at the ordinary interface
+         * size, and on top of the carrier name as well once the interface
+         * was scaled up.
+         *
+         * The tablet has never had the problem because there the same
+         * component is loaded inside the systemIndicators Row, where it
+         * takes part in the layout and pushes the icons along. This gives
+         * the phone the equivalent: bounded on both sides by the things it
+         * must not cover.
+         */
         Loader {
             id: phoneTweaksClock
-            anchors.fill: parent
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.right: systemIndicatorsBoundingRect.left
+            anchors.rightMargin: Units.gu(0.5)
+            // Its natural width, so the carrier below can be told what is
+            // left rather than both of them guessing.
+            width: item ? item.implicitWidth : 0
             sourceComponent: !Settings.tabletUi? tweaksClock : undefined;
         }
 
@@ -216,7 +241,20 @@ Item {
             anchors.topMargin: parent.height * 0.25
             anchors.bottomMargin: parent.height * 0.25
             anchors.leftMargin: parent.height * 0.25
-            width: (background.width / 2) - Units.gu(3)
+            /*
+             * Half the bar on a tablet, as it always was. On a phone,
+             * whatever is left once the clock and the indicators have taken
+             * theirs - the carrier name is the one thing here that can be
+             * shortened without losing information, and it already elides.
+             *
+             * A fixed half is what made this collide: on a 720 px screen
+             * half the bar runs under the indicator block, so the clock had
+             * nowhere to be that was not on top of something, and scaling
+             * the interface up only moved the collision further left.
+             */
+            anchors.right: Settings.tabletUi ? undefined : phoneTweaksClock.left
+            anchors.rightMargin: Settings.tabletUi ? 0 : Units.gu(0.5)
+            width: Settings.tabletUi ? (background.width / 2) - Units.gu(3) : undefined
             visible: !appMenu.visible
 
             LunaService {
