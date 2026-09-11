@@ -47,12 +47,12 @@
             },
 			{
                 "group": "launcher",
-                "restart": "none",
+                "restart": "luna",
                 "label": "Show Android tab",
                 "help": "Show a separate launcher tab holding the Waydroid Android apps",
                 "key": "showAndroidTab",
                 "type": "ToggleButton",
-                "value": false
+                "value": true
             },
 			{
                 "group": "launcher",

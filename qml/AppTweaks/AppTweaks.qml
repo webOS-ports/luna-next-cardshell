@@ -134,7 +134,7 @@ Item {
         owner: appTweaks.owner
         serviceName: appTweaks.serviceName
         key: "showAndroidTab"
-        defaultValue: false
+        defaultValue: true
     }
 
 }
