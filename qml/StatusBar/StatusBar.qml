@@ -203,8 +203,8 @@ Item {
         }
 
         /*
-         * The phone clock sits in the gap between the carrier name and the
-         * indicators, not across the whole bar.
+         * The phone clock is centred in the status bar, but never under the
+         * indicator block.
          *
          * It used to be anchors.fill: parent with the text centred inside,
          * so it was painted at the middle of the status bar with no idea
@@ -215,18 +215,17 @@ Item {
          * size, and on top of the carrier name as well once the interface
          * was scaled up.
          *
-         * The tablet has never had the problem because there the same
-         * component is loaded inside the systemIndicators Row, where it
-         * takes part in the layout and pushes the icons along. This gives
-         * the phone the equivalent: bounded on both sides by the things it
-         * must not cover.
+         * So: centred when the middle of the bar is clear, and pushed left
+         * of the indicators when it is not. The carrier side needs no such
+         * clamp, because the carrier anchors to the clock's left edge and
+         * elides into whatever room remains.
          */
         Loader {
             id: phoneTweaksClock
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            anchors.right: systemIndicatorsBoundingRect.left
-            anchors.rightMargin: Units.gu(0.5)
+            x: Math.max(0, Math.min((background.width - width) / 2,
+                                    systemIndicatorsBoundingRect.x - Units.gu(0.5) - width))
             // Its natural width, so the carrier below can be told what is
             // left rather than both of them guessing.
             width: item ? item.implicitWidth : 0
