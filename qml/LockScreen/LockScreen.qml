@@ -20,6 +20,8 @@ import QtQuick 2.5
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
+import "../Connectors"
+
 Item {
     id: lockScreen
 
@@ -429,9 +431,12 @@ Item {
         id: service
         name: "com.webos.surfacemanager-cardshell"
         onInitialized: {
-            service.subscribe("luna://com.palm.systemmanager/getDeviceLockMode", "{\"subscribe\":true}", handleDeviceLockMode, handleError);
-            service.subscribe("luna://com.palm.display/control/lockStatus", "{\"subscribe\":true}", handleLockStatus, handleError);
-            service.subscribe("luna://com.palm.display/control/status", "{\"subscribe\":true}", handleDisplayStatus, handleError);
+            // com.palm.display and com.palm.systemmanager are subscribed from
+            // the ServiceStatus watches below instead of here: a plain
+            // subscribe() is established once and dies with the provider, so
+            // restarting LunaDisplayManager left the shell with a dead
+            // lockStatus subscription. It then never heard about another lock
+            // or unlock - no padlock, and no way back short of a reboot.
             service.subscribe("luna://com.palm.systemservice/getPreferences",
                               "{\"keys\":[\"enableFingerprintUnlock\",\"enableFaceUnlock\"],\"subscribe\":true}",
                               handleBiometricPreferences, handleError);
@@ -443,6 +448,15 @@ Item {
             // camera; elsewhere this subscription simply fails and
             // faceAvailable stays false.
             subscribeFaceStatus();
+        }
+
+        function subscribeDisplayStatus() {
+            service.subscribe("luna://com.palm.display/control/lockStatus", "{\"subscribe\":true}", handleLockStatus, handleError);
+            service.subscribe("luna://com.palm.display/control/status", "{\"subscribe\":true}", handleDisplayStatus, handleError);
+        }
+
+        function subscribeDeviceLockMode() {
+            service.subscribe("luna://com.palm.systemmanager/getDeviceLockMode", "{\"subscribe\":true}", handleDeviceLockMode, handleError);
         }
 
         function subscribeFingerprintStatus() {
@@ -577,6 +591,25 @@ Item {
             console.log("Service error: " + message);
         }
     }
+
+    // The display manager and the auth manager can both restart under a
+    // running shell. LunaService.subscribe() binds to the provider that
+    // answered, so those subscriptions have to be re-established every time
+    // the service comes back, not once at startup.
+    ServiceStatus {
+        id: displayServiceStatus
+        serviceName: "com.palm.display"
+        onConnected: service.subscribeDisplayStatus()
+        onDisconnected: console.warn("LockScreen: lost com.palm.display, will resubscribe when it returns")
+    }
+
+    ServiceStatus {
+        id: systemManagerServiceStatus
+        serviceName: "com.palm.systemmanager"
+        onConnected: service.subscribeDeviceLockMode()
+        onDisconnected: console.warn("LockScreen: lost com.palm.systemmanager, will resubscribe when it returns")
+    }
+
 
     state: "none"
     states: [
