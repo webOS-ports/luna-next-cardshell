@@ -43,5 +43,14 @@ Item {
             anchors.fill: parent
             z: 1 // above the main shell
         }
+
+        // Listens to powerd itself, so it covers every way the device can be
+        // powered off, not just the shell's own power menu.
+        ShutdownScreen {
+            id: shutdownScreen
+
+            anchors.fill: parent
+            z: 2 // above the main shell and the boot screen
+        }
     }
 }
