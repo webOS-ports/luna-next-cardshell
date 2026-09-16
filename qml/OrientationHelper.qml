@@ -185,7 +185,17 @@ Item {
         rotationLock = lock;
     }
 
+    // Map a raw gesture position into this item's coordinate system.
+    //
+    // GestureHandler (LunaNext.Shell) reports touchPoint.screenPos(), i.e. a
+    // position in the window's own, unrotated space. Mapping it from our parent
+    // would skip every transform above it - including the output rotation that
+    // surface-manager applies to its views (compositorWindow.outputRotation, the
+    // "r" of com.webos.surfacemanager.compositorGeometry). On a panel mounted a
+    // quarter turn off, such as the MP01 (r270), that put taps on the wrong
+    // side or off screen. Mapping from global coordinates applies the whole
+    // chain: that rotation as well as our own sensor rotation.
     function convertRawPos(pos) {
-        return mapFromItem(parent, pos.x, pos.y);
+        return mapFromGlobal(pos.x, pos.y);
     }
 }
