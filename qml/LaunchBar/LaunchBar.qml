@@ -25,9 +25,13 @@ import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
 
 import "../LunaSysAPI" as LunaSysAPI
+import "../AppTweaks"
 
 Item {
     id: launchBarItem
+
+    // See AppTweaks.disableAnimations: instant on an E Ink panel.
+    readonly property int animationDuration: AppTweaks.disableAnimations ? 0 : 150
 
 
     property ListModel appsModel
@@ -66,9 +70,9 @@ Item {
         Transition {
             to: "hidden"
 
-            AnchorAnimation { easing.type:Easing.InOutQuad; duration: 150 }
+            AnchorAnimation { easing.type:Easing.InOutQuad; duration: launchBarItem.animationDuration }
             SequentialAnimation {
-                NumberAnimation { property: "opacity"; duration: 150 }
+                NumberAnimation { property: "opacity"; duration: launchBarItem.animationDuration }
                 PropertyAction { property: "visible" }
             }
         },
@@ -78,8 +82,8 @@ Item {
             SequentialAnimation {
                 PropertyAction { property: "visible" }
                 ParallelAnimation {
-                    AnchorAnimation { easing.type:Easing.InOutQuad; duration: 150 }
-                    NumberAnimation { property: "opacity"; duration: 150 }
+                    AnchorAnimation { easing.type:Easing.InOutQuad; duration: launchBarItem.animationDuration }
+                    NumberAnimation { property: "opacity"; duration: launchBarItem.animationDuration }
                 }
             }
         }
@@ -214,7 +218,7 @@ Item {
                 width: launchBarListView.spacing/2
             }
             moveDisplaced: Transition {
-                NumberAnimation { properties: "x"; duration: 200 }
+                NumberAnimation { properties: "x"; duration: AppTweaks.disableAnimations ? 0 : 200 }
             }
         }
 

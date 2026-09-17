@@ -21,6 +21,7 @@ import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
 
 import "../Utils"
+import "../AppTweaks"
 
 Item {
     id: cardDelegateContainer
@@ -42,7 +43,7 @@ Item {
     property bool isCurrentCard
 
     property real cornerRadius: 20
-    property real animationDuration: 100
+    property real animationDuration: AppTweaks.disableAnimations ? 0 : 100
 
     /* Advertise the wrapped window that the screen size has changed.
      * Defer the sync so the new geometry has propagated down to the
