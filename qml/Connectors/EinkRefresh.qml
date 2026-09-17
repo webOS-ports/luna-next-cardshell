@@ -51,15 +51,13 @@ Item {
     // Frames within burstWindow ms that count as "moving"; ms without a frame
     // that count as "still".
     //
-    // Both err towards staying fast. Entering the fast waveform is silent, but
-    // coming back to a greyscale one is a double clearing flash on the panel
-    // (measured: 4->2 and 3->2 both flash, 2->4 and 2->3 do not), so the
-    // return has to be rare and worth it: a keystroke or a 100 ms card
-    // animation must not start a trip, and the pauses inside a scroll-and-read
-    // session must not end one. Six frames in a quarter second is sustained
-    // motion. Half a second without a frame is the return: chosen on the MP01
-    // by eye - longer felt sluggish, and the flash that follows doubles as
-    // the ghost clean an e-reader does at that point.
+    // Auto's pair, 1 and 4, hands over silently in both directions (measured
+    // on the MP01: only entering waveform 2 flashes, which is why auto does
+    // not rest there), so the thresholds are about not wasting trips rather
+    // than about flashes: a keystroke or a 100 ms card animation must not
+    // start one. Six frames in a quarter second is sustained motion; half a
+    // second without a frame is the return, chosen by eye - longer felt
+    // sluggish.
     property int burstFrames: 6
     property int burstWindow: 250
     property int idleTime: 500
