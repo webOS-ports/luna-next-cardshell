@@ -57,11 +57,12 @@ Item {
     // return has to be rare and worth it: a keystroke or a 100 ms card
     // animation must not start a trip, and the pauses inside a scroll-and-read
     // session must not end one. Six frames in a quarter second is sustained
-    // motion; two seconds without a frame is a real pause - and the flash
-    // that follows doubles as the ghost clean an e-reader does at that point.
+    // motion. Half a second without a frame is the return: chosen on the MP01
+    // by eye - longer felt sluggish, and the flash that follows doubles as
+    // the ghost clean an e-reader does at that point.
     property int burstFrames: 6
     property int burstWindow: 250
-    property int idleTime: 2000
+    property int idleTime: 500
 
     // What the service was last told.
     property bool active: false
