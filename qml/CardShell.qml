@@ -193,15 +193,14 @@ Rectangle {
         value: einkRefresh.available
     }
 
+    // Centred, unlike the power menu: it is opened by a hardware key, not by a
+    // tap in the status bar's corner, so there is no corner to hang it off.
     EinkRefreshMenu {
         id: einkRefreshMenu
         eink: einkRefresh
         z: 800
 
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.topMargin: Units.gu(5)
-        anchors.rightMargin: Units.gu(1)
+        anchors.centerIn: parent
 
         width: parent.width * 0.6
     }
