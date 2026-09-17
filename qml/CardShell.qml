@@ -19,6 +19,7 @@
  */
 
 import QtQuick 2.0
+import QtQuick.Window 2.0
 import LuneOS.Components 1.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
@@ -117,8 +118,19 @@ Rectangle {
         fingerSize: Units.gu(5)
         minimalFlickLength: Units.gu(10)
         timeout: 2000
-        height: orientationHelper.height
-        width: orientationHelper.width
+        // The recognizer (LunaNext.Shell GestureHandler) classifies screen-edge
+        // flicks from touchPoint.screenPos(), a position in the window's own
+        // unrotated space, against this item's width and height. Under a
+        // compositor output rotation (compositorWindow.outputRotation, the "r"
+        // of compositorGeometry - the Pixel Tablet is a 1600x2560 panel shown
+        // r270) the scene is 2560x1600 while the window stays 1600x2560, so
+        // sized from orientationHelper the bottom edge sat 960 px off the panel
+        // and no bottom-edge flick was ever recognized: the gesture area was
+        // dead in landscape. Size from the window, the space the raw positions
+        // are in; the mapped position below is then classified against the
+        // scene, which is orientationHelper's space.
+        height: Window.height
+        width: Window.width
 
         signal screenEdgeFlickEdgeLeft(bool timeout,point pos)
         signal screenEdgeFlickEdgeRight(bool timeout, point pos)
@@ -146,11 +158,11 @@ Rectangle {
             case GestureHandler.ScreenEdgeFlickGesture:
                 if (screenPos.y < fingerSize) {
                     screenEdgeFlickEdgeTop(timeout, screenPos);
-                } else if (screenPos.y > gestureHandler.height - fingerSize) {
+                } else if (screenPos.y > orientationHelper.height - fingerSize) {
                     screenEdgeFlickEdgeBottom(timeout, screenPos);
                 } else if (screenPos.x < fingerSize) {
                     screenEdgeFlickEdgeLeft(timeout, screenPos);
-                } else if (screenPos.x > gestureHandler.width - fingerSize) {
+                } else if (screenPos.x > orientationHelper.width - fingerSize) {
                     screenEdgeFlickEdgeRight(timeout, screenPos);
                 }
                 break;
