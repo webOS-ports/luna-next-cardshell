@@ -175,6 +175,37 @@ Rectangle {
         width: parent.width * 0.6
     }
 
+    // E Ink refresh control (MP01): the connector feeds screen activity to the
+    // service and relays its key; the menu is what a long press of that key
+    // opens. Both are inert on a device without the service.
+    EinkRefresh {
+        id: einkRefresh
+        onMenuRequested: einkRefreshMenu.show()
+    }
+
+    // An E Ink panel flashes for every large greyscale update, so the shell's
+    // animations - each a run of such updates - are cut to instant changes on
+    // one. The flag lives in AppTweaks so the animation sites need no idea of
+    // where it comes from, and so a user can set it on any device.
+    Binding {
+        target: AppTweaks
+        property: "einkPanel"
+        value: einkRefresh.available
+    }
+
+    EinkRefreshMenu {
+        id: einkRefreshMenu
+        eink: einkRefresh
+        z: 800
+
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: Units.gu(5)
+        anchors.rightMargin: Units.gu(1)
+
+        width: parent.width * 0.6
+    }
+
     CardsArea {
         id: cardsArea
         anchors.fill: parent
