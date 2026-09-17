@@ -55,12 +55,15 @@ Item {
     // on the MP01: only entering waveform 2 flashes, which is why auto does
     // not rest there), so the thresholds are about not wasting trips rather
     // than about flashes: a keystroke or a 100 ms card animation must not
-    // start one. Six frames in a quarter second is sustained motion; half a
-    // second without a frame is the return, chosen by eye - longer felt
-    // sluggish.
+    // start one. Six frames in a quarter second is sustained motion. One
+    // second without a frame is the return: the panel redraws what the fast
+    // waveform drew once, properly, on the way back - unavoidable - but at
+    // half a second the scroll indicator's fade-out (~0.45-0.65 s after the
+    // last movement) landed after the switch and was drawn with the slow
+    // waveform, a second, avoidable flash. Longer felt sluggish.
     property int burstFrames: 6
     property int burstWindow: 250
-    property int idleTime: 500
+    property int idleTime: 1000
 
     // What the service was last told.
     property bool active: false
