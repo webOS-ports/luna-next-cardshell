@@ -40,10 +40,25 @@ Item {
     property alias tabIndicatorNumberTweakValue: tabIndicatorNumberTweak.value
     property alias androidTabTweakValue: androidTabTweak.value
     property alias newDeviceMenuTweakValue: newDeviceMenuTweak.value
+    property alias disableAnimationsTweakValue: disableAnimationsTweak.value
+
+    // Set by CardShell when org.webosports.service.eink reports an E Ink
+    // panel. Such a panel flashes for every large greyscale update, and a
+    // shell animation is a run of them, so animations are off there whether
+    // or not the user asked - the tweak is for everyone else.
+    property bool einkPanel: false
+    readonly property bool disableAnimations: einkPanel || disableAnimationsTweakValue === true
 
     //// tweak definitions
 
     // CardShell
+    Tweak {
+        id: disableAnimationsTweak
+        owner: appTweaks.owner
+        serviceName: appTweaks.serviceName
+        key: "disableAnimations"
+        defaultValue: false
+    }
     Tweak {
         id: showTapRippleTweak
         owner: appTweaks.owner

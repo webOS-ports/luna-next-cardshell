@@ -185,7 +185,7 @@ Item {
         highlightRangeMode: ListView.ApplyRange
         preferredHighlightBegin: AppTweaks.tabIndicatorNumberTweakValue === "default" ? width/2 - Units.gu(10) : 0;
         preferredHighlightEnd: AppTweaks.tabIndicatorNumberTweakValue === "default" ? width/2 + Units.gu(10) : tabRowList.width;
-        highlightMoveDuration: 500
+        highlightMoveDuration: AppTweaks.disableAnimations ? 0 : 500
         highlightMoveVelocity: -1
 
         snapMode: ListView.SnapOneItem
@@ -360,7 +360,9 @@ Item {
         preferredHighlightEnd: width
         highlightRangeMode: ListView.StrictlyEnforceRange
         highlightFollowsCurrentItem: true
-        highlightMoveDuration: 300
+        // Instant on E Ink: a 300 ms slide is a dozen full-screen greyscale
+        // updates, each of which the panel flashes for (see AppTweaks.disableAnimations).
+        highlightMoveDuration: AppTweaks.disableAnimations ? 0 : 300
         onCurrentIndexChanged: tabRowList.currentIndex = currentIndex
 
         model: tabRowList.model
@@ -434,7 +436,7 @@ Item {
                 cellHeight: fullLauncher.cellHeight
 
                 moveDisplaced: Transition {
-                    NumberAnimation { properties: "x, y"; duration: 200 }
+                    NumberAnimation { properties: "x, y"; duration: AppTweaks.disableAnimations ? 0 : 200 }
                 }
 
                 /* Drop areas of the grid */
