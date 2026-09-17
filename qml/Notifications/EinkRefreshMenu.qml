@@ -40,20 +40,23 @@ Item {
         root.visible = true;
     }
 
+    // The background fills the item and the column is centred in it, so the
+    // visible box is exactly where the item is placed - PowerMenu centres its
+    // background on a top-left-anchored column instead, which puts the box
+    // half a margin up and left of the item, invisible in a corner but not
+    // when centred on the screen.
     Rectangle {
         radius: 10
         color: "black"
         opacity: 0.8
-        anchors.centerIn: menuColumn
-        width: root.width
-        height: root.height
+        anchors.fill: parent
     }
 
     Column {
         id: menuColumn
         property real buttonsHeight: Units.gu(4)
 
-        anchors.top: root.top
+        anchors.centerIn: parent
         width: root.width - contentMargin
 
         Text {
