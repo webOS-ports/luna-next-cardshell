@@ -133,7 +133,7 @@ Item {
             if (response.returnValue === true
                     && response.hasOwnProperty("clientId")) {
                 root.shutdownClientId = response.clientId;
-                console.log("ShutdownScreen: registered with powerd as "
+                console.warn("ShutdownScreen: registered with powerd as "
                             + response.clientId);
                 return;
             }
@@ -141,14 +141,14 @@ Item {
             /* Anything else on this subscription is the hub telling us the
                registration is gone (sleepd stopped or restarted). Forget the
                id and register again once it is back. */
-            console.log("ShutdownScreen: powerd registration dropped: "
+            console.warn("ShutdownScreen: powerd registration dropped: "
                         + message.payload);
             root.shutdownClientId = "";
             reregisterTimer.restart();
         }
 
         function handleRegisterError(message) {
-            console.log("ShutdownScreen: could not register with powerd: "
+            console.warn("ShutdownScreen: could not register with powerd: "
                         + message);
             root.shutdownClientId = "";
             reregisterTimer.restart();
@@ -160,18 +160,18 @@ Item {
             /* The addmatch reply carries returnValue; the signal does not. */
             if (response.hasOwnProperty("returnValue")) {
                 if (response.returnValue !== true)
-                    console.log("ShutdownScreen: shutdown signal watch failed: "
+                    console.warn("ShutdownScreen: shutdown signal watch failed: "
                                 + message.payload);
                 return;
             }
 
-            console.log("ShutdownScreen: shutdown starting, showing animation");
+            console.warn("ShutdownScreen: shutdown starting, showing animation");
             root.start();
             ackTimer.restart();
         }
 
         function handleError(message) {
-            console.log("ShutdownScreen: bus error: " + message);
+            console.warn("ShutdownScreen: bus error: " + message);
         }
 
         function ack() {
