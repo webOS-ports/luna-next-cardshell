@@ -42,6 +42,22 @@ import "Utils"
  * deliberately short: long enough for a revolution of the spinner to be seen,
  * far short of sleepd's "Shutdown apps timed out". If the service is missing
  * or the call fails, nothing registers and shutdown behaves exactly as before.
+ *
+ * Two bus channels are involved, and they must not be confused:
+ *
+ *  - shutdownApplicationsRegister is a subscription whose only reply is the
+ *    registration itself ({clientId, returnValue:true}). sleepd never pushes
+ *    anything else on it. What it does push is the hub's cancel notice when
+ *    sleepd goes away ({returnValue:false, ...}) - every sleepd restart, for
+ *    instance. Treating "anything after the registration" as a shutdown put
+ *    the orb on screen with nothing going down behind it, which looks exactly
+ *    like a device stuck shutting down and gets it hard-reset.
+ *
+ *  - The real notification is the shutdownApplications *signal* on the
+ *    /shutdown category, broadcast by sleepd's state machine once shutdown
+ *    begins. That is what starts the animation. Its payload is {} and carries
+ *    no returnValue, which is how it is told apart from the addmatch reply
+ *    that arrives on the same subscription.
  */
 Item {
     id: root
@@ -92,23 +108,60 @@ Item {
         name: "com.webos.surfacemanager-cardshell"
 
         onInitialized: {
+            /* The signal is what matters; register second so sleepd waits
+               for our ack before tearing things down. */
+            shutdownWatch.subscribe(
+                "luna://com.palm.bus/signal/addmatch",
+                JSON.stringify({ "category": "/shutdown",
+                                 "method": "shutdownApplications" }),
+                handleShutdownSignal, handleError);
+            register();
+        }
+
+        function register() {
+            root.shutdownClientId = "";
             shutdownWatch.subscribe(
                 "luna://com.webos.service.sleep/shutdown/shutdownApplicationsRegister",
                 JSON.stringify({ "clientName": "com.webos.surfacemanager-cardshell",
                                  "subscribe": true }),
-                handleShutdownMessage, handleError);
+                handleRegisterMessage, handleRegisterError);
         }
 
-        function handleShutdownMessage(message) {
+        function handleRegisterMessage(message) {
             var response = JSON.parse(message.payload);
 
-            /* The registration reply carries our client id; the shutdown
-               notification that follows later is the one to act on. */
-            if (response.hasOwnProperty("clientId")
-                    && root.shutdownClientId === "") {
+            if (response.returnValue === true
+                    && response.hasOwnProperty("clientId")) {
                 root.shutdownClientId = response.clientId;
                 console.log("ShutdownScreen: registered with powerd as "
                             + response.clientId);
+                return;
+            }
+
+            /* Anything else on this subscription is the hub telling us the
+               registration is gone (sleepd stopped or restarted). Forget the
+               id and register again once it is back. */
+            console.log("ShutdownScreen: powerd registration dropped: "
+                        + message.payload);
+            root.shutdownClientId = "";
+            reregisterTimer.restart();
+        }
+
+        function handleRegisterError(message) {
+            console.log("ShutdownScreen: could not register with powerd: "
+                        + message);
+            root.shutdownClientId = "";
+            reregisterTimer.restart();
+        }
+
+        function handleShutdownSignal(message) {
+            var response = JSON.parse(message.payload);
+
+            /* The addmatch reply carries returnValue; the signal does not. */
+            if (response.hasOwnProperty("returnValue")) {
+                if (response.returnValue !== true)
+                    console.log("ShutdownScreen: shutdown signal watch failed: "
+                                + message.payload);
                 return;
             }
 
@@ -118,8 +171,7 @@ Item {
         }
 
         function handleError(message) {
-            console.log("ShutdownScreen: could not register with powerd: "
-                        + message);
+            console.log("ShutdownScreen: bus error: " + message);
         }
 
         function ack() {
@@ -130,6 +182,14 @@ Item {
                 JSON.stringify({ "clientId": root.shutdownClientId }),
                 undefined, handleError);
         }
+    }
+
+    /* sleepd restarted underneath us: give it a moment to come back up. */
+    Timer {
+        id: reregisterTimer
+        interval: 3000
+        repeat: false
+        onTriggered: shutdownWatch.register()
     }
 
     Timer {
