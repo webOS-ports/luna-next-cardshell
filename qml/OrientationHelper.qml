@@ -26,8 +26,24 @@ Item {
         id: preferences
     }
 
+    // Whether com.palm.display reports the panel as lit. Starts true so a
+    // shell that comes up before the display manager answers behaves as
+    // before; the subscription below corrects it on the first reply.
+    property bool displayOn: true
+
     OrientationSensor {
         id: sensor
+
+        // Rotation only matters while the screen is on. sensorfwd keeps the
+        // accelerometer streaming in the SLPI for as long as this channel is
+        // running, and on Halium every sample is an ADSP glink interrupt plus
+        // an IPCRTR_lpass_rx wakeup (~10/s on the Pixel 3a, day and night).
+        // luna-displaymanager already stops its ALS channel when it blanks
+        // the screen; this was the last always-on UI sensor client. Bind the
+        // sensor to the display state instead of start()ing it once: the
+        // channel stops with the screen and comes back, with a fresh
+        // reading, when it is lit again.
+        active: orientationHelperItem.displayOn
 
         property int sensorOrientationAngle: 0
 
@@ -132,7 +148,30 @@ Item {
     LunaService {
         id: webAppMgrService
         name: "com.webos.surfacemanager-cardshell"
-        onInitialized: orientationHelperItem.publishOrientation()
+        onInitialized: {
+            orientationHelperItem.publishOrientation();
+            webAppMgrService.subscribe("luna://com.palm.display/control/status",
+                                       JSON.stringify({"subscribe": true}),
+                                       orientationHelperItem.handleDisplayStatus,
+                                       function (error) {
+                                           console.warn("OrientationHelper: display status subscription failed: " + JSON.stringify(error));
+                                       });
+        }
+    }
+
+    // The first reply carries "state" ("on", "dimmed", "off", ...); later
+    // pushes carry only "event": displayOn, displayDimmed, displayOff, plus
+    // blockedDisplay/unblockedDisplay and the like, which say nothing about
+    // the panel. Only "off" releases the sensor: "dimmed" still shows the
+    // UI. Anything else leaves the current value alone.
+    function handleDisplayStatus(message) {
+        var response = JSON.parse(message.payload);
+        if (response.state !== undefined)
+            displayOn = (response.state !== "off");
+        else if (response.event === "displayOff")
+            displayOn = false;
+        else if (response.event === "displayOn" || response.event === "displayDimmed")
+            displayOn = true;
     }
 
     states: [
@@ -170,10 +209,6 @@ Item {
             }
         }
     ]
-
-    Component.onCompleted: {
-        sensor.start();
-    }
 
     function setOrientation(angle) {
         if (locked) return;
