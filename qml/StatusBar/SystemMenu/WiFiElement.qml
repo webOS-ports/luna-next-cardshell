@@ -33,6 +33,7 @@ Drawer {
     TechnologyModel {
         id: wifiList
         name: "wifi"
+        filter: TechnologyModel.SavedServices
     }
 
     UserAgent {
