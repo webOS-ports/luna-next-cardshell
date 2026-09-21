@@ -41,10 +41,29 @@ MenuListEntry {
         onTriggered: updateBrightness()
     }
 
+    // True while the user has the slider under a finger. The poll must not write
+    // setValue in that window: Slider.updateBarValue() works *from* the current
+    // setValue - a tap on the rail steps railChangeStep away from it, and a drag
+    // is only emitted at all when the computed value differs from it - so a poll
+    // landing mid-gesture either jerks the handle back or makes the gesture a
+    // no-op that never reaches the display manager. That is what made this
+    // slider look like it sometimes does nothing while the one in the Settings
+    // app always works; Settings has no poll.
+    readonly property bool userIsAdjusting: brightnessSlider.mouseDownOnHandle
+                                         || brightnessSlider.mouseDownOnBar
+
     function updateBrightness() {
+        if (userIsAdjusting)
+            return;
+
         service.call("luna://com.palm.display/control/getProperty",
                      JSON.stringify({"properties":["maximumBrightness"]}),
                      function(message) {
+                         // Checked again on the way back, not only before the
+                         // call: the gesture can start while the request is in
+                         // flight, and it is the write below that does the harm.
+                         if (userIsAdjusting)
+                             return;
                          var response = JSON.parse(message.payload);
                          if (!response.maximumBrightness)
                              return;
