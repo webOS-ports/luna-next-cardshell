@@ -31,54 +31,45 @@ MenuListEntry {
     property int margin: 0
     property int spacing: Units.gu(0.5)
 
-    // Right now com.palm.display has no subscription support for the maximumBrightness
-    // property and therefor our only way to update it when it changes for example through
-    // the settings app is polling ...
-    Timer {
-        repeat: true
-        running: true
-        interval: 15000
-        onTriggered: updateBrightness()
-    }
-
-    // True while the user has the slider under a finger. The poll must not write
-    // setValue in that window: Slider.updateBarValue() works *from* the current
-    // setValue - a tap on the rail steps railChangeStep away from it, and a drag
-    // is only emitted at all when the computed value differs from it - so a poll
-    // landing mid-gesture either jerks the handle back or makes the gesture a
-    // no-op that never reaches the display manager. That is what made this
-    // slider look like it sometimes does nothing while the one in the Settings
-    // app always works; Settings has no poll.
+    // True while the user has the slider under a finger. The subscription must
+    // not write setValue in that window: Slider.updateBarValue() works *from* the
+    // current setValue - a tap on the rail steps railChangeStep away from it, and
+    // a drag is only emitted at all when the computed value differs from it - so
+    // a value landing mid-gesture either jerks the handle back or makes the
+    // gesture a no-op that never reaches the display manager.
+    //
+    // This matters more with a subscription than it did with the old poll: the
+    // writes the drag itself makes come straight back to us as posts, so without
+    // this guard the slider would fight its own echo on every drag.
     readonly property bool userIsAdjusting: brightnessSlider.mouseDownOnHandle
                                          || brightnessSlider.mouseDownOnBar
 
-    function updateBrightness() {
-        if (userIsAdjusting)
-            return;
-
-        service.call("luna://com.palm.display/control/getProperty",
-                     JSON.stringify({"properties":["maximumBrightness"]}),
+    // com.palm.display posts maximumBrightness to subscribers now, so the menu
+    // follows a change made elsewhere - the Settings app, or the ALS - as it
+    // happens. This replaced a 15 s poll, which was the only way to notice such
+    // a change before and which fought the user's own gesture whenever it
+    // happened to fire mid-drag.
+    function subscribeBrightness() {
+        service.subscribe("luna://com.palm.display/control/getProperty",
+                     JSON.stringify({"properties":["maximumBrightness"], "subscribe":true}),
                      function(message) {
-                         // Checked again on the way back, not only before the
-                         // call: the gesture can start while the request is in
-                         // flight, and it is the write below that does the harm.
-                         if (userIsAdjusting)
-                             return;
                          var response = JSON.parse(message.payload);
-                         if (!response.maximumBrightness)
+                         if (!response.hasOwnProperty("maximumBrightness"))
+                             return;
+                         if (userIsAdjusting)
                              return;
                          var newValue = response.maximumBrightness / 100;
                          brightnessValue = Math.max(0.0, Math.min(newValue, 1.0));
                      },
                      function(error) {
-                         console.log("Could not retrieve maximum brightness from display manager: " + error);
+                         console.log("Could not subscribe to maximum brightness from display manager: " + error);
                      });
     }
 
     LunaService {
         id: service
         name: "com.webos.surfacemanager-cardshell"
-        onInitialized: updateBrightness()
+        onInitialized: subscribeBrightness()
     }
 
     content:
