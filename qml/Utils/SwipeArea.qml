@@ -18,10 +18,15 @@ MouseArea {
     property real _velocityY: 0
     property var _timeStamp
     property bool _swipeInitiated: false
+    // Where the finger went down, for the distance fallback in onReleased.
+    property real _startX: 0
+    property real _startY: 0
 
     onPressed: (mouse) => {
         _pressedX = mouse.x;
         _pressedY = mouse.y;
+        _startX = mouse.x;
+        _startY = mouse.y;
         _timeStamp = Date.now();
 
         // we manage this event
@@ -68,6 +73,24 @@ MouseArea {
         if( 10/diffTime < swipeVelocityThreshold ) {
             _velocityX = 0;
             _velocityY = 0;
+
+            // The finger paused before lifting, so the release velocity is
+            // zero - but a pause at the end of a deliberate swipe is natural,
+            // and dropping it made the back gesture feel unreliable. Judge by
+            // the whole distance travelled instead.
+            var totalX = mouse.x - _startX;
+            var totalY = mouse.y - _startY;
+            var minX = Math.min(width * 0.25, 200);
+            if( Math.abs(totalX) >= Math.abs(totalY) && Math.abs(totalX) > minX ) {
+                if( totalX > 0 ) swipeRightGesture(mouse.modifiers);
+                else swipeLeftGesture(mouse.modifiers);
+                return;
+            }
+            if( Math.abs(totalY) > Math.abs(totalX) && Math.abs(totalY) > 150 ) {
+                if( totalY > 0 ) swipeDownGesture(mouse.modifiers);
+                else swipeUpGesture(mouse.modifiers);
+                return;
+            }
         }
 
         if( Math.abs(_velocityX) > swipeVelocityThreshold || Math.abs(_velocityY) > swipeVelocityThreshold ) {
