@@ -86,9 +86,14 @@ Item {
                 lCurrentActiveWindow.userData.windowState !== WindowState.Carded);
     }
 
+    // LunaSysMgr played "appclose" whenever a card was thrown away
+    // (CardWindowManager, lunaSystemSoundAppClose).
+    FeedbackSound { id: appCloseSound }
+
     function removeCard(window) {
         console.log("CardView.removeCard(" + window +"): calling closeWindow");
         compositorInstance.closeWindow(window);
+        appCloseSound.play("appclose");
     }
 
     function setCurrentCard(window) {
