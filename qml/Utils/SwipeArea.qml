@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import LunaNext.Common 0.1
 
 MouseArea {
     id: swipeArea
@@ -12,21 +13,39 @@ MouseArea {
 
     property real swipeVelocityThreshold: 0.2  /* pixels per ms */
 
+    /* A finger that pauses before lifting releases at zero velocity, so such a
+       gesture is judged by the distance it travelled since the press instead.
+       This is a finger distance, so it is expressed in grid units and scales
+       with the screen like the shell's other gesture lengths (compare
+       GestureHandler.minimalFlickLength, Units.gu(10)). */
+    property real swipeDistanceThreshold: Units.gu(25)
+
+    /* A SwipeArea narrower than swipeDistanceThreshold could never satisfy it
+       horizontally, so sideways gestures ask for at most this fraction of the
+       width. There is deliberately no vertical equivalent: the gesture area is
+       a short bar the finger leaves almost immediately, so its height says
+       nothing about the distance available. */
+    property real swipeDistanceWidthFraction: 0.25
+
     property real _pressedX: 0
     property real _pressedY: 0
+    /* Where the finger went down. _pressedX/_pressedY follow it while it moves,
+       so they cannot serve as the origin of the gesture. */
+    property real _startX: 0
+    property real _startY: 0
     property real _velocityX: 0
     property real _velocityY: 0
     property var _timeStamp
     property bool _swipeInitiated: false
-    // Where the finger went down, for the distance fallback in onReleased.
-    property real _startX: 0
-    property real _startY: 0
 
     onPressed: (mouse) => {
         _pressedX = mouse.x;
         _pressedY = mouse.y;
         _startX = mouse.x;
         _startY = mouse.y;
+        // a new gesture inherits nothing from the previous one
+        _velocityX = 0;
+        _velocityY = 0;
         _timeStamp = Date.now();
 
         // we manage this event
@@ -62,6 +81,33 @@ MouseArea {
         }
     }
 
+    /* Emit the gesture the travelled distance describes, dominant axis winning,
+       and report whether it was far enough to count. */
+    function _emitDistanceGesture(mouse) {
+        var totalX = mouse.x - _startX;
+        var totalY = mouse.y - _startY;
+
+        if( Math.abs(totalX) >= Math.abs(totalY) ) {
+            if( Math.abs(totalX) <= Math.min(width * swipeDistanceWidthFraction, swipeDistanceThreshold) )
+                return false;
+
+            if( totalX > 0 )
+                swipeRightGesture(mouse.modifiers);
+            else
+                swipeLeftGesture(mouse.modifiers);
+            return true;
+        }
+
+        if( Math.abs(totalY) <= swipeDistanceThreshold )
+            return false;
+
+        if( totalY > 0 )
+            swipeDownGesture(mouse.modifiers);
+        else
+            swipeUpGesture(mouse.modifiers);
+        return true;
+    }
+
     onReleased: (mouse) => {
         if (mouse.wasHeld) return; // don't interfere with long press events
 
@@ -70,27 +116,10 @@ MouseArea {
         var diffTime = newTimeStamp - _timeStamp; /* in milliseconds here */
         // During that time, the mouse hasn't moved more than 10 pixels.
         // That enables us to know whether the swipe is still in progress or not.
-        if( 10/diffTime < swipeVelocityThreshold ) {
+        var paused = ( 10/diffTime < swipeVelocityThreshold );
+        if( paused ) {
             _velocityX = 0;
             _velocityY = 0;
-
-            // The finger paused before lifting, so the release velocity is
-            // zero - but a pause at the end of a deliberate swipe is natural,
-            // and dropping it made the back gesture feel unreliable. Judge by
-            // the whole distance travelled instead.
-            var totalX = mouse.x - _startX;
-            var totalY = mouse.y - _startY;
-            var minX = Math.min(width * 0.25, 200);
-            if( Math.abs(totalX) >= Math.abs(totalY) && Math.abs(totalX) > minX ) {
-                if( totalX > 0 ) swipeRightGesture(mouse.modifiers);
-                else swipeLeftGesture(mouse.modifiers);
-                return;
-            }
-            if( Math.abs(totalY) > Math.abs(totalX) && Math.abs(totalY) > 150 ) {
-                if( totalY > 0 ) swipeDownGesture(mouse.modifiers);
-                else swipeUpGesture(mouse.modifiers);
-                return;
-            }
         }
 
         if( Math.abs(_velocityX) > swipeVelocityThreshold || Math.abs(_velocityY) > swipeVelocityThreshold ) {
@@ -112,6 +141,13 @@ MouseArea {
                     swipeLeftGesture(mouse.modifiers);
                 }
             }
+        }
+        /* The finger paused before lifting, which zeroed the velocity above -
+           but pausing at the end of a deliberate swipe is natural, and dropping
+           those made the gesture area feel unreliable. Fall back to the whole
+           distance travelled. */
+        else if( paused && _swipeInitiated && _emitDistanceGesture(mouse) ) {
+            /* handled as a swipe */
         }
         else {
             if( _swipeInitiated ) {
