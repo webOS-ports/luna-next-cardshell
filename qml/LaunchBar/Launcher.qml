@@ -33,8 +33,9 @@ Item {
     property bool fullLauncherVisible: false
 
     // LunaSysMgr's SystemUiController::setLauncherShown() played these.
-    FeedbackSound { id: launcherSound }
-    onFullLauncherVisibleChanged: launcherSound.play(fullLauncherVisible ? "LauncherOpenApp" : "LauncherCloseApp")
+    FeedbackSound { id: launcherOpenSound; soundName: "LauncherOpenApp" }
+    FeedbackSound { id: launcherCloseSound; soundName: "LauncherCloseApp" }
+    onFullLauncherVisibleChanged: fullLauncherVisible ? launcherOpenSound.play() : launcherCloseSound.play()
 
     property bool launcherActive: state === "fullLauncher" || state === "justTypeLauncher"
     property bool justTypeLauncherActive: state === "justTypeLauncher"

@@ -27,7 +27,7 @@ Item {
 
     property variant screenShooter
 
-    FeedbackSound { id: shutterSound }
+    FeedbackSound { id: shutterSound; soundName: "shutter" }
     property Item cardViewInstance
     property QtObject compositorInstance
     property bool performanceUIVisible: false
@@ -87,7 +87,7 @@ Item {
 
         // The camera shutter, as LunaSysMgr played before capturing
         // (lunaSystemSoundScreenCapture).
-        shutterSound.play("shutter");
+        shutterSound.play();
         path = systemService.screenShooter.capture(path);
 
         if (path.length !== 0)
