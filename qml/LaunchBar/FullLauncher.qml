@@ -188,7 +188,9 @@ Item {
         readonly property bool scrollingTabs: AppTweaks.tabIndicatorNumberTweakValue === "default"
         readonly property real scrollingTabWidth: Units.gu(20)
 
-        highlightRangeMode: ListView.ApplyRange
+        // Scrolling tabs follow the pages below instead (see tabContentList's
+        // onContentXChanged), so they move with the finger rather than after it.
+        highlightRangeMode: scrollingTabs ? ListView.NoHighlightRange : ListView.ApplyRange
         preferredHighlightBegin: 0
         preferredHighlightEnd: scrollingTabs ? scrollingTabWidth : tabRowList.width
         footer: Item {
@@ -373,6 +375,16 @@ Item {
         // Instant on E Ink: a 300 ms slide is a dozen full-screen greyscale
         // updates, each of which the panel flashes for (see AppTweaks.disableAnimations).
         highlightMoveDuration: AppTweaks.disableAnimations ? 0 : 300
+        // Move the tab row in step with the pages: one page of the grid is one
+        // tab of the row, the current tab sitting at the row's left edge. The
+        // row is left alone while the user scrolls it.
+        onContentXChanged: {
+            if( !tabRowList.scrollingTabs || tabRowList.dragging || tabRowList.flicking || width <= 0 )
+                return;
+            tabRowList.contentX = tabRowList.originX +
+                (contentX - originX) * tabRowList.scrollingTabWidth / width;
+        }
+
         onCurrentIndexChanged: {
             tabRowList.currentIndex = currentIndex;
             // All tabs share one vertical scroll position: start each tab at
