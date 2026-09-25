@@ -43,15 +43,18 @@ Item {
     property bool audioServiceUp: false
 
     function maybePlayBootSound() {
-        if (bootSoundRequested && audioServiceUp && !bootSoundDelay.running
+        if (bootSoundRequested && audioServiceUp
                 && bootSound.playbackState !== MediaPlayer.PlayingState)
-            bootSoundDelay.start();
+            bootSound.play();
     }
 
     Timer {
-        id: bootSoundDelay
+        id: audioSettleDelay
         interval: 2500
-        onTriggered: bootSound.play()
+        onTriggered: {
+            audioServiceUp = true;
+            maybePlayBootSound();
+        }
     }
 
     LunaService {
@@ -70,10 +73,8 @@ Item {
 
         function handleAudioStatus(message) {
             var response = JSON.parse(message.payload);
-            if (response.hasOwnProperty("connected") && response.connected) {
-                audioServiceUp = true;
-                maybePlayBootSound();
-            }
+            if (response.hasOwnProperty("connected") && response.connected)
+                audioSettleDelay.start();
         }
 
         function handleBootMgrStatus(message) {
