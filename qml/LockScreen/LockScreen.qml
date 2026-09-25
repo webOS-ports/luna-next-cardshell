@@ -17,6 +17,7 @@
  */
 
 import QtQuick 2.5
+import QtQuick.Window 2.2
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
@@ -173,6 +174,28 @@ Item {
     // nothing left. Face unlock only makes sense while the user can see the
     // screen, which is also when they are in front of the camera.
     property bool displayOn: true
+
+    // The hwcomposer platform drops every frame drawn while the display is
+    // off - including the lock screen itself, which appears just as the
+    // screen turns off - and nothing asks for a new frame when it comes back
+    // on. The panel then stays dark until something on screen changes by
+    // itself: up to a minute, for the clock. Ask for fresh frames once the
+    // display is on again; a few times, as the compositor may not have
+    // powered the display up yet when this status arrives.
+    Timer {
+        id: repaintAfterDisplayOn
+        interval: 100
+        repeat: true
+        triggeredOnStart: true
+        property int count: 0
+        onRunningChanged: if (running) count = 0;
+        onTriggered: {
+            if (lockScreen.Window.window)
+                lockScreen.Window.window.update();
+            if (++count >= 4)
+                stop();
+        }
+    }
 
     // Same as fingerprintActive: nothing to stand in for without a passcode,
     // and here it would hold the camera open as well.
@@ -546,15 +569,25 @@ Item {
 
         function handleDisplayStatus(message) {
             var response = JSON.parse(message.payload);
-            if (response.state === undefined)
+            // Only the first reply has "state"; every change after it comes
+            // as an event (displayOn, displayOff, displayDimmed, ...).
+            var nowOn;
+            if (response.state !== undefined)
+                nowOn = (response.state === "on");
+            else if (response.event === "displayOn")
+                nowOn = true;
+            else if (response.event === "displayOff" || response.event === "displayDimmed")
+                nowOn = false;
+            else
                 return;
 
-            var nowOn = (response.state === "on");
             // Each time the screen comes back on the user is deliberately looking
             // at the phone, so give face unlock a fresh budget rather than making
             // them find the PIN because earlier attempts were spent unseen.
-            if (nowOn && !lockScreen.displayOn)
+            if (nowOn && !lockScreen.displayOn) {
                 lockScreen.faceFailedAttempts = 0;
+                repaintAfterDisplayOn.start();
+            }
             lockScreen.displayOn = nowOn;
         }
 
