@@ -182,9 +182,19 @@ Item {
 
         interactive: !draggedLauncherIcon.draggingActive
 
+        // In the default layout the tabs do not all fit: the current one sits
+        // at the left edge, where the first tab is, whichever tab it is. The
+        // footer lets the last tabs scroll that far too.
+        readonly property bool scrollingTabs: AppTweaks.tabIndicatorNumberTweakValue === "default"
+        readonly property real scrollingTabWidth: Units.gu(20)
+
         highlightRangeMode: ListView.ApplyRange
-        preferredHighlightBegin: AppTweaks.tabIndicatorNumberTweakValue === "default" ? width/2 - Units.gu(10) : 0;
-        preferredHighlightEnd: AppTweaks.tabIndicatorNumberTweakValue === "default" ? width/2 + Units.gu(10) : tabRowList.width;
+        preferredHighlightBegin: 0
+        preferredHighlightEnd: scrollingTabs ? scrollingTabWidth : tabRowList.width
+        footer: Item {
+            width: tabRowList.scrollingTabs ? Math.max(0, tabRowList.width - tabRowList.scrollingTabWidth) : 0
+            height: tabRowList.height
+        }
         highlightMoveDuration: AppTweaks.disableAnimations ? 0 : 500
         highlightMoveVelocity: -1
 
@@ -239,7 +249,7 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: AppTweaks.tabIndicatorNumberTweakValue === "default" ? Units.gu(20) :
+            width: tabRowList.scrollingTabs ? tabRowList.scrollingTabWidth :
                    AppTweaks.tabIndicatorNumberTweakValue === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count :
                                                                       tabRowList.width / AppTweaks.tabIndicatorNumberTweakValue
             height: tabRowList.height
@@ -363,7 +373,12 @@ Item {
         // Instant on E Ink: a 300 ms slide is a dozen full-screen greyscale
         // updates, each of which the panel flashes for (see AppTweaks.disableAnimations).
         highlightMoveDuration: AppTweaks.disableAnimations ? 0 : 300
-        onCurrentIndexChanged: tabRowList.currentIndex = currentIndex
+        onCurrentIndexChanged: {
+            tabRowList.currentIndex = currentIndex;
+            // All tabs share one vertical scroll position: start each tab at
+            // its top instead of wherever the previous tab was scrolled to.
+            flkMouseArea.contentY = 0;
+        }
 
         model: tabRowList.model
 
