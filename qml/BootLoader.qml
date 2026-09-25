@@ -32,6 +32,28 @@ Item {
         audioOutput: AudioOutput {}
     }
 
+    // The boot sound used to start the moment bootmgr reported the boot
+    // state - ~0.1 s before audiod registered. audiod's start-up then ran
+    // initStreamVolume (volume 0 / mute / real volume, sink by sink) right
+    // through it, and the sound crackled on every boot while the same file
+    // played cleanly any other time. Play it once audiod is up and has had a
+    // moment to settle (its bus name appears before initStreamVolume is done,
+    // hence 2.5 s); the boot screen itself is not held back.
+    property bool bootSoundRequested: false
+    property bool audioServiceUp: false
+
+    function maybePlayBootSound() {
+        if (bootSoundRequested && audioServiceUp && !bootSoundDelay.running
+                && bootSound.playbackState !== MediaPlayer.PlayingState)
+            bootSoundDelay.start();
+    }
+
+    Timer {
+        id: bootSoundDelay
+        interval: 2500
+        onTriggered: bootSound.play()
+    }
+
     LunaService {
         id: systemService
         name: "com.webos.surfacemanager-cardshell"
@@ -41,6 +63,17 @@ Item {
             systemService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
                                "{\"serviceName\":\"org.webosports.bootmgr\"}",
                                handleBootMgrStatus, handleError);
+            systemService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
+                               "{\"serviceName\":\"com.webos.service.audio\"}",
+                               handleAudioStatus, handleError);
+        }
+
+        function handleAudioStatus(message) {
+            var response = JSON.parse(message.payload);
+            if (response.hasOwnProperty("connected") && response.connected) {
+                audioServiceUp = true;
+                maybePlayBootSound();
+            }
         }
 
         function handleBootMgrStatus(message) {
@@ -62,7 +95,8 @@ Item {
                 if( response.state === "firstuse" || response.state === "normal" )
                     shellLoader.state = response.state;
 
-                bootSound.play();
+                bootSoundRequested = true;
+                maybePlayBootSound();
                 shellLoader.source = "CardShell.qml";
                 bootScreenItem.opacity = 0;
             }
