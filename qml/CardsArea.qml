@@ -149,6 +149,12 @@ WindowManager {
         id: screenShooter
     }
 
+    // The camera shutter, as LunaSysMgr played it for every screen capture
+    // (lunaSystemSoundScreenCapture).
+    FeedbackSound {
+        id: shutterSound
+    }
+
     ScreenShooterGradient {
         id: screenShooterGradient
         anchors.fill: parent
@@ -171,6 +177,7 @@ WindowManager {
     Connections {
         target: gestureAreaInstance
         function onSwipeRightGesture(modifiers) {
+            shutterSound.play("shutter");
             screenShooter.capture("");
             screenShooterGradient.startShootEffect();
         }

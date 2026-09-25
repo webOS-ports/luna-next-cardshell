@@ -23,6 +23,7 @@ import WebOSCompositorBase 1.0
 import WebOSCoreCompositor 1.0
 
 import "../LunaSysAPI" as LunaSysAPI
+import "../Utils"
 
 Item {
     id: launcherItem
@@ -30,6 +31,10 @@ Item {
     property Item gestureAreaInstance
     property Item windowManagerInstance
     property bool fullLauncherVisible: false
+
+    // LunaSysMgr's SystemUiController::setLauncherShown() played these.
+    FeedbackSound { id: launcherSound }
+    onFullLauncherVisibleChanged: launcherSound.play(fullLauncherVisible ? "LauncherOpenApp" : "LauncherCloseApp")
 
     property bool launcherActive: state === "fullLauncher" || state === "justTypeLauncher"
     property bool justTypeLauncherActive: state === "justTypeLauncher"

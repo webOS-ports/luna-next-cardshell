@@ -20,10 +20,14 @@ import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
 
+import "../Utils"
+
 Item {
     id: systemService
 
     property variant screenShooter
+
+    FeedbackSound { id: shutterSound }
     property Item cardViewInstance
     property QtObject compositorInstance
     property bool performanceUIVisible: false
@@ -81,6 +85,9 @@ Item {
         if (systemService.screenShooter === null)
             return buildErrorResponse("Internal error.");
 
+        // The camera shutter, as LunaSysMgr played before capturing
+        // (lunaSystemSoundScreenCapture).
+        shutterSound.play("shutter");
         path = systemService.screenShooter.capture(path);
 
         if (path.length !== 0)
