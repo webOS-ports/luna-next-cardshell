@@ -27,7 +27,10 @@ LunaService {
     service: "luna://com.webos.service.audio"
     method: "systemsounds/playFeedback"
 
-    function play(soundName) {
+    // The name under /usr/share/systemsounds, without ".pcm".
+    property string soundName
+
+    function play() {
         call(JSON.stringify({"name": soundName}));
     }
 }

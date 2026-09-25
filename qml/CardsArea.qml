@@ -153,6 +153,7 @@ WindowManager {
     // (lunaSystemSoundScreenCapture).
     FeedbackSound {
         id: shutterSound
+        soundName: "shutter"
     }
 
     ScreenShooterGradient {
@@ -177,7 +178,7 @@ WindowManager {
     Connections {
         target: gestureAreaInstance
         function onSwipeRightGesture(modifiers) {
-            shutterSound.play("shutter");
+            shutterSound.play();
             screenShooter.capture("");
             screenShooterGradient.startShootEffect();
         }

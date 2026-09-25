@@ -88,12 +88,12 @@ Item {
 
     // LunaSysMgr played "appclose" whenever a card was thrown away
     // (CardWindowManager, lunaSystemSoundAppClose).
-    FeedbackSound { id: appCloseSound }
+    FeedbackSound { id: appCloseSound; soundName: "appclose" }
 
     function removeCard(window) {
         console.log("CardView.removeCard(" + window +"): calling closeWindow");
         compositorInstance.closeWindow(window);
-        appCloseSound.play("appclose");
+        appCloseSound.play();
     }
 
     function setCurrentCard(window) {
