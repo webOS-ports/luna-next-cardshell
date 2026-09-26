@@ -57,7 +57,7 @@ Item {
     function updateOverlaySizes() {
         console.log("new keyboard overlay window size = " + keyboardOverlayItem.width +"x"+ keyboardOverlayItem.height);
         for( var i = 0; i < listKeyboardsModel.count; ++i ) {
-            var window = listKeyboardsModel.getByIndex(i);
+            var window = listKeyboardsModel.get(i);
             if(!window.isPopup) {
                 window.changeSize(Qt.size(keyboardOverlayItem.width, keyboardOverlayItem.height));
             }

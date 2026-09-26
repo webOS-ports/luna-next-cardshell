@@ -153,7 +153,7 @@ Item {
         var window=null;
         var i=0;
         for(i=0; i<cardsModel.count;i++) {
-            window = cardsModel.getByIndex(i)
+            window = cardsModel.get(i)
             if(window && window.appId === appId) {
                 setCurrentCard(window);
                 setCurrentCardState(WindowState.Maximized);
@@ -176,7 +176,7 @@ Item {
         var window=null;
         var i=0;
         for(i=0; i<cardsModel.count;i++) {
-            window = cardsModel.getByIndex(i)
+            window = cardsModel.get(i)
             if(window && window.appId === appId) {
                 if(window.userData) {
                     window.userData.isFullScreenMode = enableFS;
