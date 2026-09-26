@@ -175,6 +175,22 @@ Rectangle {
         z: 900
     }
 
+    KillSwitchAlert {
+        id: killSwitchAlert
+        z: 900
+    }
+
+    /*
+     * The shell-wide switch state, so the flash happens once no matter how
+     * many status bars or menus are listening. SystemIndicators has its own
+     * instance for drawing icons; this one exists for the alert.
+     */
+    KillSwitchService {
+        id: shellKillSwitchService
+
+        onSwitchChanged: (id, state) => killSwitchAlert.showSwitch(id, state)
+    }
+
     PowerMenu {
         id: powerMenuAlert
         z: 800
