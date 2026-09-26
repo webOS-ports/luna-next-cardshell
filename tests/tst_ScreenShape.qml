@@ -49,12 +49,70 @@ TestCase {
         compare(ScreenShape.topBarHeight(contentH, 0), 102)
     }
 
-    function test_bar_unchanged_at_a_quarter_turn() {
-        // Documented punt: the shape is only trusted at rotation 0.
+    /*
+     * The notch turned into each orientation. radon's panel is 720x1600 and its
+     * notch is "324 0 72 102", centred on the top edge; a quarter turn should put
+     * it against a side edge, and a half turn against the bottom.
+     */
+    function test_rect_follows_the_rotation() {
+        function r(a) { return ScreenShape.rotateRect(ScreenShape.cutouts[0], a) }
+
+        var p = r(0)
+        compare([p.x, p.y, p.width, p.height], [324, 0, 72, 102])
+
+        var l = r(90)                       // scene is 1600x720
+        compare([l.x, l.y, l.width, l.height], [1498, 324, 102, 72])
+        compare(l.x + l.width, 1600)        // against the right edge
+        compare(l.y + l.height / 2, 360)    // still centred across the short axis
+
+        var u = r(180)
+        compare([u.x, u.y, u.width, u.height], [324, 1498, 72, 102])
+        compare(u.y + u.height, 1600)       // against the bottom edge
+
+        var rl = r(270)
+        compare([rl.x, rl.y, rl.width, rl.height], [0, 324, 102, 72])
+        compare(rl.x, 0)                    // against the left edge
+    }
+
+    function test_scene_dimensions_swap_on_a_quarter_turn() {
+        compare([ScreenShape.sceneWidth(0), ScreenShape.sceneHeight(0)], [720, 1600])
+        compare([ScreenShape.sceneWidth(90), ScreenShape.sceneHeight(90)], [1600, 720])
+        compare([ScreenShape.sceneWidth(180), ScreenShape.sceneHeight(180)], [720, 1600])
+        compare([ScreenShape.sceneWidth(270), ScreenShape.sceneHeight(270)], [1600, 720])
+    }
+
+    function test_bar_only_grows_where_the_notch_is_on_top() {
+        compare(ScreenShape.topBarHeight(contentH, 0), 102)
+        // Turned, the notch is against a side or the bottom, so a TOP bar does
+        // not have to grow for it - but it still has corners to dodge.
         compare(ScreenShape.topBarHeight(contentH, 90), contentH)
+        compare(ScreenShape.topBarHeight(contentH, 180), contentH)
         compare(ScreenShape.topBarHeight(contentH, 270), contentH)
-        compare(ScreenShape.topLeftInset(57, 90), 0)
-        compare(ScreenShape.obstaclesInBand(48, 54, 90).length, 0)
+    }
+
+    function test_corners_are_inset_at_every_rotation() {
+        // This is the bug the first cut shipped: at a quarter turn the insets
+        // came back 0 and the indicators ran into the curve.
+        var inkTop = 0 + contentH * 0.1     // bar does not grow when turned
+        for (var i = 0; i < 4; i++) {
+            var a = i * 90
+            verify(ScreenShape.topLeftInset(inkTop, a) > 0)
+            verify(ScreenShape.topRightInset(inkTop, a) > 0)
+        }
+    }
+
+    function test_gesture_area_is_lifted_only_when_the_notch_is_at_the_bottom() {
+        compare(ScreenShape.bottomInset(0), 0)
+        compare(ScreenShape.bottomInset(90), 0)
+        compare(ScreenShape.bottomInset(180), 102)   // the notch, exactly
+        compare(ScreenShape.bottomInset(270), 0)
+    }
+
+    function test_angle_is_normalized() {
+        compare(ScreenShape.normalizedAngle(-90), 270)
+        compare(ScreenShape.normalizedAngle(450), 90)
+        compare(ScreenShape.normalizedAngle(360), 0)
+        compare(ScreenShape.bottomInset(-180), 102)
     }
 
     function test_corner_inset_is_the_chord_not_the_radius() {

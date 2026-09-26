@@ -81,6 +81,10 @@ QtObject {
         }
     }
 
+    /* The panel at rotation 0, which is the space cutouts is expressed in. */
+    readonly property int panelWidth: Settings.displayWidth
+    readonly property int panelHeight: Settings.displayHeight
+
     readonly property bool hasCutouts: cutouts.length > 0
     readonly property bool hasRoundedCorners: cornerRadii.length === 4 &&
                                               (cornerRadii[0] > 0 || cornerRadii[1] > 0 ||
@@ -88,29 +92,80 @@ QtObject {
     readonly property bool known: hasCutouts || hasRoundedCorners
 
     /*
-     * Whether the declared shape can be trusted at this rotation.
+     * The shape turned into the orientation the shell is laying out in.
      *
-     * The rectangles describe the panel as the shell lays it out at rotation 0.
      * OrientationHelper rotates the whole scene by -orientationAngle, so at a
-     * quarter turn the notch is against what is now a side edge and every number
-     * here would have to be turned to match.
+     * quarter turn the panel's left edge is the top of what the user sees and
+     * every rectangle here has to be turned to match. This was punted at first -
+     * phosh bails out unless its monitor transform is NORMAL and Lomiri's cutout
+     * model returns nothing outside portrait, both with a TODO here - and the
+     * result was visible on radon the moment the device was turned: the bar
+     * stopped insetting its ends and the indicators ran into the corner curve.
      *
-     * That turn is deliberately not done. Phosh bails out unless its monitor
-     * transform is NORMAL and Lomiri's cutout model returns nothing unless the
-     * orientation is portrait; both ship with a TODO where this sentence is. The
-     * reason to follow them rather than do better is narrower than theirs: the
-     * only thing this would buy is a landscape shell, and LuneOSViewRoot sets
-     * automaticOrientation false, so a rotated shell happens only when an app
-     * asks or someone presses F6-F9. Getting the sign of the transform wrong is
-     * easy and would put the inset on the wrong side, which is worse than the
-     * square-panel behaviour every device has today.
+     * Reasoning it out for a = 90 (the sensor's LeftUp, the device's left side
+     * up, scene rotated a quarter turn anticlockwise to compensate):
      *
-     * So: at a quarter turn, and upside down, every function below answers as if
-     * the panel were rectangular - which is exactly what the shell did before any
-     * of this existed.
+     *     scene top    is the panel's LEFT edge
+     *     scene right  is the panel's TOP edge
+     *     scene bottom is the panel's RIGHT edge
+     *     scene left   is the panel's BOTTOM edge
+     *
+     * so scene x runs along the panel from bottom to top - x = H - y - h - and
+     * scene y runs along it from left to right - y = x. Width and height swap,
+     * as the scene itself does (OrientationHelper's "rotated" state is
+     * height: parent.width, width: parent.height). 270 is the mirror of that,
+     * and 180 needs no swap, only both edges reflected.
      */
-    function appliesAt(angle) {
-        return known && ((angle % 360) + 360) % 360 === 0;
+    function normalizedAngle(angle) {
+        return ((Math.round(angle / 90) * 90) % 360 + 360) % 360;
+    }
+
+    function rotateRect(r, angle) {
+        var a = normalizedAngle(angle);
+        if (a === 90)
+            return { "x": panelHeight - r.y - r.height, "y": r.x,
+                     "width": r.height, "height": r.width };
+        if (a === 180)
+            return { "x": panelWidth - r.x - r.width, "y": panelHeight - r.y - r.height,
+                     "width": r.width, "height": r.height };
+        if (a === 270)
+            return { "x": r.y, "y": panelWidth - r.x - r.width,
+                     "width": r.height, "height": r.width };
+        return { "x": r.x, "y": r.y, "width": r.width, "height": r.height };
+    }
+
+    function sceneWidth(angle) {
+        var a = normalizedAngle(angle);
+        return (a === 90 || a === 270) ? panelHeight : panelWidth;
+    }
+
+    function sceneHeight(angle) {
+        var a = normalizedAngle(angle);
+        return (a === 90 || a === 270) ? panelWidth : panelHeight;
+    }
+
+    function rectsFor(angle) {
+        var out = [];
+        for (var i = 0; i < cutouts.length; i++)
+            out.push(rotateRect(cutouts[i], angle));
+        return out;
+    }
+
+    /*
+     * The radius of a corner of the rotated scene, naming corners 0..3 as
+     * cornerRadii does - top-left, top-right, bottom-right, bottom-left,
+     * clockwise. A quarter turn moves every corner one place along that cycle,
+     * so the scene's corner i was the panel's corner (i - angle/90).
+     *
+     *     a=90    scene TL,TR,BR,BL  <-  panel BL,TL,TR,BR
+     *     a=180                      <-  panel BR,BL,TL,TR
+     *     a=270                      <-  panel TR,BR,BL,TL
+     */
+    function radiusAt(corner, angle) {
+        if (!hasRoundedCorners)
+            return 0;
+        var shift = normalizedAngle(angle) / 90;
+        return cornerRadii[((corner - shift) % 4 + 4) % 4];
     }
 
     /*
@@ -129,17 +184,49 @@ QtObject {
      * keep in step by hand.
      */
     function topBarHeight(defaultHeight, angle) {
-        if (!appliesAt(angle))
+        if (!known)
             return defaultHeight;
 
         var h = defaultHeight;
-        for (var i = 0; i < cutouts.length; i++) {
-            var c = cutouts[i];
+        var rects = rectsFor(angle);
+        for (var i = 0; i < rects.length; i++) {
+            var c = rects[i];
             if (c.y > 0)
                 continue;
             h = Math.max(h, c.y + c.height);
         }
         return h;
+    }
+
+    /*
+     * How far up from the bottom edge something anchored there has to start to
+     * clear the hardware.
+     *
+     * The mirror of topBarHeight, and needed for the same reason at a different
+     * rotation: turn radon upside down and its notch is against the bottom edge,
+     * directly under the gesture area. The gesture area is Units.gu(4) - 60px -
+     * and the notch is 102px deep, so the handle and the whole touch strip end up
+     * inside the camera hole.
+     *
+     * A margin rather than a taller area, unlike the status bar: the bar is
+     * chrome that can absorb the cutout behind it, whereas the gesture area has
+     * to be somewhere the finger can actually land. Lifting it clear is the only
+     * thing that helps.
+     */
+    function bottomInset(angle) {
+        if (!known)
+            return 0;
+
+        var inset = 0;
+        var bottom = sceneHeight(angle);
+        var rects = rectsFor(angle);
+        for (var i = 0; i < rects.length; i++) {
+            var c = rects[i];
+            if (c.y + c.height < bottom)
+                continue;
+            inset = Math.max(inset, bottom - c.y);
+        }
+        return inset;
     }
 
     /*
@@ -175,11 +262,11 @@ QtObject {
     /* The two that a top bar wants, by name, so call sites do not index into
      * cornerRadii and get the order wrong. */
     function topLeftInset(contentTop, angle) {
-        return appliesAt(angle) && hasRoundedCorners ? cornerInset(cornerRadii[0], contentTop) : 0;
+        return cornerInset(radiusAt(0, angle), contentTop);
     }
 
     function topRightInset(contentTop, angle) {
-        return appliesAt(angle) && hasRoundedCorners ? cornerInset(cornerRadii[1], contentTop) : 0;
+        return cornerInset(radiusAt(1, angle), contentTop);
     }
 
     /*
@@ -193,11 +280,12 @@ QtObject {
      */
     function obstaclesInBand(top, height, angle) {
         var out = [];
-        if (!appliesAt(angle))
+        if (!known)
             return out;
 
-        for (var i = 0; i < cutouts.length; i++) {
-            var c = cutouts[i];
+        var rects = rectsFor(angle);
+        for (var i = 0; i < rects.length; i++) {
+            var c = rects[i];
             if (c.y + c.height <= top || c.y >= top + height)
                 continue;
             out.push({ "x": c.x, "width": c.width });

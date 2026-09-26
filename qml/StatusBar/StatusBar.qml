@@ -64,12 +64,29 @@ Item {
     readonly property real barHeight: ScreenShape.topBarHeight(contentHeight,
                                                                orientationHelper.orientationAngle)
 
-    /* How far in from each end the contents have to start to clear the rounded
-     * corners, measured at the height the contents actually sit at. */
+    /*
+     * How far in from each end the contents have to start to clear the rounded
+     * corners, measured at the height the ink actually starts at.
+     *
+     * Not the top of the content band. In portrait the band is pushed down by a
+     * bar that grew for the notch, so the two are close; in landscape the bar
+     * does not grow - the cutout is against a side edge, not the top - so the
+     * band starts at y=0, where the corner arc is at its very widest and the
+     * inset would come out as the whole 75px radius on radon.
+     *
+     * The icons and text do not fill their band to the pixel, so measure from
+     * where their ink begins: 80% of the band, centred, which is the fraction
+     * phosh uses for the same calculation. On radon that is 2px a side in
+     * portrait and about 50 in landscape, against 75 measured at the band edge.
+     */
+    readonly property real contentInkFraction: 0.8
+    readonly property real contentInkTop: (barHeight - contentHeight)
+                                          + contentHeight * (1 - contentInkFraction) / 2
+
     readonly property real contentInsetLeft:
-        ScreenShape.topLeftInset(barHeight - contentHeight, orientationHelper.orientationAngle)
+        ScreenShape.topLeftInset(contentInkTop, orientationHelper.orientationAngle)
     readonly property real contentInsetRight:
-        ScreenShape.topRightInset(barHeight - contentHeight, orientationHelper.orientationAngle)
+        ScreenShape.topRightInset(contentInkTop, orientationHelper.orientationAngle)
 
     property string carrierName: "LuneOS"
     // operator reported for the default voice SIM, and the combined list when
