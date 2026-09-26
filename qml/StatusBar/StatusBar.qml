@@ -40,6 +40,54 @@ Item {
     property Item batteryService
     property Item wifiService
 
+    /*
+     * The bar has two heights on a panel with a notch, and the difference is the
+     * whole trick.
+     *
+     * contentHeight is how tall the bar's own contents are - the carrier name,
+     * the clock, the indicator icons - and it is what the bar has always been.
+     * barHeight is how tall the bar has to be for the hardware to fall inside it,
+     * which on a device with a deep cutout is more. The contents keep
+     * contentHeight and sit at the bottom of barHeight, so the icons do not
+     * inflate from 45px to fill a 102px bar and they end up as far from the notch and the
+     * corner curves as the bar allows.
+     *
+     * Android splits the same two numbers (status_bar_height_portrait against the
+     * content height, placed with bottomAlignedMargin) for the same reason.
+     *
+     * Bottom-aligning is not only about size: it is also what makes the corner
+     * inset small. The curve only eats into the top of the bar, so content that
+     * starts lower down loses far less to it - on radon 3px a side rather than
+     * the 17px it would lose centred, or the 75px a naive full-radius inset takes.
+     */
+    readonly property real contentHeight: Units.gu(3)
+    readonly property real barHeight: ScreenShape.topBarHeight(contentHeight,
+                                                               orientationHelper.orientationAngle)
+
+    /*
+     * How far in from each end the contents have to start to clear the rounded
+     * corners, measured at the height the ink actually starts at.
+     *
+     * Not the top of the content band. In portrait the band is pushed down by a
+     * bar that grew for the notch, so the two are close; in landscape the bar
+     * does not grow - the cutout is against a side edge, not the top - so the
+     * band starts at y=0, where the corner arc is at its very widest and the
+     * inset would come out as the whole 75px radius on radon.
+     *
+     * The icons and text do not fill their band to the pixel, so measure from
+     * where their ink begins: 80% of the band, centred, which is the fraction
+     * phosh uses for the same calculation. On radon that is 2px a side in
+     * portrait and about 50 in landscape, against 75 measured at the band edge.
+     */
+    readonly property real contentInkFraction: 0.8
+    readonly property real contentInkTop: (barHeight - contentHeight)
+                                          + contentHeight * (1 - contentInkFraction) / 2
+
+    readonly property real contentInsetLeft:
+        ScreenShape.topLeftInset(contentInkTop, orientationHelper.orientationAngle)
+    readonly property real contentInsetRight:
+        ScreenShape.topRightInset(contentInkTop, orientationHelper.orientationAngle)
+
     property string carrierName: "LuneOS"
     // operator reported for the default voice SIM, and the combined list when
     // more than one SIM is up; updateCarrierName() picks between them
@@ -152,8 +200,19 @@ Item {
         console.log("Failed to call simListQuery service: " + message)
     }
 
+    /*
+     * The bar's paint, full width and the full barHeight - including the strip the
+     * notch sits in, and right into the rounded corners.
+     *
+     * Deliberately separate from the contents below: the window is full-bleed and
+     * only the *content* is inset, which is what Android does too
+     * (PhoneStatusBarView pads its contents; the window keeps the whole width).
+     * Painting the bar colour under the cutout and behind the curve is what stops
+     * a bright app showing as a sliver around the camera, and it means the bar
+     * reads as one object rather than as a stripe with notches cut out of it.
+     */
     Rectangle {
-        id: background
+        id: barFill
         anchors.fill: parent
         color: (!Settings.tabletUi || statusBar.blackMode)?"black":"transparent";
 
@@ -172,12 +231,50 @@ Item {
             anchors.fill: parent
             visible: Settings.tabletUi && !statusBar.blackMode
         }
+    }
+
+    /*
+     * Where the bar's contents live: full width, contentHeight tall, at the bottom
+     * of the bar.
+     *
+     * On every device without a declared cutout this is the whole bar, exactly as
+     * before - barHeight equals contentHeight and this item fills its parent. It
+     * keeps the id "background" because everything inside it is positioned
+     * relative to "parent", and parent.height being the content height rather than
+     * the bar height is the point: the carrier's margins and font size are both
+     * derived from it and must not grow when the bar does.
+     */
+    Item {
+        id: background
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: statusBar.contentHeight
 
         Text {
             id: titleTextDate
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            anchors.horizontalCenter: parent.horizontalCenter
+            /*
+             * The lock screen's date occupies the same middle-of-the-bar slot as
+             * the clock below, so it has the same problem with a centred lens and
+             * gets the same treatment. Kept simpler than the clock's because
+             * nothing else competes for the space in this state: centre it, then
+             * move it off the camera within the room the corners leave.
+             */
+            x: {
+                var minX = statusBar.contentInsetLeft;
+                var maxX = background.width - statusBar.contentInsetRight;
+                var centred = Math.round((background.width - contentWidth) / 2);
+
+                return ScreenShape.shiftClear(centred, contentWidth,
+                                              ScreenShape.obstaclesInBand(
+                                                  statusBar.barHeight - statusBar.contentHeight,
+                                                  statusBar.contentHeight,
+                                                  orientationHelper.orientationAngle),
+                                              minX, maxX);
+            }
+            width: contentWidth
             visible: statusBar.state === "lockscreen"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
@@ -224,8 +321,42 @@ Item {
             id: phoneTweaksClock
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            x: Math.max(0, Math.min((background.width - width) / 2,
-                                    systemIndicatorsBoundingRect.x - Units.gu(0.5) - width))
+
+            /*
+             * Centred, then clamped away from the indicators, then moved off the
+             * camera.
+             *
+             * The first two were already here and are unchanged. The third is the
+             * bug this was written for: on a panel with a centred hole punch the
+             * middle of the bar is exactly where the lens is, so a clock that has
+             * been told only "be centred, but not under the indicators" is drawn
+             * behind it. radon is the case in point - a 72px notch centred on 360
+             * of 720.
+             *
+             * shiftClear moves it to whichever side of the obstacle is nearer, so
+             * it ends up just left or just right of the lens rather than jumping to
+             * an end of the bar. minX is the left corner inset and maxX the point
+             * the indicator clamp already established, so the two rules compose
+             * instead of fighting: the clock cannot be pushed onto the indicators
+             * or under the other corner.
+             *
+             * Phosh picks a side the same way and warns when neither fits;
+             * ScreenShape.shiftClear does the warning.
+             */
+            x: {
+                var minX = statusBar.contentInsetLeft;
+                var maxX = systemIndicatorsBoundingRect.x - Units.gu(0.5);
+                var centred = Math.max(minX, Math.min((background.width - width) / 2,
+                                                      maxX - width));
+
+                return ScreenShape.shiftClear(centred, width,
+                                              ScreenShape.obstaclesInBand(
+                                                  statusBar.barHeight - statusBar.contentHeight,
+                                                  statusBar.contentHeight,
+                                                  orientationHelper.orientationAngle),
+                                              minX, maxX);
+            }
+
             // Its natural width, so the carrier below can be told what is
             // left rather than both of them guessing.
             width: item ? item.implicitWidth : 0
@@ -239,7 +370,8 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.25
             anchors.bottomMargin: parent.height * 0.25
-            anchors.leftMargin: parent.height * 0.25
+            // Its own margin, plus whatever the rounded corner takes.
+            anchors.leftMargin: parent.height * 0.25 + statusBar.contentInsetLeft
             /*
              * Half the bar on a tablet, as it always was. On a phone,
              * whatever is left once the clock and the indicators have taken
@@ -311,6 +443,9 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left
+            // The app menu takes the carrier's place at the left end, so it has to
+            // clear the same corner.
+            anchors.leftMargin: statusBar.contentInsetLeft
             fontSize: statusBar.fontSize
             dockModeAppMenuTitle: statusBar.dockModeAppMenuTitle
 
@@ -357,6 +492,7 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
+            anchors.rightMargin: statusBar.contentInsetRight
             width: systemIndicators.width+2*systemIndicators.anchors.margins-systemIndicators.spacing
         }
 
@@ -366,13 +502,19 @@ Item {
             anchors.bottom: parent.bottom
             anchors.right: parent.right
             anchors.margins: Units.gu(1) / 2
+            // anchors.margins already covers the right edge; the corner inset is
+            // on top of it, so the icons clear the curve as well as the edge.
+            anchors.rightMargin: Units.gu(1) / 2 + statusBar.contentInsetRight
             spacing: Units.gu(1) / 2
 
             Image {
                 id: statusBarSeparator
                 source: "../images/statusbar/status-bar-separator.png"
                 anchors.verticalCenter: parent.verticalCenter
-                height: statusBar.height
+                // The content band, not the bar: on a notched panel the bar is
+                // taller than its contents and a full-height separator would
+                // stick out of the top of them.
+                height: statusBar.contentHeight
                 width: 2
                 mipmap: true
                 opacity: Settings.tabletUi && !(systemMenu && systemMenu.visible)
@@ -408,6 +550,8 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
+            // Follow the icons in, so the tap target stays over them.
+            anchors.rightMargin: statusBar.contentInsetRight
             width: systemIndicators.width
             onClicked: {
                 if (systemMenu && !lockScreen.locked && !dockMode.visible && windowManagerInstance.state === "normal")

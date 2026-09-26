@@ -1,2 +1,3 @@
 module Utils
 singleton SystemSounds 1.0 SystemSounds.qml
+singleton ScreenShape 1.0 ScreenShape.qml

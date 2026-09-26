@@ -350,7 +350,22 @@ WindowManager {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: Units.gu(3);
+        /*
+         * Tall enough for the panel's own hardware to fall inside the bar.
+         *
+         * Units.gu(3) was the whole story while every panel was a rectangle. On
+         * one with a notch it is not: the cutout on radon is 102px deep against a
+         * 54px bar, so an app maximized directly below the bar had its top corner
+         * cut away by the camera. StatusBar works out how tall it has to be and
+         * keeps its contents at gu(3) inside that, so this is the only place the
+         * extra height has to be honoured - every other surface here already
+         * anchors to statusBarInstance.bottom, and maximizedCardTopMargin above is
+         * derived from it, so all of them inset together.
+         *
+         * Unchanged on every device that declares no cutout: barHeight is then
+         * exactly contentHeight, which is Units.gu(3).
+         */
+        height: statusBarInstance.barHeight
 
         z: 2 // can only be hidden by a fullscreen window
 
@@ -389,6 +404,20 @@ WindowManager {
             }
         }
         anchors.bottom: parent.bottom
+        /*
+         * Lifted clear of anything against the bottom edge of the panel.
+         *
+         * Zero on radon held the normal way up - its notch is at the top - and
+         * 102px when it is turned over, which is exactly the depth of the notch
+         * that is then underneath this strip. Without it the gesture handle and
+         * its touch area sit inside the camera hole: the handle is invisible and
+         * a swipe from the very bottom lands on glass with no pixels behind it.
+         *
+         * Everything above anchors to gestureAreaInstance.top (or .bottom when
+         * the area is switched off, which is still above the hole), so lifting
+         * this lifts the rest with it.
+         */
+        anchors.bottomMargin: ScreenShape.bottomInset(orientationHelper.orientationAngle)
         anchors.left: parent.left
         anchors.right: parent.right
         height: gestureAreaInstance.enableGestureArea ? Units.gu(4) : Units.gu(0);
