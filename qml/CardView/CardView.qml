@@ -372,6 +372,24 @@ Item {
     // call needs arrives asynchronously, after a window can already have been
     // deactivated. Every ordering left a card that was still on screen with a
     // suspended page behind it.
+    // A window is taking the stage, so every other card has lost it. Tell those
+    // clients, or their window state stays at fullscreen from whenever they last
+    // held it - and WAM's SetWindowHostState() does nothing when the state is
+    // unchanged, so the next "launch" of such an app sends no set_state at all
+    // and the request dies before it reaches the compositor.
+    //
+    // Every other card rather than just the outgoing one: the shell is not the
+    // only way a card leaves the stage, and on a fresh compositor there is no
+    // previous card recorded at all, so tracking one window would never
+    // bootstrap.
+    function __clearStage(incoming) {
+        for( var i = 0; i < cardsModel.count; i++ ) {
+            var w = cardsModel.get(i);
+            if( w && w !== incoming )
+                __publishWindowState(w, Qt.WindowMinimized);
+        }
+    }
+
     function __publishWindowState(window, state) {
         if (!window || typeof window.state === "undefined")
             return;
@@ -380,6 +398,7 @@ Item {
     }
 
     function __setToMaximized(window) {
+        __clearStage(window);
         // set the card as the active one
         __setCurrentActiveWindow(window);
         window.userData.takeFocus();
@@ -391,6 +410,7 @@ Item {
             window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
     }
     function __setToFullscreen(window) {
+        __clearStage(window);
         // set the card as the active one
         __setCurrentActiveWindow(window);
         window.userData.takeFocus();
