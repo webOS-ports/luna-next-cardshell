@@ -546,10 +546,18 @@ Item {
 
         function handleDisplayStatus(message) {
             var response = JSON.parse(message.payload);
-            if (response.state === undefined)
+            // Only the first reply has "state"; every change after it comes
+            // as an event (displayOn, displayOff, displayDimmed, ...).
+            var nowOn;
+            if (response.state !== undefined)
+                nowOn = (response.state === "on");
+            else if (response.event === "displayOn")
+                nowOn = true;
+            else if (response.event === "displayOff" || response.event === "displayDimmed")
+                nowOn = false;
+            else
                 return;
 
-            var nowOn = (response.state === "on");
             // Each time the screen comes back on the user is deliberately looking
             // at the phone, so give face unlock a fresh budget rather than making
             // them find the PIN because earlier attempts were spent unseen.
