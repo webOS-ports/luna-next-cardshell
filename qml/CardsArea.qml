@@ -193,6 +193,29 @@ WindowManager {
         }
     }
 
+    // luna-surfacemanager turns a client's wl_webos_shell_surface set_state into
+    // fullscreenRequested() on the compositor (via WebOSSurfaceItem::
+    // requestStateChange -> requestFullscreen). Nothing here was connected to
+    // it, so "launch" of an app that is already running went as far as
+    // WebAppWayland::Raise() in WAM, crossed Wayland, and then stopped - the
+    // launch reported success and the card stayed where it was.
+    //
+    // focusApplication() is exactly the right response and already exists; it
+    // was simply unreachable except over luna-service, which is why the
+    // com.palm.systemmanager/focusApplication path worked while launch did not.
+    //
+    // minimizeRequested() is deliberately left alone: the card shell decides
+    // for itself when a card goes back to the stack, and honouring a client's
+    // minimize here would fight that.
+    Connections {
+        target: compositor
+
+        function onFullscreenRequested(item) {
+            if (item)
+                cardViewInstance.focusApplication(item.appId);
+        }
+    }
+
     SystemService {
         id: systemService
         cardViewInstance: cardViewInstance
