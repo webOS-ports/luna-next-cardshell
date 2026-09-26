@@ -85,6 +85,29 @@ Row {
         enabled: preferences.muteSound
     }
 
+    /*
+     * Hardware privacy switches, one icon per engaged switch.
+     *
+     * A Repeater rather than a fixed set, because the machines that have these
+     * disagree on which exist: the FLX1s has camera/cellular/microphone while
+     * the PinePhone and PinePhone Pro carry six DIP switches. The service says
+     * what this device has and the row follows - nothing here is per-device.
+     */
+    KillSwitchService {
+        id: killSwitchService
+    }
+
+    Repeater {
+        model: killSwitchService.blockedSwitches
+
+        KillSwitchIndicator {
+            anchors.top: indicatorsRow.top
+            anchors.bottom: indicatorsRow.bottom
+
+            switchId: modelData.id
+        }
+    }
+
     WifiIndicator {
         id: wifiIndicator
 
