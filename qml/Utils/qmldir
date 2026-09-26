@@ -1,0 +1,2 @@
+module Utils
+singleton SystemSounds 1.0 SystemSounds.qml

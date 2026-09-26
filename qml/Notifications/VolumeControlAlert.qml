@@ -20,6 +20,7 @@ import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
 import "../Connectors"
+import "../Utils"
 
 Item {
     id: root
@@ -32,14 +33,10 @@ Item {
 
     property bool _hadFirstAudioStatus: false
 
-    LunaService {
-        id: playFeedback
-        name: "com.webos.surfacemanager-cardshell"
-        // org.webosports.service.audio is the audio-service LuneOS no longer
-        // ships; audiod serves the sounds under its own name.
-        service: "luna://com.webos.service.audio"
-        method: "systemsounds/playFeedback"
-    }
+    // Was a hand-rolled playFeedback call of its own, which meant the volume
+    // click was the one feedback sound Settings' "System Sounds" switch did
+    // not silence.
+    FeedbackSound { id: adjustVolumeSound; soundName: "AdjustVolume" }
 
     Timer {
         id: hideTimer
@@ -96,7 +93,7 @@ Item {
             return;
         }
 
-        playFeedback.call(JSON.stringify({"name":"AdjustVolume"}));
+        adjustVolumeSound.play();
 
         // we don't indicate volume changes when sound is muted
         if (response.muted) {
