@@ -350,7 +350,22 @@ WindowManager {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: Units.gu(3);
+        /*
+         * Tall enough for the panel's own hardware to fall inside the bar.
+         *
+         * Units.gu(3) was the whole story while every panel was a rectangle. On
+         * one with a notch it is not: the cutout on radon is 102px deep against a
+         * 54px bar, so an app maximized directly below the bar had its top corner
+         * cut away by the camera. StatusBar works out how tall it has to be and
+         * keeps its contents at gu(3) inside that, so this is the only place the
+         * extra height has to be honoured - every other surface here already
+         * anchors to statusBarInstance.bottom, and maximizedCardTopMargin above is
+         * derived from it, so all of them inset together.
+         *
+         * Unchanged on every device that declares no cutout: barHeight is then
+         * exactly contentHeight, which is Units.gu(3).
+         */
+        height: statusBarInstance.barHeight
 
         z: 2 // can only be hidden by a fullscreen window
 
