@@ -404,6 +404,20 @@ WindowManager {
             }
         }
         anchors.bottom: parent.bottom
+        /*
+         * Lifted clear of anything against the bottom edge of the panel.
+         *
+         * Zero on radon held the normal way up - its notch is at the top - and
+         * 102px when it is turned over, which is exactly the depth of the notch
+         * that is then underneath this strip. Without it the gesture handle and
+         * its touch area sit inside the camera hole: the handle is invisible and
+         * a swipe from the very bottom lands on glass with no pixels behind it.
+         *
+         * Everything above anchors to gestureAreaInstance.top (or .bottom when
+         * the area is switched off, which is still above the hole), so lifting
+         * this lifts the rest with it.
+         */
+        anchors.bottomMargin: ScreenShape.bottomInset(orientationHelper.orientationAngle)
         anchors.left: parent.left
         anchors.right: parent.right
         height: gestureAreaInstance.enableGestureArea ? Units.gu(4) : Units.gu(0);
