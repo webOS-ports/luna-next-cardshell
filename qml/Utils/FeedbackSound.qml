@@ -30,7 +30,20 @@ LunaService {
     // The name under /usr/share/systemsounds, without ".pcm".
     property string soundName
 
+    /*
+     * Settings' "System Sounds" switch, which LunaSysMgr checked in
+     * playFeedback() itself. Held as a property rather than read inside
+     * play(): a QML singleton is created when something first reads it, and
+     * reading it here means its subscription is up from the moment the shell
+     * loads, instead of the first sound playing before the preference has
+     * been read.
+     */
+    readonly property bool feedbackSoundsEnabled: SystemSounds.enabled
+
     function play() {
+        if (!feedbackSoundsEnabled)
+            return;
+
         call(JSON.stringify({"name": soundName}));
     }
 }
