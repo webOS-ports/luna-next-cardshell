@@ -46,6 +46,16 @@ Item {
      */
     signal launcherToggleRequested()
 
+    /*!
+     * \brief Go back.
+     *
+     * Wired to the gesture area, not to the focused application: in webOS "back"
+     * is a tap in the gesture area rather than a key, so passing Qt::Key_Back
+     * through to the app - which is what this did first - reached nothing that
+     * acts on it.
+     */
+    signal backRequested()
+
     //! What WebOSKeyFilter::Result is worth. The enum is not registered for QML,
     //! so these have to be the numbers - and getting them wrong decides the fate
     //! of every key in the system, not just ours.
@@ -190,16 +200,10 @@ Item {
                                               : hardwareKeys.resultNextPolicy;
     }
 
-    /*!
-     * \brief Whether an action swallows its key.
-     *
-     * Only "shell.back" does not. Back already works by reaching the focused
-     * application, which knows what its own back means - the shell has nothing
-     * better to do with it, and eating it here would break the one key that was
-     * going to work on its own.
-     */
+    //! Every action we handle swallows its key: having acted on it, letting it
+    //! through as well would give whatever has focus a second, duplicate go.
     function _consumes(action) {
-        return action !== "shell.back";
+        return true;
     }
 
     function _act(action) {
@@ -213,8 +217,20 @@ Item {
             // there is nothing to hang up, and that is exactly when the End key
             // should sleep the phone instead. One call rather than a
             // subscription this module would otherwise not need.
+            //
+            // The verdict arrives in the *reply*, not the error handler. An LS2
+            // call that reaches the service and is refused by it is a successful
+            // bus message carrying "returnValue": false, so onError never runs -
+            // which is why an earlier version of this, passing undefined for the
+            // reply, hung up nothing and then failed to sleep either. onError is
+            // still worth having for the case where the service is not there at
+            // all, which on a device with no telephony is every press.
             service.call("luna://com.palm.telephony/hangup", "{}",
-                         undefined, function (message) {
+                         function (message) {
+                             if (!hardwareKeys._succeeded(message))
+                                 hardwareKeys._act("display.sleep");
+                         },
+                         function (error) {
                              hardwareKeys._act("display.sleep");
                          });
             break;
@@ -237,14 +253,36 @@ Item {
             break;
 
         case "shell.back":
-            // Deliberately nothing: _consumes() lets it through to the app.
+            hardwareKeys.backRequested();
             break;
         }
     }
 
     function _call(uri, payload) {
-        service.call(uri, payload, undefined, function (message) {
-            console.warn("HardwareKeys: " + uri + " failed: " + message.payload);
-        });
+        service.call(uri, payload,
+                     function (message) {
+                         // Same reasoning as call.hangup: a refusal comes back as
+                         // a reply, so without this a denied call is silent.
+                         if (!hardwareKeys._succeeded(message))
+                             console.warn("HardwareKeys: " + uri + " refused: " + message.payload);
+                     },
+                     function (error) {
+                         console.warn("HardwareKeys: " + uri + " failed: " + error);
+                     });
+    }
+
+    //! True when a reply says the service did what was asked. A reply with no
+    //! returnValue at all is taken as success: some webOS services answer a
+    //! void call with an empty payload.
+    function _succeeded(message) {
+        if (!message || !message.payload)
+            return true;
+
+        try {
+            const reply = JSON.parse(message.payload);
+            return reply.returnValue === undefined || reply.returnValue === true;
+        } catch (e) {
+            return true;
+        }
     }
 }
