@@ -203,6 +203,13 @@ Rectangle {
         width: parent.width * 0.6
     }
 
+    // Typing has to keep the screen awake. luna-displaymanager only ever hears
+    // about touch and the power key, so without this the display dims and blanks
+    // mid-sentence on a device with a physical keyboard.
+    KeyboardActivity {
+        id: keyboardActivity
+    }
+
     // E Ink refresh control (MP01): the connector feeds screen activity to the
     // service and relays its key; the menu is what a long press of that key
     // opens. Both are inert on a device without the service.
