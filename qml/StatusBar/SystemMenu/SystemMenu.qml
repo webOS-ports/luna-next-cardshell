@@ -396,7 +396,10 @@ Item {
                 // on-screen one is already there and this would do nothing.
                 OnScreenKeyboardElement {
                     id: onScreenKeyboard
+                    // Also while the override is on, belt and braces: an entry
+                    // that vanishes the moment it is used leaves no way back.
                     visible: keyboardServiceConnector.hardwareKeyboardPresent
+                             || keyboardServiceConnector.onScreenKeyboardForced
                     ident: headerIdent
                     forced: keyboardServiceConnector.onScreenKeyboardForced
 

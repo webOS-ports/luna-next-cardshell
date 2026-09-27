@@ -70,6 +70,25 @@ WindowManager {
         return lockScreen.locked;
     }
 
+    /*!
+     * \brief Show or hide the full launcher.
+     *
+     * Exposed because the launcher is private to this component and a hardware
+     * key arrives in a connector that cannot see it.
+     *
+     * Makes the same transition the launch bar's own button does rather than
+     * setting launcherInstance.fullLauncherVisible: that property is driven by
+     * the launcher's states, so writing it directly fights the state machine
+     * instead of moving it.
+     */
+    function toggleLauncher() {
+        if (lockScreen.locked)
+            return;
+
+        launcherInstance.state =
+            (launcherInstance.state === "fullLauncher") ? "launchbar" : "fullLauncher";
+    }
+
     focus: true
     Keys.forwardTo: [ gestureAreaInstance, launcherInstance, cardViewInstance, volumeControl ]
 

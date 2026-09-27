@@ -210,6 +210,16 @@ Rectangle {
         id: keyboardActivity
     }
 
+    // The hardware call keys - answer, menu, back, hangup - which reach the
+    // compositor as ordinary Qt keys and until now had nothing to act on them.
+    // Which key means what is a per-device question, so the connector decides
+    // that; the launcher is wired here because it is private to CardsArea.
+    HardwareKeys {
+        id: hardwareKeys
+
+        onLauncherToggleRequested: cardsArea.toggleLauncher()
+    }
+
     // E Ink refresh control (MP01): the connector feeds screen activity to the
     // service and relays its key; the menu is what a long press of that key
     // opens. Both are inert on a device without the service.
