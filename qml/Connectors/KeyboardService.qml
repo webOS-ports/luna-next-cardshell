@@ -1,0 +1,105 @@
+/*
+ * Copyright (C) 2026 Herman van Hazendonk <github.com@herrie.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ */
+
+import QtQuick 2.0
+import LuneOS.Service 1.0
+
+/*!
+ * \brief What the input method says about the keyboard, and the one knob on it.
+ *
+ * A physical keyboard takes the on-screen one away, which leaves nothing for
+ * what the hardware cannot do: an emoji, a script it has no keys for, a key it
+ * simply lacks. com.webos.service.ime carries the way back.
+ *
+ * hardwareKeyboardPresent is what decides whether a control for this is worth
+ * showing at all - on a device with no physical keyboard the toggle would do
+ * nothing anyone wants.
+ */
+Item {
+    id: keyboardService
+
+    //! Whether a physical keyboard is attached.
+    property bool hardwareKeyboardPresent: false
+    //! Whether it can be typed on right now. False on a slider that is closed.
+    property bool hardwareKeyboardUsable: false
+    //! Whether the on-screen keyboard has been asked for despite the above.
+    property bool onScreenKeyboardForced: false
+
+    LunaService {
+        id: imeService
+        name: "com.webos.surfacemanager-cardshell"
+
+        onInitialized: {
+            imeService.subscribe("luna://com.webos.service.ime/getKeyboardStatus",
+                                 JSON.stringify({"subscribe": true}),
+                                 keyboardService._onStatus, keyboardService._onError);
+        }
+    }
+
+    function _onStatus(message) {
+        var response = JSON.parse(message.payload);
+
+        if (!response.returnValue)
+            return;
+
+        if (response.hardwareKeyboard !== undefined) {
+            keyboardService.hardwareKeyboardPresent = response.hardwareKeyboard.present === true;
+            keyboardService.hardwareKeyboardUsable = response.hardwareKeyboard.usable === true;
+        }
+
+        if (response.onScreenKeyboardForced !== undefined)
+            keyboardService.onScreenKeyboardForced = response.onScreenKeyboardForced === true;
+    }
+
+    function _onError(message) {
+        // Said once. maliit-server is started on demand, so being unable to
+        // reach it is ordinary rather than broken, and a line per retry would
+        // bury everything else.
+        if (!keyboardService._warned) {
+            keyboardService._warned = true;
+            console.warn("KeyboardService: no keyboard status: " + message.payload);
+        }
+    }
+
+    property bool _warned: false
+
+    //! A rejected call arrives here with returnValue false rather than through
+    //! the error callback, so it has to be read or a refusal looks like success.
+    function _onSetResponse(message) {
+        var response = JSON.parse(message.payload);
+
+        if (response.returnValue !== true) {
+            console.warn("KeyboardService: could not set the on-screen keyboard: "
+                         + message.payload);
+            return;
+        }
+
+        // The reply carries the new status, so the menu entry updates without
+        // waiting for the subscription to come round.
+        keyboardService._onStatus(message);
+    }
+
+    //! \brief Asks for the on-screen keyboard, or stops asking.
+    //!
+    //! Sticky, as LunaSysMgr's keyboard key was: it toggled IMEController and
+    //! left it toggled.
+    function setOnScreenKeyboardForced(forced) {
+        imeService.call("luna://com.webos.service.ime/setOnScreenKeyboardForced",
+                        JSON.stringify({"forced": forced === true}),
+                        keyboardService._onSetResponse, keyboardService._onError);
+    }
+}

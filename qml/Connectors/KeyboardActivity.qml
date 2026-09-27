@@ -95,15 +95,30 @@ Item {
         _lastReported = now;
 
         displayService.call("luna://com.palm.display/control/notifyUserActivity", "{}",
-                            undefined, keyboardActivity._onError);
+                            keyboardActivity._onResponse, keyboardActivity._onError);
+    }
+
+    //! A rejected call comes back here with returnValue false rather than through
+    //! the error callback, so it has to be checked or a refusal is silent. That
+    //! is not hypothetical: this was denied by LS2 for an hour while looking
+    //! like it worked, because nothing read the reply.
+    function _onResponse(message) {
+        var response = JSON.parse(message.payload);
+
+        if (response.returnValue !== true)
+            keyboardActivity._complain(message.payload);
     }
 
     function _onError(message) {
-        // Said once: if the method or the permission is missing, every keystroke
-        // would otherwise print.
+        keyboardActivity._complain(message.payload);
+    }
+
+    //! Said once: if the method or the permission is missing, every keystroke
+    //! would otherwise print.
+    function _complain(payload) {
         if (!keyboardActivity._warned) {
             keyboardActivity._warned = true;
-            console.warn("KeyboardActivity: cannot report activity:" + message.payload);
+            console.warn("KeyboardActivity: cannot report activity: " + payload);
         }
     }
 }

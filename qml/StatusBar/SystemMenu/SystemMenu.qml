@@ -62,6 +62,10 @@ Item {
         }
     }
 
+    KeyboardService {
+        id: keyboardServiceConnector
+    }
+
     TelephonyService {
         id: telephonyServiceConnector
     }
@@ -387,6 +391,25 @@ Item {
                 }
 
                 MenuDivider {visible: rotation.visible; widthOffset: dividerWidthOffset}
+
+                // Only where it means something: without a physical keyboard the
+                // on-screen one is already there and this would do nothing.
+                OnScreenKeyboardElement {
+                    id: onScreenKeyboard
+                    visible: keyboardServiceConnector.hardwareKeyboardPresent
+                    ident: headerIdent
+                    forced: keyboardServiceConnector.onScreenKeyboardForced
+
+                    onAction: {
+                        keyboardServiceConnector.setOnScreenKeyboardForced(
+                            !keyboardServiceConnector.onScreenKeyboardForced);
+
+                        closeMenuTimer.interval = 250;
+                        closeMenuTimer.start();
+                    }
+                }
+
+                MenuDivider {visible: onScreenKeyboard.visible; widthOffset: dividerWidthOffset}
 
                 MuteElement {
                     id: muteControl
