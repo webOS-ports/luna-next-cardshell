@@ -124,6 +124,10 @@ Item {
     property string dataNetworkMode: "unknown"
     property string mediaSoundOutput: "pcm_output"
 
+    KeyboardService {
+        id: keyboardServiceConnector
+    }
+
     TelephonyService {
         id: telephonyServiceConnector
     }
@@ -721,6 +725,30 @@ Item {
                         text: "Data Roaming"
                         statusText: wanService.roamGuard ? "Off" : "On"
                         onAction: wanService.setRoamGuard(!wanService.roamGuard)
+                    }
+
+                    // Only where it means something: without a physical keyboard
+                    // the on-screen one is already there and this would do
+                    // nothing anyone wants. Shown while the override is on too,
+                    // so a control that has been used can be used again.
+                    MenuDivider {
+                        visible: onScreenKeyboardEntry.visible
+                        widthOffset: dividerWidthOffset
+                    }
+
+                    NewMenuToggleEntry {
+                        id: onScreenKeyboardEntry
+                        visible: keyboardServiceConnector.hardwareKeyboardPresent
+                                 || keyboardServiceConnector.onScreenKeyboardForced
+                        text: "On-screen Keyboard"
+                        statusText: keyboardServiceConnector.onScreenKeyboardForced ? "On" : "Off"
+                        onAction: {
+                            keyboardServiceConnector.setOnScreenKeyboardForced(
+                                !keyboardServiceConnector.onScreenKeyboardForced);
+
+                            closeMenuTimer.interval = 250;
+                            closeMenuTimer.start();
+                        }
                     }
 
                     MenuDivider { widthOffset: dividerWidthOffset }
