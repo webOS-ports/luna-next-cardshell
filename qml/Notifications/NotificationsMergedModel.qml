@@ -39,6 +39,17 @@ ListModel {
 
     property IconPathServices iconPathServices: IconPathServices {}
     property NotificationService notificationService: NotificationService {}
+
+    /*
+     * Drives the notification LED off the same toast model. It lives here
+     * rather than in CardShell so that there is exactly one of it: the phone
+     * and tablet notification areas each build their own merged model, but only
+     * one of the two is ever loaded, and NotificationService - whose
+     * subscription to notificationmgr this shares - is created per model.
+     */
+    property NotificationLed notificationLed: NotificationLed {
+        notificationModel: notificationService.toastModel
+    }
     property Connections toastsListModelCnx: Connections {
         target: notificationService.toastModel
         // the signal itemAdded is declared in C++, without a qmltype declaration,
