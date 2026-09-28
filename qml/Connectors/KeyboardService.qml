@@ -39,6 +39,28 @@ Item {
     //! Whether the on-screen keyboard has been asked for despite the above.
     property bool onScreenKeyboardForced: false
 
+    /*! The digits printed on the key faces, by evdev scancode.
+     *
+     * For the things that take digits without an input method: the lock screen's
+     * PIN pad is our own QML, running inside the compositor, so nothing in
+     * maliit ever sees its keys and nothing can substitute a digit for the
+     * letter key it is printed on. On a Q25 the key labelled 1 is w.
+     *
+     * Empty where the keyboard has no profile saying so, which is every device
+     * whose digits are on keys of their own.
+     */
+    property var keyFaceDigits: ({})
+
+    /*! \brief The digit printed on a key, or "" if it is not a digit key.
+     *
+     * Takes the scancode from a QML key event, which on the compositor's evdev
+     * keyboard is the kernel's own code - the same numbering the profile uses.
+     */
+    function digitForScanCode(scanCode) {
+        var d = keyboardService.keyFaceDigits[String(scanCode)];
+        return d === undefined ? "" : d;
+    }
+
     LunaService {
         id: imeService
         name: "com.webos.surfacemanager-cardshell"
@@ -59,6 +81,9 @@ Item {
         if (response.hardwareKeyboard !== undefined) {
             keyboardService.hardwareKeyboardPresent = response.hardwareKeyboard.present === true;
             keyboardService.hardwareKeyboardUsable = response.hardwareKeyboard.usable === true;
+            keyboardService.keyFaceDigits =
+                response.hardwareKeyboard.keyFaceDigits !== undefined
+                    ? response.hardwareKeyboard.keyFaceDigits : ({});
         }
 
         if (response.onScreenKeyboardForced !== undefined)

@@ -20,6 +20,8 @@ import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
+import "../Connectors"
+
 Item {
     id: pinPasswordLock
 
@@ -27,6 +29,12 @@ Item {
     property int  margin: Units.gu(6/10)
     property int  topOffset: Units.gu(4/10)
     property bool isPINEntry: true
+
+    //! What the attached keyboard's key faces are labelled with; see the PIN
+    //! handling in Keys.onPressed.
+    KeyboardService {
+        id: keyboardService
+    }
     property int  minPassLength: 4
     property bool enforceMinLength: false
     property string queuedTitle: ""
@@ -250,6 +258,27 @@ Item {
 
     Keys.onPressed: {
         event.accepted = true;
+
+        /*
+         * A PIN typed on a physical keyboard whose digits are printed on letter
+         * keys. On a Q25 the key labelled 1 is w, and reaching the digit needs
+         * Alt - which is no way to enter a PIN, and the reason typing one here
+         * produced letters.
+         *
+         * Nothing in maliit can help: this is the shell's own QML inside the
+         * compositor, so there is no input method in the path at all and no
+         * content type to read. The keyboard's profile says what the key faces
+         * are labelled with, and keyboardService carries that here.
+         *
+         * Only for a PIN. A password may perfectly well contain a w.
+         */
+        if(isPINEntry) {
+            var digit = keyboardService.digitForScanCode(event.nativeScanCode);
+            if(digit !== "") {
+                passwordField.keyInput(digit, true);
+                return;
+            }
+        }
 
         if(isValidKey(event.key)) {
              passwordField.keyInput(event.text, isNumber(event.key));
