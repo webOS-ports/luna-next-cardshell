@@ -59,19 +59,19 @@ Item {
     readonly property bool editable: keyboardService ? keyboardService.inputFocus : false
 
     function showAt(x, y) {
-        if (!editOverlay.editable)
-            return;
-
         editOverlay.anchorX = x;
         editOverlay.anchorY = y;
         editOverlay.visible = true;
+
+        console.log("EditOverlay: shown at " + x + "," + y
+                    + " editable=" + editOverlay.editable);
     }
 
     function hide() {
         editOverlay.visible = false;
     }
 
-    //! The field going away takes the overlay with it.
+    //! The field going away takes the overlay with it once it is up.
     onEditableChanged: if (!editOverlay.editable) editOverlay.hide()
 
     // A press anywhere else dismisses, the way the legacy pill did. Below the
@@ -117,7 +117,9 @@ Item {
                         id: label
                         anchors.centerIn: parent
                         text: modelData.label
-                        color: "#f2f2f2"
+                        // Greyed rather than withheld when there is nothing to
+                        // edit, as legacy's EditMenu did with autoDisableItems.
+                        color: editOverlay.editable ? "#f2f2f2" : "#f2f2f280"
                         font.family: Settings.fontStatusBar
                         font.pixelSize: FontUtils.sizeToPixels("medium")
                         style: Text.Raised
@@ -143,6 +145,7 @@ Item {
                     MouseArea {
                         id: press
                         anchors.fill: parent
+                        enabled: editOverlay.editable
                         onClicked: {
                             if (editOverlay.compositorInstance)
                                 editOverlay.compositorInstance.sendEditCommand(modelData.command);
