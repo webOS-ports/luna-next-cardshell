@@ -81,105 +81,163 @@ Item {
         onPressed: editOverlay.hide()
     }
 
-    Rectangle {
+    /*!
+     * \brief Legacy's own pill, from legacy's own slices.
+     *
+     * The artwork is the webOS one - usr/palm/webkit/images/ate-*.png out of a
+     * Pre3 rootfs, the same files the old browser carried - drawn the way it
+     * drew them: two 17 px caps, a stretched middle either side of a 33 px
+     * arrow, all 60 px tall, with 4 px dividers between the words. A gridUnit
+     * of 10 makes those gu measurements the legacy pixels exactly.
+     */
+    Item {
         id: pill
 
-        color: "#39393b"
-        radius: Units.gu(1.4)
-        height: actions.height + Units.gu(1.2)
-        width: actions.width + Units.gu(2)
+        /*
+         * Every slice is the same 60 px canvas, and the bar does not fill it:
+         * in the caps it is rows 3..49, in the arrow that points up it is rows
+         * 10..56. Those seven rows are the whole trick - the arrow rides that
+         * much higher and its point sticks out of the top of the bar, rather
+         * than the slice being stretched taller, which only drags the bar down
+         * with it and leaves a tab hanging below.
+         */
+        readonly property real canvas: Units.gu(6)      // the 60 px slice
+        readonly property real px: canvas / 60          // one of legacy's pixels
+        readonly property real arrowRise: 7 * px        // caps' bar top vs the arrow's
 
-        // Kept on screen whichever edge the anchor is near, and sitting above
-        // the point rather than under the finger.
+        readonly property real capWidth: 17 * px
+        readonly property real arrowWidth: 33 * px
+        //! Where the bar's own ink sits inside that canvas, for placing the
+        //! words in the middle of the bar rather than the middle of the slice.
+        readonly property real barTop: 3 * px
+        readonly property real barBottom: 49 * px
+
+        //! Under the press, pointing up at the text, which is where legacy put
+        //! it. Above it instead when there is no room below, which is what the
+        //! second arrow slice was always there for.
+        readonly property bool below: editOverlay.anchorY + canvas + arrowRise < editOverlay.height
+
+        width: background.width
+        height: canvas + arrowRise
+
         x: Math.max(Units.gu(0.5),
                     Math.min(editOverlay.width - width - Units.gu(0.5),
                              editOverlay.anchorX - width / 2))
-        y: Math.max(Units.gu(0.5), editOverlay.anchorY - height - Units.gu(1))
+        //! The point sits on what it is pointing at, so the bar hangs the
+        //! slice's own distance away from it rather than a made-up gap.
+        y: below ? editOverlay.anchorY - barTop
+                 : editOverlay.anchorY - height + barTop
+
+        Row {
+            id: background
+
+            y: pill.below ? pill.arrowOverhang : 0
+
+            Image {
+                id: leftCap
+                source: Qt.resolvedUrl("images/edit/ate-left.png")
+                width: pill.capWidth
+                height: pill.canvas
+            }
+            Image {
+                source: Qt.resolvedUrl("images/edit/ate-middle.png")
+                width: actions.width / 2 - pill.arrowWidth / 2
+                height: pill.canvas
+            }
+            /*
+             * The arrow slice is the bar with the point on top of it, so it has
+             * to stand taller than the bar and hang out of the end the point is
+             * on. It cannot say so with an anchor - a Row lays its children out
+             * itself and ignores one - so it rides inside an item of bar height
+             * and is offset out of it instead.
+             */
+            Item {
+                width: pill.arrowWidth
+                height: pill.canvas
+
+                Image {
+                    source: pill.below ? Qt.resolvedUrl("images/edit/ate-arrow-up.png")
+                                       : Qt.resolvedUrl("images/edit/ate-arrow-down.png")
+                    width: parent.width
+                    height: pill.canvas
+                    //! Same canvas, seven of its rows higher, so the two bars
+                    //! meet and only the point stands above them.
+                    y: pill.below ? -pill.arrowRise : 0
+                }
+            }
+            Image {
+                source: Qt.resolvedUrl("images/edit/ate-middle.png")
+                width: actions.width / 2 - pill.arrowWidth / 2
+                height: pill.canvas
+            }
+            Image {
+                source: Qt.resolvedUrl("images/edit/ate-right.png")
+                width: pill.capWidth
+                height: pill.canvas
+            }
+        }
 
         Row {
             id: actions
-            anchors.centerIn: parent
-            spacing: 0
+
+            anchors.centerIn: background
+            //! Centred on the bar's ink, not on the canvas it is drawn in.
+            anchors.verticalCenterOffset: (pill.barTop + pill.barBottom) / 2 - pill.canvas / 2
+            spacing: Units.gu(0.6)
 
             Repeater {
+                // Legacy's order, less the "Select" it had for selecting a word:
+                // the shell asks the application to do these by shortcut and
+                // there is no shortcut for that one.
                 model: [
-                    { label: "Select All", command: "selectAll" },
                     { label: "Cut",        command: "cut" },
                     { label: "Copy",       command: "copy" },
-                    { label: "Paste",      command: "paste" }
+                    { label: "Paste",      command: "paste" },
+                    { label: "Select All", command: "selectAll" }
                 ]
 
-                delegate: Item {
-                    height: label.height + Units.gu(1)
-                    width: label.width + Units.gu(2)
+                delegate: Row {
+                    spacing: Units.gu(0.6)
+
+                    Image {
+                        source: Qt.resolvedUrl("images/edit/ate-divider.png")
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 4 * pill.px
+                        height: 40 * pill.px
+                        visible: index > 0
+                    }
 
                     Text {
                         id: label
-                        anchors.centerIn: parent
+
                         text: modelData.label
                         // Greyed rather than withheld when there is nothing to
                         // edit, as legacy's EditMenu did with autoDisableItems.
-                        color: editOverlay.editable ? "#f2f2f2" : "#f2f2f280"
-                        font.family: Settings.fontStatusBar
+                        // Qt reads eight hex digits as #AARRGGBB, not CSS's
+                        // #RRGGBBAA: "#E5E5E580" is a pale yellow, not a faded
+                        // grey, which is where the yellow words came from.
+                        color: editOverlay.editable ? "#E5E5E5" : "#80E5E5E5"
+                        font.family: "Prelude"
+                        font.weight: Font.DemiBold
                         font.pixelSize: FontUtils.sizeToPixels("medium")
-                        style: Text.Raised
-                        styleColor: "#00000099"
-                    }
 
-                    // The separators legacy drew between the pill's buttons.
-                    Rectangle {
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 1
-                        height: parent.height * 0.6
-                        color: "#00000066"
-                        visible: index < 3
-                    }
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -Units.gu(0.6)
+                            enabled: editOverlay.editable
+                            onClicked: {
+                                if (editOverlay.compositorInstance)
+                                    editOverlay.compositorInstance.sendEditCommand(modelData.command);
 
-                    Rectangle {
-                        anchors.fill: parent
-                        color: "#ffffff30"
-                        visible: press.pressed
-                    }
-
-                    MouseArea {
-                        id: press
-                        anchors.fill: parent
-                        enabled: editOverlay.editable
-                        onClicked: {
-                            if (editOverlay.compositorInstance)
-                                editOverlay.compositorInstance.sendEditCommand(modelData.command);
-
-                            // Select All leaves the selection to act on, so the
-                            // pill stays up for the Cut or Copy that follows.
-                            if (modelData.command !== "selectAll")
-                                editOverlay.hide();
+                                // Select All leaves the selection to act on, so
+                                // the pill stays up for the Cut or Copy after it.
+                                if (modelData.command !== "selectAll")
+                                    editOverlay.hide();
+                            }
                         }
                     }
                 }
             }
-        }
-    }
-
-    // The arrow under the pill, pointing at what the edit applies to.
-    Canvas {
-        width: Units.gu(1.6)
-        height: Units.gu(0.9)
-        x: Math.max(pill.x + Units.gu(0.5),
-                    Math.min(pill.x + pill.width - width - Units.gu(0.5),
-                             editOverlay.anchorX - width / 2))
-        y: pill.y + pill.height - 1
-
-        onPaint: {
-            var ctx = getContext("2d");
-            ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = "#39393b";
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(width, 0);
-            ctx.lineTo(width / 2, height);
-            ctx.closePath();
-            ctx.fill();
         }
     }
 }
