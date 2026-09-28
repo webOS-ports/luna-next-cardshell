@@ -81,22 +81,6 @@ WindowManager {
      * the launcher's states, so writing it directly fights the state machine
      * instead of moving it.
      */
-    /*!
-     * \brief Perform the back gesture.
-     *
-     * In webOS "back" is not a key an application consumes, it is a tap in the
-     * gesture area - which is why letting Qt::Key_Back through to the focused app
-     * did nothing at all. This is the same call DeviceKeyHandler's onHomePressed
-     * makes, so a hardware back key and the gesture end up in one place.
-     */
-    function backGesture() {
-        if (lockScreen.locked)
-            return;
-
-        if (gestureAreaInstance)
-            gestureAreaInstance.tapGesture();
-    }
-
     function toggleLauncher() {
         if (lockScreen.locked)
             return;

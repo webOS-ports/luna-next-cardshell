@@ -218,7 +218,6 @@ Rectangle {
         id: hardwareKeys
 
         onLauncherToggleRequested: cardsArea.toggleLauncher()
-        onBackRequested: cardsArea.backGesture()
     }
 
     // E Ink refresh control (MP01): the connector feeds screen activity to the
