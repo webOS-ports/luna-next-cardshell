@@ -405,8 +405,25 @@ WindowManager {
         anchors.right: parent.right
     }
 
+    /*! The shell's own Select All/Cut/Copy/Paste overlay.
+     *
+     * Fills the card area rather than sitting inside the status bar, because
+     * the pill has to be able to appear over the application and a press
+     * anywhere outside it has to dismiss it.
+     */
+    EditOverlay {
+        id: editOverlay
+
+        anchors.fill: parent
+        compositorInstance: compositor
+
+        keyboardService: KeyboardService {}
+    }
+
     StatusBar {
         id: statusBarInstance
+
+        onEditOverlayRequested: (x, y) => editOverlay.showAt(x, y)
 
         anchors.top: parent.top
         anchors.left: parent.left

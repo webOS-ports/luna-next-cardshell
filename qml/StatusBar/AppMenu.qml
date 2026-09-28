@@ -76,9 +76,24 @@ Item {
         return appId;
     }
 
+    /*! \brief Raised on a long press, for the shell's Select All/Cut/Copy/Paste
+     *  overlay.
+     *
+     *  This is where legacy kept the same four commands - enyo.EditMenu was a
+     *  section inside the application's own AppMenu - except that there they
+     *  only existed if the application had asked for them, and in LuneOS
+     *  essentially none do. A tap still opens the application's menu and is
+     *  unchanged; the long press is the shell's own.
+     */
+    signal editOverlayRequested(real x, real y)
+
     MouseArea {
         anchors.fill: parent
         onClicked: toggleState();
+        onPressAndHold: {
+            var p = mapToItem(null, mouseX, mouseY);
+            appMenu.editOverlayRequested(p.x, p.y);
+        }
     }
 
     function toggleState() {
