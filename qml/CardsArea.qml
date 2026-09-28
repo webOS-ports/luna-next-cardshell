@@ -97,7 +97,47 @@ WindowManager {
         // for the keyboard anymore
     //    if( compositor )
     //        compositor.clearKeyboardFocus();
-        focus = true;
+        takeKeyboardFocus();
+    }
+
+    /*!
+     * \brief Take the keyboard focus for the shell itself.
+     *
+     * Everything the shell does with a key - Just Type, the launcher's tabs,
+     * cycling through cards - happens in a Keys handler somewhere under this
+     * item, and a Keys handler only ever runs for the window's active focus item
+     * or one of its parents. Several things here claim that focus while they are
+     * up (the lock screen's pads, an application's own surface), and when they go
+     * away Qt has nobody to hand it back to: the window is left with no active
+     * focus item at all. Every key then reaches the compositor, is offered to the
+     * key filters - which is why the volume keys still worked - and is dropped.
+     * That is what "typing does nothing" was on a shell that had just started or
+     * had just been unlocked, until something on screen was tapped.
+     *
+     * Deliberately not while the lock screen is up: the pads read the keyboard
+     * themselves, which is how a PIN typed on a hardware keyboard gets in, and
+     * they take the focus back as they fade in. Taking it here would only fight
+     * them.
+     */
+    function takeKeyboardFocus() {
+        if (lockScreen.locked)
+            return;
+
+        windowManager.forceActiveFocus();
+    }
+
+    //! The shell starts out with the focus its QML asks for, but only if nothing
+    //! claimed it later during start-up - so ask for it once everything is up.
+    Component.onCompleted: windowManager.takeKeyboardFocus()
+
+    //! And again when the lock screen goes: it was holding the keyboard, and
+    //! whichever pad had it is hidden now rather than passing it on.
+    Connections {
+        target: lockScreen
+        function onLockedChanged() {
+            if (!lockScreen.locked)
+                windowManager.takeKeyboardFocus();
+        }
     }
 
     Loader {
