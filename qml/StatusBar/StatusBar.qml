@@ -605,6 +605,27 @@ Item {
 
             onLoaded: item.visible = false
 
+            // Keep the focused application's keyboard while the menu is up.
+            //
+            // The menu is the shell's own QML, not a Wayland client, so opening it
+            // takes Qt focus off the application's surface item - and the
+            // compositor answers that by clearing the application's keyboard focus
+            // (WebOSSurfaceItem::focusOutEvent). The client then blurs whatever
+            // field it had focused and deactivates its text input, which is how
+            // reaching the on-screen keyboard toggle managed to take away the very
+            // field the toggle was supposed to put a keyboard up for.
+            //
+            // Set only for this menu. The lock screen and Just Type take Qt focus
+            // because they want the keys themselves, and there the application
+            // losing the keyboard is the point.
+            Binding {
+                target: compositor
+                property: "keepInputActive"
+                value: systemMenuLoader.item !== null && systemMenuLoader.item.visible
+                when: compositor !== null
+                restoreMode: Binding.RestoreBindingOrValue
+            }
+
             Connections {
                 target: systemMenuLoader.item
                 function onCloseSystemMenu() {
