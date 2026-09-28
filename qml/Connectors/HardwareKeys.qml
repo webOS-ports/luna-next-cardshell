@@ -46,16 +46,6 @@ Item {
      */
     signal launcherToggleRequested()
 
-    /*!
-     * \brief Go back.
-     *
-     * Wired to the gesture area, not to the focused application: in webOS "back"
-     * is a tap in the gesture area rather than a key, so passing Qt::Key_Back
-     * through to the app - which is what this did first - reached nothing that
-     * acts on it.
-     */
-    signal backRequested()
-
     //! What WebOSKeyFilter::Result is worth. The enum is not registered for QML,
     //! so these have to be the numbers - and getting them wrong decides the fate
     //! of every key in the system, not just ours.
@@ -253,9 +243,36 @@ Item {
             break;
 
         case "shell.back":
-            hardwareKeys.backRequested();
+            hardwareKeys._sendBack();
             break;
         }
+    }
+
+    /*!
+     * \brief Go back, as the shell's own back gesture does.
+     *
+     * By sending Escape to whatever has focus. That is not a guess: CardView's
+     * onSwipeLeftGesture - the back gesture - does exactly this, and webOS
+     * applications take Escape as back.
+     *
+     * Two earlier attempts here were wrong and are worth recording. Letting
+     * Qt::Key_Back through to the application did nothing, because nothing in the
+     * stack acts on it. Calling the gesture area's tapGesture() *minimised* the
+     * app instead, because a tap toggles Maximized/Carded; it is swipe-left, not
+     * tap, that means back.
+     *
+     * No recursion risk: Escape is not in the action map, so the filter passes it
+     * straight through on the way back in.
+     */
+    function _sendBack() {
+        if (!compositor || !compositor.defaultSeat) {
+            console.warn("HardwareKeys: no seat to send back to");
+            return;
+        }
+
+        const seat = compositor.defaultSeat;
+        seat.sendKeyEvent(Qt.Key_Escape, true);
+        seat.sendKeyEvent(Qt.Key_Escape, false);
     }
 
     function _call(uri, payload) {
