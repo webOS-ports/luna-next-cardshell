@@ -66,6 +66,24 @@ WindowManager {
 
     gestureAreaInstance: gestureAreaInstance
     property bool gesturesEnabled: !lockScreen.locked && !dockMode.visible && state === "normal"
+
+    //! True while an application's own window is what the screen is showing: a
+    //! card of its own, with none of the shell's own UI in front of it. What the
+    //! arrow keys mean depends on this - in the shell they move the launcher's
+    //! selection, and in an application they are a finger on the glass.
+    readonly property bool applicationForeground:
+        gesturesEnabled && !launcherInstance.launcherActive &&
+        (cardViewInstance.state === "maximizedCard" || cardViewInstance.state === "fullscreenCard")
+
+    //! The window of the application in front, or null when the shell's own UI
+    //! is. A function rather than a property because which card is in front
+    //! changes without anything here to bind to, and whoever asks wants the
+    //! answer now. Not compositor.activeSurface: that is empty for some
+    //! applications - a browser_shell one, for instance - and the card view
+    //! knows perfectly well what it is showing.
+    function foregroundWindow() {
+        return applicationForeground ? cardViewInstance.currentActiveWindow() : null;
+    }
     function isScreenLocked() {
         return lockScreen.locked;
     }

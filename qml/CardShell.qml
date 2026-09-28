@@ -220,6 +220,16 @@ Rectangle {
         onLauncherToggleRequested: cardsArea.toggleLauncher()
     }
 
+    // A trackpad is an arrow-key device, and applications were written to be
+    // dragged rather than arrowed at, so inside one the arrows become a finger.
+    // Only there: in the shell's own UI they already mean something.
+    TrackpadScroll {
+        id: trackpadScroll
+
+        active: cardsArea.applicationForeground
+        windowInFront: cardsArea.foregroundWindow
+    }
+
     // E Ink refresh control (MP01): the connector feeds screen activity to the
     // service and relays its key; the menu is what a long press of that key
     // opens. Both are inert on a device without the service.
