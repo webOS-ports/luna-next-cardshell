@@ -110,9 +110,6 @@ Item {
     property string dockModeAppMenuTitle: "Time"
     signal dockModeMenuToggled()
 
-    //! Relayed from the app menu's long press; see AppMenu.editOverlayRequested.
-    signal editOverlayRequested(real x, real y)
-
     signal showPowerMenu()
 
     function probeNetworkStatus()
@@ -453,7 +450,6 @@ Item {
             dockModeAppMenuTitle: statusBar.dockModeAppMenuTitle
 
             onDockModeMenuToggled: statusBar.dockModeMenuToggled()
-            onEditOverlayRequested: (x, y) => statusBar.editOverlayRequested(x, y)
         }
 
         Loader {

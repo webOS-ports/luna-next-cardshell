@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
+import QtQuick 2.12
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 import WebOSCompositorBase 1.0
@@ -478,10 +478,69 @@ WindowManager {
         keyboardService: KeyboardService {}
     }
 
+    /*!
+     * \brief A long press on the text is what asks for that pill.
+     *
+     * Where the hand expects it, and where legacy's selection pill came from -
+     * not a long press on the application's title in the status bar, which
+     * nobody would think to try.
+     *
+     * The press is only watched, never taken: a PointHandler holds a passive
+     * grab, so the touch still reaches the application underneath and whatever
+     * it does with a long press of its own is unchanged. And it is only watched
+     * at all while a text field holds the input method's focus - the same
+     * condition the pill is shown under - because otherwise every long press in
+     * every application would be a question about pasting.
+     */
+    Item {
+        anchors.fill: parent
+        z: 1000 // under the pill itself, over the cards
+
+        enabled: editOverlay.editable && !editOverlay.visible
+
+        PointHandler {
+            id: editPressMonitor
+
+            //! Where the finger went down, to tell a hold from a drag.
+            property point pressedAt
+
+            onActiveChanged: {
+                if (editPressMonitor.active) {
+                    editPressMonitor.pressedAt = editPressMonitor.point.position;
+                    editPressTimer.restart();
+                } else {
+                    editPressTimer.stop();
+                }
+            }
+
+            onPointChanged: {
+                if (!editPressMonitor.active)
+                    return;
+
+                var dx = editPressMonitor.point.position.x - editPressMonitor.pressedAt.x;
+                var dy = editPressMonitor.point.position.y - editPressMonitor.pressedAt.y;
+
+                // Moved: that is a drag, a flick or a selection, none of which
+                // is a request for the pill.
+                if (dx * dx + dy * dy > Units.gu(1.5) * Units.gu(1.5))
+                    editPressTimer.stop();
+            }
+        }
+
+        Timer {
+            id: editPressTimer
+
+            //! Long enough not to fire on a tap, short enough to feel deliberate.
+            interval: 600
+            repeat: false
+
+            onTriggered: editOverlay.showAt(editPressMonitor.point.position.x,
+                                            editPressMonitor.point.position.y)
+        }
+    }
+
     StatusBar {
         id: statusBarInstance
-
-        onEditOverlayRequested: (x, y) => editOverlay.showAt(x, y)
 
         anchors.top: parent.top
         anchors.left: parent.left
