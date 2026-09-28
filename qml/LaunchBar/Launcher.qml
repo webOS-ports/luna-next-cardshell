@@ -61,9 +61,10 @@ Item {
         height: Units.gu(5);
         anchors.horizontalCenter: parent.horizontalCenter
 
-        onShowJustType: {
+        onShowJustType: (pressedKey, modifiers) => {
             if( !!__justTypeLauncherWindow ) {
                 launcherItem.state = "justTypeLauncher";
+                launcherItem.__handOverJustTypeKey(pressedKey, modifiers);
             }
         }
     }
@@ -155,6 +156,45 @@ Item {
             StateChangeScript { script: windowManagerInstance.switchToLauncherView() }
         }
     ]
+
+    /*!
+     * \brief Give the launcher application the key that opened Just Type.
+     *
+     * That first keystroke is what asked for Just Type in the first place, so it
+     * arrives while the shell still has the keyboard focus and the launcher
+     * window has none - JustTypeField consumes it to know it was typed at all.
+     * Without handing it over the search field comes up empty and the letter is
+     * simply gone, which is what "Just Type swallows the first letter" was.
+     *
+     * Replaying it on the seat is how the shell already talks to a focused
+     * surface: CardView's back gesture sends Escape the same way. The state
+     * change above has just taken the focus for this window, so the key goes
+     * there and nowhere else.
+     *
+     * Shift is replayed around it, balanced, because the client works out its own
+     * modifier state from the key events it was sent and it never saw the Shift
+     * that is still being held - so a capital first letter would otherwise
+     * arrive lowercase. Balanced rather than left down until the real release:
+     * that release is swallowed by WebOSKeyFilter, which drops the first release
+     * after a focus change, and a Shift left depressed would then capitalise the
+     * rest of the word.
+     */
+    function __handOverJustTypeKey(pressedKey, modifiers) {
+        if( pressedKey === 0 ) return; // the field was tapped, nothing was typed
+
+        if( !compositor || !compositor.defaultSeat ) {
+            console.warn("Launcher: no seat to hand the Just Type key to");
+            return;
+        }
+
+        var seat = compositor.defaultSeat;
+        var shifted = (modifiers & Qt.ShiftModifier) !== 0;
+
+        if( shifted ) seat.sendKeyEvent(Qt.Key_Shift, true);
+        seat.sendKeyEvent(pressedKey, true);
+        seat.sendKeyEvent(pressedKey, false);
+        if( shifted ) seat.sendKeyEvent(Qt.Key_Shift, false);
+    }
 
     function launchApplication(id, params, successCB) {
         console.log("launching app " + id + " with params " + JSON.stringify(params));

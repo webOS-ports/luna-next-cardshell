@@ -27,7 +27,15 @@ Item {
     // can't be triggered while it is hidden behind a maximized window
     visible: opacity > 0
 
-    signal showJustType(int pressedKey)
+    /*!
+     * \brief Ask for Just Type, and say which key asked for it.
+     *
+     * \a pressedKey is the key that triggered this, or 0 when the field was
+     * tapped instead. It has to travel with the signal: this key is consumed
+     * here, where the launcher window does not have the focus yet to receive
+     * it, so whoever brings that window up has to hand it over afterwards.
+     */
+    signal showJustType(int pressedKey, int modifiers)
 
     Image {
         id: bgLeft
@@ -85,12 +93,12 @@ Item {
     MouseArea {
         anchors.fill: parent
         enabled: justTypeFieldItem.state === "visible"
-        onClicked: justTypeFieldItem.showJustType(0)
+        onClicked: justTypeFieldItem.showJustType(0, 0)
     }
 
     Keys.onPressed: (event) => {
         if(visible && opacity>0 && __isDisplayableKey(event.key) ) {
-                        showJustType(event.key);
+                        showJustType(event.key, event.modifiers);
                         event.accepted = true;
         }
     }
