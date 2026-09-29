@@ -33,6 +33,10 @@ Item {
 
     property real iconSize: 64
     property bool glow: false
+    //! Whether that glow breathes. A dragged icon does, to say it is in flight;
+    //! anything else stays lit, because a highlight the user is moving around
+    //! flickers under the thumb rather than reads as a cue.
+    property bool pulse: true
 
     // Android apps run inside Waydroid but keep their own Android icon, so mark them
     readonly property bool isAndroidApp: LauncherTabs.needsAndroidBadge(launchableAppIcon.appId)
@@ -66,13 +70,13 @@ Item {
             height: iconSize
             anchors.horizontalCenter: parent.horizontalCenter
             visible: glow
-            radius: 4
+            radius: launchableAppIcon.pulse ? 4 : 12
             color: "white"
             transparentBorder: true
             source: appIconImage
 
             SequentialAnimation on radius {
-                running: glow
+                running: glow && launchableAppIcon.pulse
                 loops: Animation.Infinite
                 NumberAnimation {
                     from: 4; to: 20

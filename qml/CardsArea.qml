@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.0
+import QtQuick 2.12
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 import WebOSCompositorBase 1.0
@@ -66,6 +66,24 @@ WindowManager {
 
     gestureAreaInstance: gestureAreaInstance
     property bool gesturesEnabled: !lockScreen.locked && !dockMode.visible && state === "normal"
+
+    //! True while an application's own window is what the screen is showing: a
+    //! card of its own, with none of the shell's own UI in front of it. What the
+    //! arrow keys mean depends on this - in the shell they move the launcher's
+    //! selection, and in an application they are a finger on the glass.
+    readonly property bool applicationForeground:
+        gesturesEnabled && !launcherInstance.launcherActive &&
+        (cardViewInstance.state === "maximizedCard" || cardViewInstance.state === "fullscreenCard")
+
+    //! The window of the application in front, or null when the shell's own UI
+    //! is. A function rather than a property because which card is in front
+    //! changes without anything here to bind to, and whoever asks wants the
+    //! answer now. Not compositor.activeSurface: that is empty for some
+    //! applications - a browser_shell one, for instance - and the card view
+    //! knows perfectly well what it is showing.
+    function foregroundWindow() {
+        return applicationForeground ? cardViewInstance.currentActiveWindow() : null;
+    }
     function isScreenLocked() {
         return lockScreen.locked;
     }
@@ -97,7 +115,68 @@ WindowManager {
         // for the keyboard anymore
     //    if( compositor )
     //        compositor.clearKeyboardFocus();
-        focus = true;
+        takeKeyboardFocus();
+    }
+
+    /*!
+     * \brief Take the keyboard focus for the shell itself.
+     *
+     * Everything the shell does with a key - Just Type, the launcher's tabs,
+     * cycling through cards - happens in a Keys handler somewhere under this
+     * item, and a Keys handler only ever runs for the window's active focus item
+     * or one of its parents. Several things here claim that focus while they are
+     * up (the lock screen's pads, an application's own surface), and when they go
+     * away Qt has nobody to hand it back to: the window is left with no active
+     * focus item at all. Every key then reaches the compositor, is offered to the
+     * key filters - which is why the volume keys still worked - and is dropped.
+     * That is what "typing does nothing" was on a shell that had just started or
+     * had just been unlocked, until something on screen was tapped.
+     *
+     * Deliberately not while the lock screen is up: the pads read the keyboard
+     * themselves, which is how a PIN typed on a hardware keyboard gets in, and
+     * they take the focus back as they fade in. Taking it here would only fight
+     * them.
+     */
+    function takeKeyboardFocus() {
+        if (lockScreen.locked)
+            return;
+
+        /*
+         * An application in front keeps the keyboard; the shell only takes it
+         * when its own UI is what is on screen.
+         *
+         * Taking it regardless is worse than it sounds. The compositor hands
+         * keys to whichever surface holds the keyboard focus, and it also
+         * refuses a text field: WaylandTextModel::textModelActivate declines an
+         * activation whose surface is not the focused one ("activation declined
+         * for non-focused surface"), so an application left without the keyboard
+         * focus cannot be typed into and cannot raise a keyboard at all - the
+         * input method is never even told a field was focused. Unlocking with an
+         * application in front is how that happened: the lock screen's pads gave
+         * the focus up, this took it, and nothing gave it back until the card
+         * changed state.
+         */
+        var foreground = foregroundWindow();
+        if (foreground && foreground.userData) {
+            foreground.userData.takeFocus();
+            return;
+        }
+
+        windowManager.forceActiveFocus();
+    }
+
+    //! The shell starts out with the focus its QML asks for, but only if nothing
+    //! claimed it later during start-up - so ask for it once everything is up.
+    Component.onCompleted: windowManager.takeKeyboardFocus()
+
+    //! And again when the lock screen goes: it was holding the keyboard, and
+    //! whichever pad had it is hidden now rather than passing it on.
+    Connections {
+        target: lockScreen
+        function onLockedChanged() {
+            if (!lockScreen.locked)
+                windowManager.takeKeyboardFocus();
+        }
     }
 
     Loader {
@@ -403,6 +482,83 @@ WindowManager {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
+    }
+
+    /*! The shell's own Select All/Cut/Copy/Paste overlay.
+     *
+     * Fills the card area rather than sitting inside the status bar, because
+     * the pill has to be able to appear over the application and a press
+     * anywhere outside it has to dismiss it.
+     */
+    EditOverlay {
+        id: editOverlay
+
+        anchors.fill: parent
+        compositorInstance: compositor
+        foregroundWindow: windowManager.foregroundWindow
+
+        keyboardService: KeyboardService {}
+    }
+
+    /*!
+     * \brief A long press on the text is what asks for that pill.
+     *
+     * Where the hand expects it, and where legacy's selection pill came from -
+     * not a long press on the application's title in the status bar, which
+     * nobody would think to try.
+     *
+     * The press is only watched, never taken: a PointHandler holds a passive
+     * grab, so the touch still reaches the application underneath and whatever
+     * it does with a long press of its own is unchanged. And it is only watched
+     * at all while a text field holds the input method's focus - the same
+     * condition the pill is shown under - because otherwise every long press in
+     * every application would be a question about pasting.
+     */
+    Item {
+        anchors.fill: parent
+        z: 1000 // under the pill itself, over the cards
+
+        enabled: editOverlay.editable && !editOverlay.visible
+
+        PointHandler {
+            id: editPressMonitor
+
+            //! Where the finger went down, to tell a hold from a drag.
+            property point pressedAt
+
+            onActiveChanged: {
+                if (editPressMonitor.active) {
+                    editPressMonitor.pressedAt = editPressMonitor.point.position;
+                    editPressTimer.restart();
+                } else {
+                    editPressTimer.stop();
+                }
+            }
+
+            onPointChanged: {
+                if (!editPressMonitor.active)
+                    return;
+
+                var dx = editPressMonitor.point.position.x - editPressMonitor.pressedAt.x;
+                var dy = editPressMonitor.point.position.y - editPressMonitor.pressedAt.y;
+
+                // Moved: that is a drag, a flick or a selection, none of which
+                // is a request for the pill.
+                if (dx * dx + dy * dy > Units.gu(1.5) * Units.gu(1.5))
+                    editPressTimer.stop();
+            }
+        }
+
+        Timer {
+            id: editPressTimer
+
+            //! Long enough not to fire on a tap, short enough to feel deliberate.
+            interval: 600
+            repeat: false
+
+            onTriggered: editOverlay.showAt(editPressMonitor.point.position.x,
+                                            editPressMonitor.point.position.y)
+        }
     }
 
     StatusBar {

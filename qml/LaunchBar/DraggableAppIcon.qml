@@ -24,6 +24,11 @@ Item {
     property bool editionMode: false
     property bool draggingActive: false
 
+    //! Picked out by the trackpad or the arrow keys. Wears the same glow as an
+    //! icon being dragged, because it means the same thing: this is the one the
+    //! next thing you do will happen to.
+    property bool selected: false
+
     property alias iconWidth: launcherIcon.width
     property alias iconSize: launcherIcon.iconSize
 
@@ -47,6 +52,10 @@ Item {
     Drag.hotSpot.x: width / 2
     Drag.hotSpot.y: height / 2
 
+    // The chrome an icon wears in edition mode is also what marks the one the
+    // trackpad has picked out. It is the shell's existing "this one" look, it
+    // costs no new artwork, and it simply sits there - a selection the user is
+    // walking across the grid should not be flashing while they do it.
     Image {
         source: Qt.resolvedUrl("../images/launcher/edit-icon-bg.png");
         anchors {
@@ -54,7 +63,7 @@ Item {
             margins: 3
         }
         fillMode: Image.Stretch
-        visible: draggableAppIconItem.editionMode && !draggingActive
+        visible: (draggableAppIconItem.editionMode || draggableAppIconItem.selected) && !draggingActive
     }
 
     LaunchableAppIcon {
@@ -68,7 +77,11 @@ Item {
 
         showTitle: true
 
-        glow: draggableAppIconItem.draggingActive
+        // In edition mode every icon wears the chrome, so there the selected one
+        // is told apart by a glow as well - lit, not pulsing like a drag.
+        glow: draggableAppIconItem.draggingActive ||
+              (draggableAppIconItem.selected && draggableAppIconItem.editionMode)
+        pulse: draggableAppIconItem.draggingActive
 
         onStartLaunchApplication: draggableAppIconItem.startLaunchApplication(appId, appParams);
     }

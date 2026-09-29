@@ -25,6 +25,7 @@ import LuneOS.Service 1.0
 import LuneOS.Components 1.0
 
 import "LauncherTabs.js" as LauncherTabs
+import "FullLauncherSelection.js" as Selection
 import "../Utils"
 import "../LunaSysAPI" as LunaSysAPI
 import "../AppTweaks"
@@ -109,14 +110,40 @@ Item {
     anchors.top: parent.bottom
 
     focus: true
-    Keys.onPressed: {
-        if (event.key === Qt.Key_Left) {
-            event.accepted = true;
-            tabRowList.currentIndex = Math.max(tabRowList.currentIndex - 1,0);
-        }
-        if (event.key === Qt.Key_Right) {
-            event.accepted = true;
-            tabRowList.currentIndex = Math.min(tabRowList.currentIndex + 1,tabRowList.count-1);
+
+    /*!
+     * \brief Picking an app with the trackpad or the arrow keys.
+     *
+     * Whether an icon is the chosen one is the grid's own currentIndex, and this
+     * says whether that choice is shown at all: there is no selection until an
+     * arrow is pressed, so the launcher looks exactly as it always did for
+     * anyone using it by touch. FullLauncherSelection.js does the moving, and
+     * the comments there explain what the trackpad sends and how the selection
+     * crosses from one tab into the next.
+     */
+    property bool keyboardSelectionActive: false
+
+    onStateChanged: if( state !== "visible" ) Selection.reset();
+
+    Keys.onPressed: (event) => {
+        switch( event.key ) {
+        case Qt.Key_Left:
+            event.accepted = Selection.step(-1, 0, event.isAutoRepeat);
+            break;
+        case Qt.Key_Right:
+            event.accepted = Selection.step(1, 0, event.isAutoRepeat);
+            break;
+        case Qt.Key_Up:
+            event.accepted = Selection.step(0, -1, event.isAutoRepeat);
+            break;
+        case Qt.Key_Down:
+            event.accepted = Selection.step(0, 1, event.isAutoRepeat);
+            break;
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+        case Qt.Key_Space:
+            event.accepted = Selection.launchSelection();
+            break;
         }
     }
 
@@ -435,6 +462,8 @@ Item {
                 }
 
                 delegate: DraggableAppIcon {
+                    selected: fullLauncher.keyboardSelectionActive && GridView.isCurrentItem
+
                     modelTitle: model.title
                     modelIcon: model.icon
                     modelId: model.id

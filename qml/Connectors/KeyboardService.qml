@@ -39,6 +39,13 @@ Item {
     //! Whether the on-screen keyboard has been asked for despite the above.
     property bool onScreenKeyboardForced: false
 
+    //! Whether a text field currently holds the input method's focus.
+    //!
+    //! What the edit overlay is shown for: there is no point offering Cut and
+    //! Paste with nothing focused to cut from. Legacy's enyo.EditMenu greyed
+    //! its items out on the same question.
+    property bool inputFocus: false
+
     /*! The digits printed on the key faces, by evdev scancode.
      *
      * For the things that take digits without an input method: the lock screen's
@@ -88,6 +95,9 @@ Item {
 
         if (response.onScreenKeyboardForced !== undefined)
             keyboardService.onScreenKeyboardForced = response.onScreenKeyboardForced === true;
+
+        if (response.inputFocus !== undefined)
+            keyboardService.inputFocus = response.inputFocus === true;
     }
 
     function _onError(message) {
