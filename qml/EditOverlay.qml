@@ -48,6 +48,11 @@ Item {
     property QtObject keyboardService: null
     property QtObject compositorInstance: null
 
+    //! Where to give the keyboard back to. The shell passes its own function,
+    //! because pressing anything here takes the focus off the application and
+    //! the shortcut has to arrive at one that still has it.
+    property var foregroundWindow: null
+
     //! Where the pill points. Set before calling show().
     property real anchorX: width / 2
     property real anchorY: height / 2
@@ -253,6 +258,22 @@ Item {
                             anchors.margins: -Units.gu(0.6)
                             enabled: editOverlay.editable
                             onClicked: {
+                                /*
+                                 * Hand the keyboard back before typing at it.
+                                 *
+                                 * Pressing this pill is a press on the shell,
+                                 * and it leaves the application's surface
+                                 * without the keyboard focus. The shortcut is
+                                 * delivered to whatever holds that focus, so
+                                 * sent from here it went nowhere at all: the
+                                 * input method saw Ctrl+C and the page never
+                                 * did.
+                                 */
+                                var foreground = editOverlay.foregroundWindow
+                                                 ? editOverlay.foregroundWindow() : null;
+                                if (foreground && foreground.userData)
+                                    foreground.userData.takeFocus();
+
                                 if (editOverlay.compositorInstance)
                                     editOverlay.compositorInstance.sendEditCommand(modelData.command);
 

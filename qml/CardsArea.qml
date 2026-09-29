@@ -495,6 +495,7 @@ WindowManager {
 
         anchors.fill: parent
         compositorInstance: compositor
+        foregroundWindow: windowManager.foregroundWindow
 
         keyboardService: KeyboardService {}
     }
