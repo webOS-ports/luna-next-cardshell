@@ -101,7 +101,15 @@ Item {
          * than the slice being stretched taller, which only drags the bar down
          * with it and leaves a tab hanging below.
          */
-        readonly property real canvas: Units.gu(6)      // the 60 px slice
+        /*
+         * How big legacy's 60 px slice is drawn here.
+         *
+         * Legacy's own bar is 41 px of a 768 px screen, and matching that share
+         * exactly came out too small: that screenshot is a TouchPad, and the
+         * same fraction of a phone's screen is a much smaller thing to hit and
+         * to read. Half a gu above it, which is what a hand asked for.
+         */
+        readonly property real canvas: Units.gu(5.25)   // the 60 px slice
         readonly property real px: canvas / 60          // one of legacy's pixels
         readonly property real arrowRise: 7 * px        // caps' bar top vs the arrow's
 
@@ -199,6 +207,13 @@ Item {
                 delegate: Row {
                     spacing: Units.gu(0.6)
 
+                    //! The same height for every item, whether or not it has a
+                    //! divider. A Row leaves out a child that is not visible,
+                    //! so the first item - the only one without one - would
+                    //! otherwise be a row as short as its own text, and being
+                    //! top-aligned with the rest it would sit higher than them.
+                    height: 40 * pill.px
+
                     Image {
                         source: Qt.resolvedUrl("images/edit/ate-divider.png")
                         anchors.verticalCenter: parent.verticalCenter
@@ -210,6 +225,12 @@ Item {
                     Text {
                         id: label
 
+                        //! In the middle of the bar. Without this the words sit
+                        //! against the top of the row, because the divider
+                        //! beside them is taller than they are and a Row aligns
+                        //! its children to the top.
+                        anchors.verticalCenter: parent.verticalCenter
+
                         text: modelData.label
                         // Greyed rather than withheld when there is nothing to
                         // edit, as legacy's EditMenu did with autoDisableItems.
@@ -218,8 +239,14 @@ Item {
                         // grey, which is where the yellow words came from.
                         color: editOverlay.editable ? "#E5E5E5" : "#80E5E5E5"
                         font.family: "Prelude"
-                        font.weight: Font.DemiBold
-                        font.pixelSize: FontUtils.sizeToPixels("medium")
+                        //! Not DemiBold: the only Prelude faces on the device
+                        //! are Medium and Bold, so anything above Normal picks
+                        //! up Bold, which is not what legacy's pill reads like.
+                        font.weight: Font.Normal
+                        //! Measured off legacy's own pill - caps a third of the
+                        //! bar's height - and expressed in its pixels so the
+                        //! words follow the slice at any size.
+                        font.pixelSize: 20 * pill.px
 
                         MouseArea {
                             anchors.fill: parent
