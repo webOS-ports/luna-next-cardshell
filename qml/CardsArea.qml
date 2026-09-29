@@ -141,6 +141,27 @@ WindowManager {
         if (lockScreen.locked)
             return;
 
+        /*
+         * An application in front keeps the keyboard; the shell only takes it
+         * when its own UI is what is on screen.
+         *
+         * Taking it regardless is worse than it sounds. The compositor hands
+         * keys to whichever surface holds the keyboard focus, and it also
+         * refuses a text field: WaylandTextModel::textModelActivate declines an
+         * activation whose surface is not the focused one ("activation declined
+         * for non-focused surface"), so an application left without the keyboard
+         * focus cannot be typed into and cannot raise a keyboard at all - the
+         * input method is never even told a field was focused. Unlocking with an
+         * application in front is how that happened: the lock screen's pads gave
+         * the focus up, this took it, and nothing gave it back until the card
+         * changed state.
+         */
+        var foreground = foregroundWindow();
+        if (foreground && foreground.userData) {
+            foreground.userData.takeFocus();
+            return;
+        }
+
         windowManager.forceActiveFocus();
     }
 
