@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.5
-import Qt5Compat.GraphicalEffects
+import QtQuick
+import QtQuick.Shapes
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
@@ -58,7 +58,7 @@ Item {
     // the very edge of the screen at rest
     readonly property real baseRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 4
 
-    Item {
+    Shape {
         id: pulse
 
         anchors.centerIn: parent
@@ -67,29 +67,36 @@ Item {
         scale: 1
         opacity: 0
 
-        // Qt5Compat's RadialGradient fills its whole rectangular bounds; the
-        // real QPainter/QRadialGradient legacy renderer feathers past the
-        // visible edge smoothly, so clip to a circle to avoid a hard square
-        layer.enabled: true
-        layer.effect: OpacityMask {
-            maskSource: Rectangle {
-                width: pulse.width
-                height: pulse.height
-                radius: width / 2
+        // The gradient is painted into a circle, so there is no hard square
+        // edge to hide: the real QPainter/QRadialGradient legacy renderer
+        // feathers past the visible edge smoothly, and the last stop is all
+        // but transparent anyway.
+        ShapePath {
+            strokeWidth: -1
+
+            fillGradient: RadialGradient {
+                centerX: pulse.width / 2
+                centerY: pulse.height / 2
+                focalX: centerX
+                focalY: centerY
+                centerRadius: nfcGlow.baseRadius
+
+                // Exact stops from TouchToShareGlow.cpp's QGradientStops
+                GradientStop { position: 0.0;  color: "#AFFFFFFF" }
+                GradientStop { position: 0.25; color: "#1FFFFFFF" }
+                GradientStop { position: 0.5;  color: "#FFFFFFFF" }
+                GradientStop { position: 0.75; color: "#1FFFFFFF" }
+                GradientStop { position: 1.0;  color: "#01FFFFFF" }
             }
-        }
 
-        RadialGradient {
-            anchors.fill: parent
-            horizontalRadius: nfcGlow.baseRadius
-            verticalRadius: nfcGlow.baseRadius
-
-            // Exact stops from TouchToShareGlow.cpp's QGradientStops
-            GradientStop { position: 0.0;  color: "#AFFFFFFF" }
-            GradientStop { position: 0.25; color: "#1FFFFFFF" }
-            GradientStop { position: 0.5;  color: "#FFFFFFFF" }
-            GradientStop { position: 0.75; color: "#1FFFFFFF" }
-            GradientStop { position: 1.0;  color: "#01FFFFFF" }
+            PathAngleArc {
+                centerX: pulse.width / 2
+                centerY: pulse.height / 2
+                radiusX: pulse.width / 2
+                radiusY: pulse.height / 2
+                startAngle: 0
+                sweepAngle: 360
+            }
         }
     }
 
