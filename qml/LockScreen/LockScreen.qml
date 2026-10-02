@@ -30,6 +30,13 @@ Item {
     property Item windowManagerInstance;
 
     property bool isFirstUse: false
+    property bool _lockedBySnapshot: false
+    onIsFirstUseChanged: {
+        if (isFirstUse && _lockedBySnapshot) {
+            _lockedBySnapshot = false;
+            state = "none";
+        }
+    }
     property bool locked: false;
 
     property bool needKeyboard: pinPasswordLock.visible && deviceLockMode === "password"
@@ -551,6 +558,18 @@ Item {
         function handleLockStatus(message) {
             console.warn("Got lock status " + message.payload);
             var response = JSON.parse(message.payload);
+
+            // The reply to a fresh subscription is a snapshot ("event" is
+            // absent), not something that just happened. The display manager
+            // comes up reporting "locked", which would put the padlock in
+            // front of the FirstUse app on every first boot. Remember that
+            // the lock came from a snapshot so first-use can drop it, whether
+            // the window manager reaches that state before or after this
+            // reply. Real locks (timeout, power key) carry an event.
+            lockScreen._lockedBySnapshot = (response.event === undefined &&
+                                            response.lockState === "locked");
+            if (lockScreen._lockedBySnapshot && lockScreen.isFirstUse)
+                return;
 
             if (response.lockState === "locked")
                 lockScreen.state = "pad";
