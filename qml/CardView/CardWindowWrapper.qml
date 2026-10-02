@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
@@ -104,12 +104,15 @@ FocusScope {
         anchors.fill: cardWrapperItem
         visible: !useShaderCorner && windowState !== WindowState.Fullscreen
         cornerRadius: cardWrapperItem.cornerRadius
+        // MultiEffect samples its mask as a texture, so the mask has to be a layer
+        layer.enabled: useShaderCorner
     }
     // Rounded corners (shader version)
-    OpacityMask {
+    MultiEffect {
         anchors.fill: cardWrapperItem
         source: childWrapper
-        invert: true
+        maskEnabled: true
+        maskInverted: true
         maskSource: cornerStaticMask
         visible: useShaderCorner
     }
