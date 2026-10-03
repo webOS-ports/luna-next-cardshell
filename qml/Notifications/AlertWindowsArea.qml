@@ -31,6 +31,17 @@ Rectangle {
     property Item windowManagerItem
     property var compositorInstance
 
+    /*!
+     * Closes every alert. Used both by the tap action a tap on the gesture area
+     * runs and for a tap anywhere outside the alerts (see CardsArea).
+     */
+    function closeAll() {
+        for (var i = listPopupAlertsModel.count - 1; i >= 0; --i)
+            compositorInstance.closeWindow(listPopupAlertsModel.get(i));
+        if (windowManagerItem)
+            windowManagerItem.removeTapAction("hideAlertWindow");
+    }
+
     /* Phone ui fills its bar edge to edge with the alert. Tablet ui floats it,
      * so the alert needs room to breathe inside a rounded panel - measured off
      * webOS 3.0.5 on a touchpad, where the 320 wide alert sat in a ~340 wide
@@ -107,7 +118,7 @@ Rectangle {
                     }
 
                     if( windowManagerItem ) {
-                        windowManagerItem.addTapAction("hideAlertWindow", function () { compositorInstance.closeWindow(window); });
+                        windowManagerItem.addTapAction("hideAlertWindow", function () { rootAlertsArea.closeAll(); });
                     }
 
                     alertItem.focus = true;
