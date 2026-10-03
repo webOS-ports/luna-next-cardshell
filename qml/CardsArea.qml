@@ -393,6 +393,23 @@ WindowManager {
         }
     }
 
+    // While an alert is up, a press anywhere outside it closes it, as a tap
+    // on the gesture area already did; until now tapping elsewhere left it
+    // sitting there. The press is taken, so what is underneath does not also
+    // react to a tap that only meant "go away". It sits just under the alert
+    // area and exists only while there is an alert.
+    MouseArea {
+        id: alertDismissArea
+
+        anchors.fill: parent
+        z: 3
+
+        enabled: alertWindowsAreaInstance.visible && alertWindowsAreaInstance.maxHeight > 0
+        visible: enabled
+
+        onPressed: alertWindowsAreaInstance.closeAll()
+    }
+
     AlertWindowsArea {
         id: alertWindowsAreaInstance
 
