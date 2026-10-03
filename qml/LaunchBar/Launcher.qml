@@ -38,6 +38,22 @@ Item {
     onFullLauncherVisibleChanged: fullLauncherVisible ? launcherOpenSound.play() : launcherCloseSound.play()
 
     property bool launcherActive: state === "fullLauncher" || state === "justTypeLauncher"
+
+    /*!
+     * When a hardware key last toggled the launcher (CardsArea.toggleLauncher).
+     *
+     * On a phone with capacitive keys under the screen (BlackBerry KEY2), a
+     * swipe up that starts low enough brushes the Home key on its way to the
+     * gesture area: Home toggles the launcher as the finger lands, and the
+     * gesture area toggles it again ~70-90 ms later when it recognises the
+     * swipe - so the launcher flashed open and shut, or shut and open, on
+     * roughly every other swipe. A swipe-up this soon after a key toggle is
+     * the same intent and is not acted on twice. The window is a double
+     * tap's 500 ms: several times the gap measured, and short enough not to
+     * eat a deliberate swipe made just after pressing Home.
+     */
+    property real lastHardwareKeyToggleAt: 0
+    readonly property int keyThenSwipeWindowMs: 500
     property bool justTypeLauncherActive: state === "justTypeLauncher"
 
     property ListModel appsModel: LunaSysAPI.ApplicationModel {}
@@ -262,6 +278,8 @@ Item {
         id: gestureAreaConnections
         target: gestureAreaInstance
         function onSwipeUpGesture(modifiers) {
+            if( Date.now() - launcherItem.lastHardwareKeyToggleAt < launcherItem.keyThenSwipeWindowMs )
+                return;
             if( state === "launchbar" ) {
                 state = "fullLauncher";
             }
