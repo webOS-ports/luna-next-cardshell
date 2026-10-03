@@ -103,6 +103,7 @@ WindowManager {
         if (lockScreen.locked)
             return;
 
+        launcherInstance.lastHardwareKeyToggleAt = Date.now();
         launcherInstance.state =
             (launcherInstance.state === "fullLauncher") ? "launchbar" : "fullLauncher";
     }
