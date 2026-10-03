@@ -206,7 +206,10 @@ Item {
             mySoundFilePath = getResourcePathFromString(soundFile, appId, Settings.lunaSystemSoundsPath);
         }
 
-        if (isEmpty(soundFilePath)) {
+        // Only when neither soundFilePath nor soundFile gave a sound: testing
+        // the soundFilePath argument here replaced a toast's own soundFile with
+        // the preference tone every time.
+        if (isEmpty(mySoundFilePath)) {
             if (streamClass === "ringtones") {
                 mySoundFilePath = preferences.ringtoneFullPath;
             } else if (streamClass === "alerts" ||
