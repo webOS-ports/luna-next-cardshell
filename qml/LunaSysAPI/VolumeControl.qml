@@ -79,7 +79,21 @@ Item {
         applyVolume(volumeControl.currentVolume + volumeControl.volumeStep);
     }
 
+    // When set, every step the volume-down key makes (the press and each
+    // auto-repeat) goes to this function instead, which steps the volume
+    // through stepVolumeDown() if it decides to. ScreenshotChord uses it so
+    // that volume down pressed as part of volume down + power does not step
+    // the volume at all.
+    property var volumeDownHandler: null
+
     function handleVolumeDown() {
+        if (volumeControl.volumeDownHandler)
+            volumeControl.volumeDownHandler();
+        else
+            stepVolumeDown();
+    }
+
+    function stepVolumeDown() {
         applyVolume(volumeControl.currentVolume - volumeControl.volumeStep);
     }
 
