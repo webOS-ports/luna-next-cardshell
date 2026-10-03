@@ -392,6 +392,54 @@ WindowManager {
         }
     }
 
+    // Collapse the expanded notification area on a tap anywhere above it.
+    //
+    // Opening it registers a tap action, but tap actions only run for a tap on
+    // the gesture area - a tap anywhere else left the notifications expanded
+    // until that was found. Declared after the cards, launcher and notification
+    // area and before the status bar, so it sits over the first two and under
+    // the bar. The press is taken, so what is underneath does not also react to
+    // a tap that only meant "close the notifications"; it exists only while
+    // they are expanded.
+    MouseArea {
+        id: notificationAreaDismissArea
+
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: notificationAreaInstance.top
+        z: 2
+
+        enabled: notificationAreaInstance.item !== null &&
+                 notificationAreaInstance.item.state === "open" &&
+                 notificationAreaInstance.visible
+        visible: enabled
+
+        onPressed: notificationAreaDismissArea.collapse()
+
+        function collapse() {
+            if (!notificationAreaInstance.item || notificationAreaInstance.item.state !== "open")
+                return;
+            notificationAreaInstance.item.minimizeNotificationArea();
+            windowManager.removeTapAction("minimizeNotificationArea");
+        }
+
+        // Swiping up for the launcher, or into Just Type, does not go through
+        // this area at all - collapse then too, rather than leave the
+        // notifications expanded under the launcher.
+        Connections {
+            target: launcherInstance
+            function onFullLauncherVisibleChanged() {
+                if (launcherInstance.fullLauncherVisible)
+                    notificationAreaDismissArea.collapse();
+            }
+            function onJustTypeLauncherActiveChanged() {
+                if (launcherInstance.justTypeLauncherActive)
+                    notificationAreaDismissArea.collapse();
+            }
+        }
+    }
+
     AlertWindowsArea {
         id: alertWindowsAreaInstance
 
