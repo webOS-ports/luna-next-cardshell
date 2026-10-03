@@ -201,6 +201,39 @@ Item {
     }
 
     /*
+     * Close the system menu on a tap anywhere outside it, as any drop-down does.
+     * Before this the only way out was tapping the indicators again (or a
+     * flick from the top edge).
+     *
+     * Declared first so it sits under everything else in the bar: the menu
+     * itself and the indicators' own MouseArea (which still toggles the menu)
+     * keep their taps. It covers the whole screen from the bar's origin and
+     * takes the tap, so whatever is underneath does not also react to the one
+     * that only meant "close the menu"; a press inside the menu's rectangle is
+     * passed on rather than counted as outside. It exists only while the menu is open;
+     * the lock screen hides the menu by its visible property, hence both checks.
+     */
+    MouseArea {
+        id: systemMenuDismissArea
+        x: 0
+        y: 0
+        width: statusBar.width
+        height: windowManagerInstance ? windowManagerInstance.height : statusBar.height
+        enabled: systemMenu !== null && systemMenu.state === "visible" && systemMenu.visible
+        visible: enabled
+        onPressed: (mouse) => {
+            // A press on a part of the menu with nothing of its own to take it
+            // is still inside the menu: let it through instead of closing.
+            if (systemMenuLoader.contains(mapToItem(systemMenuLoader, mouse.x, mouse.y))) {
+                mouse.accepted = false;
+                return;
+            }
+            systemMenu.resetMenu()
+            systemMenu.toggleState()
+        }
+    }
+
+    /*
      * The bar's paint, full width and the full barHeight - including the strip the
      * notch sits in, and right into the rounded corners.
      *
