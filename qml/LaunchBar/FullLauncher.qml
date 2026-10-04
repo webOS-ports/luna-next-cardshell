@@ -355,6 +355,7 @@ Item {
     }
     /* Drop areas of the row buttons */
     DropArea {
+        keys: [ "launcher-app" ] // launcher icons only, not ones off the launch bar
         // drop area on the left side of the grid
         anchors.fill: tabRowList
         onEntered: {
@@ -500,6 +501,7 @@ Item {
 
                 /* Drop areas of the grid */
                 DropArea {
+                    keys: [ "launcher-app" ] // launcher icons only, not ones off the launch bar
                     // drop area on the left side of the grid
                     anchors {
                         top: parent.top; bottom: parent.bottom; left: parent.left
@@ -526,6 +528,7 @@ Item {
                     }
                 }
                 DropArea {
+                    keys: [ "launcher-app" ] // launcher icons only, not ones off the launch bar
                     // drop area on the right side of the grid
                     anchors {
                         top: parent.top; bottom: parent.bottom; right: parent.right
@@ -550,6 +553,7 @@ Item {
                     }
                 }
                 DropArea {
+                    keys: [ "launcher-app" ] // launcher icons only, not ones off the launch bar
                     // main drop area covering the grid
                     property int placeHolderPosition;
                     anchors {
@@ -713,11 +717,17 @@ Item {
                 onReleased: {
                     if( held && !releaseHeld.running ) {
                         console.log("trigger drop");
-                        if( draggedLauncherIcon.Drag.target && (typeof draggedLauncherIcon.Drag.target.placeHolderPosition !== "undefined") ) {
+                        var dropTarget = draggedLauncherIcon.Drag.target;
+                        if( dropTarget && (typeof dropTarget.placeHolderPosition !== "undefined") ) {
                             draggedLauncherIcon.Drag.drop();
                         }
                         else {
-                            console.log("no drop target, resetting drag source");
+                            // Dropped on the launch bar, the app is put there as
+                            // well; it goes back to its place in the grid too.
+                            if( dropTarget && dropTarget.acceptsLauncherApps )
+                                draggedLauncherIcon.Drag.drop();
+                            else
+                                console.log("no drop target, resetting drag source");
                             currentGridView.model.insert(draggedLauncherIcon.modelIndex,
                                                 {title : draggedLauncherIcon.modelTitle,
                                                  icon: draggedLauncherIcon.modelIcon,
