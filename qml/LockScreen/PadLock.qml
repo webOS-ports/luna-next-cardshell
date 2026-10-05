@@ -17,8 +17,9 @@
  */
 
 import QtQuick 2.5
-import Qt5Compat.GraphicalEffects
 import LunaNext.Common 0.1
+
+import "../Utils"
 
 Item {
     id: padLock
@@ -219,15 +220,15 @@ Item {
         anchors.bottomMargin: Units.gu(3)
     }
 
-    // Halo around the (lit) padlock; the artwork itself stays untinted.
-    Glow {
+    // Halo around the (lit) padlock; the artwork itself stays untinted. Under the
+    // padlock, which comes first in the file, so it shows through it.
+    IconGlow {
         id: fpGlow
         anchors.fill: pad
+        z: pad.z - 1
         source: pad
         visible: false
         radius: Units.gu(1.6)
-        samples: 33
-        spread: 0.3
         color: "#2aa100"
     }
 }
