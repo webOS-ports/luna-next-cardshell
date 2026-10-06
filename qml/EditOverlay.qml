@@ -60,8 +60,20 @@ Item {
     visible: false
     z: 1001
 
+    //! Whether an application is in front. The input method's focus belongs to
+    //! whichever client spoke last and outlives the card it came from, so
+    //! without this the pill came up over the card list, the launcher and the
+    //! lock screen on the strength of a field nobody can see.
+    property bool applicationForeground: true
+
     //! Whether there is anything to edit. Nothing is shown without it.
-    readonly property bool editable: keyboardService ? keyboardService.inputFocus : false
+    readonly property bool editable: applicationForeground &&
+                                     (keyboardService ? keyboardService.inputFocus : false)
+
+    readonly property bool hasSelection: keyboardService ? keyboardService.inputHasSelection : false
+    //! False against an input method that does not say, which gets every item.
+    readonly property bool selectionKnown: keyboardService ? keyboardService.inputSelectionKnown : false
+    readonly property bool hasText: keyboardService ? keyboardService.inputHasText : false
 
     function showAt(x, y) {
         editOverlay.anchorX = x;
@@ -199,15 +211,35 @@ Item {
             spacing: Units.gu(0.6)
 
             Repeater {
-                // Legacy's order, less the "Select" it had for selecting a word:
-                // the shell asks the application to do these by shortcut and
-                // there is no shortcut for that one.
-                model: [
-                    { label: "Cut",        command: "cut" },
-                    { label: "Copy",       command: "copy" },
-                    { label: "Paste",      command: "paste" },
-                    { label: "Select All", command: "selectAll" }
-                ]
+                /*
+                 * Legacy's rules, read out of libWebKitLuna's ClipboardCommand
+                 * classes (each command's enabled(Frame)), in its own order:
+                 *   Cut         a range selection, in an editable field
+                 *   Copy        a range selection
+                 *   Select      no range selection, and text in the field
+                 *   Select All  the same condition as Select
+                 *   Paste       text on the pasteboard, in an editable field
+                 * A caret or nothing selected is "no range selection".
+                 *
+                 * Two departures. "Select" - the word under the caret - has no
+                 * keyboard shortcut to ask the application for, so it is left
+                 * out. And the shell cannot see the pasteboard, so Paste is
+                 * offered whenever the field is editable rather than only when
+                 * there is something to paste.
+                 */
+                model: !editOverlay.selectionKnown
+                       ? [ { label: "Cut",        command: "cut" },
+                           { label: "Copy",       command: "copy" },
+                           { label: "Paste",      command: "paste" },
+                           { label: "Select All", command: "selectAll" } ]
+                       : editOverlay.hasSelection
+                         ? [ { label: "Cut",  command: "cut" },
+                             { label: "Copy", command: "copy" },
+                             { label: "Paste", command: "paste" } ]
+                         : editOverlay.hasText
+                           ? [ { label: "Select All", command: "selectAll" },
+                               { label: "Paste",      command: "paste" } ]
+                           : [ { label: "Paste",      command: "paste" } ]
 
                 delegate: Row {
                     spacing: Units.gu(0.6)

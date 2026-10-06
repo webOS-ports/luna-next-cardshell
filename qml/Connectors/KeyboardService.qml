@@ -46,6 +46,16 @@ Item {
     //! its items out on the same question.
     property bool inputFocus: false
 
+    //! Whether the focused field has a selection, and whether it has any text.
+    //!
+    //! What the edit overlay chooses its items from, as legacy's did: Cut and
+    //! Copy are for a selection, Select All and Paste for a field with none.
+    property bool inputHasSelection: false
+    property bool inputHasText: false
+    //! Whether the input method reports the two above at all. An older one does
+    //! not, and then "no selection" would just be a silence to read as a fact.
+    property bool inputSelectionKnown: false
+
     /*! The digits printed on the key faces, by evdev scancode.
      *
      * For the things that take digits without an input method: the lock screen's
@@ -98,6 +108,14 @@ Item {
 
         if (response.inputFocus !== undefined)
             keyboardService.inputFocus = response.inputFocus === true;
+
+        if (response.inputHasSelection !== undefined) {
+            keyboardService.inputSelectionKnown = true;
+            keyboardService.inputHasSelection = response.inputHasSelection === true;
+        }
+
+        if (response.inputHasText !== undefined)
+            keyboardService.inputHasText = response.inputHasText === true;
     }
 
     function _onError(message) {
