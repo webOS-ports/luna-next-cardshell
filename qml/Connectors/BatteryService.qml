@@ -31,6 +31,19 @@ Item {
     property bool charging: false
 
     /*
+     * The battery is full while a charger is still connected. batteryd's "Charging" is "a charger is
+     * delivering power" (the display manager's inductive-dock handling and systemui's not-charging alert read
+     * it that way) and stays true at 100%, so whether to show a full battery rather than a charging one is
+     * decided here:
+     * 100%, and no more than _fullMaxCurrentMa flowing either way (the sign of the current differs per
+     * device). Once full it stays full until the level drops below 100%, so a top-off current tapering
+     * through the threshold cannot make the indicator flicker.
+     */
+    readonly property bool full: charging && _batteryFull
+    property bool _batteryFull: false
+    readonly property int _fullMaxCurrentMa: 50
+
+    /*
      * Every battery batteryd knows about, primary first, as
      * { name, role, label, primary, present, charging, percentage, level }.
      * Empty on a device with a single battery: batteryd only sends the array
@@ -148,6 +161,14 @@ Item {
         batteryService.error = false;
         level = __levelForPercentage(response.percent_ui);
         percentage = response.percent_ui
+
+        if (response.percent_ui < 100) {
+            _batteryFull = false;
+        } else if (!_batteryFull) {
+            // Some gauges carry the reading on only one of the two; prefer whichever is not zero.
+            var current = response.current_mA || response.avg_current_mA || 0;
+            _batteryFull = Math.abs(current) <= _fullMaxCurrentMa;
+        }
 
         /*
          * batteryd sends "batteries" only on a device that has more than one -
