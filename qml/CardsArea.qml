@@ -556,6 +556,7 @@ WindowManager {
                     editPressMonitor.pressedAt = editPressMonitor.point.position;
                     editPressMonitor.selectedAtPress = editOverlay.hasSelection;
                     editTapTimer.stop();
+                    spellingTapTimer.stop();
                     editPressTimer.restart();
                 } else {
                     // The hold timer still running means the finger neither
@@ -565,6 +566,8 @@ WindowManager {
 
                     if (wasTap && editPressMonitor.selectedAtPress)
                         editTapTimer.restart();
+                    else if (wasTap)
+                        spellingTapTimer.restart();
                 }
             }
 
@@ -602,6 +605,33 @@ WindowManager {
             onTriggered: if (editOverlay.editable && editOverlay.hasSelection && !editOverlay.visible)
                              editOverlay.showAt(editPressMonitor.pressedAt.x,
                                                 editPressMonitor.pressedAt.y)
+        }
+
+        /*
+         * A tap on a misspelled word raises its suggestions, as legacy's
+         * spelling widget did on a tap.
+         *
+         * The shell does not know where the words are, and the keyboard is what
+         * says which one is wrong: it reports the misspelled word the caret is in
+         * after the tap has put the caret there, so there is a moment to wait for
+         * that report, a little longer than the selection tap's. A tap on a word
+         * that is fine, or anywhere else, leaves nothing reported and no pill.
+         */
+        Timer {
+            id: spellingTapTimer
+
+            interval: 250
+            repeat: false
+
+            onTriggered: {
+                var suggestions = editOverlay.keyboardService
+                                  ? editOverlay.keyboardService.spellingSuggestions : [];
+
+                if (editOverlay.editable && !editOverlay.visible
+                        && !editOverlay.hasSelection && suggestions.length > 0)
+                    editOverlay.showSuggestionsAt(editPressMonitor.pressedAt.x,
+                                                  editPressMonitor.pressedAt.y)
+            }
         }
 
         Timer {

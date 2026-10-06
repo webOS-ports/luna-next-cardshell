@@ -93,6 +93,19 @@ Item {
      * enabled there is no pill at all.
      */
     readonly property var items: {
+        // Raised by a tap on a misspelled word rather than by a hold, and then
+        // it is the words that could replace it: legacy's spelling widget, which
+        // used the same pill.
+        if (editOverlay.spellingMode) {
+            var words = [];
+            var suggestions = keyboardService ? keyboardService.spellingSuggestions : [];
+
+            for (var i = 0; i < suggestions.length; ++i)
+                words.push({ label: suggestions[i], command: "suggest" });
+
+            return words;
+        }
+
         if (!editOverlay.selectionKnown) {
             // An input method that does not report a selection: everything, as
             // before.
@@ -118,6 +131,20 @@ Item {
         return list;
     }
 
+    //! Whether the pill shows suggestions for a misspelled word instead of the
+    //! edit commands. Set by showSuggestionsAt(), cleared whenever it goes away.
+    property bool spellingMode: false
+
+    function showSuggestionsAt(x, y) {
+        editOverlay.spellingMode = true;
+        editOverlay.showAt(x, y);
+
+        // Nothing to suggest means nothing was shown, and the mode must not be
+        // left set for the next time the pill comes up.
+        if (!editOverlay.visible)
+            editOverlay.spellingMode = false;
+    }
+
     function showAt(x, y) {
         // Legacy's widget returned without showing when none of its commands was
         // enabled; an empty pill is not something to put up.
@@ -134,6 +161,18 @@ Item {
 
     function hide() {
         editOverlay.visible = false;
+        editOverlay.spellingMode = false;
+    }
+
+    // The caret moved to another word, or out of this one: the suggestions are
+    // for a word it is no longer in.
+    Connections {
+        target: editOverlay.keyboardService
+
+        function onSpellingWordChanged() {
+            if (editOverlay.spellingMode)
+                editOverlay.hide();
+        }
     }
 
     //! The field going away takes the overlay with it once it is up.
@@ -321,6 +360,12 @@ Item {
                                  * input method saw Ctrl+C and the page never
                                  * did.
                                  */
+                                if (modelData.command === "suggest") {
+                                    editOverlay.keyboardService.applySpellingSuggestion(modelData.label);
+                                    editOverlay.hide();
+                                    return;
+                                }
+
                                 var foreground = editOverlay.foregroundWindow
                                                  ? editOverlay.foregroundWindow() : null;
                                 if (foreground && foreground.userData)
