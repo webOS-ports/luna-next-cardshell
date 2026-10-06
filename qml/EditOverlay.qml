@@ -75,7 +75,55 @@ Item {
     readonly property bool selectionKnown: keyboardService ? keyboardService.inputSelectionKnown : false
     readonly property bool hasText: keyboardService ? keyboardService.inputHasText : false
 
+    //! Whether the pasteboard has text. True against a compositor that cannot say,
+    //! so Paste is not lost to an old one.
+    readonly property bool clipboardHasText:
+        compositorInstance && compositorInstance.clipboardHasText !== undefined
+            ? compositorInstance.clipboardHasText : true
+
+    /*
+     * The pill's items, by legacy's own rules - read out of libWebKitLuna's
+     * ClipboardCommand classes, each command's enabled(Frame), in its order:
+     *   Cut         a range selection, in an editable field
+     *   Copy        a range selection
+     *   Select      no range selection, and text in the field
+     *   Select All  the same condition as Select
+     *   Paste       text on the pasteboard, in an editable field
+     * A caret, or nothing selected, is "no range selection". With none of them
+     * enabled there is no pill at all.
+     */
+    readonly property var items: {
+        if (!editOverlay.selectionKnown) {
+            // An input method that does not report a selection: everything, as
+            // before.
+            return [ { label: "Cut",        command: "cut" },
+                     { label: "Copy",       command: "copy" },
+                     { label: "Paste",      command: "paste" },
+                     { label: "Select All", command: "selectAll" } ];
+        }
+
+        var list = [];
+
+        if (editOverlay.hasSelection) {
+            list.push({ label: "Cut",  command: "cut" });
+            list.push({ label: "Copy", command: "copy" });
+        } else if (editOverlay.hasText) {
+            list.push({ label: "Select",     command: "selectWord" });
+            list.push({ label: "Select All", command: "selectAll" });
+        }
+
+        if (editOverlay.clipboardHasText)
+            list.push({ label: "Paste", command: "paste" });
+
+        return list;
+    }
+
     function showAt(x, y) {
+        // Legacy's widget returned without showing when none of its commands was
+        // enabled; an empty pill is not something to put up.
+        if (editOverlay.items.length === 0)
+            return;
+
         editOverlay.anchorX = x;
         editOverlay.anchorY = y;
         editOverlay.visible = true;
@@ -211,35 +259,7 @@ Item {
             spacing: Units.gu(0.6)
 
             Repeater {
-                /*
-                 * Legacy's rules, read out of libWebKitLuna's ClipboardCommand
-                 * classes (each command's enabled(Frame)), in its own order:
-                 *   Cut         a range selection, in an editable field
-                 *   Copy        a range selection
-                 *   Select      no range selection, and text in the field
-                 *   Select All  the same condition as Select
-                 *   Paste       text on the pasteboard, in an editable field
-                 * A caret or nothing selected is "no range selection".
-                 *
-                 * Two departures. "Select" - the word under the caret - has no
-                 * keyboard shortcut to ask the application for, so it is left
-                 * out. And the shell cannot see the pasteboard, so Paste is
-                 * offered whenever the field is editable rather than only when
-                 * there is something to paste.
-                 */
-                model: !editOverlay.selectionKnown
-                       ? [ { label: "Cut",        command: "cut" },
-                           { label: "Copy",       command: "copy" },
-                           { label: "Paste",      command: "paste" },
-                           { label: "Select All", command: "selectAll" } ]
-                       : editOverlay.hasSelection
-                         ? [ { label: "Cut",  command: "cut" },
-                             { label: "Copy", command: "copy" },
-                             { label: "Paste", command: "paste" } ]
-                         : editOverlay.hasText
-                           ? [ { label: "Select All", command: "selectAll" },
-                               { label: "Paste",      command: "paste" } ]
-                           : [ { label: "Paste",      command: "paste" } ]
+                model: editOverlay.items
 
                 delegate: Row {
                     spacing: Units.gu(0.6)
@@ -309,10 +329,10 @@ Item {
                                 if (editOverlay.compositorInstance)
                                     editOverlay.compositorInstance.sendEditCommand(modelData.command);
 
-                                // Select All leaves the selection to act on, so
-                                // the pill stays up for the Cut or Copy after it.
-                                if (modelData.command !== "selectAll")
-                                    editOverlay.hide();
+                                // Legacy hid the widget before running any command,
+                                // Select All included; the selection it leaves is
+                                // what a tap raises the pill for again.
+                                editOverlay.hide();
                             }
                         }
                     }
