@@ -64,6 +64,9 @@ Item {
     //! Where the caret is, in the application's own coordinates - {x, y, width,
     //! height} - while there is a misspelling to point at; null otherwise.
     property var spellingRect: null
+    //! Whether that word may be added to the user dictionary: a misspelling may, a
+    //! word the keyboard itself autocorrected may not.
+    property bool spellingCanLearn: false
 
     /*! The digits printed on the key faces, by evdev scancode.
      *
@@ -132,6 +135,7 @@ Item {
             keyboardService.spellingSuggestions = response.spellingSuggestions;
             keyboardService.spellingRect = response.spellingRect !== undefined
                                            ? response.spellingRect : null;
+            keyboardService.spellingCanLearn = response.spellingCanLearn === true;
         }
     }
 
@@ -170,6 +174,13 @@ Item {
     function applySpellingSuggestion(suggestion) {
         imeService.call("luna://com.webos.service.ime/applySpellingSuggestion",
                         JSON.stringify({"suggestion": suggestion}),
+                        keyboardService._onApplyResponse, keyboardService._onError);
+    }
+
+    //! \brief Adds the misspelled word to the user dictionary.
+    function learnWord(word) {
+        imeService.call("luna://com.webos.service.ime/learnWord",
+                        JSON.stringify({"word": word}),
                         keyboardService._onApplyResponse, keyboardService._onError);
     }
 

@@ -107,6 +107,14 @@ Item {
             for (var i = 0; i < suggestions.length; ++i)
                 words.push({ label: suggestions[i], command: "suggest" });
 
+            // Last, the word itself with a "+": add it to the dictionary, as
+            // legacy's spelling widget ended its list.
+            if (keyboardService && keyboardService.spellingCanLearn
+                    && keyboardService.spellingWord !== "") {
+                words.push({ label: keyboardService.spellingWord, command: "learn",
+                             plus: true });
+            }
+
             return words;
         }
 
@@ -381,34 +389,49 @@ Item {
                         //! At least 50 of legacy's pixels wide, the word in the
                         //! middle of it, as legacy laid its commands out.
                         Item {
-                            width: Math.max(label.implicitWidth, 50 * pill.px)
+                            width: Math.max(wording.implicitWidth, 50 * pill.px)
                             height: 40 * pill.px
 
-                            Text {
-                                id: label
+                            //! The "+" legacy drew before the word that can be added
+                            //! to the dictionary, then the word.
+                            Row {
+                                id: wording
 
                                 //! In the middle of the bar. Without this the words sit
                                 //! against the top of the row, because the divider
                                 //! beside them is taller than they are and a Row aligns
                                 //! its children to the top.
                                 anchors.centerIn: parent
+                                spacing: 4 * pill.px
 
-                                text: modelData.label
-                                // Greyed rather than withheld when there is nothing to
-                                // edit, as legacy's EditMenu did with autoDisableItems.
-                                // Qt reads eight hex digits as #AARRGGBB, not CSS's
-                                // #RRGGBBAA: "#E5E5E580" is a pale yellow, not a faded
-                                // grey, which is where the yellow words came from.
-                                color: editOverlay.editable ? "#E5E5E5" : "#80E5E5E5"
-                                font.family: "Prelude"
-                                //! Not DemiBold: the only Prelude faces on the device
-                                //! are Medium and Bold, so anything above Normal picks
-                                //! up Bold, which is not what legacy's pill reads like.
-                                font.weight: Font.Normal
-                                //! Measured off legacy's own pill - caps a third of the
-                                //! bar's height - and expressed in its pixels so the
-                                //! words follow the slice at any size.
-                                font.pixelSize: 20 * pill.px
+                                Image {
+                                    visible: modelData.plus === true
+                                    source: Qt.resolvedUrl("images/edit/ate-plus.png")
+                                    width: visible ? 12 * pill.px : 0
+                                    height: 12 * pill.px
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    id: label
+
+                                    text: modelData.label
+                                    // Greyed rather than withheld when there is nothing to
+                                    // edit, as legacy's EditMenu did with autoDisableItems.
+                                    // Qt reads eight hex digits as #AARRGGBB, not CSS's
+                                    // #RRGGBBAA: "#E5E5E580" is a pale yellow, not a faded
+                                    // grey, which is where the yellow words came from.
+                                    color: editOverlay.editable ? "#E5E5E5" : "#80E5E5E5"
+                                    font.family: "Prelude"
+                                    //! Not DemiBold: the only Prelude faces on the device
+                                    //! are Medium and Bold, so anything above Normal picks
+                                    //! up Bold, which is not what legacy's pill reads like.
+                                    font.weight: Font.Normal
+                                    //! Measured off legacy's own pill - caps a third of the
+                                    //! bar's height - and expressed in its pixels so the
+                                    //! words follow the slice at any size.
+                                    font.pixelSize: 20 * pill.px
+                                }
                             }
 
                             MouseArea {
@@ -429,6 +452,12 @@ Item {
                                      */
                                     if (modelData.command === "suggest") {
                                         editOverlay.keyboardService.applySpellingSuggestion(modelData.label);
+                                        editOverlay.hide();
+                                        return;
+                                    }
+
+                                    if (modelData.command === "learn") {
+                                        editOverlay.keyboardService.learnWord(modelData.label);
                                         editOverlay.hide();
                                         return;
                                     }
