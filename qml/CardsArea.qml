@@ -629,8 +629,8 @@ WindowManager {
 
                 if (editOverlay.editable && !editOverlay.visible
                         && !editOverlay.hasSelection && suggestions.length > 0)
-                    editOverlay.showSuggestionsAt(editPressMonitor.pressedAt.x,
-                                                  editPressMonitor.pressedAt.y)
+                    editOverlay.showSuggestionsAtWord(editPressMonitor.pressedAt.x,
+                                                      editPressMonitor.pressedAt.y)
             }
         }
 

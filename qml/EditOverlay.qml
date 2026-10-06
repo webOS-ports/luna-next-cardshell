@@ -56,6 +56,10 @@ Item {
     //! Where the pill points. Set before calling show().
     property real anchorX: width / 2
     property real anchorY: height / 2
+    //! Where it points when it hangs above the line instead: the line's top, for a
+    //! pill that points at a line of text rather than at a finger. The same as
+    //! anchorY unless set.
+    property real anchorTopY: anchorY
 
     visible: false
     z: 1001
@@ -135,6 +139,29 @@ Item {
     //! edit commands. Set by showSuggestionsAt(), cleared whenever it goes away.
     property bool spellingMode: false
 
+    /*
+     * Suggestions at the word, where legacy's spelling widget put them, not where
+     * the finger was. The keyboard reports the caret's rectangle in the
+     * application's own coordinates and the window it is in knows how to turn
+     * that into ours; without either, the tap point is as good as it gets.
+     */
+    function showSuggestionsAtWord(tapX, tapY) {
+        var rect = editOverlay.keyboardService ? editOverlay.keyboardService.spellingRect : null;
+        var foreground = editOverlay.foregroundWindow ? editOverlay.foregroundWindow() : null;
+
+        if (rect && foreground && typeof foreground.mapToItem === "function") {
+            var top = foreground.mapToItem(editOverlay, rect.x, rect.y);
+            var bottom = foreground.mapToItem(editOverlay, rect.x, rect.y + rect.height);
+
+            editOverlay.anchorTopY = top.y;
+            editOverlay.showSuggestionsAt(top.x, bottom.y);
+            return;
+        }
+
+        editOverlay.anchorTopY = tapY;
+        editOverlay.showSuggestionsAt(tapX, tapY);
+    }
+
     function showSuggestionsAt(x, y) {
         editOverlay.spellingMode = true;
         editOverlay.showAt(x, y);
@@ -142,7 +169,7 @@ Item {
         // Nothing to suggest means nothing was shown, and the mode must not be
         // left set for the next time the pill comes up.
         if (!editOverlay.visible)
-            editOverlay.spellingMode = false;
+            editOverlay.hide();
     }
 
     function showAt(x, y) {
@@ -162,6 +189,7 @@ Item {
     function hide() {
         editOverlay.visible = false;
         editOverlay.spellingMode = false;
+        editOverlay.anchorTopY = Qt.binding(function() { return editOverlay.anchorY; });
     }
 
     // The caret moved to another word, or out of this one: the suggestions are
@@ -229,6 +257,12 @@ Item {
         //! second arrow slice was always there for.
         readonly property bool below: editOverlay.anchorY + canvas + arrowRise < editOverlay.height
 
+        //! The most the words may take before the pill scrolls instead of growing:
+        //! the screen less its margins and the two caps, which is the bound legacy
+        //! put on its balloon.
+        readonly property real maxViewportWidth:
+            editOverlay.width - 2 * Units.gu(0.5) - 2 * capWidth
+
         width: background.width
         height: canvas + arrowRise
 
@@ -238,12 +272,10 @@ Item {
         //! The point sits on what it is pointing at, so the bar hangs the
         //! slice's own distance away from it rather than a made-up gap.
         y: below ? editOverlay.anchorY - barTop
-                 : editOverlay.anchorY - height + barTop
+                 : editOverlay.anchorTopY - height + barTop
 
         Row {
             id: background
-
-            y: pill.below ? pill.arrowOverhang : 0
 
             Image {
                 id: leftCap
@@ -253,7 +285,7 @@ Item {
             }
             Image {
                 source: Qt.resolvedUrl("images/edit/ate-middle.png")
-                width: actions.width / 2 - pill.arrowWidth / 2
+                width: viewport.width / 2 - pill.arrowWidth / 2
                 height: pill.canvas
             }
             /*
@@ -279,7 +311,7 @@ Item {
             }
             Image {
                 source: Qt.resolvedUrl("images/edit/ate-middle.png")
-                width: actions.width / 2 - pill.arrowWidth / 2
+                width: viewport.width / 2 - pill.arrowWidth / 2
                 height: pill.canvas
             }
             Image {
@@ -289,100 +321,166 @@ Item {
             }
         }
 
-        Row {
-            id: actions
+        /*
+         * The words, scrolling sideways when there are more than fit.
+         *
+         * As legacy's widget did: a scroll position kept between nothing and
+         * what is left over, dragged with the finger and flicked on letting go,
+         * with no spring past either end. Something is only a press on a word if
+         * the finger did not drag - a drag that began on one belongs to the
+         * scrolling, which Flickable takes from the MouseArea underneath.
+         */
+        Flickable {
+            id: viewport
 
             anchors.centerIn: background
             //! Centred on the bar's ink, not on the canvas it is drawn in.
             anchors.verticalCenterOffset: (pill.barTop + pill.barBottom) / 2 - pill.canvas / 2
-            spacing: Units.gu(0.6)
 
-            Repeater {
-                model: editOverlay.items
+            width: Math.min(actions.width, pill.maxViewportWidth)
+            height: actions.height
 
-                delegate: Row {
-                    spacing: Units.gu(0.6)
+            contentWidth: actions.width
+            contentHeight: actions.height
 
-                    //! The same height for every item, whether or not it has a
-                    //! divider. A Row leaves out a child that is not visible,
-                    //! so the first item - the only one without one - would
-                    //! otherwise be a row as short as its own text, and being
-                    //! top-aligned with the rest it would sit higher than them.
-                    height: 40 * pill.px
+            clip: true
+            flickableDirection: Flickable.HorizontalFlick
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: contentWidth > width
 
-                    Image {
-                        source: Qt.resolvedUrl("images/edit/ate-divider.png")
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 4 * pill.px
+            //! What is still out of sight on each side.
+            readonly property bool canScrollToLeft: contentX > 0
+            readonly property bool canScrollToRight: contentX < contentWidth - width
+
+            Row {
+                id: actions
+
+                spacing: Units.gu(0.6)
+
+                Repeater {
+                    model: editOverlay.items
+
+                    delegate: Row {
+                        spacing: Units.gu(0.6)
+
+                        //! The same height for every item, whether or not it has a
+                        //! divider. A Row leaves out a child that is not visible,
+                        //! so the first item - the only one without one - would
+                        //! otherwise be a row as short as its own text, and being
+                        //! top-aligned with the rest it would sit higher than them.
                         height: 40 * pill.px
-                        visible: index > 0
-                    }
 
-                    Text {
-                        id: label
+                        Image {
+                            source: Qt.resolvedUrl("images/edit/ate-divider.png")
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 4 * pill.px
+                            height: 40 * pill.px
+                            visible: index > 0
+                        }
 
-                        //! In the middle of the bar. Without this the words sit
-                        //! against the top of the row, because the divider
-                        //! beside them is taller than they are and a Row aligns
-                        //! its children to the top.
-                        anchors.verticalCenter: parent.verticalCenter
+                        //! At least 50 of legacy's pixels wide, the word in the
+                        //! middle of it, as legacy laid its commands out.
+                        Item {
+                            width: Math.max(label.implicitWidth, 50 * pill.px)
+                            height: 40 * pill.px
 
-                        text: modelData.label
-                        // Greyed rather than withheld when there is nothing to
-                        // edit, as legacy's EditMenu did with autoDisableItems.
-                        // Qt reads eight hex digits as #AARRGGBB, not CSS's
-                        // #RRGGBBAA: "#E5E5E580" is a pale yellow, not a faded
-                        // grey, which is where the yellow words came from.
-                        color: editOverlay.editable ? "#E5E5E5" : "#80E5E5E5"
-                        font.family: "Prelude"
-                        //! Not DemiBold: the only Prelude faces on the device
-                        //! are Medium and Bold, so anything above Normal picks
-                        //! up Bold, which is not what legacy's pill reads like.
-                        font.weight: Font.Normal
-                        //! Measured off legacy's own pill - caps a third of the
-                        //! bar's height - and expressed in its pixels so the
-                        //! words follow the slice at any size.
-                        font.pixelSize: 20 * pill.px
+                            Text {
+                                id: label
 
-                        MouseArea {
-                            anchors.fill: parent
-                            anchors.margins: -Units.gu(0.6)
-                            enabled: editOverlay.editable
-                            onClicked: {
-                                /*
-                                 * Hand the keyboard back before typing at it.
-                                 *
-                                 * Pressing this pill is a press on the shell,
-                                 * and it leaves the application's surface
-                                 * without the keyboard focus. The shortcut is
-                                 * delivered to whatever holds that focus, so
-                                 * sent from here it went nowhere at all: the
-                                 * input method saw Ctrl+C and the page never
-                                 * did.
-                                 */
-                                if (modelData.command === "suggest") {
-                                    editOverlay.keyboardService.applySpellingSuggestion(modelData.label);
+                                //! In the middle of the bar. Without this the words sit
+                                //! against the top of the row, because the divider
+                                //! beside them is taller than they are and a Row aligns
+                                //! its children to the top.
+                                anchors.centerIn: parent
+
+                                text: modelData.label
+                                // Greyed rather than withheld when there is nothing to
+                                // edit, as legacy's EditMenu did with autoDisableItems.
+                                // Qt reads eight hex digits as #AARRGGBB, not CSS's
+                                // #RRGGBBAA: "#E5E5E580" is a pale yellow, not a faded
+                                // grey, which is where the yellow words came from.
+                                color: editOverlay.editable ? "#E5E5E5" : "#80E5E5E5"
+                                font.family: "Prelude"
+                                //! Not DemiBold: the only Prelude faces on the device
+                                //! are Medium and Bold, so anything above Normal picks
+                                //! up Bold, which is not what legacy's pill reads like.
+                                font.weight: Font.Normal
+                                //! Measured off legacy's own pill - caps a third of the
+                                //! bar's height - and expressed in its pixels so the
+                                //! words follow the slice at any size.
+                                font.pixelSize: 20 * pill.px
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                anchors.margins: -Units.gu(0.3)
+                                enabled: editOverlay.editable
+                                onClicked: {
+                                    /*
+                                     * Hand the keyboard back before typing at it.
+                                     *
+                                     * Pressing this pill is a press on the shell,
+                                     * and it leaves the application's surface
+                                     * without the keyboard focus. The shortcut is
+                                     * delivered to whatever holds that focus, so
+                                     * sent from here it went nowhere at all: the
+                                     * input method saw Ctrl+C and the page never
+                                     * did.
+                                     */
+                                    if (modelData.command === "suggest") {
+                                        editOverlay.keyboardService.applySpellingSuggestion(modelData.label);
+                                        editOverlay.hide();
+                                        return;
+                                    }
+
+                                    var foreground = editOverlay.foregroundWindow
+                                                     ? editOverlay.foregroundWindow() : null;
+                                    if (foreground && foreground.userData)
+                                        foreground.userData.takeFocus();
+
+                                    if (editOverlay.compositorInstance)
+                                        editOverlay.compositorInstance.sendEditCommand(modelData.command);
+
+                                    // Legacy hid the widget before running any command,
+                                    // Select All included; the selection it leaves is
+                                    // what a tap raises the pill for again.
                                     editOverlay.hide();
-                                    return;
                                 }
-
-                                var foreground = editOverlay.foregroundWindow
-                                                 ? editOverlay.foregroundWindow() : null;
-                                if (foreground && foreground.userData)
-                                    foreground.userData.takeFocus();
-
-                                if (editOverlay.compositorInstance)
-                                    editOverlay.compositorInstance.sendEditCommand(modelData.command);
-
-                                // Legacy hid the widget before running any command,
-                                // Select All included; the selection it leaves is
-                                // what a tap raises the pill for again.
-                                editOverlay.hide();
                             }
                         }
                     }
                 }
             }
         }
+
+        /*
+         * Legacy's paintFade: the left one while scrolled away from the start,
+         * the right one while there is more to the right, each at its edge of the
+         * words and the height of the bar.
+         */
+        Image {
+            source: Qt.resolvedUrl("images/edit/ate-left-scroll-fade.png")
+            visible: viewport.canScrollToLeft
+            x: viewport.x
+            y: background.y
+            width: 30 * pill.px
+            height: pill.canvas
+        }
+
+        Image {
+            source: Qt.resolvedUrl("images/edit/ate-right-scroll-fade.png")
+            visible: viewport.canScrollToRight
+            x: viewport.x + viewport.width - width
+            y: background.y
+            width: 30 * pill.px
+            height: pill.canvas
+        }
+    }
+
+    // It comes up at the start of the words, as legacy's showClipboardWidget put
+    // it there before showing.
+    onVisibleChanged: {
+        if (visible)
+            viewport.contentX = 0;
     }
 }

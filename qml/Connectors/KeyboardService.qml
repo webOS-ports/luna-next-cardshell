@@ -61,6 +61,9 @@ Item {
     //! gets no suggestions - which includes any that hides what is typed in it.
     property string spellingWord: ""
     property var spellingSuggestions: []
+    //! Where the caret is, in the application's own coordinates - {x, y, width,
+    //! height} - while there is a misspelling to point at; null otherwise.
+    property var spellingRect: null
 
     /*! The digits printed on the key faces, by evdev scancode.
      *
@@ -127,6 +130,8 @@ Item {
             keyboardService.spellingWord = response.spellingWord !== undefined
                                            ? response.spellingWord : "";
             keyboardService.spellingSuggestions = response.spellingSuggestions;
+            keyboardService.spellingRect = response.spellingRect !== undefined
+                                           ? response.spellingRect : null;
         }
     }
 
