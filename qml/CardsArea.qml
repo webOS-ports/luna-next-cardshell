@@ -440,6 +440,7 @@ WindowManager {
         windowManagerItem: windowManager
         compositorInstance: compositor
         screenLocked: lockScreen.visible
+        modalSpaceBottom: gestureAreaInstance.visible ? gestureAreaInstance.y : gestureAreaInstance.y + gestureAreaInstance.height
 
         z: 4 // just under the keyboard
     }
