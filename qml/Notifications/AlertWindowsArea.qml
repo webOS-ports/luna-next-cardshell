@@ -74,9 +74,10 @@ Rectangle {
 
             property Item window: listPopupAlertsModel.get(index /* index is set by Repeater */)
             // Kept out of sight while a notification alert is shown in front
-            // of it: the panel is translucent on a tablet, so covering it is
-            // not enough. It comes back once that alert is answered.
-            visible: !notificationAlerts.showing
+            // of it in the phone's bar; it comes back once that alert is
+            // answered. A tablet shows the alert in the middle instead, clear
+            // of this panel.
+            visible: !(notificationAlerts.showing && !Settings.tabletUi)
             x: rootAlertsArea.contentMargin
             y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
             width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
@@ -140,9 +141,10 @@ Rectangle {
         var newMaxHeight = 0;
         var currentMaxHeight = 0;
 
-        // A notification alert hides the window alerts behind it, so the area
-        // is its size alone while it is up.
-        if (notificationAlerts.showing) {
+        // In the phone's bar a notification alert hides the window alerts
+        // behind it, so the area is its size alone while it is up. A tablet
+        // shows it in the middle of the screen, apart from this panel.
+        if (notificationAlerts.showing && !Settings.tabletUi) {
             rootAlertsArea.maxHeight = notificationAlerts.height;
             return;
         }
@@ -157,16 +159,25 @@ Rectangle {
 
     /*
      * The alerts com.webos.notification hands out - a web app asking for
-     * permission, for one - hosted the way an application's popup alert window
-     * is: in this bar or panel, at its foot, over any window alert that is up,
-     * and gone with a tap outside unless it is modal.
+     * permission, for one. These are an application's question, and legacy
+     * asked those where the frameworks put their dialogs:
+     *
+     * - on a phone at the foot of the screen, as Mojo's .palm-dialog-box did -
+     *   so here in this bar, over any window alert, gone with a tap outside
+     *   unless it is modal;
+     * - on a tablet in the middle, over a scrim that a tap does not dismiss,
+     *   as Enyo's ModalDialog did (scrim, modal, dismissWithClick: false,
+     *   openAtCenter) - so in tabletModal below, not in this corner panel.
      */
     NotificationAlertsArea {
         id: notificationAlerts
 
-        x: rootAlertsArea.contentMargin
-        y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
-        width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
+        parent: Settings.tabletUi ? tabletModalPanel : rootAlertsArea
+        x: Settings.tabletUi ? tabletModalPanel.margin : rootAlertsArea.contentMargin
+        y: Settings.tabletUi ? tabletModalPanel.margin
+                             : rootAlertsArea.height - rootAlertsArea.contentMargin - height
+        width: Settings.tabletUi ? tabletModalPanel.width - 2 * tabletModalPanel.margin
+                                 : rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
         z: 1
 
         onHeightChanged: rootAlertsArea.computeNewRootHeight()
@@ -174,6 +185,49 @@ Rectangle {
             rootAlertsArea.computeNewRootHeight();
             if (showing && windowManagerItem)
                 windowManagerItem.addTapAction("hideAlertWindow", function () { rootAlertsArea.closeAll(); });
+        }
+    }
+
+    // Tablet ui: the scrim and the centred panel a notification alert is shown
+    // in, over everything below the status bar.
+    Item {
+        id: tabletModal
+
+        parent: rootAlertsArea.parent
+        // Gone with the window alerts under the lock screen, and above their
+        // panel when both are up.
+        visible: Settings.tabletUi && notificationAlerts.showing && rootAlertsArea.visible
+        z: rootAlertsArea.z + 0.5
+
+        x: 0
+        width: parent ? parent.width : 0
+        // From the foot of the status bar, which is where this area hangs from
+        // on a tablet less the inset it hangs by.
+        y: rootAlertsArea.y - rootAlertsArea.anchors.topMargin
+        height: parent ? parent.height - y : 0
+
+        Rectangle {
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.5)
+
+            // The question has to be answered; nothing behind takes the press,
+            // and neither does a tap here dismiss it.
+            MouseArea {
+                anchors.fill: parent
+                preventStealing: true
+            }
+        }
+
+        Rectangle {
+            id: tabletModalPanel
+
+            readonly property real margin: rootAlertsArea.contentMargin
+
+            anchors.centerIn: parent
+            width: Units.length(320) + 2 * margin
+            height: notificationAlerts.height + 2 * margin
+            color: Qt.rgba(0, 0, 0, 0.85)
+            radius: margin
         }
     }
 
@@ -187,7 +241,7 @@ Rectangle {
         delegate: alertComponent
 
         onItemAdded: (index, item) => {
-            if( !notificationAlerts.showing && item.height > rootAlertsArea.maxHeight )
+            if( !(notificationAlerts.showing && !Settings.tabletUi) && item.height > rootAlertsArea.maxHeight )
                 rootAlertsArea.maxHeight = item.height;
         }
         onItemRemoved: (index, item) => {
