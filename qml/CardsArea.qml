@@ -439,6 +439,7 @@ WindowManager {
         visible: !lockScreen.visible
         windowManagerItem: windowManager
         compositorInstance: compositor
+        screenLocked: lockScreen.visible
 
         z: 4 // just under the keyboard
     }
