@@ -197,10 +197,12 @@ Item {
         width: Units.gu(4.8)
         height: Units.gu(4.8)
         fillMode: Image.PreserveAspectFit
-        // notificationmgr hands the icon over as a file:// url.
+        // notificationmgr hands the icon over as a file:// url. Without one,
+        // the yellow warning legacy drew on its error screens, from the Mojo
+        // framework already on the device rather than a copy of it here.
         source: root.currentAlert && root.currentAlert.iconUrl
                 ? root.currentAlert.iconUrl
-                : "../images/icon-warning.png"
+                : "file:///usr/palm/frameworks/mojo/submissions/506/images/warning-large.png"
     }
 
     Column {
