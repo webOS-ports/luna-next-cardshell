@@ -30,6 +30,10 @@ Rectangle {
     property int maxHeight: 0
     property Item windowManagerItem
     property var compositorInstance
+    // Set while the lock screen is up. The tablet's centred notification alert
+    // is not in this area, so it cannot go by whether this area is shown, which
+    // is not only a question of the lock screen.
+    property bool screenLocked: false
 
     /*!
      * Closes every alert. Used both by the tap action a tap on the gesture area
@@ -194,9 +198,9 @@ Rectangle {
         id: tabletModal
 
         parent: rootAlertsArea.parent
-        // Gone with the window alerts under the lock screen, and above their
-        // panel when both are up.
-        visible: Settings.tabletUi && notificationAlerts.showing && rootAlertsArea.visible
+        // Not over the lock screen, and above the window alerts' panel when
+        // both are up.
+        visible: Settings.tabletUi && notificationAlerts.showing && !rootAlertsArea.screenLocked
         z: rootAlertsArea.z + 0.5
 
         x: 0
