@@ -191,16 +191,6 @@ Rectangle {
         onSwitchChanged: (id, state) => killSwitchAlert.showSwitch(id, state)
     }
 
-    // Alerts from com.webos.notification, such as a web app asking for
-    // permission. Over the menus, under the brief volume and switch flashes.
-    NotificationAlertsArea {
-        id: notificationAlertsArea
-        z: 850
-        // A question about the phone is not for whoever holds it locked; it
-        // waits until the screen is unlocked.
-        held: cardsArea.screenLocked
-    }
-
     PowerMenu {
         id: powerMenuAlert
         z: 800

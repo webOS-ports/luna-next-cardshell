@@ -20,6 +20,8 @@ import LunaNext.Common 0.1
 import WebOSServices 1.0
 import WebOSCompositorBase 1.0
 
+import "../Utils"
+
 /*
  * The alerts com.webos.notification hands out (createAlert): a title, a
  * message and a row of buttons, each with the luna call it stands for.
@@ -29,23 +31,29 @@ import WebOSCompositorBase 1.0
  * its window never comes on screen here - so a web app's permission question,
  * which WAM asks through createAlert, was never seen.
  *
- * They are drawn the way the QtWebEngine era's permission dialog was
- * (PermissionDialog in luneos-components): a dark rounded panel with the
- * title, the message, a warning icon and full width buttons, an "ok" button
- * green and a "cancel" one red. One alert is shown at a time; modal alerts
- * jump the queue, as notificationmgr's other clients order them.
+ * This is the alert's content only: AlertWindowsArea hosts it the way it hosts
+ * an application's popup alert window, in the same bar resting on the
+ * notification area on a phone and the same panel under the status bar on a
+ * tablet - where legacy put its system alerts - with the same "tap outside to
+ * dismiss", which a modal alert does not give in to. The buttons are the
+ * shell's own notification buttons (ActionButton): affirmative for "ok",
+ * negative for "cancel".
  *
- * A press runs the button's call and then closes the alert at notificationmgr,
- * which tells every client, this one included, that it is gone.
+ * One alert is shown at a time; modal alerts jump the queue, as
+ * notificationmgr's other clients order them. A press runs the button's call
+ * and then closes the alert at notificationmgr, which tells every client, this
+ * one included, that it is gone.
  */
 Item {
     id: root
 
-    anchors.fill: parent
-    visible: alertModel.count > 0 && !held
+    //! Whether there is an alert to show.
+    readonly property bool showing: alertModel.count > 0
+    //! Whether the alert shown has to be answered: no tap elsewhere closes it.
+    readonly property bool modal: showing && alertModel.get(0).modal
 
-    //! While set, alerts are kept but not shown, e.g. under the lock screen.
-    property bool held: false
+    height: showing ? content.height + 2 * Units.gu(1.5) : 0
+    visible: showing
 
     // One row per alert, the message kept as text: a ListModel turns nested
     // arrays into models of their own, and the buttons are easier to read
@@ -99,13 +107,9 @@ Item {
         alertModel.append(row);
     }
 
-    function pressButton(button) {
+    // Takes the alert shown away here and at notificationmgr.
+    function closeCurrent() {
         var alert = currentAlert;
-        var action = button.action;
-        if (action && action.serviceURI && action.serviceMethod) {
-            LS.adhoc.call(action.serviceURI, action.serviceMethod,
-                          JSON.stringify(action.launchParams || {}));
-        }
 
         // Gone from here at once; the close notificationmgr sends back finds
         // nothing left to remove.
@@ -114,6 +118,21 @@ Item {
             LS.adhoc.call("luna://com.webos.notification", "/closeAlert",
                           JSON.stringify({"alertId": alert.alertId}));
         }
+    }
+
+    function pressButton(button) {
+        var action = button.action;
+        if (action && action.serviceURI && action.serviceMethod) {
+            LS.adhoc.call(action.serviceURI, action.serviceMethod,
+                          JSON.stringify(action.launchParams || {}));
+        }
+        closeCurrent();
+    }
+
+    //! A tap outside the alerts: closes the alert shown unless it is modal.
+    function dismiss() {
+        if (showing && !modal)
+            closeCurrent();
     }
 
     Service {
@@ -164,132 +183,81 @@ Item {
         }
     }
 
-    // The question has to be answered; nothing behind it takes the press.
+    // A press on the alert itself is the alert's, not a tap outside it.
     MouseArea {
         anchors.fill: parent
-        preventStealing: true
     }
 
-    Rectangle {
-        id: dialog
+    Image {
+        id: icon
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: Units.gu(1.5)
+        anchors.rightMargin: Units.gu(1.5)
+        width: Units.gu(4.8)
+        height: Units.gu(4.8)
+        fillMode: Image.PreserveAspectFit
+        // notificationmgr hands the icon over as a file:// url.
+        source: root.currentAlert && root.currentAlert.iconUrl
+                ? root.currentAlert.iconUrl
+                : "../images/icon-warning.png"
+    }
 
-        anchors.centerIn: parent
-        width: Math.min(parent.width - Units.gu(2), Units.gu(32))
-        height: content.height + 2 * Units.gu(2)
-        color: "#343434"
-        opacity: 0.9
-        radius: 10
-        smooth: true
+    Column {
+        id: content
 
-        Image {
-            id: icon
-            anchors.top: parent.top
-            anchors.right: parent.right
-            anchors.topMargin: Units.gu(1.6)
-            anchors.rightMargin: Units.gu(1.6)
-            width: Units.gu(5.9)
-            height: Units.gu(5.9)
-            fillMode: Image.PreserveAspectFit
-            // notificationmgr hands the icon over as a file:// url.
-            source: root.currentAlert && root.currentAlert.iconUrl
-                    ? root.currentAlert.iconUrl
-                    : "../images/icon-warning.png"
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.margins: Units.gu(1.5)
+        spacing: Units.gu(0.5)
+
+        Text {
+            id: titleText
+            width: parent.width - icon.width - Units.gu(1)
+            text: root.currentAlert ? (root.currentAlert.title || "") : ""
+            visible: text.length > 0
+            font.family: "Prelude"
+            font.pixelSize: FontUtils.sizeToPixels("16pt")
+            font.weight: Font.DemiBold
+            color: "white"
+            elide: Text.ElideRight
         }
 
-        Column {
-            id: content
+        Text {
+            id: messageText
+            width: parent.width - icon.width - Units.gu(1)
+            text: root.currentAlert ? (root.currentAlert.message || "") : ""
+            font.family: "Prelude"
+            font.pixelSize: FontUtils.sizeToPixels("12pt")
+            font.bold: true
+            color: "white"
+            wrapMode: Text.WordWrap
+        }
 
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.margins: Units.gu(2)
-            spacing: Units.gu(0.5)
+        // Room between the text and the buttons, and clear of the icon when
+        // the message is a single line.
+        Item {
+            width: 1
+            height: Math.max(Units.gu(1),
+                             icon.height + Units.gu(0.5) - messageText.height
+                             - (titleText.visible ? titleText.height + content.spacing : 0))
+        }
 
-            Text {
-                id: titleText
-                width: parent.width - icon.width - Units.gu(1)
-                text: root.currentAlert ? (root.currentAlert.title || "") : ""
-                visible: text.length > 0
-                font.family: "Prelude"
-                font.pixelSize: FontUtils.sizeToPixels("16pt")
-                font.weight: Font.DemiBold
-                color: "white"
-                elide: Text.ElideRight
-            }
+        Repeater {
+            model: root.currentAlert ? root.currentAlert.buttons : []
 
-            Text {
-                id: messageText
-                width: parent.width - icon.width - Units.gu(1)
-                text: root.currentAlert ? (root.currentAlert.message || "") : ""
-                font.family: "Prelude"
-                font.pixelSize: FontUtils.sizeToPixels("12pt")
-                font.bold: true
-                color: "white"
-                wrapMode: Text.WordWrap
-            }
+            delegate: ActionButton {
+                required property var modelData
 
-            // Room between the text and the buttons, and clear of the icon
-            // when the message is a single line.
-            Item {
-                width: 1
-                height: Math.max(Units.gu(1.5),
-                                 icon.height + Units.gu(1) - messageText.height
-                                 - (titleText.visible ? titleText.height + content.spacing : 0))
-            }
+                width: content.width
+                height: Units.gu(4)
 
-            Repeater {
-                model: root.currentAlert ? root.currentAlert.buttons : []
+                caption: modelData.label || ""
+                affirmative: modelData.type === "ok"
+                negative: modelData.type === "cancel"
 
-                delegate: Rectangle {
-                    id: button
-
-                    required property var modelData
-
-                    width: content.width
-                    height: Units.gu(3.8)
-                    radius: 4
-                    color: modelData.type === "ok" ? "green"
-                           : modelData.type === "cancel" ? "red"
-                           : "#4b4b4b"
-
-                    Image {
-                        id: capLeft
-                        anchors.left: parent.left
-                        width: Units.gu(1.9)
-                        height: parent.height
-                        source: "../images/button-up-left.png"
-                        fillMode: Image.Stretch
-                    }
-                    Image {
-                        anchors.left: capLeft.right
-                        anchors.right: capRight.left
-                        height: parent.height
-                        source: "../images/button-up-center.png"
-                        fillMode: Image.Stretch
-                    }
-                    Image {
-                        id: capRight
-                        anchors.right: parent.right
-                        width: Units.gu(1.9)
-                        height: parent.height
-                        source: "../images/button-up-right.png"
-                        fillMode: Image.Stretch
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: button.modelData.label || ""
-                        font.family: "Prelude"
-                        font.pixelSize: FontUtils.sizeToPixels("14pt")
-                        font.bold: true
-                        color: "white"
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.pressButton(button.modelData)
-                    }
-                }
+                onAction: root.pressButton(modelData)
             }
         }
     }

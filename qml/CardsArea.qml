@@ -66,8 +66,6 @@ WindowManager {
 
     gestureAreaInstance: gestureAreaInstance
     property bool gesturesEnabled: !lockScreen.locked && !dockMode.visible && state === "normal"
-    //! Whether the lock screen is up, for what has to wait until it is gone.
-    readonly property bool screenLocked: lockScreen.locked
 
     //! True while an application's own window is what the screen is showing: a
     //! card of its own, with none of the shell's own UI in front of it. What the

@@ -38,7 +38,10 @@ Rectangle {
     function closeAll() {
         for (var i = listPopupAlertsModel.count - 1; i >= 0; --i)
             compositorInstance.closeWindow(listPopupAlertsModel.get(i));
-        if (windowManagerItem)
+        // A notification alert goes too, unless it is modal: that one has to
+        // be answered, and the tap stays with it.
+        notificationAlerts.dismiss();
+        if (windowManagerItem && !notificationAlerts.showing)
             windowManagerItem.removeTapAction("hideAlertWindow");
     }
 
@@ -70,6 +73,10 @@ Rectangle {
             id: alertItem
 
             property Item window: listPopupAlertsModel.get(index /* index is set by Repeater */)
+            // Kept out of sight while a notification alert is shown in front
+            // of it: the panel is translucent on a tablet, so covering it is
+            // not enough. It comes back once that alert is answered.
+            visible: !notificationAlerts.showing
             x: rootAlertsArea.contentMargin
             y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
             width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
@@ -132,6 +139,13 @@ Rectangle {
         var i=0;
         var newMaxHeight = 0;
         var currentMaxHeight = 0;
+
+        // A notification alert hides the window alerts behind it, so the area
+        // is its size alone while it is up.
+        if (notificationAlerts.showing) {
+            rootAlertsArea.maxHeight = notificationAlerts.height;
+            return;
+        }
         for( i=0; i < listPopupAlertsModel.count; ++i ) {
             currentMaxHeight = listPopupAlertsModel.get(i).height;
             if( currentMaxHeight > newMaxHeight )
@@ -139,6 +153,28 @@ Rectangle {
         }
 
         rootAlertsArea.maxHeight = newMaxHeight;
+    }
+
+    /*
+     * The alerts com.webos.notification hands out - a web app asking for
+     * permission, for one - hosted the way an application's popup alert window
+     * is: in this bar or panel, at its foot, over any window alert that is up,
+     * and gone with a tap outside unless it is modal.
+     */
+    NotificationAlertsArea {
+        id: notificationAlerts
+
+        x: rootAlertsArea.contentMargin
+        y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
+        width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
+        z: 1
+
+        onHeightChanged: rootAlertsArea.computeNewRootHeight()
+        onShowingChanged: {
+            rootAlertsArea.computeNewRootHeight();
+            if (showing && windowManagerItem)
+                windowManagerItem.addTapAction("hideAlertWindow", function () { rootAlertsArea.closeAll(); });
+        }
     }
 
     Repeater {
@@ -151,7 +187,7 @@ Rectangle {
         delegate: alertComponent
 
         onItemAdded: (index, item) => {
-            if( item.height > rootAlertsArea.maxHeight )
+            if( !notificationAlerts.showing && item.height > rootAlertsArea.maxHeight )
                 rootAlertsArea.maxHeight = item.height;
         }
         onItemRemoved: (index, item) => {
