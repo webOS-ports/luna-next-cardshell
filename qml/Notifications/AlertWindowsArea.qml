@@ -34,6 +34,11 @@ Rectangle {
     // is not in this area, so it cannot go by whether this area is shown, which
     // is not only a question of the lock screen.
     property bool screenLocked: false
+    // Where the free space below the status bar ends, in the parent's
+    // coordinates: the top of the gesture area. The tablet's notification
+    // alert is centred in that space, as legacy centred its modals in the
+    // positive space, not in the whole screen.
+    property real modalSpaceBottom: parent ? parent.height : 0
 
     /*!
      * Closes every alert. Used both by the tap action a tap on the gesture area
@@ -206,9 +211,10 @@ Rectangle {
         x: 0
         width: parent ? parent.width : 0
         // From the foot of the status bar, which is where this area hangs from
-        // on a tablet less the inset it hangs by.
+        // on a tablet less the inset it hangs by, down to the gesture area,
+        // which stays free for the tap that dismisses.
         y: rootAlertsArea.y - rootAlertsArea.anchors.topMargin
-        height: parent ? parent.height - y : 0
+        height: rootAlertsArea.modalSpaceBottom - y
 
         Rectangle {
             anchors.fill: parent
