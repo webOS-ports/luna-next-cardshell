@@ -291,7 +291,8 @@ Row {
         anchors.bottom: indicatorsRow.bottom
 
         level: batteryService.level
-        charging: batteryService.charging
+        // A full battery on a charger shows as full, not as charging.
+        charging: batteryService.charging && !batteryService.full
         percentage: batteryService.percentage
 
         enabled: !batteryService.error
