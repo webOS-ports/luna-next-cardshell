@@ -514,6 +514,10 @@ WindowManager {
         anchors.fill: parent
         compositorInstance: compositor
         foregroundWindow: windowManager.foregroundWindow
+        // Just Type is an application too, shown by the launcher rather than
+        // the card view, so it is not covered by applicationForeground.
+        applicationForeground: windowManager.applicationForeground ||
+                               (!lockScreen.locked && launcherInstance.justTypeLauncherActive)
 
         keyboardService: KeyboardService {}
     }
@@ -544,12 +548,26 @@ WindowManager {
             //! Where the finger went down, to tell a hold from a drag.
             property point pressedAt
 
+            //! Whether there was a selection under the finger as it went down.
+            property bool selectedAtPress: false
+
             onActiveChanged: {
                 if (editPressMonitor.active) {
                     editPressMonitor.pressedAt = editPressMonitor.point.position;
+                    editPressMonitor.selectedAtPress = editOverlay.hasSelection;
+                    editTapTimer.stop();
+                    spellingTapTimer.stop();
                     editPressTimer.restart();
                 } else {
+                    // The hold timer still running means the finger neither
+                    // moved off nor stayed down long enough: that was a tap.
+                    var wasTap = editPressTimer.running;
                     editPressTimer.stop();
+
+                    if (wasTap && editPressMonitor.selectedAtPress)
+                        editTapTimer.restart();
+                    else if (wasTap)
+                        spellingTapTimer.restart();
                 }
             }
 
@@ -567,11 +585,60 @@ WindowManager {
             }
         }
 
+        /*
+         * A tap on a selection raises the pill at once, as legacy's did: its
+         * mouse-down remembered a press on the selected text and the mouse-up
+         * showed the widget with no hold in between.
+         *
+         * The shell does not know where the selection is, so it asks the other
+         * way round: the press found a selection, and a moment after the lift
+         * it is still there. A tap anywhere else collapses the selection, so
+         * that one does not come back as a selection and gets no pill. The
+         * moment is for the input method's report to arrive.
+         */
+        Timer {
+            id: editTapTimer
+
+            interval: 150
+            repeat: false
+
+            onTriggered: if (editOverlay.editable && editOverlay.hasSelection && !editOverlay.visible)
+                             editOverlay.showAt(editPressMonitor.pressedAt.x,
+                                                editPressMonitor.pressedAt.y)
+        }
+
+        /*
+         * A tap on a misspelled word raises its suggestions, as legacy's
+         * spelling widget did on a tap.
+         *
+         * The shell does not know where the words are, and the keyboard is what
+         * says which one is wrong: it reports the misspelled word the caret is in
+         * after the tap has put the caret there, so there is a moment to wait for
+         * that report, a little longer than the selection tap's. A tap on a word
+         * that is fine, or anywhere else, leaves nothing reported and no pill.
+         */
+        Timer {
+            id: spellingTapTimer
+
+            interval: 250
+            repeat: false
+
+            onTriggered: {
+                var suggestions = editOverlay.keyboardService
+                                  ? editOverlay.keyboardService.spellingSuggestions : [];
+
+                if (editOverlay.editable && !editOverlay.visible
+                        && !editOverlay.hasSelection && suggestions.length > 0)
+                    editOverlay.showSuggestionsAtWord(editPressMonitor.pressedAt.x,
+                                                      editPressMonitor.pressedAt.y)
+            }
+        }
+
         Timer {
             id: editPressTimer
 
-            //! Long enough not to fire on a tap, short enough to feel deliberate.
-            interval: 600
+            //! Legacy's tap-and-hold time, from startTapAndHoldTimer: 700 ms.
+            interval: 700
             repeat: false
 
             onTriggered: editOverlay.showAt(editPressMonitor.point.position.x,

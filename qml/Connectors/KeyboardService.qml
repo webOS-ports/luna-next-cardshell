@@ -46,6 +46,28 @@ Item {
     //! its items out on the same question.
     property bool inputFocus: false
 
+    //! Whether the focused field has a selection, and whether it has any text.
+    //!
+    //! What the edit overlay chooses its items from, as legacy's did: Cut and
+    //! Copy are for a selection, Select All and Paste for a field with none.
+    property bool inputHasSelection: false
+    property bool inputHasText: false
+    //! Whether the input method reports the two above at all. An older one does
+    //! not, and then "no selection" would just be a silence to read as a fact.
+    property bool inputSelectionKnown: false
+
+    //! The misspelled word the caret is in, and what the keyboard would put in its
+    //! place. Both empty when the caret is in no such word, or in a field that
+    //! gets no suggestions - which includes any that hides what is typed in it.
+    property string spellingWord: ""
+    property var spellingSuggestions: []
+    //! Where the caret is, in the application's own coordinates - {x, y, width,
+    //! height} - while there is a misspelling to point at; null otherwise.
+    property var spellingRect: null
+    //! Whether that word may be added to the user dictionary: a misspelling may, a
+    //! word the keyboard itself autocorrected may not.
+    property bool spellingCanLearn: false
+
     /*! The digits printed on the key faces, by evdev scancode.
      *
      * For the things that take digits without an input method: the lock screen's
@@ -98,6 +120,23 @@ Item {
 
         if (response.inputFocus !== undefined)
             keyboardService.inputFocus = response.inputFocus === true;
+
+        if (response.inputHasSelection !== undefined) {
+            keyboardService.inputSelectionKnown = true;
+            keyboardService.inputHasSelection = response.inputHasSelection === true;
+        }
+
+        if (response.inputHasText !== undefined)
+            keyboardService.inputHasText = response.inputHasText === true;
+
+        if (response.spellingSuggestions !== undefined) {
+            keyboardService.spellingWord = response.spellingWord !== undefined
+                                           ? response.spellingWord : "";
+            keyboardService.spellingSuggestions = response.spellingSuggestions;
+            keyboardService.spellingRect = response.spellingRect !== undefined
+                                           ? response.spellingRect : null;
+            keyboardService.spellingCanLearn = response.spellingCanLearn === true;
+        }
     }
 
     function _onError(message) {
@@ -126,6 +165,30 @@ Item {
         // The reply carries the new status, so the menu entry updates without
         // waiting for the subscription to come round.
         keyboardService._onStatus(message);
+    }
+
+    //! \brief Puts one of the suggestions in the misspelled word's place.
+    //!
+    //! Refused by the input method if the caret has left that word since the
+    //! suggestions were reported, which is as it should be.
+    function applySpellingSuggestion(suggestion) {
+        imeService.call("luna://com.webos.service.ime/applySpellingSuggestion",
+                        JSON.stringify({"suggestion": suggestion}),
+                        keyboardService._onApplyResponse, keyboardService._onError);
+    }
+
+    //! \brief Adds the misspelled word to the user dictionary.
+    function learnWord(word) {
+        imeService.call("luna://com.webos.service.ime/learnWord",
+                        JSON.stringify({"word": word}),
+                        keyboardService._onApplyResponse, keyboardService._onError);
+    }
+
+    function _onApplyResponse(message) {
+        var response = JSON.parse(message.payload);
+
+        if (response.returnValue !== true)
+            console.warn("KeyboardService: suggestion not applied: " + message.payload);
     }
 
     //! \brief Asks for the on-screen keyboard, or stops asking.
