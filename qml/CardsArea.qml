@@ -436,7 +436,9 @@ WindowManager {
         width: Settings.tabletUi ? Units.length(320) + 2 * contentMargin : parent.width
         x: Settings.tabletUi ? parent.width - width - tabletInset : 0
 
-        visible: !lockScreen.visible
+        // The tablet panel is a rounded black rectangle even when empty, so it must only exist
+        // while an alert does (maxHeight is 0 otherwise); the phone bar is a plain strip.
+        visible: !lockScreen.visible && (!Settings.tabletUi || maxHeight > 0)
         windowManagerItem: windowManager
         compositorInstance: compositor
         screenLocked: lockScreen.visible
