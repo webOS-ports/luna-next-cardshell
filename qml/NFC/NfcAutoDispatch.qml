@@ -94,7 +94,7 @@ Item {
             appId = "org.webosports.app.atlas";
             label = "Opening location";
         } else if (uri.indexOf("http://") === 0 || uri.indexOf("https://") === 0) {
-            appId = "com.webos.app.enactbrowser";
+            appId = "org.webosports.app.atlas";
             label = "Opening " + uri;
         } else {
             return;
