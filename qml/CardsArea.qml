@@ -377,7 +377,14 @@ WindowManager {
     Loader {
         id: notificationAreaInstance
 
-        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
+        /*
+         * Always above the gesture area, also while the lock screen hides it. The cards hang from
+         * this area, and following the gesture area's visibility made every open application's
+         * window 40 pixels taller when the screen locked and shorter again on unlocking: each
+         * display off and on resized and reallocated their buffers, for nothing, as the lock
+         * screen covers them. With the gesture area switched off its height is 0, so top is bottom.
+         */
+        anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
