@@ -207,7 +207,12 @@ ListModel {
 
             onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
 
-            children: [ dashboardWindow ]
+            // Behind the window, which Component.onCompleted parents here and
+            // so stacks on top. Shows through a transparent dashboard window.
+            NotificationBar {
+                anchors.fill: parent
+                visible: !Settings.tabletUi
+            }
 
             Component.onCompleted: {
                 if( dashboardWindow ) {

@@ -25,62 +25,57 @@ Item {
     property string title: "(no title)"
     property string body: "(no summary)"
     property url iconUrl: Qt.resolvedUrl("../images/default-app-icon.png");
-    property string bgColor: Settings.tabletUi? "transparent" : "#393939";
 
-    Rectangle {
-        id: iconBox
-        width: Units.gu(6)
-        anchors.left: parent.left
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        color: bgColor
-        radius: 8
-
-        Image {
-            id: notificationIcon
-            anchors.fill: parent
-            anchors.margins: Units.gu(0.5)
-            anchors.centerIn: parent
-            source: iconUrl
-            fillMode: Image.PreserveAspectFit
-            layer.mipmap: true
-        }
+    /*
+     * Legacy webOS's dashboard look: the shared bar, the icon sitting on it, a
+     * bold white title over a regular white summary. The tablet ui keeps the
+     * transparent background it has always had.
+     */
+    NotificationBar {
+        id: bar
+        anchors.fill: parent
+        visible: !Settings.tabletUi
     }
 
-    Rectangle {
-        id: mainContent
-        anchors.left: iconBox.right
-        anchors.leftMargin: Units.gu(1) / 2
+    Image {
+        id: notificationIcon
+        anchors.left: parent.left
+        anchors.leftMargin: parent.height * 0.2
+        anchors.verticalCenter: parent.verticalCenter
+        height: parent.height * 0.62
+        width: height
+        source: iconUrl
+        fillMode: Image.PreserveAspectFit
+        layer.mipmap: true
+    }
+
+    Column {
+        id: textColumn
+        anchors.left: notificationIcon.right
+        anchors.leftMargin: parent.height * 0.35
         anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.bottom: parent.bottom
-        color: bgColor
-        radius: 8
+        anchors.rightMargin: parent.height * 0.2
+        anchors.verticalCenter: parent.verticalCenter
+        spacing: 0
 
         Text {
             id: summaryText
+            width: parent.width
             font.bold: true
             font.pixelSize: FontUtils.sizeToPixels("medium")
             color: "white"
+            elide: Text.ElideRight
             text: notification.title
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.topMargin: 3
-            anchors.leftMargin: 10
-            anchors.bottomMargin: 5
         }
 
         Text {
             id: bodyText
-            font.pixelSize: FontUtils.sizeToPixels("small")
+            width: parent.width
+            font.pixelSize: FontUtils.sizeToPixels("medium")
             font.bold: false
             color: "white"
+            elide: Text.ElideRight
             text: notification.body
-            anchors.top: summaryText.bottom
-            anchors.left: parent.left
-            anchors.bottom: parent.bottom
-            anchors.leftMargin: 10
-            anchors.bottomMargin: 3
         }
     }
 }
