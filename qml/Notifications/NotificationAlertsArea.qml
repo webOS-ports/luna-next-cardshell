@@ -218,6 +218,7 @@ Item {
             id: titleText
             width: parent.width - icon.width - Units.gu(1)
             text: root.currentAlert ? (root.currentAlert.title || "") : ""
+            textFormat: Text.PlainText
             visible: text.length > 0
             font.family: "Prelude"
             font.pixelSize: FontUtils.sizeToPixels("16pt")
@@ -230,6 +231,7 @@ Item {
             id: messageText
             width: parent.width - icon.width - Units.gu(1)
             text: root.currentAlert ? (root.currentAlert.message || "") : ""
+            textFormat: Text.PlainText
             font.family: "Prelude"
             font.pixelSize: FontUtils.sizeToPixels("12pt")
             font.bold: true
