@@ -122,18 +122,56 @@ Item {
             NumberAnimation { duration: 1000 }
         }
 
+        /* Size of the logo artwork as a fraction of the screen's short edge,
+           so the logo takes the same share of the screen on every device.
+           Left at its native size, the 720x720 artwork filled a 720p screen
+           but shrank to half of a 1440p one. 1.0 keeps the look the Q25
+           (720x720) always had, where it was drawn 1:1: the logo itself is
+           307px of that canvas, 43% of the short edge, the rest is room for
+           the glow. Both PNGs share the canvas, so the glow keeps lining up. */
+        property real logoFraction: 1.0
+        property real canvasSize: Math.min(width, height) * logoFraction
+
+        /* The artwork comes at 720, 1440 (@2x) and 2880 (@4x) px; the source is
+           graphics/psd/LuneOS-bootscreen@4x.psd. Pick the smallest one that is
+           not scaled up: decoding the 4x PNGs costs ~10x the 1x ones, which a
+           small armv7 device would spend with the screen still black. The
+           size passes through 0 and other transient values during layout, so
+           the tier is chosen once it has settled; otherwise the 1x art would
+           be decoded first and thrown away. */
+        property string artSuffix: ""
+        function pickArt() {
+            if (canvasSize > 0)
+                artSuffix = canvasSize > 1440 ? "@4x" : canvasSize > 720 ? "@2x" : "@1x";
+        }
+        onCanvasSizeChanged: Qt.callLater(pickArt)
+        function artSource(name) {
+            if (artSuffix === "")
+                return "";
+            return "images/lune-os-bootscreen-" + name + "-alpha"
+                    + (artSuffix === "@1x" ? "" : artSuffix) + ".png";
+        }
+
         Image {
             id: logoNormal
             anchors.centerIn: parent
-            source: "images/lune-os-bootscreen-idle-alpha.png"
+            width: bootScreenItem.canvasSize
+            height: bootScreenItem.canvasSize
+            source: bootScreenItem.artSource("idle")
             fillMode: Image.PreserveAspectFit
+            smooth: true
+            mipmap: true
         }
 
         Image {
             id: logoGlow
             anchors.centerIn: logoNormal
-            source: "images/lune-os-bootscreen-glowing-alpha.png"
+            width: bootScreenItem.canvasSize
+            height: bootScreenItem.canvasSize
+            source: bootScreenItem.artSource("glowing")
             fillMode: Image.PreserveAspectFit
+            smooth: true
+            mipmap: true
             opacity: 0.1
         }
 
