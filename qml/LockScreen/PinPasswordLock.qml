@@ -19,6 +19,7 @@
 import QtQuick 2.0
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
+import LuneOS.Passcode 1.0
 
 import "../Connectors"
 
