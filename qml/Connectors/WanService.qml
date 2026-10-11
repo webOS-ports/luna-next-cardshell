@@ -19,6 +19,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 Item {
@@ -63,10 +64,15 @@ Item {
 
     ServiceStatus {
         serviceName: "com.palm.connectionmanager"
-        onConnected: {
+        clientName: "com.webos.surfacemanager-cardshell"
+
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
             getConnMgrWanStatus.subscribe(JSON.stringify({"subscribe":true}));
         }
-        onDisconnected: {
+
+        function disconnected() {
             wanService.online = false;
             wanService.connected = false;
         }
@@ -100,10 +106,15 @@ Item {
 
     ServiceStatus {
         serviceName: "com.palm.wan"
-        onConnected: {
+        clientName: "com.webos.surfacemanager-cardshell"
+
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
             getWanStatus.subscribe(JSON.stringify({"subscribe":true}));
         }
-        onDisconnected: {
+
+        function disconnected() {
             wanService.powered = false;
             wanService.technology = "none";
         }

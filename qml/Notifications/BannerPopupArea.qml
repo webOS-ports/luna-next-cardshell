@@ -40,45 +40,9 @@ Item {
         name: "com.webos.surfacemanager-cardshell"
     }
 
-    LunaService {
-            id: systemService
-
-            name: "com.webos.surfacemanager-cardshell"
-
-            property variant keysToWatch: ["ringtone","alerttone","notificationtone","locale"]
-
-            onInitialized: {
-                console.log("Calling preferences service for system sounds and locale...");
-
-                // subscribe to preference change events so that we know when something has changed
-                // and we can notify the relevant parts about this
-                systemService.call("luna://com.webos.service.systemservice/getPreferences",
-                                        JSON.stringify({"keys": keysToWatch,"subscribe":true}),
-                                        handlePreferencesResponse,
-                                        handleError);
-            }
-
-            function handlePreferencesResponse(message) {
-                var response = JSON.parse(message.payload);
-
-                if (response.hasOwnProperty("ringtone")) {
-                    preferences.ringtoneFullPath = response.ringtone.fullPath;
-                }
-                if (response.hasOwnProperty("alerttone")) {
-                    preferences.alerttoneFullPath = response.alerttone.fullPath;
-                }
-                if (response.hasOwnProperty("notificationtone")) {
-                    preferences.notificationtoneFullPath = response.notificationtone.fullPath;
-                }
-                if (response.hasOwnProperty("locale")) {
-                    preferences.locale = response.locale.languageCode+"_"+response.locale.countryCode;
-                }
-            }
-
-            function handleError(message) {
-                console.log("Failed to call preferences service: " + message);
-            }
-        }
+    // No preference subscription of its own: the sounds and the locale used
+    // below are the shell's Preferences ("preferences"), which follows them.
+    // This one asked for the same keys again, once, and wrote them back there.
 
     Loader {
         active: !Settings.tabletUi

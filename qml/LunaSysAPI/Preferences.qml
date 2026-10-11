@@ -17,7 +17,7 @@
  */
 
 import QtQuick 2.0
-import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 Item {
@@ -59,32 +59,23 @@ Item {
     // private
     //
 
-    onRotationLockAngleChanged: systemService.setPreference("rotationLock", preferences.rotationLockAngle)
+    // Set while a read is being applied: what was just read is not written back
+    property bool _applying: false
+
+    onRotationLockAngleChanged: if (!_applying) prefs.set("rotationLock", preferences.rotationLockAngle)
     onUiScaleChanged: Units.persistUiScale(preferences.uiScale)
-    onMuteSoundChanged: systemService.setPreference("muteSound", preferences.muteSound)
+    onMuteSoundChanged: if (!_applying) prefs.set("muteSound", preferences.muteSound)
 
-    LunaService {
-        id: systemService
+    // Writes nothing until the first read is in, so the defaults above never
+    // overwrite what is stored
+    SystemPreferences {
+        id: prefs
 
-        name: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager-cardshell"
+        keys: ["wallpaper","airplaneMode","rotationLock","muteSound","ringtone","notificationtone","alerttone","locale","uiScale"]
 
-        property variant keysToWatch: ["wallpaper","airplaneMode","rotationLock","muteSound","ringtone","notificationtone","alerttone","locale","uiScale"]
-        property bool firstReadDone: false
-
-        onInitialized: {
-            console.log("Calling preferences service ...");
-
-            // subscribe to preference change events so that we know when something has changed
-            // and we can notify the relevant parts of the UI about this
-            systemService.subscribe("luna://com.webos.service.systemservice/getPreferences",
-                                    JSON.stringify({"keys": keysToWatch,"subscribe":true}),
-                                    handlePreferencesChanged,
-                                    handleError);
-        }
-
-        function handlePreferencesChanged(message) {
-            var response = JSON.parse(message.payload);
-
+        onUpdated: (response) => {
+            preferences._applying = true;
             if (response.hasOwnProperty("wallpaper")) {
                 preferences.wallpaperFile = response.wallpaper.wallpaperFile;
             }
@@ -112,26 +103,8 @@ Item {
             if (response.hasOwnProperty("locale")) {
                 preferences.locale = response.locale.languageCode+"_"+response.locale.countryCode;
             }
-
-            firstReadDone = true;
+            preferences._applying = false;
         }
-
-        function handleError(message) {
-            console.log("Failed to call preferences service: " + message);
-        }
-
-        function setPreference(key, value) {
-            if(!firstReadDone) {
-                console.log("Trying to set preferences before reading them first: ignoring.");
-                return;
-            }
-
-            var params = {};
-            params[key] = value;
-            systemService.call("luna://com.webos.service.systemservice/setPreferences",
-                                    JSON.stringify(params),
-                                    function (message) { },
-                                    handleError);
-        }
+        onError: (message) => console.log("Failed to call preferences service: " + message)
     }
 }

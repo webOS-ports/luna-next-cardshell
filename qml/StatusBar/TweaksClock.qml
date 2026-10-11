@@ -18,7 +18,7 @@
  */
 
 import QtQuick 2.0
-import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 import "../AppTweaks"
@@ -30,31 +30,20 @@ Item {
     property real fontSize: FontUtils.sizeToPixels("medium")
     signal triggered
 
-    function probeTimeFormat()
-    {
-        timeFormatQuery.subscribe(
-                    "luna://com.webos.service.systemservice/getPreferences",
-                    JSON.stringify({"subscribe":true, "keys":["timeFormat"]}),
-                    onTimeFormatChanged, onTimeFormatError)
-    }
-
-    function onTimeFormatChanged(message) {
-        var response = JSON.parse(message.payload)
-        timeFormat = response.timeFormat
+    function onTimeFormatChanged(response) {
+        if (response.timeFormat !== undefined)
+            timeFormat = response.timeFormat
     }
 
     function onTimeFormatError(message) {
         console.log("Failed to call timeFormat service: " + message)
     }
 
-    LunaService {
-        id: timeFormatQuery
-
-        name: "com.webos.surfacemanager-cardshell"
-
-        onInitialized: {
-            probeTimeFormat()
-        }
+    SystemPreferences {
+        clientName: "com.webos.surfacemanager-cardshell"
+        keys: ["timeFormat"]
+        onUpdated: (response) => title.onTimeFormatChanged(response)
+        onError: (message) => title.onTimeFormatError(message)
     }
 
     Text {

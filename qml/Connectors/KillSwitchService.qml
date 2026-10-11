@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 /*
@@ -74,17 +75,17 @@ Item {
     LunaService {
         id: lunaService
         name: "com.webos.surfacemanager-cardshell"
-
-        onInitialized: {
-            lunaService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-                                  JSON.stringify({"serviceName": "org.webosports.service.killswitch"}),
-                                  handleServiceStatus, handleError);
-        }
     }
 
-    function handleServiceStatus(message) {
-        var response = JSON.parse(message.payload);
-        killSwitchService.serviceAvailable = response.connected === true;
+    ServiceStatus {
+        id: killSwitchStatus
+        serviceName: "org.webosports.service.killswitch"
+        clientName: "com.webos.surfacemanager-cardshell"
+        onAvailableChanged: killSwitchService.handleServiceStatus()
+    }
+
+    function handleServiceStatus() {
+        killSwitchService.serviceAvailable = killSwitchStatus.available;
 
         if (!killSwitchService.serviceAvailable) {
             /* Do not keep drawing stale indicators for a service that went

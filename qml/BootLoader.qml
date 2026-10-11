@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 import QtMultimedia 6.3
 
@@ -57,34 +58,27 @@ Item {
         }
     }
 
+    ServiceStatus {
+        serviceName: "org.webosports.bootmgr"
+        clientName: "com.webos.surfacemanager-cardshell"
+        onAvailableChanged: if (available) systemService.subscribeBootStatus()
+    }
+
+    ServiceStatus {
+        serviceName: "com.webos.service.audio"
+        clientName: "com.webos.surfacemanager-cardshell"
+        onAvailableChanged: if (available) audioSettleDelay.start()
+    }
+
     LunaService {
         id: systemService
         name: "com.webos.surfacemanager-cardshell"
-        onInitialized: {
+        function subscribeBootStatus() {
             console.log("Calling boot status service ...");
-
-            systemService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-                               "{\"serviceName\":\"org.webosports.bootmgr\"}",
-                               handleBootMgrStatus, handleError);
-            systemService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-                               "{\"serviceName\":\"com.webos.service.audio\"}",
-                               handleAudioStatus, handleError);
-        }
-
-        function handleAudioStatus(message) {
-            var response = JSON.parse(message.payload);
-            if (response.hasOwnProperty("connected") && response.connected)
-                audioSettleDelay.start();
-        }
-
-        function handleBootMgrStatus(message) {
-            var response = JSON.parse(message.payload);
-            if (response.hasOwnProperty("connected") && response.connected) {
-                systemService.subscribe("luna://org.webosports.bootmgr/getStatus",
-                                        JSON.stringify({"subscribe":true}),
-                                        handleBootStatusChanged,
-                                        handleError);
-            }
+            systemService.subscribe("luna://org.webosports.bootmgr/getStatus",
+                                    JSON.stringify({"subscribe":true}),
+                                    handleBootStatusChanged,
+                                    handleError);
         }
 
         function handleBootStatusChanged(message) {

@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 ListModel {
@@ -96,12 +97,14 @@ ListModel {
         refresh();
     }
 
-    function handleApplicationManagerStatusChanged(message) {
-        var response = JSON.parse(message.payload);
+    // A property: a ListModel takes nothing but ListElements as children
+    property QtObject applicationManagerStatus: ServiceStatus {
+        serviceName: "com.webos.service.applicationmanager"
+        clientName: "com.webos.surfacemanager-cardshell"
+        onAvailableChanged: if (available) applicationModel.handleApplicationManagerUp()
+    }
 
-        if (!response.connected)
-            return;
-
+    function handleApplicationManagerUp() {
         // register handler for possible launch point change events
         service.subscribe("luna://com.palm.applicationManager/launchPointChanges",
             JSON.stringify({"subscribe":true}), handleLaunchPointChanges, handleError);
@@ -111,11 +114,5 @@ ListModel {
 
     function handleError(message) {
         console.log("Failed to call application manager: " + message);
-    }
-
-    Component.onCompleted: {
-        service.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-            JSON.stringify({"serviceName":"com.webos.service.applicationManager"}),
-            handleApplicationManagerStatusChanged, handleError);
     }
 }

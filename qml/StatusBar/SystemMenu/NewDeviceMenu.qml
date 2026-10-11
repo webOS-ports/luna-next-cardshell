@@ -23,6 +23,7 @@
 import QtQuick 2.5
 import QtQuick.Window 2.2
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 // Connman
@@ -199,8 +200,11 @@ Item {
      */
     ServiceStatus {
         serviceName: "org.webosports.service.torch"
+        clientName: "com.webos.surfacemanager-cardshell"
 
-        onConnected: {
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
             service.subscribe("luna://org.webosports.service.torch/getStatus",
                  JSON.stringify({"subscribe": true}),
                  function(message) {
@@ -216,7 +220,7 @@ Item {
                  });
         }
 
-        onDisconnected: {
+        function disconnected() {
             deviceMenu.flashlightAvailable = false;
             deviceMenu.flashlightOn = false;
         }

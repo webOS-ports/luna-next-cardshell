@@ -17,6 +17,7 @@
 
 import QtQuick 2.5
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 
 // Tap-and-go: when a tag with a dispatchable NDEF record comes into range,
 // act on it immediately (open a link, call a number, ...) instead of only
@@ -39,9 +40,9 @@ Item {
         }
     }
 
-    LunaService {
+    AppLauncher {
         id: appLauncher
-        name: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager-cardshell"
     }
 
     LunaService {
@@ -100,9 +101,7 @@ Item {
             return;
         }
 
-        appLauncher.call("luna://com.webos.service.applicationManager/launch",
-                          JSON.stringify({"id": appId, "params": {"target": uri}}),
-                          function () {}, function () {});
+        appLauncher.launch(appId, {"target": uri});
 
         nfcAutoDispatch.showToast(label);
     }

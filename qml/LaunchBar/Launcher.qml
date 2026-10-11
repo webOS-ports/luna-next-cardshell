@@ -19,6 +19,7 @@
 import QtQuick 2.9
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import WebOSCompositorBase 1.0
 import WebOSCoreCompositor 1.0
 
@@ -58,9 +59,9 @@ Item {
 
     property ListModel appsModel: LunaSysAPI.ApplicationModel {}
 
-    property QtObject lunaNextLS2Service: LunaService {
-        id: lunaNextLS2Service
-        name: "com.webos.surfacemanager-cardshell"
+    property QtObject appLauncher: AppLauncher {
+        id: appLauncher
+        clientName: "com.webos.surfacemanager-cardshell"
     }
 
     Keys.forwardTo: [ justTypeFieldInstance, fullLauncherInstance ]
@@ -215,8 +216,7 @@ Item {
     function launchApplication(id, params, successCB) {
         console.log("launching app " + id + " with params " + JSON.stringify(params));
         state = "launchbar";
-        lunaNextLS2Service.call("luna://com.webos.service.applicationManager/launch",
-            JSON.stringify({"id": id, "params": params}), successCB, handleLaunchAppError)
+        appLauncher.launch(id, params, successCB, handleLaunchAppError)
     }
 
     Connections {

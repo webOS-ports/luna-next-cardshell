@@ -18,7 +18,7 @@
 pragma Singleton
 
 import QtQuick 2.0
-import LuneOS.Service 1.0
+import LuneOS.System 1.0
 
 /*
  * The "System Sounds" switch from Settings' Sounds & Alerts page.
@@ -39,24 +39,14 @@ QtObject {
     // the preference has never been written or cannot be read.
     property bool enabled: true
 
-    property var _service: LunaService {
-        name: "com.webos.surfacemanager-cardshell"
+    property var _prefs: SystemPreferences {
+        clientName: "com.webos.surfacemanager-cardshell"
+        keys: ["systemSounds"]
 
-        onInitialized: {
-            subscribe("luna://com.webos.service.systemservice/getPreferences",
-                      JSON.stringify({"keys": ["systemSounds"], "subscribe": true}),
-                      handlePreferencesChanged, handleError);
-        }
-
-        function handlePreferencesChanged(message) {
-            var response = JSON.parse(message.payload);
-
+        onUpdated: (response) => {
             if (response.hasOwnProperty("systemSounds"))
                 systemSounds.enabled = response.systemSounds;
         }
-
-        function handleError(message) {
-            console.log("SystemSounds: failed to read the systemSounds preference: " + message);
-        }
+        onError: (message) => console.log("SystemSounds: failed to read the systemSounds preference: " + message)
     }
 }
