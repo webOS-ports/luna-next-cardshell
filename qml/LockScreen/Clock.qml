@@ -17,7 +17,7 @@
 
 import QtQuick 2.6
 import LunaNext.Common 0.1
-import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import QtQml 2.2
 
 Item {
@@ -35,25 +35,16 @@ Item {
     property string screenLockImagePrefix: "../images/lockscreen/screen-lock-clock-"
     property string screenLockImageSuffix: ".png"
 
-    function probePrefs()
-    {
-        prefsQuery.subscribe(
-                            "luna://com.webos.service.systemservice/getPreferences",
-                            JSON.stringify({"subscribe":true, "keys":["timeFormat", "locale"]}),
-                            onPrefsChanged, onPrefsError)
-    }
-
-    function onPrefsChanged(message) {
-        var response = JSON.parse(message.payload)
+    function onPrefsChanged(response) {
         if (response.timeFormat !== undefined) {
-
-        timeFormat = response.timeFormat
+            timeFormat = response.timeFormat
         }
 
-        if (response.locale.countryCode !== undefined) {
+        // Not every update carries the locale
+        if (response.locale && response.locale.countryCode !== undefined) {
             localeCountry = response.locale.countryCode.toUpperCase()
         }
-        if (response.locale.languageCode !== undefined) {
+        if (response.locale && response.locale.languageCode !== undefined) {
             localeLanguage = response.locale.languageCode
         }
     }
@@ -87,13 +78,11 @@ Item {
     }
 
 
-    LunaService {
-        id: prefsQuery
-        name: "com.webos.surfacemanager-cardshell"
-
-        onInitialized: {
-            probePrefs()
-        }
+    SystemPreferences {
+        clientName: "com.webos.surfacemanager-cardshell"
+        keys: ["timeFormat", "locale"]
+        onUpdated: (response) => clockItem.onPrefsChanged(response)
+        onError: (message) => clockItem.onPrefsError(message)
     }
 
     Row {

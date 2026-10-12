@@ -19,6 +19,7 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 import WebOSServices 1.0
 import WebOSCompositorBase 1.0
+import LuneOS.System 1.0
 
 import "../Utils"
 
@@ -135,21 +136,11 @@ Item {
             closeCurrent();
     }
 
-    Service {
+    ServiceStatus {
         id: notificationManagerStatus
-        appId: LS.appId
-        service: "luna://com.webos.service.bus"
-        method: "signal/registerServerStatus"
-
-        Component.onCompleted: callService({"serviceName": "com.webos.notification", "subscribe": true})
-
-        onResponse: (method, payload, token) => {
-            var response = JSON.parse(payload);
-            if (response.connected)
-                notificationManager.subscribe();
-            else
-                notificationManager.unsubscribe();
-        }
+        serviceName: "com.webos.notification"
+        clientName: "com.webos.surfacemanager-cardshell"
+        onAvailableChanged: available ? notificationManager.subscribe() : notificationManager.unsubscribe()
     }
 
     Service {

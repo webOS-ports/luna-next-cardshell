@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 /*
@@ -231,16 +232,7 @@ Item {
         id: ledService
         name: "com.webos.surfacemanager-cardshell"
 
-        readonly property var keysToWatch: ["BlinkNotifications", "notificationLedColors"]
-
         onInitialized: {
-            ledService.subscribe("luna://com.webos.service.systemservice/getPreferences",
-                                 JSON.stringify({"keys": keysToWatch, "subscribe": true}),
-                                 notificationLed.handlePreferences,
-                                 function (error) {
-                                     console.warn("NotificationLed: preference subscription failed: " + JSON.stringify(error));
-                                 });
-
             ledService.subscribe("luna://com.palm.display/control/status",
                                  JSON.stringify({"subscribe": true}),
                                  notificationLed.handleDisplayStatus,
@@ -250,8 +242,14 @@ Item {
         }
     }
 
-    function handlePreferences(message) {
-        var response = JSON.parse(message.payload);
+    SystemPreferences {
+        clientName: "com.webos.surfacemanager-cardshell"
+        keys: ["BlinkNotifications", "notificationLedColors"]
+        onUpdated: (response) => notificationLed.handlePreferences(response)
+        onError: (message) => console.warn("NotificationLed: preference subscription failed: " + message)
+    }
+
+    function handlePreferences(response) {
 
         if (response.hasOwnProperty("BlinkNotifications"))
             blinkNotifications = response.BlinkNotifications;

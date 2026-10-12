@@ -19,6 +19,7 @@
 import QtQuick 2.5
 import QtQuick.Window 2.2
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 
 /*
  * The shell's side of org.webosports.service.eink, the E Ink refresh-mode
@@ -79,8 +80,11 @@ Item {
 
     ServiceStatus {
         serviceName: "org.webosports.service.eink"
+        clientName: "com.webos.surfacemanager-cardshell"
 
-        onConnected: {
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
             service.subscribe("luna://org.webosports.service.eink/getStatus",
                               JSON.stringify({"subscribe": true}),
                               function(message) {
@@ -118,7 +122,7 @@ Item {
             eink.active = false;
         }
 
-        onDisconnected: {
+        function disconnected() {
             eink.available = false;
             eink.active = false;
         }

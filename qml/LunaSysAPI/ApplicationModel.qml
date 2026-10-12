@@ -18,6 +18,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 ListModel {
@@ -64,6 +65,10 @@ ListModel {
 
     function fillFromJSONResult(message) {
         var result = JSON.parse(message.payload);
+        // SAM leaves launchPoints out while it is still starting up. That is
+        // not an empty list: keep what is shown until the real one comes.
+        if (!result.returnValue || result.launchPoints === undefined)
+            return;
         applicationModel.clear();
         if(result.returnValue && result.launchPoints !== undefined) {
             for(var i=0; i<result.launchPoints.length; i++) {
@@ -96,26 +101,35 @@ ListModel {
         refresh();
     }
 
-    function handleApplicationManagerStatusChanged(message) {
-        var response = JSON.parse(message.payload);
+    // A property: a ListModel takes nothing but ListElements as children
+    property QtObject applicationManagerStatus: ServiceStatus {
+        serviceName: "com.webos.service.applicationmanager"
+        clientName: "com.webos.surfacemanager-cardshell"
+        onAvailableChanged: if (available) applicationModel.handleApplicationManagerUp()
+    }
 
-        if (!response.connected)
-            return;
-
+    function handleApplicationManagerUp() {
         // register handler for possible launch point change events
         service.subscribe("luna://com.palm.applicationManager/launchPointChanges",
             JSON.stringify({"subscribe":true}), handleLaunchPointChanges, handleError);
 
-        refresh();
+        // SAM is on the bus before it has scanned the apps, and answers
+        // without a list until then. Once it has, it posts to listLaunchPoints'
+        // subscribers - without the list (SAM's postListLaunchPoints drops it),
+        // so every post is taken as a cue to ask again.
+        service.subscribe("luna://com.webos.service.applicationmanager/listLaunchPoints",
+            JSON.stringify({"subscribe":true}), handleLaunchPointsPosted, handleError);
+    }
+
+    function handleLaunchPointsPosted(message) {
+        var response = JSON.parse(message.payload);
+        if (response.launchPoints !== undefined)
+            fillFromJSONResult(message);
+        else
+            refresh();
     }
 
     function handleError(message) {
         console.log("Failed to call application manager: " + message);
-    }
-
-    Component.onCompleted: {
-        service.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-            JSON.stringify({"serviceName":"com.webos.service.applicationManager"}),
-            handleApplicationManagerStatusChanged, handleError);
     }
 }

@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 import "../Connectors"
@@ -32,12 +33,6 @@ Item {
     height: image.height
 
     property bool _hadFirstAudioStatus: false
-
-    // ServiceStatus can report "connected" more than once without a "disconnected" in between (audiod
-    // registering its bus name while it is still starting). Every subscribe() adds a subscription,
-    // audiod then notifies each of them, and the volume click played once per subscription: two
-    // clicks, a few tens of milliseconds apart on a device whose audio path is slow to open a stream.
-    property bool _subscribed: false
 
     // Was a hand-rolled playFeedback call of its own, which meant the volume
     // click was the one feedback sound Settings' "System Sounds" switch did
@@ -72,16 +67,22 @@ Item {
     ServiceStatus {
         id: audioServiceStatus
         serviceName: "com.webos.service.audio"
-        onConnected: {
-            if (root._subscribed)
-                return;
-            root._subscribed = true;
+        clientName: "com.webos.surfacemanager-cardshell"
+
+        onAvailableChanged: available ? connected() : disconnected()
+
+        // The bus can report "connected" more than once without a
+        // "disconnected" in between (audiod registering its bus name while it
+        // is still starting). "available" only changes on a real change, so
+        // this subscribes once: a second subscription played the volume click
+        // twice, a few tens of milliseconds apart.
+        function connected() {
             audioService.subscribe("luna://com.webos.service.audio/master/getVolume",
                                    "{\"subscribe\":true}",
                                    onAudioStatusChanged, onError);
         }
-        onDisconnected: {
-            root._subscribed = false;
+
+        function disconnected() {
             console.log("Lost audio service!");
         }
     }

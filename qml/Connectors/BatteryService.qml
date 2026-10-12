@@ -20,6 +20,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 import QtMultimedia 6.3
 
@@ -96,9 +97,6 @@ Item {
         name: "com.webos.surfacemanager-cardshell"
 
         onInitialized: {
-            lunaService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-                                  "{\"serviceName\":\"com.webos.service.battery\"}",
-                                  handleBatterydServiceStatus, handleError);
             lunaService.subscribe("luna://com.palm.bus/signal/addmatch",
                                   "{\"category\":\"/com/palm/power\",\"method\":\"batteryStatus\"}",
                                   handlePowerdBatteryEvent, handleError);
@@ -112,12 +110,19 @@ Item {
         console.log("Service error: " + message);
     }
 
-    function handleBatterydServiceStatus(message) {
-        var response = JSON.parse(message.payload);
+    ServiceStatus {
+        id: batterydStatus
+        serviceName: "com.webos.service.battery"
+        clientName: "com.webos.surfacemanager-cardshell"
+        onAvailableChanged: batteryService.handleBatterydServiceStatus()
+    }
 
-        batterydAvailable = response.connected;
+    function handleBatterydServiceStatus() {
+        batterydAvailable = batterydStatus.available;
+        // Unknown until batteryd is back. This wrote "batteryLevel", which
+        // does not exist, so the indicator kept the last level it had.
         if (!batterydAvailable)
-            batteryLevel = -1;
+            level = -1;
         else {
             /* query initial values */
             lunaService.call("luna://com.webos.service.battery/com/palm/power/chargerStatusQuery",

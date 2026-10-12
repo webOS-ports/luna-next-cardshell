@@ -18,6 +18,7 @@
 
 import QtQuick 2.5
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 import "../Connectors"
@@ -444,9 +445,6 @@ Item {
             // restarting LunaDisplayManager left the shell with a dead
             // lockStatus subscription. It then never heard about another lock
             // or unlock - no padlock, and no way back short of a reboot.
-            service.subscribe("luna://com.palm.systemservice/getPreferences",
-                              "{\"keys\":[\"enableFingerprintUnlock\",\"enableFaceUnlock\"],\"subscribe\":true}",
-                              handleBiometricPreferences, handleError);
             // webos-fingerprint-adapter is only present on devices with a
             // fingerprint sensor; on others this subscription simply fails
             // and fingerprintAvailable stays false.
@@ -504,8 +502,7 @@ Item {
             }
         }
 
-        function handleBiometricPreferences(message) {
-            var response = JSON.parse(message.payload);
+        function handleBiometricPreferences(response) {
             if (response.enableFingerprintUnlock !== undefined)
                 lockScreen.fingerprintUnlockEnabled = response.enableFingerprintUnlock;
             if (response.enableFaceUnlock !== undefined)
@@ -615,18 +612,43 @@ Item {
     // running shell. LunaService.subscribe() binds to the provider that
     // answered, so those subscriptions have to be re-established every time
     // the service comes back, not once at startup.
+    SystemPreferences {
+        clientName: "com.webos.surfacemanager-cardshell"
+        keys: ["enableFingerprintUnlock", "enableFaceUnlock"]
+        onUpdated: (response) => service.handleBiometricPreferences(response)
+        onError: (message) => console.warn("LockScreen: cannot read the biometric preferences: " + message)
+    }
+
     ServiceStatus {
         id: displayServiceStatus
         serviceName: "com.palm.display"
-        onConnected: service.subscribeDisplayStatus()
-        onDisconnected: console.warn("LockScreen: lost com.palm.display, will resubscribe when it returns")
+        clientName: "com.webos.surfacemanager-cardshell"
+
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
+            service.subscribeDisplayStatus();
+        }
+
+        function disconnected() {
+            console.warn("LockScreen: lost com.palm.display, will resubscribe when it returns");
+        }
     }
 
     ServiceStatus {
         id: systemManagerServiceStatus
         serviceName: "com.palm.systemmanager"
-        onConnected: service.subscribeDeviceLockMode()
-        onDisconnected: console.warn("LockScreen: lost com.palm.systemmanager, will resubscribe when it returns")
+        clientName: "com.webos.surfacemanager-cardshell"
+
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
+            service.subscribeDeviceLockMode();
+        }
+
+        function disconnected() {
+            console.warn("LockScreen: lost com.palm.systemmanager, will resubscribe when it returns");
+        }
     }
 
 
