@@ -315,8 +315,8 @@ Item {
         // Legacy's Home on the card view showed the launcher. With the launcher
         // up, the gesture area's shellFirst has already closed it.
         function onTapGesture() {
-            if( state === "launchbar" ) {
-                state = "fullLauncher";
+            if( launcherItem.state === "launchbar" ) {
+                launcherItem.state = "fullLauncher";
             }
         }
     }

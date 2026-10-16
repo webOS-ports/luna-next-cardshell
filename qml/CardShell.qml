@@ -78,7 +78,7 @@ Rectangle {
     }
 
     DeviceKeyHandler {
-        property Item gestureItem: cardsArea.state==="normal"? cardsArea.gestureAreaInstance : null;
+        property LunaGestureArea gestureItem: cardsArea.state==="normal"? cardsArea.gestureAreaInstance : null;
 
         onHomePressed: {
             console.log("Key: Home");

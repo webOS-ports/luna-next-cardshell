@@ -278,19 +278,19 @@ WindowManager {
     }
 
     function _openNotificationList() {
-        var list = notificationList();
+        var list = windowManager.notificationList();
         return (list && list.state === "open") ? list : null;
     }
 
     //! Close the notification list if it is open, and say whether it was.
     function closeNotificationList() {
-        var list = _openNotificationList();
+        var list = windowManager._openNotificationList();
         if (!list)
             return false;
 
         list.minimizeNotificationArea();
         // The phone's list only drops its tap action when a tap runs it.
-        removeTapAction("minimizeNotificationArea");
+        windowManager.removeTapAction("minimizeNotificationArea");
         return true;
     }
 
@@ -308,8 +308,8 @@ WindowManager {
             // Key_CoreNavi_Home: dock mode, the notification list, alerts and
             // the SIM PIN window each register a tap action while they are up,
             // and the newest one goes first. Then the menu, then the launcher.
-            if (nbRegisteredTapActions() > 0) {
-                doNextTapAction();
+            if (windowManager.nbRegisteredTapActions() > 0) {
+                windowManager.doNextTapAction();
                 return true;
             }
             if (statusBarInstance.closeSystemMenu())
@@ -328,7 +328,7 @@ WindowManager {
                 dockMode.undock();
                 return true;
             }
-            closeNotificationList();
+            windowManager.closeNotificationList();
             statusBarInstance.closeSystemMenu();
             return false;
 
@@ -337,7 +337,7 @@ WindowManager {
             // the launcher closes itself and an application gets Escape.
             // Legacy left dock mode when nothing took back, which in dock mode
             // is always: no application has the keyboard there.
-            if (closeNotificationList())
+            if (windowManager.closeNotificationList())
                 return true;
             if (statusBarInstance.closeSystemMenu())
                 return true;
@@ -350,14 +350,14 @@ WindowManager {
         case "forward":
             // Key_CoreNavi_Menu: closes the notification list and the menu,
             // and goes on to the application.
-            closeNotificationList();
+            windowManager.closeNotificationList();
             statusBarInstance.closeSystemMenu();
             return false;
 
         case "down":
             // Key_CoreNavi_SwipeDown does nothing while anything is open over
             // the cards.
-            return _openNotificationList() !== null || statusBarInstance.isSystemMenuOpen() ||
+            return windowManager._openNotificationList() !== null || statusBarInstance.isSystemMenuOpen() ||
                    launcherInstance.launcherActive;
         }
         return false;
@@ -622,7 +622,7 @@ WindowManager {
         anchors.fill: parent
         z: 1000
 
-        enabled: gestureAreaInstance.visible && gestureAreaInstance.height > 0 && gesturesEnabled
+        enabled: gestureAreaInstance.visible && gestureAreaInstance.height > 0 && windowManager.gesturesEnabled
 
         PointHandler {
             id: swipeDownMonitor

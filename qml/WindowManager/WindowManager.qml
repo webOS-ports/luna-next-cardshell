@@ -26,7 +26,7 @@ import "WindowManagerServices.js" as WindowManagerServices
 Item {
     id: windowManager
 
-    property Item gestureAreaInstance
+    property LunaGestureArea gestureAreaInstance
     property Item gestureHandlerInstance
 
     signal switchToCardView

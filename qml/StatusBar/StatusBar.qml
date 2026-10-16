@@ -106,7 +106,7 @@ Item {
     property Item systemMenu: systemMenuLoader.item
 
     //! The tablet's notification list, which lives in the bar. Null on a phone.
-    readonly property Item tabletNotificationArea: notificationAreaInstance.item
+    readonly property var tabletNotificationArea: notificationAreaInstance.item
 
     function isSystemMenuOpen() {
         return systemMenu !== null && systemMenu.state === "visible";
