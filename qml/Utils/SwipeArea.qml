@@ -1,163 +1,167 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 
+/*!
+ * \brief The gesture area's recogniser, made to decide the way legacy webOS did.
+ *
+ * Legacy's gesture area was not read by LunaSysMgr but by hidd's touch panel
+ * plugin, libhidtouchpanel.so (HidTouchpanelGestures.c), configured by
+ * /etc/hidd/HidTouchpanel_*.xml. The thresholds below come from decompiling it
+ * and from those files, which carry the same gesture values on the Pre, Pre 2,
+ * Veer, Pre 3 and TouchPad.
+ *
+ * What that recogniser does, and so what this one does:
+ *  - Everything is decided when the finger lifts, and by distance only. There
+ *    is no speed test, so a slow, deliberate swipe counts just as a fast one.
+ *  - The checks run in a fixed order: tap, then up, then left/right. The first
+ *    one that matches is the gesture.
+ *
+ * Legacy's numbers are touch panel pixels, the same on every device. They are
+ * taken here at the original Pre's density (320x480, gestureBound 480) and
+ * converted with Units.dp, so they keep the same size for the finger on a
+ * denser screen.
+ */
 MouseArea {
     id: swipeArea
 
-    signal clicked()
+    signal tapped()
     signal swipeCanceled()
     signal swipeUpGesture(int modifiers)
-    signal swipeDownGesture(int modifiers)
     signal swipeLeftGesture(int modifiers)
     signal swipeRightGesture(int modifiers)
 
-    property real swipeVelocityThreshold: 0.2  /* pixels per ms */
+    /*!
+     * A tap is a touch that never strays further than this from where it went
+     * down. There is no time limit: legacy counted a long touch that did not
+     * move as a tap too. (tapRadius 12)
+     */
+    property real tapRadius: Units.dp(12)
 
-    /* A finger that pauses before lifting releases at zero velocity, so such a
-       gesture is judged by the distance it travelled since the press instead.
-       This is a finger distance, so it is expressed in grid units and scales
-       with the screen like the shell's other gesture lengths (compare
-       GestureHandler.minimalFlickLength, Units.gu(10)). */
-    property real swipeDistanceThreshold: Units.gu(25)
+    /*!
+     * Legacy only took a tap in the middle of the gesture area, between
+     * homeButtonLeftBound and homeButtonRightBound (104 and 216 of 320). A tap
+     * either side came out as HOME_LEFT or HOME_RIGHT, which LunaSysMgr mapped
+     * to no key at all (hiddtp_qws.cpp lookupGesture), so it did nothing.
+     */
+    property real homeZoneLeft: 104 / 320
+    property real homeZoneRight: 216 / 320
 
-    /* A SwipeArea narrower than swipeDistanceThreshold could never satisfy it
-       horizontally, so sideways gestures ask for at most this fraction of the
-       width. There is deliberately no vertical equivalent: the gesture area is
-       a short bar the finger leaves almost immediately, so its height says
-       nothing about the distance available. */
-    property real swipeDistanceWidthFraction: 0.25
+    //! Back and forward: further than this sideways. (BACK, MENU strokeLength 35)
+    property real strokeLength: Units.dp(35)
 
-    property real _pressedX: 0
-    property real _pressedY: 0
-    /* Where the finger went down. _pressedX/_pressedY follow it while it moves,
-       so they cannot serve as the origin of the gesture. */
+    /*!
+     * Up: the finger has to leave the gesture area and lift at least this far
+     * above it (gestureBound - extendedGestureBound: 480 - 459 on the Pre 2).
+     * A swipe that stays inside the area is not an up swipe.
+     */
+    property real launcherMargin: Units.dp(21)
+
+    /*!
+     * A second back is dropped when it follows a back that ended in the middle
+     * of the area within a second, and starts there too: the finger bouncing
+     * on the glass after a swipe, not a second request. The middle here is the
+     * tap zone widened by 39 pixels each side. (CheckSwipeGesture,
+     * maybeBlockNextBack)
+     */
+    property real backRepeatMargin: Units.dp(39)
+    property int backRepeatWindowMs: 1000
+
+    /*!
+     * A long swipe, further than this and across the middle of the area, is
+     * legacy's previous/next (NEXT, PREV strokeLength 125). LunaSysMgr turns
+     * those into plain back and forward unless advanced gestures are on
+     * (SystemUiController::handleKeyEvent, sysUiEnableNextPrevGestures, off by
+     * default on phones), so they are reported as back and forward here. They
+     * are checked before back, so the bounce filter above does not apply.
+     */
+    property real longStrokeLength: Units.dp(125)
+
     property real _startX: 0
     property real _startY: 0
-    property real _velocityX: 0
-    property real _velocityY: 0
-    property var _timeStamp
-    property bool _swipeInitiated: false
+    property bool _withinTapRadius: false
+    property bool _backRepeatArmed: false
+    property real _backRepeatArmedAt: 0
 
-    onPressed: (mouse) => {
-        _pressedX = mouse.x;
-        _pressedY = mouse.y;
-        _startX = mouse.x;
-        _startY = mouse.y;
-        // a new gesture inherits nothing from the previous one
-        _velocityX = 0;
-        _velocityY = 0;
-        _timeStamp = Date.now();
-
-        // we manage this event
-        // mouse.accepted = true;
+    function _inHomeZone(x, margin) {
+        return x >= width * homeZoneLeft - margin && x <= width * homeZoneRight + margin;
     }
 
-    onPressAndHold: (mouse) => {
-        // just defining the function, so that mouse.wasHeld is true
-        mouse.accepted = false;
+    //! From one side of the middle zone to the other. (CrossedHomeButton)
+    function _crossedHomeZone(startX, endX) {
+        var left = width * homeZoneLeft;
+        var right = width * homeZoneRight;
+        return (startX < left && endX > right) || (startX > right && endX < left);
+    }
+
+    /*!
+     * Whether this back is the bounce of the previous one, and remember this one
+     * in case the next back is its bounce.
+     */
+    function _isRepeatedBack(startX, endX) {
+        var repeated = false;
+
+        if (_backRepeatArmed) {
+            _backRepeatArmed = false;
+            repeated = _inHomeZone(startX, backRepeatMargin) &&
+                       Date.now() - _backRepeatArmedAt < backRepeatWindowMs;
+        }
+
+        if (!repeated && _inHomeZone(endX, backRepeatMargin)) {
+            _backRepeatArmed = true;
+            _backRepeatArmedAt = Date.now();
+        }
+
+        return repeated;
+    }
+
+    onPressed: (mouse) => {
+        _startX = mouse.x;
+        _startY = mouse.y;
+        _withinTapRadius = true;
     }
 
     onPositionChanged: (mouse) => {
-        if (mouse.wasHeld) return;  // if the intent is a long press, ignore the movements
+        var dx = mouse.x - _startX;
+        var dy = mouse.y - _startY;
 
-        var xDiff = mouse.x - _pressedX;
-        var yDiff = mouse.y - _pressedY;
-
-        // don't compute anything if the distance is too short
-        if( Math.abs(xDiff) > 10 || Math.abs(yDiff) > 10 ) {
-            var newTimeStamp = Date.now();
-            var diffTime = newTimeStamp - _timeStamp; /* in milliseconds here */
-
-            _velocityX = xDiff/diffTime;
-            _velocityY = yDiff/diffTime;
-
-            // update position for next time
-            _pressedX = mouse.x;
-            _pressedY = mouse.y;
-            // update also time stamp
-            _timeStamp = newTimeStamp;
-
-            _swipeInitiated = true;
-        }
-    }
-
-    /* Emit the gesture the travelled distance describes, dominant axis winning,
-       and report whether it was far enough to count. */
-    function _emitDistanceGesture(mouse) {
-        var totalX = mouse.x - _startX;
-        var totalY = mouse.y - _startY;
-
-        if( Math.abs(totalX) >= Math.abs(totalY) ) {
-            if( Math.abs(totalX) <= Math.min(width * swipeDistanceWidthFraction, swipeDistanceThreshold) )
-                return false;
-
-            if( totalX > 0 )
-                swipeRightGesture(mouse.modifiers);
-            else
-                swipeLeftGesture(mouse.modifiers);
-            return true;
-        }
-
-        if( Math.abs(totalY) <= swipeDistanceThreshold )
-            return false;
-
-        if( totalY > 0 )
-            swipeDownGesture(mouse.modifiers);
-        else
-            swipeUpGesture(mouse.modifiers);
-        return true;
+        if (dx * dx + dy * dy > tapRadius * tapRadius)
+            _withinTapRadius = false;
     }
 
     onReleased: (mouse) => {
-        if (mouse.wasHeld) return; // don't interfere with long press events
-
-        // Evaluate how much time has passed since the last call to onPositionChanged
-        var newTimeStamp = Date.now();
-        var diffTime = newTimeStamp - _timeStamp; /* in milliseconds here */
-        // During that time, the mouse hasn't moved more than 10 pixels.
-        // That enables us to know whether the swipe is still in progress or not.
-        var paused = ( 10/diffTime < swipeVelocityThreshold );
-        if( paused ) {
-            _velocityX = 0;
-            _velocityY = 0;
+        if (_withinTapRadius) {
+            if (_inHomeZone(_startX, 0))
+                tapped();
+            return;
         }
 
-        if( Math.abs(_velocityX) > swipeVelocityThreshold || Math.abs(_velocityY) > swipeVelocityThreshold ) {
-            /* Consider this as a swipe */
-            var angleTanAbs = Math.abs(_velocityX/_velocityY);
-
-            /* Separate the various swipe cases */
-            if( angleTanAbs < 1 /*Math.tan(Math.PI/4)*/ ) { // swipe Up or Down
-                if( _velocityY>0 )
-                    swipeDownGesture(mouse.modifiers);
-                else
-                    swipeUpGesture(mouse.modifiers);
-            }
-            else {  // only posibility left: swipe Left or Right
-                if( _velocityX>0 ) {
-                    swipeRightGesture(mouse.modifiers);
-                }
-                else {
-                    swipeLeftGesture(mouse.modifiers);
-                }
-            }
-        }
-        /* The finger paused before lifting, which zeroed the velocity above -
-           but pausing at the end of a deliberate swipe is natural, and dropping
-           those made the gesture area feel unreliable. Fall back to the whole
-           distance travelled. */
-        else if( paused && _swipeInitiated && _emitDistanceGesture(mouse) ) {
-            /* handled as a swipe */
-        }
-        else {
-            if( _swipeInitiated ) {
-                swipeCanceled();
-            }
-            else if( !mouse.wasHeld ) {
-                clicked();
-            }
+        // The area's own top edge is y = 0, so above it is negative.
+        if (mouse.y <= -launcherMargin) {
+            swipeUpGesture(mouse.modifiers);
+            return;
         }
 
-        _swipeInitiated = false;
+        var dx = mouse.x - _startX;
+
+        if (Math.abs(dx) > longStrokeLength && _crossedHomeZone(_startX, mouse.x)) {
+            if (dx < 0)
+                swipeLeftGesture(mouse.modifiers);
+            else
+                swipeRightGesture(mouse.modifiers);
+            return;
+        }
+
+        if (dx < -strokeLength) {
+            if (!_isRepeatedBack(_startX, mouse.x))
+                swipeLeftGesture(mouse.modifiers);
+            return;
+        }
+
+        if (dx > strokeLength) {
+            swipeRightGesture(mouse.modifiers);
+            return;
+        }
+
+        swipeCanceled();
     }
 }
