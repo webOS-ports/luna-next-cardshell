@@ -309,15 +309,21 @@ Item {
          * Forward. Legacy passed Key_CoreNavi_Menu (0xE0E5 in
          * luna-sysmgr-ipc-messages' SysMgrDeviceKeydefs.h) on to the
          * application, after closing the notification list and system menu -
-         * which the gesture area's shellFirst now does. Not 0xE0E3, which
-         * LunaNext.Common's EventType calls CoreNaviNext: that is legacy's long
-         * swipe to the next application.
+         * which the gesture area's shellFirst now does.
          *
-         * The key itself is not sent: it has no scan code in the compositor's
-         * xkb keymap, so QWaylandSeat::sendKeyEvent would drop it with a
-         * warning, and nothing in LuneOS reads it. Send it from here once the
-         * keymap and an application can carry it.
+         * That key cannot be sent here: it has no scan code in the keymap the
+         * compositor gives its clients, so QWaylandSeat::sendKeyEvent would drop
+         * it with a warning. Qt.Key_Forward (XF86Forward) is in that keymap and
+         * is what "forward" means to Chromium and Qt alike, so it goes in its
+         * place - the counterpart of back being Escape.
          */
+        function onSwipeRightGesture(modifiers) {
+            if( cardViewItem.isCurrentCardActive() ) {
+                var seat = compositor.defaultSeat
+                seat.sendKeyEvent(Qt.Key_Forward, true);
+                seat.sendKeyEvent(Qt.Key_Forward, false);
+            }
+        }
     }
 
     ///////// private section //////////

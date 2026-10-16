@@ -184,6 +184,44 @@ Item {
             compare(cardView.state, "maximizedCard");
         }
 
+        function test_backSendsEscapeToTheApp() {
+            maximize();
+            compositor.defaultSeat.sentKeys = [];
+            gesture.back(0);
+            compare(compositor.defaultSeat.sentKeys, [[Qt.Key_Escape, true], [Qt.Key_Escape, false]]);
+        }
+
+        function test_forwardSendsForwardToTheApp() {
+            maximize();
+            compositor.defaultSeat.sentKeys = [];
+            gesture.forward(0);
+            compare(compositor.defaultSeat.sentKeys, [[Qt.Key_Forward, true], [Qt.Key_Forward, false]]);
+        }
+
+        function test_forwardClosesMenuAndCarriesOn() {
+            maximize();
+            openSystemMenu();
+            compositor.defaultSeat.sentKeys = [];
+            gesture.forward(0);
+            verify(!statusBar.isSystemMenuOpen());
+            compare(compositor.defaultSeat.sentKeys.length, 2);
+        }
+
+        function test_backWithMenuOpenSendsNothing() {
+            maximize();
+            openSystemMenu();
+            compositor.defaultSeat.sentKeys = [];
+            gesture.back(0);
+            compare(compositor.defaultSeat.sentKeys.length, 0);
+        }
+
+        function test_forwardInCardViewSendsNothing() {
+            toCardView();
+            compositor.defaultSeat.sentKeys = [];
+            gesture.forward(0);
+            compare(compositor.defaultSeat.sentKeys.length, 0);
+        }
+
         function test_backClosesLauncher() {
             toCardView();
             launcher.state = "fullLauncher";

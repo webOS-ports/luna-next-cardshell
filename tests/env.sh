@@ -51,6 +51,15 @@ cp -r "$COMPONENTS/test/imports/WebOSCoreCompositor" "$IMPORTS/"
 cp "$TESTS/stubs/KeyFilter.qml" "$IMPORTS/WebOSCoreCompositor/"
 grep -q '^KeyFilter ' "$IMPORTS/WebOSCoreCompositor/qmldir" ||
 	echo "KeyFilter 1.0 KeyFilter.qml" >> "$IMPORTS/WebOSCoreCompositor/qmldir"
+cp "$TESTS/stubs/TestSeat.qml" "$IMPORTS/WebOSCoreCompositor/"
+# The stub compositor has no seat to send keys to applications through, and
+# nowhere for the shell's key filters to be installed.
+sed -i 's|^\( *\)property ListModel surfaceModel: ListModel {}$|&\n\1property QtObject defaultSeat: TestSeat {}\n\1property QtObject keyFilter: null|' \
+	"$IMPORTS/WebOSCoreCompositor/Compositor.qml"
+if ! grep -q 'defaultSeat: TestSeat' "$IMPORTS/WebOSCoreCompositor/Compositor.qml"; then
+	echo "Could not give the stub compositor a seat: has its Compositor.qml changed?" >&2
+	exit 2
+fi
 cp -r "$TESTS/stubs/WebOSServices" "$IMPORTS/"
 
 export QT_QPA_PLATFORM=offscreen
