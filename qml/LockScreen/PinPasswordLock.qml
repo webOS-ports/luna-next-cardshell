@@ -22,6 +22,7 @@ import LunaNext.Common 0.1
 import LuneOS.Passcode 1.0
 
 import "../Connectors"
+import "Lockout.js" as Lockout
 
 Item {
     id: pinPasswordLock
@@ -40,6 +41,10 @@ Item {
     property bool enforceMinLength: false
     property string queuedTitle: ""
     property string queuedHint: ""
+
+    //! Seconds until luna-authmanager takes passcodes again; see Lockout.js.
+    property int lockoutLeft: 0
+    readonly property bool lockedOut: lockoutLeft > 0
 
     signal canceled
     signal unlock
@@ -103,6 +108,7 @@ Item {
     PasswordField {
         id: passwordField;
         isPIN: isPINEntry;
+        enabled: !pinPasswordLock.lockedOut
         width: Units.gu(320/10) - Units.gu(4/10);
         x: pinPasswordLock.edgeOffset + Units.gu(3/10)
         y: titleText.y + titleText.height + (pinPasswordLock.isPINEntry ? 0 : Units.gu(6/10))
@@ -111,6 +117,7 @@ Item {
     PinPad {
         id: keyPad
         visible: pinPasswordLock.isPINEntry
+        enabled: !pinPasswordLock.lockedOut
         x: pinPasswordLock.edgeOffset
         anchors.top: passwordField.bottom
 
@@ -154,7 +161,8 @@ Item {
             affirmative: true
             width: buttonGrid.width/buttonGrid.columns - pinPasswordLock.margin / 2
             height: Units.gu(52/10)
-            active: passwordField.enteredText.length >= (enforceMinLength ? minPassLength : 1)
+            active: !pinPasswordLock.lockedOut &&
+                    passwordField.enteredText.length >= (enforceMinLength ? minPassLength : 1)
             onAction: {
                 if(passwordField.enteredText.length > 0) {
                     submitPassword(passwordField.enteredText, pinPasswordLock.isPINEntry);
@@ -170,6 +178,8 @@ Item {
     }
 
     function submitPassword(password, isPin) {
+        if (lockedOut)
+            return;
         service.call("luna://com.palm.systemmanager/matchDevicePasscode",
                      JSON.stringify({"passCode": password}),
                      handlePasscodeResult,
@@ -184,6 +194,9 @@ Item {
         if (response.returnValue) {
             pinPasswordLock.unlock();
             passwordField.clearAll();
+        }
+        else if (Lockout.secondsFrom(response) > 0) {
+            startLockout(Lockout.secondsFrom(response));
         }
         else {
             var title = "";
@@ -204,6 +217,35 @@ Item {
 
     function handleServiceError(message) {
         console.log("Service error: " + message);
+    }
+
+    function startLockout(seconds) {
+        queuedTitle = "";
+        queuedHint = "";
+        passwordField.clearAll();
+        titleText.text = "Too many tries";
+        lockoutLeft = seconds;
+        passwordField.setHintText(Lockout.waitText(lockoutLeft));
+    }
+
+    // Counts down with the display on; while the device sleeps neither this
+    // nor the daemon's monotonic clock moves, so the two stay together. The
+    // daemon has the last word either way: a try it still refuses comes back
+    // with the time left.
+    Timer {
+        id: lockoutTimer
+        interval: 1000
+        repeat: true
+        running: pinPasswordLock.lockedOut
+        onTriggered: {
+            pinPasswordLock.lockoutLeft--;
+            if (pinPasswordLock.lockedOut) {
+                passwordField.setHintText(Lockout.waitText(pinPasswordLock.lockoutLeft));
+            } else {
+                titleText.text = "Device Locked";
+                passwordField.setHintText(pinPasswordLock.isPINEntry ? "Enter PIN" : "Enter password");
+            }
+        }
     }
 
     function isValidKey(keyCode) {
@@ -259,6 +301,9 @@ Item {
 
     Keys.onPressed: {
         event.accepted = true;
+
+        if (lockedOut)
+            return;
 
         /*
          * A PIN typed on a physical keyboard whose digits are printed on letter
