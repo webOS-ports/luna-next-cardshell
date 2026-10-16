@@ -20,6 +20,8 @@ import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 import LuneOS.Passcode 1.0
 
+import "Lockout.js" as Lockout
+
 /*
  * The lock screen's half of Pattern unlock, alongside PinPasswordLock.
  *
@@ -37,13 +39,19 @@ Item {
     property int edgeOffset: Units.gu(11/10)
     property int margin: Units.gu(6/10)
     property int topOffset: Units.gu(4/10)
+    // Above and below the Cancel button, as PinPasswordLock has it.
+    property int buttonSpacing: Units.gu(14/10)
     property string queuedTitle: ""
+
+    //! Seconds until luna-authmanager takes passcodes again; see Lockout.js.
+    property int lockoutLeft: 0
+    readonly property bool lockedOut: lockoutLeft > 0
 
     signal canceled
     signal unlock
 
     width: Units.gu(320/10) + 2 * patternLock.edgeOffset
-    height: buttonGrid.y + buttonGrid.height + patternLock.edgeOffset + patternLock.margin
+    height: buttonGrid.y + buttonGrid.height + patternLock.edgeOffset + patternLock.margin + patternLock.buttonSpacing
     focus: true
 
     function queueUpTitle(newTitle) {
@@ -67,10 +75,15 @@ Item {
     }
 
     function resetEntry() {
-        titleText.text = "Device Locked";
-        hintText.text = "Draw your pattern";
         queuedTitle = "";
         grid.reset();
+        if (lockedOut) {
+            titleText.text = "Too many tries";
+            hintText.text = Lockout.waitText(lockoutLeft);
+            return;
+        }
+        titleText.text = "Device Locked";
+        hintText.text = "Draw your pattern";
     }
 
     onOpacityChanged: {
@@ -125,6 +138,7 @@ Item {
         height: width
         anchors.horizontalCenter: parent.horizontalCenter
         y: hintText.y + hintText.height + Units.gu(8/10)
+        enabled: !patternLock.lockedOut
 
         dotColor: "#FFFFFF"
         dotOpacity: 0.6
@@ -148,7 +162,7 @@ Item {
         width: Units.gu(320/10) - 2 * patternLock.margin
         x: patternLock.edgeOffset + patternLock.margin
         anchors.top: grid.bottom
-        anchors.topMargin: Units.gu(6/10)
+        anchors.topMargin: patternLock.buttonSpacing
 
         columns: 1
         rows: 1
@@ -157,7 +171,7 @@ Item {
         ActionButton {
             caption: "Cancel"
             width: buttonGrid.width
-            height: Units.gu(52/10)
+            height: Math.round(Units.gu(4))
             onAction: canceled()
         }
     }
@@ -196,6 +210,12 @@ Item {
 
         if (response.returnValue) {
             patternLock.unlock();
+        } else if (Lockout.secondsFrom(response) > 0) {
+            mismatchTimer.stop();
+            lockoutLeft = Lockout.secondsFrom(response);
+            grid.reset();
+            titleText.text = "Too many tries";
+            hintText.text = Lockout.waitText(lockoutLeft);
         } else {
             grid.showError();
             mismatchTimer.restart();
@@ -204,6 +224,24 @@ Item {
 
     function handleServiceError(message) {
         console.log("Service error: " + message);
+    }
+
+    // As in PinPasswordLock: counts down while the display is on, as the
+    // daemon's monotonic clock does, and the daemon has the last word.
+    Timer {
+        id: lockoutTimer
+        interval: 1000
+        repeat: true
+        running: patternLock.lockedOut
+        onTriggered: {
+            patternLock.lockoutLeft--;
+            if (patternLock.lockedOut) {
+                hintText.text = Lockout.waitText(patternLock.lockoutLeft);
+            } else {
+                titleText.text = "Device Locked";
+                hintText.text = "Draw your pattern";
+            }
+        }
     }
 
     Timer {
