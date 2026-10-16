@@ -248,6 +248,27 @@ WindowManager {
         id: screenShooter
     }
 
+    // The camera shutter, as LunaSysMgr played it for every screen capture
+    // (lunaSystemSoundScreenCapture).
+    FeedbackSound {
+        id: shutterSound
+        soundName: "shutter"
+    }
+
+    // The flash over the screen, legacy's WSOverlayScreenShotAnimation.
+    ScreenShooterGradient {
+        id: screenShooterGradient
+        anchors.fill: parent
+        z: 11
+    }
+
+    //! Take a screenshot the way the screenshot keys do: shutter, capture, flash.
+    function takeScreenshot() {
+        shutterSound.play();
+        screenShooter.capture("");
+        screenShooterGradient.startShootEffect();
+    }
+
     // Legacy webOS's Touch to Share ripple, ported to trigger on real NFC
     // tag presence instead
     NfcGlow {
