@@ -3,6 +3,8 @@ import QtQml 2.15
 
 Item {
     id: swipeableRoot
+    // Found by name when the shell asks whether a touch began on a card.
+    objectName: "swipeableCard"
     property Component cardComponent
     property alias interactive: flickableArea.interactive
     property alias cardItem: cardLoader.item

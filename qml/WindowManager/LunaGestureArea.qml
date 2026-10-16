@@ -25,11 +25,62 @@ Item {
     id: gestureAreaItem
     property bool enableGestureArea: true
 
+    /*
+     * What the card view and the launcher act on. They only hear a gesture the
+     * shell has not already dealt with through shellFirst, so raise them with
+     * tap(), swipeUp() and so on rather than emitting them directly.
+     */
     signal tapGesture
     signal swipeUpGesture(int modifiers)
     signal swipeDownGesture(int modifiers)
     signal swipeLeftGesture(int modifiers)
     signal swipeRightGesture(int modifiers)
+
+    /*!
+     * Asked first, with "tap", "up", "down", "back" or "forward", before a
+     * gesture is passed on; returning true means the shell took it.
+     *
+     * Legacy checked its own overlays before anything else got a gesture key
+     * (SystemUiController::handleKeyEvent): an open notification list or system
+     * menu closes, and for some gestures that is all the gesture does. Several
+     * Connections on one signal cannot stop each other, so that decision has to
+     * be made here, before the signal goes out.
+     */
+    property var shellFirst: null
+
+    function _shellTook(gesture) {
+        return shellFirst !== null && shellFirst(gesture) === true;
+    }
+
+    //! Key_CoreNavi_Home
+    function tap() {
+        if (!_shellTook("tap"))
+            tapGesture();
+    }
+
+    //! Key_CoreNavi_Launcher
+    function swipeUp(modifiers) {
+        if (!_shellTook("up"))
+            swipeUpGesture(modifiers);
+    }
+
+    //! Key_CoreNavi_SwipeDown: a drag from the screen into the area
+    function swipeDown(modifiers) {
+        if (!_shellTook("down"))
+            swipeDownGesture(modifiers);
+    }
+
+    //! Key_CoreNavi_Back
+    function back(modifiers) {
+        if (!_shellTook("back"))
+            swipeLeftGesture(modifiers);
+    }
+
+    //! Key_CoreNavi_Menu, legacy's forward
+    function forward(modifiers) {
+        if (!_shellTook("forward"))
+            swipeRightGesture(modifiers);
+    }
 
     focus: true
 
@@ -79,14 +130,14 @@ Item {
 
         onSwipeRightGesture: (modifiers) => {
             glowLeftToRight.start();
-            gestureAreaItem.swipeRightGesture(modifiers);
+            gestureAreaItem.forward(modifiers);
         }
         onSwipeLeftGesture: (modifiers) => {
             glowRightToLeft.start();
-            gestureAreaItem.swipeLeftGesture(modifiers);
+            gestureAreaItem.back(modifiers);
         }
-        onSwipeUpGesture: (modifiers) => { gestureAreaItem.swipeUpGesture(modifiers); }
+        onSwipeUpGesture: (modifiers) => { gestureAreaItem.swipeUp(modifiers); }
 
-        onTapped: gestureAreaItem.tapGesture();
+        onTapped: gestureAreaItem.tap();
     }
 }

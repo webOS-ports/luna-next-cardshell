@@ -83,17 +83,17 @@ Rectangle {
         onHomePressed: {
             console.log("Key: Home");
             if (gestureItem !== null)
-                gestureItem.tapGesture();
+                gestureItem.tap();
         }
         onEndPressed: {
             console.log("Key: End");
             if (gestureItem !== null)
-                gestureItem.swipeUpGesture(0);
+                gestureItem.swipeUp(0);
         }
         onEscapePressed: {
             console.log("Key: Escape");
             if (gestureItem !== null)
-                gestureItem.swipeLeftGesture(0);
+                gestureItem.back(0);
         }
         onF6Pressed: {
             console.log("Key: F6");

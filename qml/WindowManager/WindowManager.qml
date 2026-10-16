@@ -37,8 +37,6 @@ Item {
     signal switchToLockscreen
 
     // utility functions that may be useful when we have dashboard apps
-    property int nbRegisteredTapActionsBeforeTap: 0;
-
     function nbRegisteredTapActions() {
         return WindowManagerServices.nbRegisteredTapActions();
     }
@@ -55,13 +53,8 @@ Item {
         return WindowManagerServices.doNextTapAction();
     }
 
-    ///////// gesture area management ///////////
-    Connections {
-        id: gestureAreaConnections
-        target: gestureAreaInstance
-        function onTapGesture() {
-            nbRegisteredTapActionsBeforeTap = WindowManagerServices.nbRegisteredTapActions();
-            doNextTapAction();
-        }
-    }
+    /*
+     * The tap actions are run by the gesture area's shellFirst (see CardsArea):
+     * a tap that closes one of them is then not also seen by the card view.
+     */
 }

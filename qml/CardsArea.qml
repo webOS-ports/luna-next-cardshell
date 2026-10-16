@@ -248,19 +248,6 @@ WindowManager {
         id: screenShooter
     }
 
-    // The camera shutter, as LunaSysMgr played it for every screen capture
-    // (lunaSystemSoundScreenCapture).
-    FeedbackSound {
-        id: shutterSound
-        soundName: "shutter"
-    }
-
-    ScreenShooterGradient {
-        id: screenShooterGradient
-        anchors.fill: parent
-        z: 11
-    }
-
     // Legacy webOS's Touch to Share ripple, ported to trigger on real NFC
     // tag presence instead
     NfcGlow {
@@ -275,21 +262,105 @@ WindowManager {
     }
 
     Connections {
-        target: gestureAreaInstance
-        function onSwipeRightGesture(modifiers) {
-            shutterSound.play();
-            screenShooter.capture("");
-            screenShooterGradient.startShootEffect();
-        }
-    }
-
-    Connections {
         target: gestureHandlerInstance
         function onScreenEdgeFlickEdgeBottom(timeout, pos) {
             if (!timeout && gestureAreaInstance.visible === false
                     && gesturesEnabled === true)
-                gestureAreaInstance.swipeUpGesture(0);
+                gestureAreaInstance.swipeUp(0);
         }
+    }
+
+    //! The notification list: the phone's above the gesture area, the tablet's
+    //! in the status bar.
+    function notificationList() {
+        return Settings.tabletUi ? statusBarInstance.tabletNotificationArea
+                                 : notificationAreaInstance.item;
+    }
+
+    function _openNotificationList() {
+        var list = notificationList();
+        return (list && list.state === "open") ? list : null;
+    }
+
+    //! Close the notification list if it is open, and say whether it was.
+    function closeNotificationList() {
+        var list = _openNotificationList();
+        if (!list)
+            return false;
+
+        list.minimizeNotificationArea();
+        // The phone's list only drops its tap action when a tap runs it.
+        removeTapAction("minimizeNotificationArea");
+        return true;
+    }
+
+    /*!
+     * \brief What a gesture does before the card view and the launcher see it.
+     *
+     * LunaSysMgr's SystemUiController::handleKeyEvent, gesture by gesture. An
+     * open overlay is dealt with first; returning true means that was the whole
+     * gesture. Legacy's dashboard is our notification list; its universal search
+     * is Just Type, which is part of the launcher here.
+     */
+    function gestureShellFirst(gesture) {
+        switch (gesture) {
+        case "tap":
+            // Key_CoreNavi_Home: dock mode, the notification list, alerts and
+            // the SIM PIN window each register a tap action while they are up,
+            // and the newest one goes first. Then the menu, then the launcher.
+            if (nbRegisteredTapActions() > 0) {
+                doNextTapAction();
+                return true;
+            }
+            if (statusBarInstance.closeSystemMenu())
+                return true;
+            if (launcherInstance.launcherActive) {
+                launcherInstance.state = "launchbar";
+                return true;
+            }
+            return false;
+
+        case "up":
+            // Key_CoreNavi_Launcher: leaves dock mode; otherwise closes the
+            // notification list and the menu and carries on to the launcher or
+            // the card.
+            if (dockMode.visible) {
+                dockMode.undock();
+                return true;
+            }
+            closeNotificationList();
+            statusBarInstance.closeSystemMenu();
+            return false;
+
+        case "back":
+            // Key_CoreNavi_Back: closes the notification list, else the menu;
+            // the launcher closes itself and an application gets Escape.
+            // Legacy left dock mode when nothing took back, which in dock mode
+            // is always: no application has the keyboard there.
+            if (closeNotificationList())
+                return true;
+            if (statusBarInstance.closeSystemMenu())
+                return true;
+            if (dockMode.visible) {
+                dockMode.undock();
+                return true;
+            }
+            return false;
+
+        case "forward":
+            // Key_CoreNavi_Menu: closes the notification list and the menu,
+            // and goes on to the application.
+            closeNotificationList();
+            statusBarInstance.closeSystemMenu();
+            return false;
+
+        case "down":
+            // Key_CoreNavi_SwipeDown does nothing while anything is open over
+            // the cards.
+            return _openNotificationList() !== null || statusBarInstance.isSystemMenuOpen() ||
+                   launcherInstance.launcherActive;
+        }
+        return false;
     }
 
     // luna-surfacemanager turns a client's wl_webos_shell_surface set_state into
@@ -534,6 +605,80 @@ WindowManager {
     }
 
     /*!
+     * \brief Legacy's swipe down: a drag from the screen into the gesture area.
+     *
+     * The gesture area cannot see it - the touch starts on the screen above it -
+     * so it is watched here, passively, the way the edit pill's long press is
+     * below: the touch still reaches whatever it started on. libhidtouchpanel's
+     * CheckDownGesture: more than 10 px down, more down than sideways, lifted
+     * inside the gesture area. Legacy's pixels are taken at the Pre's density,
+     * as in SwipeArea.
+     *
+     * A touch that starts on a card in the card view is left alone: dragging a
+     * card down is that card's own gesture. The card's Flickable taking the
+     * touch over does not end this passive watch, so it has to be checked.
+     */
+    Item {
+        anchors.fill: parent
+        z: 1000
+
+        enabled: gestureAreaInstance.visible && gestureAreaInstance.height > 0 && gesturesEnabled
+
+        PointHandler {
+            id: swipeDownMonitor
+
+            property point pressedAt
+            property bool startedOnCard: false
+
+            //! Whether pos, in this item's space, is on a card in the card view.
+            //! Every card is looked at rather than only the topmost item under the
+            //! finger: the card list stacks other items over its cards.
+            function _startedOnCard(pos) {
+                if (cardViewInstance.state !== "cardList")
+                    return false;
+
+                function onCard(item) {
+                    if (!item.visible)
+                        return false;
+                    // A card's column runs the full height of the view; only
+                    // the card itself counts.
+                    if (item.objectName === "swipeableCard") {
+                        var card = item.cardItem;
+                        return card !== null &&
+                               card.contains(swipeDownMonitor.parent.mapToItem(card, pos.x, pos.y));
+                    }
+                    for (var i = 0; i < item.children.length; i++)
+                        if (onCard(item.children[i]))
+                            return true;
+                    return false;
+                }
+                return onCard(cardViewInstance);
+            }
+
+            onActiveChanged: {
+                var parentItem = swipeDownMonitor.parent;
+                if (swipeDownMonitor.active) {
+                    swipeDownMonitor.pressedAt = swipeDownMonitor.point.position;
+                    swipeDownMonitor.startedOnCard = _startedOnCard(swipeDownMonitor.pressedAt);
+                    return;
+                }
+
+                // Still the point that lifted while the handler lets it go.
+                var from = swipeDownMonitor.pressedAt;
+                var to = swipeDownMonitor.point.position;
+                var areaTop = parentItem.mapFromItem(gestureAreaInstance, 0, 0).y;
+                var dx = Math.abs(to.x - from.x);
+                var dy = to.y - from.y;
+
+                if (!swipeDownMonitor.startedOnCard && from.y < areaTop && to.y >= areaTop &&
+                        dy > Units.dp(10) && dx < dy)
+                    gestureAreaInstance.swipeDown(0);
+            }
+
+        }
+    }
+
+    /*!
      * \brief A long press on the text is what asks for that pill.
      *
      * Where the hand expects it, and where legacy's selection pill came from -
@@ -698,6 +843,8 @@ WindowManager {
 
     LunaGestureArea {
         id: gestureAreaInstance
+
+        shellFirst: function(gesture) { return windowManager.gestureShellFirst(gesture); }
 
         Connections {
             target: AppTweaks

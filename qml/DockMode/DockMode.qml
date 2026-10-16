@@ -54,6 +54,11 @@ Item {
         appMenu.toggle();
     }
 
+    //! Leave dock mode, as a tap or a swipe up on the gesture area does.
+    function undock() {
+        setDisplayState.call(JSON.stringify({"state":"undock"}));
+    }
+
     visible: dockModeActive
 
     // The applications the user ticked in Settings' Exhibition page, straight
@@ -67,7 +72,7 @@ Item {
         if (dockModeActive) {
             __stageLoaded = true;
             windowManagerInstance.switchToDockMode();
-            windowManagerInstance.addTapAction("deactivateDockMode", function() { setDisplayState.call(JSON.stringify({"state":"undock"})); }, null)
+            windowManagerInstance.addTapAction("deactivateDockMode", undock, null)
         }
         else {
             // Remember where we were, so docking again comes back to the

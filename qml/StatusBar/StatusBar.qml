@@ -105,6 +105,23 @@ Item {
     // which one gets loaded into systemMenuLoader.
     property Item systemMenu: systemMenuLoader.item
 
+    //! The tablet's notification list, which lives in the bar. Null on a phone.
+    readonly property Item tabletNotificationArea: notificationAreaInstance.item
+
+    function isSystemMenuOpen() {
+        return systemMenu !== null && systemMenu.state === "visible";
+    }
+
+    //! Close the system menu if it is open, and say whether it was.
+    function closeSystemMenu() {
+        if (!isSystemMenuOpen())
+            return false;
+
+        systemMenu.resetMenu();
+        systemMenu.toggleState();
+        return true;
+    }
+
     // Exhibition mode: the page on show, and a tap on the app menu asking for
     // the exhibition page list. Both are wired up to DockMode by CardsArea.
     property string dockModeAppMenuTitle: "Time"

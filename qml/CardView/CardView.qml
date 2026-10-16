@@ -278,19 +278,24 @@ Item {
     Connections {
         id: gestureAreaConnections
         target: gestureAreaInstance
+        // Legacy's Home: an application in front goes back to its card. In the
+        // card view the tap is the launcher's (Launcher.qml), as Home showed
+        // the launcher there (SystemUiController, Key_CoreNavi_Home).
         function onTapGesture() {
-            if( 0 === windowManagerInstance.nbRegisteredTapActionsBeforeTap ) {
-                if( cardViewItem.isCurrentCardActive() ) {
-                    cardViewItem.setCurrentCardState(WindowState.Carded);
-                }
-                else {
-                    cardViewItem.setCurrentCardState(WindowState.Maximized);
-                }
+            if( cardViewItem.isCurrentCardActive() ) {
+                cardViewItem.setCurrentCardState(WindowState.Carded);
             }
         }
         function onSwipeUpGesture(modifiers) {
             if( cardViewItem.isCurrentCardActive() ) {
                 cardViewItem.setCurrentCardState(WindowState.Carded);
+            }
+        }
+        // Key_CoreNavi_SwipeDown, a drag from the screen into the gesture area:
+        // in the card view it opens the card in the middle.
+        function onSwipeDownGesture(modifiers) {
+            if( cardViewItem.state === "cardList" && !cardViewItem.isCurrentCardActive() ) {
+                cardViewItem.setCurrentCardState(WindowState.Maximized);
             }
         }
         function onSwipeLeftGesture(modifiers) {
@@ -301,15 +306,18 @@ Item {
             }
         }
         /*
-        function onSwipeRightGesture(modifiers) {
-            if( cardViewItem.isCurrentCardActive() ) {
-                var seat = compositor.defaultSeat
-                // 0xE0E3 comes from https://github.com/webOS-ports/luna-next/blob/master/plugins/compositor/eventtype.cpp#L33
-                seat.sendKeyEvent(0xE0E3, true);
-                seat.sendKeyEvent(0xE0E3, false);
-            }
-        }
-        */
+         * Forward. Legacy passed Key_CoreNavi_Menu (0xE0E5 in
+         * luna-sysmgr-ipc-messages' SysMgrDeviceKeydefs.h) on to the
+         * application, after closing the notification list and system menu -
+         * which the gesture area's shellFirst now does. Not 0xE0E3, which
+         * LunaNext.Common's EventType calls CoreNaviNext: that is legacy's long
+         * swipe to the next application.
+         *
+         * The key itself is not sent: it has no scan code in the compositor's
+         * xkb keymap, so QWaylandSeat::sendKeyEvent would drop it with a
+         * warning, and nothing in LuneOS reads it. Send it from here once the
+         * keymap and an application can carry it.
+         */
     }
 
     ///////// private section //////////
