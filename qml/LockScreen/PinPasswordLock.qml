@@ -363,4 +363,8 @@ Item {
             passwordSubmitted(passwordField.enteredText, isPINEntry);
         }
     }
+
+    // Nothing outside connects to passwordSubmitted, so Enter on a hardware
+    // keyboard did nothing: it submits as Done does.
+    onPasswordSubmitted: (password, isPIN) => submitPassword(password, isPIN)
 }
