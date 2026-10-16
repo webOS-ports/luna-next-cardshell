@@ -23,9 +23,26 @@ import LunaNext.Shell 0.1
 Item {
     id: volumeControl
 
+    //! A volume key went down or came up (Qt.Key_VolumeUp/Down). VolumeKeys
+    //! takes those keys before any key filter sees them, so this is the only
+    //! way to know one is held - for the screenshot chord.
+    signal volumeKeyPressed(int key)
+    signal volumeKeyReleased(int key)
+
     VolumeKeys {
+        id: volumeKeys
         onVolumeUp: handleVolumeUp()
         onVolumeDown: handleVolumeDown()
+    }
+
+    // Through Connections rather than handlers on VolumeKeys itself: a
+    // luneos-components from before keyPressed/keyReleased does not have them,
+    // and the volume keys must keep working there.
+    Connections {
+        target: volumeKeys
+        ignoreUnknownSignals: true
+        function onKeyPressed(key) { volumeControl.volumeKeyPressed(key); }
+        function onKeyReleased(key) { volumeControl.volumeKeyReleased(key); }
     }
 
     // Volume state, tracked from audiod so the keys can step it themselves.

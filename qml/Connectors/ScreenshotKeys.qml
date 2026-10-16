@@ -42,7 +42,11 @@ import WebOSCoreCompositor 1.0
  * goes by press time. Nothing is armed while the display is off, so power
  * always wakes it.
  *
- * Volume Down still changes the volume on its press, as it always has.
+ * Volume Down still changes the volume on its press, as it always has. It
+ * never reaches a key filter - LunaNext.Shell's VolumeKeys takes both volume
+ * keys application-wide - so it is passed in through volumeKey() from
+ * VolumeKeys' keyPressed/keyReleased. Power comes through the compositor's key
+ * filter.
  */
 Item {
     id: screenshotKeys
@@ -148,7 +152,17 @@ Item {
         screenshotKeys._powerBlock = null;
     }
 
+    //! A volume key went down or came up, as VolumeKeys reports it (no
+    //! auto-repeat).
+    function volumeKey(keycode, pressed) {
+        screenshotKeys._key(keycode, pressed, false);
+    }
+
     function _onKey(keycode, pressed, autoRepeat, nativeModifiers) {
+        return screenshotKeys._key(keycode, pressed, autoRepeat);
+    }
+
+    function _key(keycode, pressed, autoRepeat) {
         var power = (keycode === Qt.Key_PowerOff);
         if (!power && keycode !== Qt.Key_VolumeDown)
             return screenshotKeys.resultNextPolicy;

@@ -200,6 +200,29 @@ Item {
             tryCompare(fakeDisplay, "cancels", 1, 2000);
         }
 
+        // As on a device: Volume Down from VolumeKeys, power from the filter.
+        function test_volumeFromVolumeKeys() {
+            keys.volumeKey(Qt.Key_VolumeDown, true);
+            compare(fakeDisplay.active(), 1);
+            press(Qt.Key_PowerOff);
+            wait(100);
+            compare(release(Qt.Key_PowerOff), accepted);
+            keys.volumeKey(Qt.Key_VolumeDown, false);
+            compare(shots.count, 1);
+            fakeDisplay.reportRelease();
+            compare(fakeDisplay.active(), 0);
+        }
+
+        function test_volumeUpIsNotPartOfIt() {
+            keys.volumeKey(Qt.Key_VolumeUp, true);
+            press(Qt.Key_PowerOff);
+            wait(100);
+            compare(release(Qt.Key_PowerOff), next);
+            keys.volumeKey(Qt.Key_VolumeUp, false);
+            compare(shots.count, 0);
+            compare(fakeDisplay.blocks, 0);
+        }
+
         function test_twoShotsInARow() {
             press(Qt.Key_VolumeDown);
             press(Qt.Key_PowerOff); wait(50); release(Qt.Key_PowerOff);

@@ -242,6 +242,19 @@ WindowManager {
 
     VolumeControl {
         id: volumeControl
+
+        onVolumeKeyPressed: (key) => screenshotKeys.volumeKey(key, true)
+        onVolumeKeyReleased: (key) => screenshotKeys.volumeKey(key, false)
+    }
+
+    // Power + Volume Down, legacy's Home + Power screenshot chord. Volume Down
+    // comes from VolumeControl above; power from the compositor's key filter.
+    ScreenshotKeys {
+        id: screenshotKeys
+        compositorInstance: compositor
+        displayOn: orientationHelper.displayOn
+
+        onScreenshotRequested: windowManager.takeScreenshot()
     }
 
     ScreenShooter {

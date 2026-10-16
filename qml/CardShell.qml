@@ -220,14 +220,6 @@ Rectangle {
         onLauncherToggleRequested: cardsArea.toggleLauncher()
     }
 
-    // Power + Volume Down, legacy's Home + Power screenshot chord.
-    ScreenshotKeys {
-        compositorInstance: compositor
-        displayOn: orientationHelper.displayOn
-
-        onScreenshotRequested: cardsArea.takeScreenshot()
-    }
-
     // A trackpad is an arrow-key device, and applications were written to be
     // dragged rather than arrowed at, so inside one the arrows become a finger.
     // Only there: in the shell's own UI they already mean something.
