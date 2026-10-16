@@ -39,6 +39,8 @@ Item {
     property int edgeOffset: Units.gu(11/10)
     property int margin: Units.gu(6/10)
     property int topOffset: Units.gu(4/10)
+    // Above and below the Cancel button, as PinPasswordLock has it.
+    property int buttonSpacing: Units.gu(14/10)
     property string queuedTitle: ""
 
     //! Seconds until luna-authmanager takes passcodes again; see Lockout.js.
@@ -49,7 +51,7 @@ Item {
     signal unlock
 
     width: Units.gu(320/10) + 2 * patternLock.edgeOffset
-    height: buttonGrid.y + buttonGrid.height + patternLock.edgeOffset + patternLock.margin
+    height: buttonGrid.y + buttonGrid.height + patternLock.edgeOffset + patternLock.margin + patternLock.buttonSpacing
     focus: true
 
     function queueUpTitle(newTitle) {
@@ -160,7 +162,7 @@ Item {
         width: Units.gu(320/10) - 2 * patternLock.margin
         x: patternLock.edgeOffset + patternLock.margin
         anchors.top: grid.bottom
-        anchors.topMargin: Units.gu(6/10)
+        anchors.topMargin: patternLock.buttonSpacing
 
         columns: 1
         rows: 1
@@ -169,7 +171,7 @@ Item {
         ActionButton {
             caption: "Cancel"
             width: buttonGrid.width
-            height: Units.gu(52/10)
+            height: Math.round(Units.gu(4))
             onAction: canceled()
         }
     }

@@ -30,6 +30,9 @@ Item {
     property int  edgeOffset: Units.gu(11/10)
     property int  margin: Units.gu(6/10)
     property int  topOffset: Units.gu(4/10)
+    //! Above and below the Cancel/Done row, about the room "Device Locked"
+    //! has above it: 20 pixels on a tenderloin.
+    property int  buttonSpacing: Units.gu(14/10)
     property bool isPINEntry: true
 
     //! What the attached keyboard's key faces are labelled with; see the PIN
@@ -81,7 +84,7 @@ Item {
     }
 
     width: Units.gu(320/10) + 2 * pinPasswordLock.edgeOffset
-    height: buttonGrid.y + buttonGrid.height + pinPasswordLock.edgeOffset + margin;
+    height: buttonGrid.y + buttonGrid.height + pinPasswordLock.edgeOffset + margin + buttonSpacing;
     focus: true;
 
     BorderImage {
@@ -144,6 +147,7 @@ Item {
         width: Units.gu(320/10) - 2 * pinPasswordLock.margin
         x: pinPasswordLock.edgeOffset + pinPasswordLock.margin
         anchors.top: pinPasswordLock.isPINEntry ? keyPad.bottom : passwordField.bottom;
+        anchors.topMargin: pinPasswordLock.buttonSpacing
 
         columns: 2
         rows: 1
@@ -151,16 +155,16 @@ Item {
 
         ActionButton {
             caption: "Cancel";
-            width: buttonGrid.width/buttonGrid.columns - pinPasswordLock.margin / 2
-            height:Units.gu(52/10)
+            width: Math.round(buttonGrid.width/buttonGrid.columns - pinPasswordLock.margin / 2)
+            height: Math.round(Units.gu(4))
             onAction: canceled();
         }
 
         ActionButton {
             caption: "Done";
             affirmative: true
-            width: buttonGrid.width/buttonGrid.columns - pinPasswordLock.margin / 2
-            height: Units.gu(52/10)
+            width: Math.round(buttonGrid.width/buttonGrid.columns - pinPasswordLock.margin / 2)
+            height: Math.round(Units.gu(4))
             active: !pinPasswordLock.lockedOut &&
                     passwordField.enteredText.length >= (enforceMinLength ? minPassLength : 1)
             onAction: {
