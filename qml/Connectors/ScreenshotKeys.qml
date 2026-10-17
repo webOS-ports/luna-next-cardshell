@@ -42,7 +42,9 @@ import WebOSCoreCompositor 1.0
  * goes by press time. Nothing is armed while the display is off, so power
  * always wakes it.
  *
- * Volume Down still changes the volume on its press, as it always has. It
+ * Volume Down's own volume step is held back by VolumeControl while the
+ * chord is armed, and dropped once volumeDownTaken says the press took a
+ * screenshot: no step, no click, no indicator in the shot. Volume Down
  * never reaches a key filter - LunaNext.Shell's VolumeKeys takes both volume
  * keys application-wide - so it is passed in through volumeKey() from
  * VolumeKeys' keyPressed/keyReleased. Power comes through the compositor's key
@@ -63,6 +65,14 @@ Item {
     //! How long the tapped key may be down. (legacy: 500 ms)
     property int tapWindowMs: 500
 
+    //! Volume Down may be the start of a chord: VolumeControl holds its step
+    //! back while this is true.
+    readonly property bool armed: displayOn
+
+    //! The Volume Down press under way took a screenshot - as the held key
+    //! or the tapped one - so it must change nothing. Until the next press.
+    readonly property bool volumeDownTaken: _volumeDownTaken
+
     //! What WebOSKeyFilter::Result is worth (see HardwareKeys).
     readonly property int resultAccepted: 1
     readonly property int resultNextPolicy: 2
@@ -73,6 +83,7 @@ Item {
     property real _volumeDownAt: 0
     property bool _eatPowerUp: false
     property bool _eatVolumeUp: false
+    property bool _volumeDownTaken: false
 
     //! The powerKeyBlock subscription while it is held, else null.
     property var _powerBlock: null
@@ -181,6 +192,7 @@ Item {
             } else {
                 screenshotKeys._volumeDown = true;
                 screenshotKeys._eatVolumeUp = false;
+                screenshotKeys._volumeDownTaken = false;
                 screenshotKeys._volumeDownAt = now;
                 if (screenshotKeys.displayOn)
                     screenshotKeys._blockPower();
@@ -199,6 +211,7 @@ Item {
                 eat = true;
             } else if (screenshotKeys._volumeDown && screenshotKeys._powerBlock !== null &&
                        now - screenshotKeys._powerDownAt <= screenshotKeys.tapWindowMs) {
+                screenshotKeys._volumeDownTaken = true;
                 screenshotKeys.screenshotRequested();
                 screenshotKeys._eatVolumeUp = true;
                 eat = true;
@@ -211,6 +224,7 @@ Item {
                 eat = true;
             } else if (screenshotKeys._powerDown && screenshotKeys._powerBlock !== null &&
                        now - screenshotKeys._volumeDownAt <= screenshotKeys.tapWindowMs) {
+                screenshotKeys._volumeDownTaken = true;
                 screenshotKeys.screenshotRequested();
                 screenshotKeys._eatPowerUp = true;
                 eat = true;

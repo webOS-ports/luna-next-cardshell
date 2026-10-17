@@ -29,20 +29,90 @@ Item {
     signal volumeKeyPressed(int key)
     signal volumeKeyReleased(int key)
 
+    /*!
+     * Hold Volume Down's step back until the key comes up, so that a press
+     * which turns out to be half of the screenshot chord changes nothing - no
+     * volume step, no click, no indicator in the screenshot. Legacy's Home key,
+     * which Volume Down stands in for, had nothing to undo. Holding the key
+     * still ramps the volume: the held-back step is taken when the key starts
+     * repeating, 700 ms in. Read at each press.
+     */
+    property bool deferVolumeDown: false
+
+    /*!
+     * True when the Volume Down press under way belongs to a screenshot chord;
+     * its held-back step is then dropped instead of taken, and so is every
+     * repeat. Read when the key repeats or comes up, after volumeKeyReleased
+     * has been handled.
+     */
+    property bool volumeDownTaken: false
+
+    //! The step of the press now coming from VolumeKeys is to be held back.
+    property bool _deferNextVolumeDown: false
+    //! A Volume Down step is held back, waiting for the key to come up.
+    property bool _volumeDownPending: false
+
+    //! What VolumeKeys reports; tests drive it.
+    readonly property alias _volumeKeys: volumeKeys
+
     VolumeKeys {
         id: volumeKeys
         onVolumeUp: handleVolumeUp()
-        onVolumeDown: handleVolumeDown()
+        onVolumeDown: volumeControl._volumeDownStep()
     }
 
     // Through Connections rather than handlers on VolumeKeys itself: a
     // luneos-components from before keyPressed/keyReleased does not have them,
-    // and the volume keys must keep working there.
+    // and the volume keys must keep working there - without these, no step is
+    // ever held back.
+    //
+    // VolumeKeys reports the press before it steps the volume for it, so
+    // _deferNextVolumeDown is set in time for that step.
     Connections {
         target: volumeKeys
         ignoreUnknownSignals: true
-        function onKeyPressed(key) { volumeControl.volumeKeyPressed(key); }
-        function onKeyReleased(key) { volumeControl.volumeKeyReleased(key); }
+        function onKeyPressed(key) {
+            if (key === Qt.Key_VolumeDown) {
+                volumeControl._deferNextVolumeDown = volumeControl.deferVolumeDown;
+                volumeControl._volumeDownPending = false;
+            }
+            volumeControl.volumeKeyPressed(key);
+        }
+        function onKeyReleased(key) {
+            volumeControl.volumeKeyReleased(key);
+            if (key === Qt.Key_VolumeDown) {
+                volumeControl._deferNextVolumeDown = false;
+                volumeControl._flushVolumeDown();
+            }
+        }
+    }
+
+    function _volumeDownStep() {
+        // The press's own step: hold it back.
+        if (volumeControl._deferNextVolumeDown) {
+            volumeControl._deferNextVolumeDown = false;
+            volumeControl._volumeDownPending = true;
+            return;
+        }
+        // The first repeat: the key is being held to ramp the volume, so the
+        // held-back step is taken now, in this repeat's place. That keeps
+        // the indicator moving one step at a time.
+        if (volumeControl._volumeDownPending) {
+            volumeControl._flushVolumeDown();
+            return;
+        }
+        // A press that took a screenshot ramps nothing, however long it is
+        // held after.
+        if (!volumeControl.volumeDownTaken)
+            handleVolumeDown();
+    }
+
+    function _flushVolumeDown() {
+        if (!volumeControl._volumeDownPending)
+            return;
+        volumeControl._volumeDownPending = false;
+        if (!volumeControl.volumeDownTaken)
+            handleVolumeDown();
     }
 
     // Volume state, tracked from audiod so the keys can step it themselves.

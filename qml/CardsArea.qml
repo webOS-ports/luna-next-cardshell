@@ -243,6 +243,9 @@ WindowManager {
     VolumeControl {
         id: volumeControl
 
+        deferVolumeDown: screenshotKeys.armed
+        volumeDownTaken: screenshotKeys.volumeDownTaken
+
         onVolumeKeyPressed: (key) => screenshotKeys.volumeKey(key, true)
         onVolumeKeyReleased: (key) => screenshotKeys.volumeKey(key, false)
     }
