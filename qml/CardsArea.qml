@@ -335,7 +335,9 @@ WindowManager {
         maximizedCardTopMargin: cardViewInstance.state === "fullscreenCard" ? 0 : statusBarInstance.y + statusBarInstance.height
 
         anchors.top: parent.top
-        anchors.bottom: cardViewInstance.state === "fullscreenCard" ? notificationAreaInstance.bottom : notificationAreaInstance.top
+        // Fullscreen covers the gesture area too, which is hidden then; the
+        // bottom margin under it (a notch turned to the bottom) stays clear.
+        anchors.bottom: cardViewInstance.state === "fullscreenCard" ? gestureAreaInstance.bottom : notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -735,7 +737,11 @@ WindowManager {
         anchors.right: parent.right
         height: gestureAreaInstance.enableGestureArea ? Units.gu(4) : Units.gu(0);
 
+        // Hidden under a fullscreen card. A flick up from the bottom edge of
+        // the screen still takes it back to the cards: see
+        // onScreenEdgeFlickEdgeBottom, which stands in for a hidden area.
         visible: !lockScreen.visible && gestureAreaInstance.enableGestureArea
+                 && cardViewInstance.state !== "fullscreenCard"
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
     }
