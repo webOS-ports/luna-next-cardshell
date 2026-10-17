@@ -62,12 +62,7 @@ Item {
         onCardRemove: (window) => { cardViewItem.removeCard(window); }
         onCardSelect: (window) => {
             setCurrentCard(window);
-            if(window.userData.isFullScreenMode) {
-                setCurrentCardState(WindowState.Fullscreen);
-            }
-            else {
-                setCurrentCardState(WindowState.Maximized);
-            }
+            setCurrentCardState(cardViewItem.__openState(window));
         }
         onCurrentCardChanged: {
             if( cardViewItem.keepCurrentCardMaximized ) setCurrentCardState(WindowState.Maximized);
@@ -156,7 +151,7 @@ Item {
             window = cardsModel.get(i)
             if(window && window.appId === appId) {
                 setCurrentCard(window);
-                setCurrentCardState(WindowState.Maximized);
+                setCurrentCardState(__openState(window));
                 return true;
             }
         }
@@ -177,21 +172,30 @@ Item {
         var i=0;
         for(i=0; i<cardsModel.count;i++) {
             window = cardsModel.get(i)
-            if(window && window.appId === appId) {
-                if(window.userData) {
-                    window.userData.isFullScreenMode = enableFS;
-                    if(window.userData.windowState === WindowState.Maximized) {
-                        windowManagerInstance.switchToFullscreen(window);
-                    }
-                    else if(window.userData.windowState === WindowState.Fullscreen) {
-                        windowManagerInstance.switchToMaximize(window);
-                    }
-                    return true;
-                }
-            }
+            if(window && window.appId === appId)
+                return setFullScreenMode(window, enableFS);
         }
 
         return false;
+    }
+
+    // Whether a card covers the whole screen, status bar included, whenever
+    // it is open; a carded window keeps it for when it is opened again.
+    // Asked for by the app through the "LuneOS_fullscreen" window property
+    // (CardWindowWrapper) or enableFullScreenMode() above.
+    function setFullScreenMode(window, enableFS) {
+        if (!window || !window.userData)
+            return false;
+
+        if (window.userData.isFullScreenMode === enableFS)
+            return true;
+
+        window.userData.isFullScreenMode = enableFS;
+        if (enableFS && window.userData.windowState === WindowState.Maximized)
+            windowManagerInstance.switchToFullscreen(window);
+        else if (!enableFS && window.userData.windowState === WindowState.Fullscreen)
+            windowManagerInstance.switchToMaximize(window);
+        return true;
     }
 
     state: "cardList"
@@ -284,7 +288,7 @@ Item {
                     cardViewItem.setCurrentCardState(WindowState.Carded);
                 }
                 else {
-                    cardViewItem.setCurrentCardState(WindowState.Maximized);
+                    cardViewItem.setCurrentCardState(cardViewItem.__openState(cardViewItem.currentActiveWindow()));
                 }
             }
         }
@@ -428,6 +432,12 @@ Item {
         // Carded is Minimized to the client: it no longer holds the stage. It
         // is still on screen in the card view, hence the true.
         __publishWindowState(window, Qt.WindowMinimized);
+    }
+
+    // The state a card opens in: maximized, or fullscreen if its app asked.
+    function __openState(window) {
+        return (window && window.userData && window.userData.isFullScreenMode) ? WindowState.Fullscreen
+                                                                               : WindowState.Maximized;
     }
 
     function __setCurrentActiveWindow(window) {
