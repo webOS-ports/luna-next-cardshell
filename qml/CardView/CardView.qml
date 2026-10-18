@@ -20,6 +20,18 @@ Item {
     property real defaultWindowWidth: cardViewItem.width
     property real defaultWindowHeight: cardViewItem.height - maximizedCardTopMargin
 
+    // A new xdg_shell window starts at the size its card is about to give it,
+    // not at the output size: for Waydroid each size change is a display
+    // hotplug in Android, and two in a row can crash it.
+    Binding {
+        target: cardViewItem.compositorInstance
+        property: "defaultWindowSize"
+        value: Qt.size(cardViewItem.defaultWindowWidth, cardViewItem.defaultWindowHeight)
+        // Older compositors do not have the property.
+        when: !!cardViewItem.compositorInstance
+              && cardViewItem.compositorInstance.defaultWindowSize !== undefined
+    }
+
     property bool keepCurrentCardMaximized: false
 
     property real cornerRadius: 20
