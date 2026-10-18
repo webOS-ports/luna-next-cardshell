@@ -5,7 +5,7 @@
         "prefs": [
             {
                 "group": "ui",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Visual support for tap ripple",
                 "help": "Enable or disable visual tap ripple animation",
                 "key": "tapRippleSupport",
@@ -14,7 +14,7 @@
             },
 			{
                 "group": "ui",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Show virtual gesture area",
                 "help": "Enable or disable support for virtual gesture area",
                 "key": "showGestureArea",
@@ -56,7 +56,7 @@
             },
 			{
                 "group": "launcher",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Show Android tab",
                 "help": "Show a separate launcher tab holding the Waydroid Android apps",
                 "key": "showAndroidTab",
@@ -102,7 +102,7 @@
             },			
             {
                 "group": "ui",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Enable stacked cards",
                 "help": "Enable or disable stacked cards",
                 "key": "stackedCardSupport",
@@ -112,7 +112,7 @@
 
 			{
                 "group": "ui",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Display date, time or both",
                 "help": "Show Date, Time or Date & Time in Status Bar",
                 "key": "showDateTime",
@@ -136,7 +136,7 @@
             },
 			{
                 "group": "Status Bar",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Show battery icon, percentage or both",
                 "help": "Show Battery Icon, Battery Percentage or Both",
                 "key": "showBatteryPercentage",
@@ -160,7 +160,7 @@
             },
 			{
                 "group": "Status Bar",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Battery Percentage Color Option",
                 "help": "Show Battery Percentage in white or in color",
                 "key": "batteryPercentageColor",
@@ -180,7 +180,7 @@
             },
 			{
                 "group": "Status Bar",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Use New Device Menu",
                 "help": "Replace the classic system menu with the tabbed New Device Menu",
                 "key": "useNewDeviceMenu",
@@ -189,7 +189,7 @@
             },
 			{
                 "group": "Status Bar",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Use Custom Carrier String",
                 "help": "Enables the use of your own text as the carrier string.",
                 "key": "useCustomCarrierString",
@@ -198,7 +198,7 @@
             },
 			{
                 "group": "Status Bar",
-                "restart": "luna",
+                "restart": "none",
                 "label": "Carrier String",
                 "help": "The text used as your custom carrier string.",
                 "key": "carrierString",
