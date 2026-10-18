@@ -331,6 +331,7 @@ WindowManager {
         compositorInstance: compositor
         gestureAreaInstance: gestureAreaInstance
         windowManagerInstance: windowManager
+        appLifeEvents: LS.applicationManager
 
         maximizedCardTopMargin: cardViewInstance.state === "fullscreenCard" ? 0 : statusBarInstance.y + statusBarInstance.height
 

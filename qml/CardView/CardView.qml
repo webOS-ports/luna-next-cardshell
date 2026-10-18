@@ -13,6 +13,8 @@ Item {
     property QtObject compositorInstance
     property Item gestureAreaInstance
     property Item windowManagerInstance
+    // SAM's application life events (LS.applicationManager); see below.
+    property QtObject appLifeEvents
 
     property real maximizedCardTopMargin;
     property real defaultWindowWidth: cardViewItem.width
@@ -131,6 +133,29 @@ Item {
         }
     }
 
+    // A window that outlives its app's process comes forward when the app is
+    // launched again. Waydroid's hwcomposer owns the windows of Android apps:
+    // the webOS app behind such a card is only a launcher script, so launching
+    // it again starts a new process while the old card stays - and an
+    // xdg_shell client has no set_state to raise itself with, the way WAM
+    // raises a web app's card. The launch went through, and the card and the
+    // Android app with it sat there in the stack.
+    //
+    // SAM's "launch" life event means a new process. A running web app that is
+    // launched again gets no such event, and a native app's window goes when
+    // its process does, so a card that already carries the app id here can
+    // only be one of these windows. focusApplication() returns false when there
+    // is no card, which is the case for every other launch.
+    Connections {
+        target: cardViewItem.appLifeEvents
+        ignoreUnknownSignals: true
+
+        function onAppLifeEventsChanged(appId, event) {
+            if (event === "launch" && appId)
+                cardViewItem.focusApplication(appId);
+        }
+    }
+
     function focusApplication(appId) {
         if (typeof appId === 'undefined' || appId.length === 0)
             return false;
@@ -142,7 +167,9 @@ Item {
         if (appId === "com.palm.launcher")
             return false;
 
-        if (getAppIdForFocusApplication() === appId)
+        // Nothing to do when it is already open - but a carded card can be
+        // the current one too, and that still has to come out of the stack.
+        if (getAppIdForFocusApplication() === appId && isCurrentCardActive())
             return true;
 
         var window=null;
