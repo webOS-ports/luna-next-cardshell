@@ -52,15 +52,13 @@ Item {
         if (fpLockoutText.visible)
             return;
         fpStatusText.text = message;
-        fpStatusText.visible = message !== "";
-        if (fpStatusText.visible)
+        if (message !== "")
             fpStatusTimer.restart();
         else
             fpStatusTimer.stop();
     }
 
     function clearBiometricStatus() {
-        fpStatusText.visible = false;
         fpStatusTimer.stop();
     }
 
@@ -88,7 +86,6 @@ Item {
         id: fpStatusTimer
         interval: 2500
         repeat: false
-        onTriggered: fpStatusText.visible = false
     }
 
     Timer {
@@ -208,7 +205,7 @@ Item {
 
     Text {
         id: fpStatusText
-        visible: false
+        visible: fpStatusTimer.running
         width: parent.width - Units.gu(4)
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
