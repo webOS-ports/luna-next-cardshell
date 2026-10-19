@@ -60,7 +60,7 @@ Item {
      */
     property var auxBatteries: []
 
-    property bool batterydAvailable: false
+    readonly property bool batterydAvailable: batterydStatus.available
 
     property bool _playSoundWhenCharged: false
 
@@ -118,10 +118,9 @@ Item {
     }
 
     function handleBatterydServiceStatus() {
-        batterydAvailable = batterydStatus.available;
         // Unknown until batteryd is back. This wrote "batteryLevel", which
         // does not exist, so the indicator kept the last level it had.
-        if (!batterydAvailable)
+        if (!batterydStatus.available)
             level = -1;
         else {
             /* query initial values */
