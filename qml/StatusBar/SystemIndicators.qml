@@ -85,6 +85,22 @@ Row {
         enabled: preferences.muteSound
     }
 
+    /* Headphones carrying the audio, wired or Bluetooth, as audiod routes it.
+     * Bluetooth wins when both are there: that is where audiod sends it. */
+    AudioOutputService {
+        id: audioOutputService
+    }
+
+    HeadsetIndicator {
+        id: headsetIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: audioOutputService.headset || audioOutputService.bluetoothAudio
+        bluetooth: audioOutputService.bluetoothAudio
+    }
+
     /*
      * Hardware privacy switches, one icon per engaged switch.
      *
