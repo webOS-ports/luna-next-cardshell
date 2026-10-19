@@ -58,8 +58,9 @@ Item {
     property real anchorY: height / 2
     //! Where it points when it hangs above the line instead: the line's top, for a
     //! pill that points at a line of text rather than at a finger. The same as
-    //! anchorY unless set.
-    property real anchorTopY: anchorY
+    //! anchorY unless showSuggestionsAtWord() found the word.
+    readonly property real anchorTopY: isNaN(_wordTopY) ? anchorY : _wordTopY
+    property real _wordTopY: NaN
 
     visible: false
     z: 1001
@@ -161,12 +162,12 @@ Item {
             var top = foreground.mapToItem(editOverlay, rect.x, rect.y);
             var bottom = foreground.mapToItem(editOverlay, rect.x, rect.y + rect.height);
 
-            editOverlay.anchorTopY = top.y;
+            editOverlay._wordTopY = top.y;
             editOverlay.showSuggestionsAt(top.x, bottom.y);
             return;
         }
 
-        editOverlay.anchorTopY = tapY;
+        editOverlay._wordTopY = NaN;
         editOverlay.showSuggestionsAt(tapX, tapY);
     }
 
@@ -197,7 +198,7 @@ Item {
     function hide() {
         editOverlay.visible = false;
         editOverlay.spellingMode = false;
-        editOverlay.anchorTopY = Qt.binding(function() { return editOverlay.anchorY; });
+        editOverlay._wordTopY = NaN;
     }
 
     // The caret moved to another word, or out of this one: the suggestions are
