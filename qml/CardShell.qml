@@ -191,6 +191,19 @@ Rectangle {
         onSwitchChanged: (id, state) => killSwitchAlert.showSwitch(id, state)
     }
 
+    AudioOutputAlert {
+        id: audioOutputAlert
+        z: 900
+    }
+
+    /* Shell-wide, like shellKillSwitchService: one flash per change however
+     * many status bars are drawing the headphone icon. */
+    AudioOutputService {
+        id: shellAudioOutputService
+
+        onOutputChanged: (kind, connected) => audioOutputAlert.showOutput(kind, connected)
+    }
+
     PowerMenu {
         id: powerMenuAlert
         z: 800
