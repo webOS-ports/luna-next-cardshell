@@ -42,6 +42,8 @@ Item {
     // Above and below the Cancel button, as PinPasswordLock has it.
     property int buttonSpacing: Units.gu(14/10)
     property string queuedTitle: ""
+    property string _title: "Device Locked"
+    property bool _mismatched: false
 
     //! Seconds until luna-authmanager takes passcodes again; see Lockout.js.
     property int lockoutLeft: 0
@@ -76,14 +78,9 @@ Item {
 
     function resetEntry() {
         queuedTitle = "";
+        _title = "Device Locked";
+        _mismatched = false;
         grid.reset();
-        if (lockedOut) {
-            titleText.text = "Too many tries";
-            hintText.text = Lockout.waitText(lockoutLeft);
-            return;
-        }
-        titleText.text = "Device Locked";
-        hintText.text = "Draw your pattern";
     }
 
     onOpacityChanged: {
@@ -112,7 +109,7 @@ Item {
         color: "#FFF"
         anchors.horizontalCenter: parent.horizontalCenter
         y: patternLock.edgeOffset + patternLock.margin + patternLock.topOffset
-        text: "Device Locked"
+        text: patternLock.lockedOut ? "Too many tries" : patternLock._title
     }
 
     Text {
@@ -122,7 +119,9 @@ Item {
         color: "#CCC"
         anchors.horizontalCenter: parent.horizontalCenter
         y: titleText.y + titleText.height + Units.gu(4/10)
-        text: "Draw your pattern"
+        text: patternLock.lockedOut ? Lockout.waitText(patternLock.lockoutLeft)
+            : patternLock._mismatched ? "Pattern incorrect. Try again."
+            : "Draw your pattern"
     }
 
     /*
@@ -151,7 +150,7 @@ Item {
         // pad.
         onStarted: {
             mismatchTimer.stop();
-            hintText.text = "Draw your pattern";
+            patternLock._mismatched = false;
         }
         onPatternDrawn: (encoded) => patternLock.submitPattern(encoded)
         onTooShort: grid.reset()
@@ -212,10 +211,8 @@ Item {
             patternLock.unlock();
         } else if (Lockout.secondsFrom(response) > 0) {
             mismatchTimer.stop();
+            resetEntry();
             lockoutLeft = Lockout.secondsFrom(response);
-            grid.reset();
-            titleText.text = "Too many tries";
-            hintText.text = Lockout.waitText(lockoutLeft);
         } else {
             grid.showError();
             mismatchTimer.restart();
@@ -233,15 +230,7 @@ Item {
         interval: 1000
         repeat: true
         running: patternLock.lockedOut
-        onTriggered: {
-            patternLock.lockoutLeft--;
-            if (patternLock.lockedOut) {
-                hintText.text = Lockout.waitText(patternLock.lockoutLeft);
-            } else {
-                titleText.text = "Device Locked";
-                hintText.text = "Draw your pattern";
-            }
-        }
+        onTriggered: patternLock.lockoutLeft--
     }
 
     Timer {
@@ -249,11 +238,11 @@ Item {
         interval: 500
         repeat: false
         onTriggered: {
-            if (queuedTitle !== "") {
-                titleText.text = queuedTitle;
-                queuedTitle = "";
+            if (patternLock.queuedTitle !== "") {
+                patternLock._title = patternLock.queuedTitle;
+                patternLock.queuedTitle = "";
             }
-            hintText.text = "Pattern incorrect. Try again.";
+            patternLock._mismatched = true;
             grid.reset();
         }
     }
