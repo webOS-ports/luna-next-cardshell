@@ -37,6 +37,7 @@ for t in tst_*.qml; do
     # shell itself imports.
     "$QMLTESTRUNNER" -input "$t" \
         -import ../qml \
+        -import imports \
         -import "$COMPONENTS/modules" \
         -import "$COMPONENTS/test/imports" "$@" || status=1
 done
