@@ -35,9 +35,24 @@ ListModel {
     // signal sent whenever the list of apps has been updated
     signal appsModelRefreshed();
 
+    // The bus, replaceable by the tests.
     property QtObject lunaNextLS2Service: LunaService {
-        id: service
         name: "com.webos.surfacemanager-cardshell"
+    }
+
+    // SAM posts a change for one launch point after another while it rescans the
+    // apps - dozens for one install or removal - and every answer to listLaunchPoints
+    // is the whole list, which takes the shell a while to read. So the changes of a
+    // burst are answered with one list: it is asked for once they stop coming (at
+    // most a second after the first), and never while the previous one is on its way.
+    readonly property int refreshDelay: 150
+    readonly property int refreshMaxDelay: 1000
+    property double _refreshAskedAt: 0
+    property bool _listing: false
+    property bool _listAgain: false
+    property QtObject _refreshTimer: Timer {
+        interval: applicationModel.refreshDelay
+        onTriggered: applicationModel._list()
     }
 
     function applyFilter(newFilter) {
@@ -46,8 +61,41 @@ ListModel {
     }
 
     function refresh() {
-        service.call("luna://com.webos.service.applicationManager/listLaunchPoints",
-            "{}", fillFromJSONResult, handleError);
+        if( !_refreshTimer.running )
+            _refreshAskedAt = Date.now();
+        else if( Date.now() - _refreshAskedAt >= refreshMaxDelay )
+            return; // it fires soon: no more waiting for the burst to end
+        _refreshTimer.restart();
+    }
+
+    function _list() {
+        if( _listing ) {
+            _listAgain = true;
+            return;
+        }
+        _listing = true;
+        lunaNextLS2Service.call("luna://com.webos.service.applicationManager/listLaunchPoints",
+            "{}", _listed, _listFailed);
+    }
+
+    function _listed(message) {
+        _listing = false;
+        fillFromJSONResult(message);
+        _listNext();
+    }
+
+    function _listFailed(message) {
+        _listing = false;
+        handleError(message);
+        _listNext();
+    }
+
+    // Changes came while the list was on its way: it may be out of date already.
+    function _listNext() {
+        if( _listAgain ) {
+            _listAgain = false;
+            refresh();
+        }
     }
 
     function isFilteredOut(launchPoint) {
@@ -110,14 +158,14 @@ ListModel {
 
     function handleApplicationManagerUp() {
         // register handler for possible launch point change events
-        service.subscribe("luna://com.palm.applicationManager/launchPointChanges",
+        lunaNextLS2Service.subscribe("luna://com.palm.applicationManager/launchPointChanges",
             JSON.stringify({"subscribe":true}), handleLaunchPointChanges, handleError);
 
         // SAM is on the bus before it has scanned the apps, and answers
         // without a list until then. Once it has, it posts to listLaunchPoints'
         // subscribers - without the list (SAM's postListLaunchPoints drops it),
         // so every post is taken as a cue to ask again.
-        service.subscribe("luna://com.webos.service.applicationmanager/listLaunchPoints",
+        lunaNextLS2Service.subscribe("luna://com.webos.service.applicationmanager/listLaunchPoints",
             JSON.stringify({"subscribe":true}), handleLaunchPointsPosted, handleError);
     }
 

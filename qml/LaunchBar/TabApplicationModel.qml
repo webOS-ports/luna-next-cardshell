@@ -2,14 +2,15 @@ import QtQuick 2.0
 import LunaNext.Common 0.1
 
 import "LauncherTabs.js" as LauncherTabs
-import "../LunaSysAPI" as LunaSysAPI
 
 ListModel {
     id: tabAppsModel
 
-    property ListModel appsModel: LunaSysAPI.ApplicationModel {
-        Component.onCompleted: appsModel.appsModelRefreshed.connect(refreshConfig);
-    }
+    // The apps of all tabs: one LunaSysAPI.ApplicationModel the launcher shares,
+    // which also tells each tab when to refresh (FullLauncher). A model of its
+    // own here would be one more listener asking SAM for the whole list at every
+    // change, built even when the launcher hands this one in.
+    property ListModel appsModel
 
     // The placements the user made themselves, shared by all tabs. A ListModel
     // cannot hold a Connections, so it is the launcher that calls refreshConfig()
@@ -65,6 +66,8 @@ ListModel {
         // LauncherTabs.js, then the default configuration file. What none of
         // them mentions ends up on the default tab.
         tabAppsModel.clear();
+        if( !appsModel )
+            return;
         var unsortedAppsArray = [];
         var nbApps = appsModel.count;
         // everything the configuration does not order goes after the default elements
