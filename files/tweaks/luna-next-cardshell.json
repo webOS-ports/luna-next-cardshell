@@ -31,6 +31,30 @@
                 "value": false
             },
 			{
+                "group": "ui",
+                "restart": "none",
+                "label": "Hardware navigation keys",
+                "help": "Whether Back, Home and Menu keys act. Automatic: only with a hardware keyboard, since on other phones they are unlit capacitive keys.",
+                "key": "hardwareNavigationKeys",
+                "type": "ListSelector",
+                "value": "auto",
+				"choices": 
+				[ 
+					{
+						"label": "Automatic",
+						"value": "auto"
+					}, 
+					{
+						"label": "On",
+						"value": "on"
+					}, 
+					{
+						"label": "Off",
+						"value": "off"
+					} 	
+				]
+            },
+			{
                 "group": "launcher",
                 "restart": "none",
                 "label": "Tab title case",

@@ -41,6 +41,7 @@ Item {
     property alias androidTabTweakValue: androidTabTweak.value
     property alias newDeviceMenuTweakValue: newDeviceMenuTweak.value
     property alias disableAnimationsTweakValue: disableAnimationsTweak.value
+    property alias hardwareNavigationKeysTweakValue: hardwareNavigationKeysTweak.value
 
     // Set by CardShell when org.webosports.service.eink reports an E Ink
     // panel. Such a panel flashes for every large greyscale update, and a
@@ -58,6 +59,16 @@ Item {
         serviceName: appTweaks.serviceName
         key: "disableAnimations"
         defaultValue: false
+    }
+    // "auto": Back, Home and Menu keys act only with a hardware keyboard
+    // present, because on a phone without one they are the unlit capacitive
+    // keys LuneOS never used. "on" and "off" say so regardless.
+    Tweak {
+        id: hardwareNavigationKeysTweak
+        owner: appTweaks.owner
+        serviceName: appTweaks.serviceName
+        key: "hardwareNavigationKeys"
+        defaultValue: "auto"
     }
     Tweak {
         id: showTapRippleTweak

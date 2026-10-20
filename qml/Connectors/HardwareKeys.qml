@@ -34,6 +34,13 @@ import WebOSCoreCompositor 1.0
  * its *menu* key emits KEY_APPSELECT, so a shell that hardcoded "HomePage means
  * home" would put that phone to sleep when the user wanted the launcher. So the
  * defaults below read each key at face value and a device may override them.
+ *
+ * Back, HomePage and Menu are also the keycodes of an Android phone's capacitive
+ * back/home/recents keys - tissot's touchscreen reports exactly those - which
+ * LuneOS has never used and which stay unlit there. So the defaults for those
+ * three only apply while navigationKeysEnabled, which the shell ties to a tweak
+ * that by default follows whether a hardware keyboard is present. A device's
+ * own override of one of them always applies: it was asked for.
  */
 Item {
     id: hardwareKeys
@@ -76,6 +83,15 @@ Item {
 
     property var actions: ({})
 
+    //! Whether the default actions of Back, HomePage and Menu apply.
+    property bool navigationKeysEnabled: true
+
+    //! The three keys navigationKeysEnabled is about.
+    readonly property var navigationKeys: [Qt.Key_Back, Qt.Key_HomePage, Qt.Key_Menu]
+
+    //! Keycodes the device override names, which navigationKeysEnabled leaves alone.
+    property var _overridden: ({})
+
     //! Audio mute is a toggle and com.palm.audio has no "toggle", so the state is
     //! tracked here. It starts false rather than being read back: there is no
     //! getter in the audio API's mute group, and a wrong first press is cheaper
@@ -114,6 +130,7 @@ Item {
 
     function _loadActions() {
         var merged = hardwareKeys._defaultActions();
+        var overridden = {};
         var text = hardwareKeys._readFile(hardwareKeys.overridePath);
 
         if (text) {
@@ -130,6 +147,7 @@ Item {
                         continue;
                     }
                     merged[code] = override[name];
+                    overridden[code] = true;
                 }
             } catch (e) {
                 console.warn("HardwareKeys: cannot parse " + hardwareKeys.overridePath + ": " + e);
@@ -137,6 +155,7 @@ Item {
         }
 
         hardwareKeys.actions = merged;
+        hardwareKeys._overridden = overridden;
     }
 
     //! Synchronous on purpose: this has to be settled before the first key press,
@@ -159,7 +178,9 @@ Item {
         if (hardwareKeys._installed)
             return;
 
-        if (!compositor) {
+        // typeof, because outside the shell there is no compositor to be null:
+        // the name is not defined at all, and testing it would throw.
+        if (typeof compositor === "undefined" || !compositor) {
             console.warn("HardwareKeys: no compositor, hardware keys will do nothing");
             return;
         }
@@ -173,8 +194,20 @@ Item {
         hardwareKeys._installed = true;
     }
 
-    function _onKey(keycode, pressed, autoRepeat, nativeModifiers) {
+    //! The action a key has right now, "none" for a navigation key that is off.
+    function actionFor(keycode) {
         var action = hardwareKeys.actions[keycode];
+
+        if (!hardwareKeys.navigationKeysEnabled
+                && !hardwareKeys._overridden[keycode]
+                && hardwareKeys.navigationKeys.indexOf(keycode) >= 0)
+            return "none";
+
+        return action;
+    }
+
+    function _onKey(keycode, pressed, autoRepeat, nativeModifiers) {
+        var action = hardwareKeys.actionFor(keycode);
 
         if (action === undefined || action === "none")
             return hardwareKeys.resultNextPolicy;
