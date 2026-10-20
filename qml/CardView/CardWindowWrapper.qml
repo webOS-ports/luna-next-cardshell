@@ -192,31 +192,21 @@ FocusScope {
     // included, with the window property "LuneOS_fullscreen" set to "true"
     // (a video player while it plays); "false" gives the bar back. Window
     // properties arrive as strings, and can be set before the window is
-    // wrapped, so they are read once here and then on every change. Only a
-    // change of this one property counts: the signal comes for any of them,
-    // and must not undo enableFullScreenMode() on a new title.
-    property string fullScreenProperty: ""
-
-    Connections {
-        target: cardWrapperItem.wrappedWindow
-        ignoreUnknownSignals: true
-        function onWindowPropertiesChanged() { cardWrapperItem.readFullScreenMode(); }
-    }
-
-    function readFullScreenMode() {
+    // wrapped. Only a change of this one property counts, so a new title
+    // does not undo enableFullScreenMode().
+    readonly property string fullScreenProperty: {
         var properties = wrappedWindow ? wrappedWindow.windowProperties : null;
-        var value = (properties && properties["LuneOS_fullscreen"] !== undefined) ? String(properties["LuneOS_fullscreen"]) : "";
-        if (value === fullScreenProperty)
-            return;
-        fullScreenProperty = value;
-        cardView.setFullScreenMode(wrappedWindow, value === "true");
+        return (properties && properties["LuneOS_fullscreen"] !== undefined) ? String(properties["LuneOS_fullscreen"]) : "";
     }
+    onFullScreenPropertyChanged: cardView.setFullScreenMode(wrappedWindow, fullScreenProperty === "true")
 
     function setWrappedWindow(window) {
         childWrapper.setWrappedChild(window);
         if( window ) {
             window.userData = this
-            readFullScreenMode();
+            // The property was read before there was a userData to set.
+            if (fullScreenProperty === "true")
+                cardView.setFullScreenMode(window, true);
         }
     }
 

@@ -27,7 +27,20 @@ Rectangle {
     id: rootAlertsArea
     height: maxHeight + 2 * contentMargin
 
-    property int maxHeight: 0
+    // The tallest window alert. In the phone's bar a notification alert hides
+    // the window alerts behind it, so the area is its size alone while it is
+    // up; a tablet shows it in the middle of the screen, apart from this panel.
+    readonly property int maxHeight: {
+        if (notificationAlerts.showing && !Settings.tabletUi)
+            return notificationAlerts.height;
+        var height = 0;
+        for (var i = 0; i < listPopupAlertsModel.count; ++i) {
+            var window = listPopupAlertsModel.get(i);
+            if (window && window.height > height)
+                height = window.height;
+        }
+        return height;
+    }
     property Item windowManagerItem
     property var compositorInstance
     // Set while the lock screen is up. The tablet's centred notification alert
@@ -91,7 +104,6 @@ Rectangle {
             y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
             width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
             height: window ? window.height : 0
-            onHeightChanged: computeNewRootHeight();
 
             onWidthChanged: if(window && window.height>0) window.changeSize(Qt.size(alertItem.width, alertItem.height));
 
@@ -144,28 +156,6 @@ Rectangle {
         }
     }
 
-    function computeNewRootHeight()
-    {
-        var i=0;
-        var newMaxHeight = 0;
-        var currentMaxHeight = 0;
-
-        // In the phone's bar a notification alert hides the window alerts
-        // behind it, so the area is its size alone while it is up. A tablet
-        // shows it in the middle of the screen, apart from this panel.
-        if (notificationAlerts.showing && !Settings.tabletUi) {
-            rootAlertsArea.maxHeight = notificationAlerts.height;
-            return;
-        }
-        for( i=0; i < listPopupAlertsModel.count; ++i ) {
-            currentMaxHeight = listPopupAlertsModel.get(i).height;
-            if( currentMaxHeight > newMaxHeight )
-                newMaxHeight = currentMaxHeight;
-        }
-
-        rootAlertsArea.maxHeight = newMaxHeight;
-    }
-
     /*
      * The alerts com.webos.notification hands out - a web app asking for
      * permission, for one. These are an application's question, and legacy
@@ -189,9 +179,7 @@ Rectangle {
                                  : rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
         z: 1
 
-        onHeightChanged: rootAlertsArea.computeNewRootHeight()
         onShowingChanged: {
-            rootAlertsArea.computeNewRootHeight();
             if (showing && windowManagerItem)
                 windowManagerItem.addTapAction("hideAlertWindow", function () { rootAlertsArea.closeAll(); });
         }
@@ -249,14 +237,6 @@ Rectangle {
         anchors.bottom: rootAlertsArea.bottom
         model: listPopupAlertsModel.count
         delegate: alertComponent
-
-        onItemAdded: (index, item) => {
-            if( !(notificationAlerts.showing && !Settings.tabletUi) && item.height > rootAlertsArea.maxHeight )
-                rootAlertsArea.maxHeight = item.height;
-        }
-        onItemRemoved: (index, item) => {
-            computeNewRootHeight();
-        }
     }
 
     // have an object that surveys the count of alerts and notify the display if something interesting happens

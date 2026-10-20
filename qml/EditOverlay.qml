@@ -58,7 +58,7 @@ Item {
     property real anchorY: height / 2
     //! Where it points when it hangs above the line instead: the line's top, for a
     //! pill that points at a line of text rather than at a finger. The same as
-    //! anchorY unless set.
+    //! anchorY unless showSuggestionsAtWord() found the word.
     property real anchorTopY: anchorY
 
     visible: false
@@ -161,12 +161,14 @@ Item {
             var top = foreground.mapToItem(editOverlay, rect.x, rect.y);
             var bottom = foreground.mapToItem(editOverlay, rect.x, rect.y + rect.height);
 
+            // A value, not a binding: top is a point mapped once, so a
+            // Qt.binding() over it would have nothing to follow.
             editOverlay.anchorTopY = top.y;
             editOverlay.showSuggestionsAt(top.x, bottom.y);
             return;
         }
 
-        editOverlay.anchorTopY = tapY;
+        editOverlay.anchorTopY = Qt.binding(function() { return editOverlay.anchorY; });
         editOverlay.showSuggestionsAt(tapX, tapY);
     }
 

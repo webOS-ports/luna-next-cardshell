@@ -81,7 +81,7 @@ Item {
         "Key_VolumeMute": Qt.Key_VolumeMute
     })
 
-    property var actions: ({})
+    readonly property var actions: _loaded.actions
 
     //! Whether the default actions of Back, HomePage and Menu apply.
     property bool navigationKeysEnabled: true
@@ -90,7 +90,9 @@ Item {
     readonly property var navigationKeys: [Qt.Key_Back, Qt.Key_HomePage, Qt.Key_Menu]
 
     //! Keycodes the device override names, which navigationKeysEnabled leaves alone.
-    property var _overridden: ({})
+    readonly property var _overridden: _loaded.overridden
+
+    readonly property var _loaded: _loadActions(overridePath)
 
     //! Audio mute is a toggle and com.palm.audio has no "toggle", so the state is
     //! tracked here. It starts false rather than being read back: there is no
@@ -107,8 +109,6 @@ Item {
     }
 
     KeyFilter { id: hardwareKeyFilter }
-
-    Component.onCompleted: hardwareKeys._loadActions()
 
     /*!
      * \brief The default mapping: each key read at face value.
@@ -128,10 +128,10 @@ Item {
         return d;
     }
 
-    function _loadActions() {
+    function _loadActions(path) {
         var merged = hardwareKeys._defaultActions();
         var overridden = {};
-        var text = hardwareKeys._readFile(hardwareKeys.overridePath);
+        var text = hardwareKeys._readFile(path);
 
         if (text) {
             try {
@@ -139,7 +139,7 @@ Item {
                 for (const name in override) {
                     const code = hardwareKeys.keyNames[name];
                     if (code === undefined) {
-                        console.warn("HardwareKeys: unknown key name '" + name + "' in " + hardwareKeys.overridePath);
+                        console.warn("HardwareKeys: unknown key name '" + name + "' in " + path);
                         continue;
                     }
                     if (hardwareKeys.knownActions.indexOf(override[name]) < 0) {
@@ -150,12 +150,11 @@ Item {
                     overridden[code] = true;
                 }
             } catch (e) {
-                console.warn("HardwareKeys: cannot parse " + hardwareKeys.overridePath + ": " + e);
+                console.warn("HardwareKeys: cannot parse " + path + ": " + e);
             }
         }
 
-        hardwareKeys.actions = merged;
-        hardwareKeys._overridden = overridden;
+        return { actions: merged, overridden: overridden };
     }
 
     //! Synchronous on purpose: this has to be settled before the first key press,

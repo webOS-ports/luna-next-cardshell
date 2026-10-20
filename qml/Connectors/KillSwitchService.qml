@@ -49,9 +49,9 @@ Item {
     property var switches: []
 
     /* Just those currently engaged - what the status bar draws. */
-    property var blockedSwitches: []
+    readonly property var blockedSwitches: switches.filter(function(s) { return s.state === "blocked"; })
 
-    property bool serviceAvailable: false
+    readonly property bool serviceAvailable: killSwitchStatus.available
 
     /* Emitted when a switch changes position, so the shell can flash an alert.
      * Not emitted for the first status after (re)connecting: that is the
@@ -85,13 +85,10 @@ Item {
     }
 
     function handleServiceStatus() {
-        killSwitchService.serviceAvailable = killSwitchStatus.available;
-
-        if (!killSwitchService.serviceAvailable) {
+        if (!killSwitchStatus.available) {
             /* Do not keep drawing stale indicators for a service that went
              * away - we no longer know anything about the hardware. */
             killSwitchService.switches = [];
-            killSwitchService.blockedSwitches = [];
             killSwitchService._hadFirstStatus = false;
             killSwitchService._previousState = ({});
             return;
@@ -108,18 +105,12 @@ Item {
             return;
 
         var list = payload.switches;
-        var blocked = [];
         var current = ({});
 
-        for (var i = 0; i < list.length; i++) {
-            var entry = list[i];
-            current[entry.id] = entry.state;
-            if (entry.state === "blocked")
-                blocked.push(entry);
-        }
+        for (var i = 0; i < list.length; i++)
+            current[list[i].id] = list[i].state;
 
         killSwitchService.switches = list;
-        killSwitchService.blockedSwitches = blocked;
 
         if (!killSwitchService._hadFirstStatus) {
             killSwitchService._hadFirstStatus = true;
