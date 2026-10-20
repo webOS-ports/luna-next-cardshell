@@ -8,9 +8,8 @@ import "../qml/CardView"
  * CardView tells the compositor the size a new window's card will give it
  * (WebOSCoreCompositor.defaultWindowSize), so that an xdg_shell window starts
  * at that size instead of the output's and is not resized straight after it
- * opens. Run against luneos-components' compositor mock; the one with the
- * property declares it, as the compositor has it, and the other is an older
- * compositor without it.
+ * opens. Run against luneos-components' compositor mock, which is given the
+ * property here as the compositor has it.
  */
 TestCase {
     name: "DefaultWindowSize"
@@ -21,8 +20,6 @@ TestCase {
         id: compositor
         property size defaultWindowSize
     }
-
-    Compositor { id: olderCompositor }
 
     Item {
         id: windowManager
@@ -53,17 +50,6 @@ TestCase {
         windowManagerInstance: windowManager
     }
 
-    Component {
-        id: olderCardViewComponent
-        CardView {
-            width: 480
-            height: 800
-            compositorInstance: olderCompositor
-            gestureAreaInstance: gestureArea
-            windowManagerInstance: windowManager
-        }
-    }
-
     function cleanup() {
         cardView.width = 480;
         cardView.height = 800;
@@ -83,14 +69,5 @@ TestCase {
 
         cardView.maximizedCardTopMargin = 0;
         compare(compositor.defaultWindowSize, Qt.size(800, 480));
-    }
-
-    // A compositor that has no such property is left alone, without a
-    // warning about it.
-    function test_an_older_compositor_is_left_alone() {
-        failOnWarning(/defaultWindowSize/);
-        var olderCardView = createTemporaryObject(olderCardViewComponent, this);
-        verify(olderCardView);
-        compare(olderCompositor.defaultWindowSize, undefined);
     }
 }

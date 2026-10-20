@@ -27,9 +27,6 @@ Item {
         target: cardViewItem.compositorInstance
         property: "defaultWindowSize"
         value: Qt.size(cardViewItem.defaultWindowWidth, cardViewItem.defaultWindowHeight)
-        // Older compositors do not have the property.
-        when: !!cardViewItem.compositorInstance
-              && cardViewItem.compositorInstance.defaultWindowSize !== undefined
     }
 
     property bool keepCurrentCardMaximized: false
