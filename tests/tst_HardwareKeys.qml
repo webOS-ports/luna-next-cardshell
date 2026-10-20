@@ -37,8 +37,6 @@ TestCase {
             overridePath: overrideFile ? pathOf(overrideFile) : "/nonexistent/hardware-keys.json",
             navigationKeysEnabled: navigationKeysEnabled
         });
-        // onCompleted read the default path before overridePath was set.
-        keys._loadActions();
         launcherSpy.target = keys;
         launcherSpy.clear();
         return keys;
