@@ -61,6 +61,16 @@ Item {
             compare(overlay.anchorTopY, 215);
         }
 
+        function test_at_the_tap_after_a_word() {
+            keyboard.spellingRect = Qt.rect(50, 200, 80, 30);
+            overlay.showSuggestionsAtWord(70, 215);
+            keyboard.spellingRect = null;
+            overlay.showSuggestionsAtWord(70, 600);
+            compare(overlay.anchorTopY, 600);
+            overlay.showAt(10, 500);
+            compare(overlay.anchorTopY, 500);
+        }
+
         function test_follows_anchorY_again_once_hidden() {
             keyboard.spellingRect = Qt.rect(50, 200, 80, 30);
             overlay.showSuggestionsAtWord(70, 215);
