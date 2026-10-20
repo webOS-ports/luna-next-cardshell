@@ -227,10 +227,21 @@ Rectangle {
     // compositor as ordinary Qt keys and until now had nothing to act on them.
     // Which key means what is a per-device question, so the connector decides
     // that; the launcher is wired here because it is private to CardsArea.
+    //
+    // Back, Home and Menu are also an Android phone's capacitive keys, so by
+    // default they act only where there is a hardware keyboard.
     HardwareKeys {
         id: hardwareKeys
 
+        navigationKeysEnabled: AppTweaks.hardwareNavigationKeysTweakValue === "on" ||
+                               (AppTweaks.hardwareNavigationKeysTweakValue !== "off" &&
+                                hardwareKeyboardStatus.hardwareKeyboardPresent)
+
         onLauncherToggleRequested: cardsArea.toggleLauncher()
+    }
+
+    KeyboardService {
+        id: hardwareKeyboardStatus
     }
 
     // A trackpad is an arrow-key device, and applications were written to be

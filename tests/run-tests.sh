@@ -25,6 +25,11 @@ if [ ! -x "$QMLTESTRUNNER" ]; then
     exit 1
 fi
 
+# As on the device, where luna-surfacemanager's launcher exports it: HardwareKeys
+# reads its per-device override with a file:// XMLHttpRequest, which Qt refuses
+# without this, and tst_HardwareKeys feeds it the override files in data/.
+export QML_XHR_ALLOW_FILE_READ=1
+
 status=0
 for t in tst_*.qml; do
     echo "--- $t"
