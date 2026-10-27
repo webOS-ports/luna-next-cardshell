@@ -636,6 +636,13 @@ Item {
                                : parent.width - item.width + item.edgeOffset
             source: AppTweaks.newDeviceMenuTweakValue ? "SystemMenu/NewDeviceMenu.qml" : "SystemMenu/SystemMenu.qml"
 
+            // The room the menu has to fit in: from below the bar to the
+            // bottom of the (rotated) scene. Both menus read it by name, as a
+            // Loader's properties are in scope for what it loads.
+            property real availableHeight: (windowManagerInstance ? windowManagerInstance.height
+                                                                  : orientationHelper.height)
+                                           - statusBar.barHeight
+
             onLoaded: item.visible = false
 
             // Keep the focused application's keyboard while the menu is up.
