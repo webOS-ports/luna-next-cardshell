@@ -121,10 +121,7 @@ Item {
                 //listCardGroupsModel.setWindowInFront(window, index)
                 cardGroupListViewItem.cardSelect(window);
             }
-            onCardRemove: (window) => {
-                cardGroupListViewItem.updateKeysForwardTo(false);
-                cardGroupListViewItem.cardRemove(window);
-            }
+            onCardRemove: (window) => cardGroupListViewItem.throwAway(window)
             onCardDragStart: (window) => cardGroupListViewItem.startCardDrag(window)
             onCardDragStop: cardGroupListViewItem.endCardDrag()
         }
@@ -164,8 +161,12 @@ Item {
 
             anchors.fill: parent
 
-            preferredHighlightBegin: width/2-cardWindowWidth/2
-            preferredHighlightEnd: width/2+cardWindowWidth/2
+            // The current group in the middle, as a whole: LunaSysMgr slid
+            // the active group to the centre of the screen (slideAllGroups).
+            // A range one card wide centred a stack's first card instead.
+            readonly property real currentGroupWidth: currentItem ? currentItem.width : cardWindowWidth
+            preferredHighlightBegin: width/2-currentGroupWidth/2
+            preferredHighlightEnd: width/2+currentGroupWidth/2
             highlightRangeMode: ListView.StrictlyEnforceRange
             highlightFollowsCurrentItem: true
             highlightMoveDuration: 0
@@ -454,6 +455,50 @@ Item {
         }
     }
 
+    ///////// Closing cards //////////
+    //
+    // A card thrown away leaves its group at once, as on LunaSysMgr
+    // (CardWindowManager::closeWindow, then removeCardFromGroup), rather than
+    // when its app's surface goes, which can take a while or never happen.
+    // Kept in the group meanwhile, it sat there swiped out of sight, and as
+    // the current group it was the one in the middle, so the card left on
+    // its own was off to one side. An app that is still there after a while
+    // has ignored the close, and gets its card back.
+
+    property var __closingWindows: []
+
+    Timer {
+        id: closingTimeout
+        interval: 5000
+        onTriggered: cardGroupListViewItem.__restoreUnclosed()
+    }
+
+    function throwAway(window) {
+        updateKeysForwardTo(false);
+        if( listCardGroupsModel.find(window) ) {
+            if( window === draggedWindow )
+                cancelCardDrag();
+            listCardGroupsModel.removeWindow(window);
+            __closingWindows.push(window);
+            closingTimeout.restart();
+        }
+        cardRemove(window);
+    }
+
+    function __restoreUnclosed() {
+        var stillThere = [];
+        for( var i = 0; i < listCardGroupsModel.listCardsModel.count; ++i ) {
+            var window = listCardGroupsModel.listCardsModel.get(i);
+            if( __closingWindows.indexOf(window) >= 0 )
+                stillThere.push(window);
+        }
+        __closingWindows = [];
+        for( var j = 0; j < stillThere.length; ++j ) {
+            console.log("Card " + stillThere[j] + " was thrown away but did not close; putting it back");
+            listCardGroupsModel.restoreWindow(stillThere[j]);
+        }
+    }
+
     function currentActiveWindow() {
         if( internalListView.currentIndex >= 0 ) {
             return listCardGroupsModel.getCurrentCardOfGroup(listCardGroupsModel.get(internalListView.currentIndex));
@@ -463,6 +508,12 @@ Item {
     }
 
     function setCurrentActiveWindow(window) {
+        // Brought forward again before it closed (the app was launched
+        // again): it gets its card back.
+        if( __closingWindows.indexOf(window) >= 0 && !listCardGroupsModel.find(window) ) {
+            __closingWindows.splice(__closingWindows.indexOf(window), 1);
+            listCardGroupsModel.restoreWindow(window);
+        }
         var foundGroupIndex = listCardGroupsModel.setCurrentCard(window);
         if( foundGroupIndex>=0 ) {
             internalListView.setCurrentCardIndex(foundGroupIndex);
