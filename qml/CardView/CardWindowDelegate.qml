@@ -28,7 +28,7 @@ Item {
 
     // this is the window model wrapping the window
     property CardWindowWrapper windowUserData
-    property bool anchorWindowUserData: windowUserData && !windowUserData.Drag.active
+    property bool anchorWindowUserData: !!windowUserData && !windowUserData.Drag.active
 
     // this defines the sizes the card should have, depending on the state of the window
     property real cardHeight
@@ -162,6 +162,9 @@ Item {
         x: (cardWindowWrapper.width - width) / 2
         y: (cardWindowWrapper.height - height) / 2 + 5 * tileScale
         scale: tileScale
+        // Only under the card it belongs to: not while the card is being
+        // dragged elsewhere, nor before its window is there.
+        opacity: cardDelegateContainer.anchorWindowUserData ? 1 : 0
 
         border { left: 43; top: 43; right: 43; bottom: 43 }
         horizontalTileMode: BorderImage.Stretch
@@ -170,6 +173,7 @@ Item {
 
     Item {
         id: cardWindowWrapper
+        objectName: "cardSlot"
 
         anchors.fill: parent
 
