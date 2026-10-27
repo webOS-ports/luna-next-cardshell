@@ -104,16 +104,46 @@ FocusScope {
         anchors.fill: cardWrapperItem
         visible: !useShaderCorner && windowState !== WindowState.Fullscreen
         cornerRadius: cardWrapperItem.cornerRadius
-        // MultiEffect samples its mask as a texture, so the mask has to be a layer
-        layer.enabled: useShaderCorner
+    }
+    // The same corners, as the mask of the shader version. MultiEffect samples
+    // its mask as a texture, so the mask has to be a layer - and one that stays
+    // on: when the layer was switched off for a maximized window and back on
+    // for the card, MultiEffect kept sampling the texture of the old layer, so
+    // every card that had been maximized once lost its corners.
+    RoundedItem {
+        id: cornerShaderMask
+        objectName: "cornerShaderMask"
+        anchors.fill: cardWrapperItem
+        visible: false
+        cornerRadius: cardWrapperItem.cornerRadius
+        layer.enabled: true
+    }
+    // The window with a transparent pixel round it, so the edge of a card
+    // tilted in a stack is filtered instead of drawn as a staircase.
+    // MultiEffect's own paddingRect cannot do this: it sizes the padded source
+    // from the window before the window has followed a resize, and never
+    // again, so after a maximize the card showed a squeezed window.
+    // No source while maximized, so the window is not also drawn off screen.
+    ShaderEffectSource {
+        id: paddedWindow
+        objectName: "paddedWindow"
+        anchors.fill: cardWrapperItem
+        anchors.margins: -1
+        visible: false
+        sourceItem: useShaderCorner ? childWrapper : null
+        sourceRect: Qt.rect(-1, -1, childWrapper.width + 2, childWrapper.height + 2)
     }
     // Rounded corners (shader version)
     MultiEffect {
-        anchors.fill: cardWrapperItem
-        source: childWrapper
+        anchors.fill: paddedWindow
+        source: paddedWindow
         maskEnabled: true
         maskInverted: true
-        maskSource: cornerStaticMask
+        maskSource: cornerShaderMask
+        // By default the mask cuts at the first non-zero alpha, which throws
+        // away the antialiased rim of the corner images; fade across it instead.
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
         visible: useShaderCorner
     }
 
