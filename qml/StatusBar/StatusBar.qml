@@ -638,6 +638,16 @@ Item {
 
             onLoaded: item.visible = false
 
+            // The room the menu has to fit in: from below the bar to the
+            // bottom of the (rotated) scene.
+            Binding {
+                target: systemMenuLoader.item
+                property: "availableHeight"
+                value: (windowManagerInstance ? windowManagerInstance.height : orientationHelper.height)
+                       - statusBar.barHeight
+                when: systemMenuLoader.item !== null
+            }
+
             // Keep the focused application's keyboard while the menu is up.
             //
             // The menu is the shell's own QML, not a Wayland client, so opening it
