@@ -39,8 +39,8 @@ Item {
     // 320x480 screen: almost the full screen width, centered, with a
     // small margin on either side.
     property int  preferredWidth: Units.gu(40)
-    // Set by the StatusBar: the room left under it in the rotated scene.
-    property real availableHeight: Screen.height - Units.gu(3)
+    // availableHeight is on the StatusBar's Loader: the room left under the
+    // bar in the rotated scene.
     property int  maxHeight: Math.min(Units.gu(45), availableHeight - Units.gu(3))
     property int  ident: Units.gu(1.8)
     property int  subIdent: Units.gu(2)

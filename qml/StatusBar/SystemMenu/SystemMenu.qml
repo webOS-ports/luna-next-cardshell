@@ -32,11 +32,10 @@ Item {
     // gu(48), so with that cap the menu scrolled on every device, however much
     // room there was below it. It now grows to fit its contents and only
     // scrolls when the space under the status bar runs out. That space is
-    // handed in by the StatusBar, which knows its own height and the rotated
-    // scene size; Screen.height is the unrotated panel and would be wrong in
-    // landscape.
+    // availableHeight on the StatusBar's Loader, which knows the bar's height
+    // and the rotated scene size; Screen.height is the unrotated panel and
+    // would be wrong in landscape.
     property int  preferredWidth: Units.gu(40)
-    property real availableHeight: Screen.height
     property int  maxHeight: availableHeight - Units.gu(1)
     property int  headerIdent: Units.gu (1.4) 
     property int  subItemIdent: Units.gu (1.6) 
