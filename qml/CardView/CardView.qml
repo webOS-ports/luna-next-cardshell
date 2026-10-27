@@ -31,6 +31,11 @@ Item {
 
     property bool keepCurrentCardMaximized: false
 
+    //! The card that holds the stage - maximized or fullscreen - or null while
+    //! every card is carded. Unlike currentActiveWindow(), this can be bound
+    //! to. It goes back to null by itself when the window is destroyed.
+    property Item stageWindow: null
+
     property real cornerRadius: 20
 
     signal currentCardChanged();
@@ -446,6 +451,7 @@ Item {
         // switch the state to maximized
         window.userData.windowState = WindowState.Maximized;
         __publishWindowState(window, Qt.WindowMaximized);
+        stageWindow = window;
         if( !!window )
             window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
     }
@@ -458,6 +464,7 @@ Item {
         // switch the state to fullscreen
         window.userData.windowState = WindowState.Fullscreen;
         __publishWindowState(window, Qt.WindowFullScreen);
+        stageWindow = window;
         if( !!window )
             window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height));
     }
@@ -468,6 +475,8 @@ Item {
         // Carded is Minimized to the client: it no longer holds the stage. It
         // is still on screen in the card view, hence the true.
         __publishWindowState(window, Qt.WindowMinimized);
+        if (stageWindow === window)
+            stageWindow = null;
     }
 
     // The state a card opens in: maximized, or fullscreen if its app asked.

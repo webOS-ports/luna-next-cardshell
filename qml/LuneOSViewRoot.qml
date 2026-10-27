@@ -21,6 +21,21 @@ import LunaNext.Common 0.1
 import WebOSCompositorBase 1.0
 
 Item {
+    // This item is surface-manager's viewsRoot. getForegroundAppInfo, and with
+    // it SAM's foreground/background life status, comes from
+    // Utils.foregroundList(viewsRoot.children), which looks for a child with
+    // hasForegroundItem and currentItem - what each of webOS OSE's own views
+    // provides. Without one the list stayed empty, and SAM kept every app
+    // "launching" for as long as it ran.
+    Item {
+        id: foregroundView
+
+        readonly property Item currentItem:
+            mainShellLoader.item && mainShellLoader.item.appForegroundWindow
+                ? mainShellLoader.item.appForegroundWindow : null
+        readonly property bool hasForegroundItem: currentItem !== null
+    }
+
     OrientationHelper {
         id: orientationHelper
         automaticOrientation: false
