@@ -84,6 +84,13 @@ WindowManager {
     function foregroundWindow() {
         return applicationForeground ? cardViewInstance.currentActiveWindow() : null;
     }
+
+    //! The window whose application SAM is told is in front (LuneOSViewRoot
+    //! hands it to surface-manager's getForegroundAppInfo): the card that holds
+    //! the stage, unless the launcher covers it. Unlike applicationForeground it
+    //! includes first use, whose card is just as much an application in front.
+    readonly property Item appForegroundWindow:
+        launcherInstance.launcherActive ? null : cardViewInstance.stageWindow
     function isScreenLocked() {
         return lockScreen.locked;
     }

@@ -41,6 +41,9 @@ Rectangle {
     color: "black"
     state: cardShellState // inherited from the main shell Loader
 
+    // For LuneOSViewRoot, which reports it to SAM.
+    readonly property Item appForegroundWindow: cardsArea.appForegroundWindow
+
     Preferences {
         id: preferences
     }
