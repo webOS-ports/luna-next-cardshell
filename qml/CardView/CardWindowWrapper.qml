@@ -42,8 +42,11 @@ FocusScope {
 
     property bool isFullScreenMode: false
 
-    // this is the radius that should be applied to the corners of this window container
-    property real cornerRadius: 20
+    // this is the radius that should be applied to the corners of this window container:
+    // the card view's, shrunk with the card as LunaSysMgr's did, so a card has
+    // the same corners as the window it is a picture of
+    property real cornerRadius: cardView && cardView.width > 0 ? cardView.cornerRadius * width / cardView.width
+                                                               : 0
     property bool useShaderCorner: true
 
     signal clicked();
