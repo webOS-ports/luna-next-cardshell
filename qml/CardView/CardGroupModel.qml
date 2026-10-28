@@ -16,7 +16,12 @@ ListModel {
     id: listCardGroupsModel
 
     signal newCardInserted(int group, int index, Item newWindow)
-    signal cardRemoved()
+    signal cardRemoved(Item window)
+
+    //! The group the card view has in the middle, if any: a new card's group
+    //! goes right after it, as LunaSysMgr's did (CardWindowManager::
+    //! prepareAddWindowSibling), and at the end when there is none.
+    property int activeGroupIndex: -1
 
     property WindowModel listCardsModel: WindowModel {
         surfaceSource: compositor.surfaceModel
@@ -42,41 +47,64 @@ ListModel {
         }
 
         onRowsAboutToBeRemoved: (index, first, last) => {
-            removeWindow(listCardsModel.get(last));
+            for( var i = first; i <= last; ++i )
+                removeWindow(listCardsModel.get(i));
         }
         onRowsInserted: (index, first, last) => {
-            var newWindow = listCardsModel.get(last);
-            var groupIndexForInsertion = listCardGroupsModel.count;
-            if( newWindow.parentWinId ) {
-                var windowFound = false;
-                // First, we have to find which group contains this parent window
-                for( var groupIndex=0; !windowFound && groupIndex<listCardGroupsModel.count; ++groupIndex ) {
-                    var windowList = listCardGroupsModel.get(groupIndex).windowList;
-                    var windowIndex=0;
-                    for( windowIndex=0; !windowFound && windowIndex<windowList.count; ++windowIndex ) {
-                        if( windowList.get(windowIndex).window.winId === newWindow.parentWinId ) {
-                            groupIndexForInsertion = groupIndex;
-                            windowFound = true;
-                        }
+            for( var i = first; i <= last; ++i )
+                addWindow(listCardsModel.get(i));
+        }
+    }
+
+    /*
+     * Every window is in exactly one group, and there are no empty groups.
+     * Windows are found by identity, never through a cached index or a
+     * DelegateModel item, which go stale as soon as the model changes.
+     */
+
+    //! { group, card } of the window, or null
+    function find(window) {
+        if( !window ) return null;
+        for( var g = 0; g < count; ++g ) {
+            var windowList = get(g).windowList;
+            for( var c = 0; c < windowList.count; ++c ) {
+                if( windowList.get(c).window === window )
+                    return { "group": g, "card": c };
+            }
+        }
+        return null;
+    }
+
+    function addWindow(newWindow) {
+        if( !newWindow || find(newWindow) ) return;
+
+        var groupIndex = -1;
+        // A child window joins its parent's group, on top of it.
+        if( newWindow.parentWinId ) {
+            for( var g = 0; groupIndex < 0 && g < count; ++g ) {
+                var windowList = get(g).windowList;
+                for( var c = 0; c < windowList.count; ++c ) {
+                    if( windowList.get(c).window.winId === newWindow.parentWinId ) {
+                        groupIndex = g;
+                        break;
                     }
                 }
             }
-
-            // then add it to the dest group
-            if( groupIndexForInsertion === listCardGroupsModel.count ) {
-                createNewGroup(newWindow, groupIndexForInsertion);
-            }
-            else {
-                var destGroup = listCardGroupsModel.get(groupIndexForInsertion);
-                destGroup.windowList.insert(destGroup.windowList.count, {"window": newWindow});
-            }
-
-            listCardGroupsModel.newCardInserted(groupIndexForInsertion, 0, newWindow);
-
-            // DEBUG: move the new window in the previous group, and build groups of 3 windows
-            //if( last>0 && ((last+1)%4) !== 0 )
-            //    moveWindowGroup(newWindow, listCardGroupsModel.count-1, listCardGroupsModel.count-2);
         }
+
+        var cardIndex = 0;
+        if( groupIndex >= 0 ) {
+            var group = get(groupIndex);
+            cardIndex = group.windowList.count;
+            group.windowList.append({"window": newWindow});
+            group.currentCardInGroup = cardIndex;
+        }
+        else {
+            groupIndex = (activeGroupIndex >= 0 && activeGroupIndex < count) ? activeGroupIndex + 1 : count;
+            createNewGroup(newWindow, groupIndex);
+        }
+
+        newCardInserted(groupIndex, cardIndex, newWindow);
     }
 
     function getCurrentCardOfGroup(group) {
@@ -94,106 +122,91 @@ ListModel {
         group.currentCardInGroup = cardIndexInGroup;
     }
 
+    //! Make the window the current card of its group; returns the group's index, or -1
     function setCurrentCard(window) {
-        var foundGroupIndex = -1;
-
-        var windowFound = false;
-        // First, we have to find which group contains this window
-        var groupIndex = 0;
-        for( groupIndex=0; !windowFound && groupIndex<listCardGroupsModel.count; ++groupIndex ) {
-            var windowList = listCardGroupsModel.get(groupIndex).windowList;
-            var windowIndex=0;
-            for( windowIndex=0; !windowFound && windowIndex<windowList.count; ++windowIndex ) {
-                if( windowList.get(windowIndex).window === window ) {
-                    var currentCardInGroup = listCardGroupsModel.get(groupIndex).currentCardInGroup;
-                    if( windowIndex !== currentCardInGroup )
-                    {
-                        listCardGroupsModel.setCurrentCardInGroup(listCardGroupsModel.get(groupIndex), windowIndex);
-                    }
-
-                    foundGroupIndex = groupIndex;
-
-                    windowFound = true;
-                }
-            }
-        }
-
-        return foundGroupIndex;
-    }
-
-    function setWindowInFront(window, groupIndex) {
-        // first, remove the window from the origin group
-        var windowList = listCardGroupsModel.get(groupIndex).windowList;
-        var i=0;
-        for( i=0; i<windowList.count; ++i ) {
-            if( windowList.get(i).window === window ) {
-                windowList.move(i,windowList.count-1,1);
-                break;
-            }
-        }
+        var pos = find(window);
+        if( !pos ) return -1;
+        setCurrentCardInGroup(get(pos.group), pos.card);
+        return pos.group;
     }
 
     function createNewGroup(window, insertAt) {
         // create a new group with only one window
-        listCardGroupsModel.insert(insertAt, {"windowList": [], "currentCardInGroup": 0, "spreadRatio": 0.1});
-        listCardGroupsModel.get(insertAt).windowList.append( { "window":window } );
+        insert(insertAt, {"windowList": [], "currentCardInGroup": 0, "spreadRatio": 0.1});
+        get(insertAt).windowList.append( { "window":window } );
+    }
+
+    // Take the window out of its group and fix the group's current card up;
+    // the group itself is left in place even when it is now empty.
+    //! Take the window at pos out of its group; returns true if that
+    //! emptied the group, which is then removed as a whole: emptied first,
+    //! its delegate would lay out a group of no cards on its way out.
+    function __takeWindow(pos) {
+        var group = get(pos.group);
+        if( group.windowList.count === 1 ) {
+            remove(pos.group);
+            return true;
+        }
+        var current = group.currentCardInGroup;
+        group.windowList.remove(pos.card);
+        if( pos.card < current )
+            current = current - 1;
+        else if( pos.card === current )
+            // LunaSysMgr made the card on the left the active one (CardGroup::removeFromGroup)
+            current = Math.max(pos.card - 1, 0);
+        group.currentCardInGroup = Math.min(current, Math.max(group.windowList.count - 1, 0));
+        return false;
     }
 
     function removeWindow(window) {
-        // remove the window from the group it belongs to
-        var windowRemoved = false;
+        var pos = find(window);
+        if( !pos ) return;
 
-        var groupIndex = 0;
-        for( groupIndex=0; !windowRemoved && groupIndex<listCardGroupsModel.count; ++groupIndex ) {
-            var windowList = listCardGroupsModel.get(groupIndex).windowList;
-            var windowIndex=0;
-            for( windowIndex=0; !windowRemoved && windowIndex<windowList.count; ++windowIndex ) {
-                if( windowList.get(windowIndex).window === window ) {
-                    var currentCardInGroup = listCardGroupsModel.get(groupIndex).currentCardInGroup;
-                    if( windowIndex === currentCardInGroup )
-                    {
-                        // if we are going to remove the current card of the group, then
-                        // select the previous one
-                        listCardGroupsModel.setCurrentCardInGroup(listCardGroupsModel.get(groupIndex), Math.max(currentCardInGroup-1,0));
-                    }
-                    cardRemoved();
-                    windowList.remove(windowIndex);
-
-                    // If the group is now empty, remove it
-                    if( windowList.count === 0 )
-                        listCardGroupsModel.remove(groupIndex);
-
-                    windowRemoved = true;
-                }
-            }
-        }
+        __takeWindow(pos);
+        cardRemoved(window);
     }
 
-    function moveWindowGroup(window, groupFrom, groupTo) {
-        if( groupFrom === groupTo ) return;
+    //! Move the window to position cardIndex of group groupIndex; both are
+    //! counted as they are before the move. The window becomes the current
+    //! card of that group. An emptied group is removed.
+    function moveWindow(window, groupIndex, cardIndex) {
+        var pos = find(window);
+        if( !pos || groupIndex < 0 || groupIndex >= count ) return false;
 
-        // first, remove the window from the origin group
-        var windowListFrom = listCardGroupsModel.get(groupFrom).windowList;
-        var i=0;
-        for( i=0; i<windowListFrom.count; ++i ) {
-            if( windowListFrom.get(i).window === window ) {
-                windowListFrom.remove(i);
-                break;
-            }
+        var target = get(groupIndex);
+        cardIndex = Math.max(0, Math.min(cardIndex, target.windowList.count));
+
+        if( pos.group === groupIndex ) {
+            var to = cardIndex > pos.card ? cardIndex - 1 : cardIndex;
+            if( to !== pos.card )
+                target.windowList.move(pos.card, to, 1);
+            target.currentCardInGroup = to;
+            return true;
         }
 
-        // then add it to the dest group
-        if( groupTo === -1 || groupTo === listCardGroupsModel.count ) {
-            createNewGroup(window);
-        }
-        else {
-            var windowListTo = listCardGroupsModel.get(groupTo).windowList;
-            windowListTo.append({"window": window});
-        }
+        target.windowList.insert(cardIndex, {"window": window});
+        target.currentCardInGroup = cardIndex;
+        __takeWindow(pos);
+        return true;
+    }
 
-        // Clean up the origin group if it is empty
-        if( windowListFrom.count === 0 )
-            listCardGroupsModel.remove(groupFrom);
+    //! Move the window into a group of its own at groupIndex, counted as
+    //! before the move. Returns the new group's index.
+    function moveWindowToNewGroup(window, groupIndex) {
+        var pos = find(window);
+        if( !pos ) return -1;
+        groupIndex = Math.max(0, Math.min(groupIndex, count));
+
+        // Already alone, and that is where it would go
+        if( get(pos.group).windowList.count === 1 &&
+            (groupIndex === pos.group || groupIndex === pos.group + 1) )
+            return pos.group;
+
+        createNewGroup(window, groupIndex);
+        if( groupIndex <= pos.group )
+            pos.group = pos.group + 1;
+        if( __takeWindow(pos) && pos.group < groupIndex )
+            groupIndex = groupIndex - 1;
+        return groupIndex;
     }
 }
-

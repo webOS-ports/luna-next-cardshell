@@ -30,6 +30,10 @@ Item {
 
     property bool enableDragnDrop: true
 
+    //! The groups, for the card view and the tests
+    readonly property alias cardGroupModel: listCardGroupsModel
+    readonly property alias listView: internalListView
+
     property real maximizedCardTopMargin;
 
     property real cardScale: 0.6
@@ -72,12 +76,18 @@ Item {
         model: CardGroupModel {
             id: listCardGroupsModel
 
+            activeGroupIndex: internalListView.currentIndex
+
             onNewCardInserted: (group, index, newWindow) => {
-                if( !containerForDraggedCard.visible ) { // don't activate the new card group during drag'n'drop
-                    internalListView.delayedCardSelect(newWindow);
-                }
+                // A new card ends any drag, as on LunaSysMgr, and comes forward
+                cardGroupListViewItem.cancelCardDrag();
+                internalListView.delayedCardSelect(newWindow);
             }
-            onCardRemoved: updateKeysForwardTo(false);
+            onCardRemoved: (window) => {
+                updateKeysForwardTo(false);
+                if( window === cardGroupListViewItem.draggedWindow )
+                    cardGroupListViewItem.cancelCardDrag();
+            }
         }
 
         delegate: CardGroupDelegate {
@@ -86,9 +96,14 @@ Item {
             cardGroupModel: listCardGroupsModel
             groupModel: windowList
             cardSpread: {
-                if(ListView.isCurrentItem) {
+                // Not ListView.isCurrentItem: read in here, while a removed
+                // group's delegate is laid out on its way out, it re-ran this
+                // binding from inside itself (a binding loop on cardSpread).
+                if(index === internalListView.currentIndex) {
                     if(cardGroupListViewItem.isCardedViewActive) {
-                        return spreadRatio; // fetch ratio from card group model
+                        // fetch ratio from card group model; gone while the
+                        // delegate of a removed group is torn down
+                        return spreadRatio !== undefined ? spreadRatio : 0.1;
                     } else {
                         return 0; // current card is maximized or fullscreen
                     }
@@ -110,32 +125,15 @@ Item {
                 cardGroupListViewItem.updateKeysForwardTo(false);
                 cardGroupListViewItem.cardRemove(window);
             }
-            onCardDragStart: (window) => {
-                if( !enableDragnDrop ) {
-                    console.log("Drag'n'drop is currently disabled.");
-                }
-                else if( containerForDraggedCard.visible ) {
-                    console.log("A Drag'n'drop transaction is already ongoing. Please drop the dragged window somewhere valid.");
-                }
-                else if( listCardGroupsModel.listCardsModel.count >= 2 ) {
-                    console.log("Entering drag'n'drop mode...");
-                    cardGroupListViewItem.interactiveList = false;
-                    containerForDraggedCard.startDrag(window);
-                    listCardGroupsModel.removeWindow(window);
-                    internalListView.forceLayout();
-                }
-            }
-            onCardDragStop: {
-                cardGroupListViewItem.interactiveList = true;
-                containerForDraggedCard.stopDrag();
-            }
+            onCardDragStart: (window) => cardGroupListViewItem.startCardDrag(window)
+            onCardDragStop: cardGroupListViewItem.endCardDrag()
         }
     }
 
     /* Pinch to spread cards */
     PinchArea {
         anchors.fill: parent
-        enabled: cardGroupListViewItem.interactiveList
+        enabled: cardGroupListViewItem.interactiveList && !cardGroupListViewItem.draggedWindow
         property real _initialRatio: 0.1
         property bool _isCardAloneInGroup: true
         onPinchStarted: {
@@ -179,7 +177,7 @@ Item {
             orientation: ListView.Horizontal
             smooth: !internalListView.moving
             focus: true
-            interactive: cardGroupListViewItem.interactiveList
+            interactive: cardGroupListViewItem.interactiveList && !cardGroupListViewItem.draggedWindow
             snapMode: ListView.SnapOneItem
 
             onCurrentIndexChanged: {
@@ -189,15 +187,21 @@ Item {
 
             function delayedCardSelect(windowToSelect) {
                 cardSelectTimer._windowToSelect = windowToSelect;
+                cardSelectTimer._tries = 0;
                 cardSelectTimer.start();
             }
+            // A card can be listed before its wrapper is made, when the
+            // surface is mapped: it can only be opened once it has one.
             Timer {
                 id: cardSelectTimer
                 running: false; repeat: false; interval: 10
                 onTriggered: {
-                    if(_windowToSelect) cardGroupListViewItem.cardSelect(_windowToSelect);
+                    if(!_windowToSelect) return;
+                    if(_windowToSelect.userData) cardGroupListViewItem.cardSelect(_windowToSelect);
+                    else if(++_tries < 50) start();
                 }
                 property Item _windowToSelect
+                property int _tries: 0
             }
 
             function setCurrentCardIndex(newIndex) {
@@ -231,12 +235,14 @@ Item {
         }
 
         // This item is used during a Drag'n'Drop operation, to
-        // temporarily hold the dragged card
+        // temporarily hold the dragged card. The card's place in the groups
+        // follows it while it is dragged; this is only where it is drawn.
         Item {
             id: containerForDraggedCard
 
             visible: false
             anchors.fill: internalListView
+            // LunaSysMgr's dragged card (CardWindowManager::enterReorder)
             opacity: 0.8
 
             Item {
@@ -266,123 +272,20 @@ Item {
                 anchors.left: leftDropArea.right
                 anchors.right: rightDropArea.left
 
-                property var _temporaryUnresolvedGroup
-                property CardGroupDelegate _groupForUnresolvedCard
-                property var _temporaryUnresolvedCard
-
-                function insertUnresolvedGroup(groupAtCenter, insertOnLeft, wrappedWindow) {
-                    // CASE 1: insert temporary group on the left (or on the right) of "group"
-                    var destIndexTmp = insertOnLeft ? groupAtCenter.VisualDataModel.itemsIndex-1 : groupAtCenter.VisualDataModel.itemsIndex+1;
-                    if( _temporaryUnresolvedGroup && _temporaryUnresolvedGroup.itemsIndex !== destIndexTmp ) {
-                        // we already have a temporary group ? remove it. (move doesn't work so well...)
-                        listCardGroupsModel.remove(_temporaryUnresolvedGroup.itemsIndex,1);
-                        _temporaryUnresolvedGroup = null;
-                    }
-                    if( !_temporaryUnresolvedGroup )
-                    {
-                        if( _temporaryUnresolvedCard && _groupForUnresolvedCard ) {
-                            // remove the temporary card
-                            _groupForUnresolvedCard.groupModel.remove(_temporaryUnresolvedCard.itemsIndex, 1);
-                            _temporaryUnresolvedCard = null;
-                            _groupForUnresolvedCard = null;
-                        }
-                        // insert a new temporary group
-                        var destIndex = insertOnLeft ? groupAtCenter.VisualDataModel.itemsIndex : groupAtCenter.VisualDataModel.itemsIndex+1;
-                        listCardGroupsModel.createNewGroup(wrappedWindow, destIndex);
-                       // groupsDataModel.items.insert(destIndex, {"windowList": _tmpEmptyListModel, "currentCardInGroup": 0});
-                        _temporaryUnresolvedGroup = groupsDataModel.items.get(destIndex);
-                    }
-                }
-
-                function insertUnresolvedCard(group, card, wrappedWindow) {
-                    if( !card || !_temporaryUnresolvedCard ||
-                        card.VisualDataModel.itemsIndex !== _temporaryUnresolvedCard.itemsIndex ) {
-                        // CASE 2: temporary card
-                        var destIndexTmp, destIndex;
-                        if( _temporaryUnresolvedGroup ) {
-                            // remove the temporary group
-                            listCardGroupsModel.remove(_temporaryUnresolvedGroup.itemsIndex,1);
-                            _temporaryUnresolvedGroup = null;
-                        }
-
-                        destIndexTmp = card ? card.VisualDataModel.itemsIndex+1 : 0;
-                        // If we have to move the card, remove it first, because the "move" operation on delegate lists is bugged.
-                        if( _groupForUnresolvedCard && _temporaryUnresolvedCard &&
-                            ( _temporaryUnresolvedCard.itemsIndex !== destIndexTmp || _groupForUnresolvedCard !== group ) ) {
-                            // remove the temporary card
-                            _groupForUnresolvedCard.groupModel.remove(_temporaryUnresolvedCard.itemsIndex,1);
-                            _temporaryUnresolvedCard = null;
-                            _groupForUnresolvedCard = null;
-                        }
-                        if( !_groupForUnresolvedCard ) {
-                            // no temporary card yet, insert a new temporary card above "card" (if not no card under, at the bottom of the stack)
-                            destIndex = card ? card.VisualDataModel.itemsIndex+1 : 0;
-                            group.groupModel.insert(destIndex, {"window": wrappedWindow});
-                            _groupForUnresolvedCard = group;
-                            _temporaryUnresolvedCard = group.visualGroupDataModel.items.get(destIndex);
-                        }
-                    }
-                }
-
-                onEntered: positionChanged(drag);
-                onPositionChanged: {
-                    //First, determine what group & card we are talking about
-                    var internalListViewCoords = mapToItem(internalListView, drag.x, drag.y);
-                    if( !internalListViewCoords ) return;
-                    var groupForDrop = internalListView.itemAt(internalListViewCoords.x+internalListView.contentX, internalListViewCoords.y+internalListView.contentY);
-                    if( !groupForDrop ) {
-                        groupForDrop = internalListView.itemAt(internalListView.width/2+internalListView.contentX, internalListView.height/2+internalListView.contentY);
-                        if( groupForDrop ) {
-                            insertUnresolvedGroup(groupForDrop, internalListViewCoords.x < internalListView.width/2, drag.source.wrappedWindow);
-                        }
-                    }
-                    else if( !_temporaryUnresolvedGroup || _temporaryUnresolvedGroup.itemsIndex !== groupForDrop.VisualDataModel.itemsIndex ) {
-                        //We have the group, but ignore the temporary one if any
-                        var cardCoordsX = drag.source.x + internalListView.contentX - groupForDrop.x;
-                        var slidingCardDelegate = groupForDrop.cardAt(cardCoordsX, groupForDrop.height/2);
-                        insertUnresolvedCard(groupForDrop, slidingCardDelegate, drag.source.wrappedWindow);
-                    }
-                }
-                onExited: {
-                    // clean up the temporary stuff
-                    if( _temporaryUnresolvedCard && _groupForUnresolvedCard ) {
-                        // remove the temporary card if any
-                        _groupForUnresolvedCard.groupModel.remove(_temporaryUnresolvedCard.itemsIndex, 1);
-                    }
-                    else if( _temporaryUnresolvedGroup ) {
-                        // remove the temporary group if any
-                        listCardGroupsModel.remove(_temporaryUnresolvedGroup.itemsIndex, 1);
-                    }
-                    _temporaryUnresolvedCard = null;
-                    _groupForUnresolvedCard = null;
-                    _temporaryUnresolvedGroup = null;
-                }
-                onDropped: {
-                    if( _temporaryUnresolvedCard && _groupForUnresolvedCard ) {
-                        _groupForUnresolvedCard.cardDragStop();
-                    }
-                    else if( _temporaryUnresolvedGroup ) {
-                        cardGroupListViewItem.interactiveList = true;
-                        containerForDraggedCard.stopDrag();
-                    }
-                    else {
-                        // last-chance fallback
-                        listCardGroupsModel.createNewGroup(drag.source.wrappedWindow, 0);
-                    }
-
-                    _temporaryUnresolvedCard = null;
-                    _groupForUnresolvedCard = null;
-                    _temporaryUnresolvedGroup = null;
-
-                    console.log("Exited drag'n'drop mode.");
-                }
+                onEntered: (drag) => cardGroupListViewItem.__dragMovedTo(mapToItem(internalListView, drag.x, drag.y))
+                onPositionChanged: (drag) => cardGroupListViewItem.__dragMovedTo(mapToItem(internalListView, drag.x, drag.y))
             }
             Timer {
                 id: scrollLeft
                 running: leftDropArea.containsDrag
                 interval: 10
                 repeat: true
-                onTriggered: internalListView.contentX -= internalListView.atXBeginning ? 0 : 5;
+                onTriggered: {
+                    if( internalListView.atXBeginning )
+                        cardGroupListViewItem.__dragPastTheEnd(true);
+                    else
+                        internalListView.contentX -= 5;
+                }
             }
             DropArea {
                 id: leftDropArea
@@ -390,19 +293,18 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 width: parent.width*0.1
-
-                onDropped: {
-                    listCardGroupsModel.createNewGroup(drag.source.wrappedWindow, 0);
-                    cardGroupListViewItem.interactiveList = true;
-                    containerForDraggedCard.stopDrag();
-                }
             }
             Timer {
                 id: scrollRight
                 running: rightDropArea.containsDrag
                 interval: 10
                 repeat: true
-                onTriggered: internalListView.contentX += internalListView.atXEnd ? 0 : 5;
+                onTriggered: {
+                    if( internalListView.atXEnd )
+                        cardGroupListViewItem.__dragPastTheEnd(false);
+                    else
+                        internalListView.contentX += 5;
+                }
             }
             DropArea {
                 id: rightDropArea
@@ -410,12 +312,6 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
                 width: parent.width*0.1
-
-                onDropped: {
-                    listCardGroupsModel.createNewGroup(drag.source.wrappedWindow, listCardGroupsModel.count);
-                    cardGroupListViewItem.interactiveList = true;
-                    containerForDraggedCard.stopDrag();
-                }
             }
 
             function startDrag(window) {
@@ -426,6 +322,135 @@ Item {
             function stopDrag() {
                 containerForDraggedCard.visible = false;
             }
+        }
+    }
+
+    ///////// Drag'n'drop //////////
+    //
+    // A held card can be dragged to another place in its group, into another
+    // group, or out into a group of its own, as on LunaSysMgr
+    // (CardWindowManager's ReorderState). The window stays in the model the
+    // whole time and is moved there as the finger goes, so it always has
+    // exactly one place: whatever ends the drag - a release anywhere, a
+    // cancelled touch, a card opening or closing, the card view going away -
+    // the card goes back into that place, with its shadow.
+
+    //! The window being dragged, if any
+    property Item draggedWindow: null
+
+    // LunaSysMgr's cardGroupReorder animation: the slots settle before the
+    // next step, so a card that moves under the finger does not bounce back.
+    Timer {
+        id: reorderStep
+        interval: 350
+        onTriggered: if( __pendingDragPoint ) cardGroupListViewItem.__dragMovedTo(__pendingDragPoint)
+        property var __pendingDragPoint: null
+    }
+
+    function startCardDrag(window) {
+        var wrapper = window ? window.userData : null;
+        if( !wrapper ) return;
+
+        var refusal = "";
+        if( !enableDragnDrop )
+            refusal = "Drag'n'drop is currently disabled.";
+        else if( draggedWindow )
+            refusal = "A Drag'n'drop transaction is already ongoing.";
+        else if( !isCardedViewActive || !visible )
+            refusal = "Cards can only be moved in the card view.";
+        else if( listCardGroupsModel.listCardsModel.count < 2 || !listCardGroupsModel.find(window) )
+            refusal = "There is nowhere else to put this card.";
+        if( refusal ) {
+            console.log(refusal);
+            wrapper.cancelDrag();
+            return;
+        }
+
+        console.log("Entering drag'n'drop mode...");
+        draggedWindow = window;
+        reorderStep.__pendingDragPoint = null;
+        containerForDraggedCard.startDrag(window);
+    }
+
+    function endCardDrag() {
+        if( !draggedWindow ) return;
+
+        var window = draggedWindow;
+        draggedWindow = null;
+        reorderStep.stop();
+        reorderStep.__pendingDragPoint = null;
+        containerForDraggedCard.stopDrag();
+        // Ended from here rather than by the card: let go of it too, so that
+        // its place takes it back.
+        if( window.userData )
+            window.userData.cancelDrag();
+
+        var groupIndex = listCardGroupsModel.setCurrentCard(window);
+        if( groupIndex >= 0 )
+            internalListView.currentIndex = groupIndex;
+        console.log("Exited drag'n'drop mode.");
+    }
+
+    //! End any drag, the card going to where it was last put
+    function cancelCardDrag() {
+        endCardDrag();
+    }
+
+    // LunaSysMgr cancelled a reorder when the card view stopped being one
+    // (maximize, lock, dock) - see CardWindowManager's signalExitReorder.
+    onIsCardedViewActiveChanged: if( !isCardedViewActive ) cancelCardDrag()
+    onVisibleChanged: if( !visible ) cancelCardDrag()
+
+    // point is in internalListView's coordinates
+    function __dragMovedTo(point) {
+        if( !draggedWindow ) return;
+        if( reorderStep.running ) {
+            reorderStep.__pendingDragPoint = point;
+            return;
+        }
+        reorderStep.__pendingDragPoint = null;
+
+        var before = listCardGroupsModel.find(draggedWindow);
+        if( !before ) return;
+        before.groups = listCardGroupsModel.count;
+
+        var x = point.x + internalListView.contentX;
+        var y = point.y + internalListView.contentY;
+        var groupIndex = internalListView.indexAt(x, y);
+        if( groupIndex >= 0 ) {
+            // Over a group: above the topmost card under the finger
+            var group = internalListView.itemAt(x, y);
+            var local = group.mapFromItem(internalListView, point.x, point.y);
+            listCardGroupsModel.moveWindow(draggedWindow, groupIndex, group.slotAt(local.x));
+        }
+        else if( internalListView.currentIndex >= 0 ) {
+            // Between groups: a group of its own, on that side of the middle one
+            var middle = internalListView.currentIndex;
+            listCardGroupsModel.moveWindowToNewGroup(draggedWindow, point.x < internalListView.width/2 ? middle : middle + 1);
+        }
+
+        __dragSettled(before);
+    }
+
+    // Held at either end of the list: a group of its own there
+    function __dragPastTheEnd(atStart) {
+        if( !draggedWindow || reorderStep.running ) return;
+        var before = listCardGroupsModel.find(draggedWindow);
+        if( !before ) return;
+        before.groups = listCardGroupsModel.count;
+        listCardGroupsModel.moveWindowToNewGroup(draggedWindow, atStart ? 0 : listCardGroupsModel.count);
+        __dragSettled(before);
+    }
+
+    function __dragSettled(before) {
+        var after = listCardGroupsModel.find(draggedWindow);
+        if( !after ) return;
+        // A new group, or an emptied one gone, changes the count even when
+        // the card's indexes stay the same.
+        if( after.group !== before.group || after.card !== before.card ||
+            listCardGroupsModel.count !== before.groups ) {
+            internalListView.currentIndex = after.group;
+            reorderStep.restart();
         }
     }
 

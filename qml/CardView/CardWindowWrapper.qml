@@ -161,12 +161,15 @@ FocusScope {
         drag.target: held ? cardWrapperItem : undefined
         drag.axis: Drag.XAndYAxis
         drag.filterChildren: true
+        // The card stays under the finger, as on LunaSysMgr: smoothed, it
+        // trails it by the drag threshold, and so does where it is dropped.
+        drag.smoothed: false
 
         onClicked: {
             cardWrapperItem.clicked();
         }
 
-        onPressAndHold: {
+        onPressAndHold: (mouse) => {
             // switch to drag'n'drop state
             console.log("Card wrapper: press and hold");
 
@@ -174,19 +177,31 @@ FocusScope {
             cardWrapperItem.Drag.hotSpot.x = mouse.x
             cardWrapperItem.Drag.hotSpot.y = mouse.y
             held = true;
-            cardWrapperItem.startDrag();
+            // Active before anyone hears of it, so that the card view can
+            // still refuse the drag with cancelDrag().
             cardWrapperItem.Drag.active = true;
+            cardWrapperItem.startDrag();
         }
         onReleased: {
             // stop the drag'n'drop
             if( held ) {
                 console.log("Card wrapper: released drag");
                 cardWrapperItem.Drag.drop();
-                cardWrapperItem.Drag.active = false;
-                held = false;
-                cardWrapperItem.stopDrag();
+                cardWrapperItem.cancelDrag();
             }
         }
+        // The touch can be taken away (a flickable, a gesture, a popup): a
+        // drag left active would leave the card out of its group for good.
+        onCanceled: if( held ) cardWrapperItem.cancelDrag();
+    }
+
+    //! End a drag of this card without dropping it anywhere
+    function cancelDrag() {
+        if( !dragMouseArea.held && !cardWrapperItem.Drag.active )
+            return;
+        cardWrapperItem.Drag.active = false;
+        dragMouseArea.held = false;
+        cardWrapperItem.stopDrag();
     }
 
     state: windowState === WindowState.Fullscreen ? "fullscreen" : windowState === WindowState.Maximized ? "maximized" : "card"

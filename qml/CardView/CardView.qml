@@ -70,6 +70,7 @@ Item {
 
     CardGroupListView {
         id: cardGroupListViewInstance
+        objectName: "cardGroupListView"
 
         anchors.fill: cardViewItem
         maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin

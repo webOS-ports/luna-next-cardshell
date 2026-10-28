@@ -58,14 +58,17 @@ Item {
                 Behavior on shiftX { SmoothedAnimation { duration: 1000 } }
 
                 property bool isCurrentItem: cardGroupDelegateItem.delegateIsCurrent
-                property bool isCarded: windowUserData && windowUserData.windowState === WindowState.Carded
-                property CardWindowWrapper windowUserData: window.userData
+                property bool isCarded: !!windowUserData && windowUserData.windowState === WindowState.Carded
+                // A binding: the card's wrapper is made when the surface is
+                // mapped, which can come after the card is in the model.
+                // window goes null with its window, and so does this.
+                property CardWindowWrapper windowUserData: (window && window.userData) || null
 
                 scale: slidingCardDelegate.isCurrentItem ? 1.0 : 0.95
                 Behavior on scale { NumberAnimation { duration: 300 } }
 
                 interactive: isCurrentItem &&
-                             !windowUserData.Drag.active &&
+                             !!windowUserData && !windowUserData.Drag.active &&
                              isCarded
 
                 onRequestDestruction: {
@@ -99,6 +102,9 @@ Item {
                             console.log("startDrag with window " + window);
                             cardGroupDelegateItem.cardDragStart(window);
                         }
+                        function onStopDrag() {
+                            cardGroupDelegateItem.cardDragStop();
+                        }
                     }
                 }
 
@@ -108,14 +114,26 @@ Item {
 
                 Component.onCompleted: {
                     console.log("Delegate " + slidingCardDelegate + " instantiated for window " + window);
-                    windowUserData = window.userData; // do not introduce a binding, to avoid
-                                                      // errors if window gets destroyed brutally
                 }
             }
     }
 
     function cardAt(x,y) {
         return cardGroupDelegateItem.childAt(x, y);
+    }
+
+    //! Where a card dragged to x should go in this group: just above the
+    //! topmost card under x, at the bottom left of them all, on top right of
+    //! them all. Counted as CardGroupModel.moveWindow() counts.
+    function slotAt(x) {
+        var count = groupModel ? groupModel.count : 0;
+        var cardWidth = cardGroupListViewInstance.cardWindowWidth;
+        for( var i = count - 1; i >= 0; --i ) {
+            var left = cardSpread * cardWidth * i;
+            if( x >= left && x < left + cardWidth )
+                return i + 1;
+        }
+        return x < 0 ? 0 : count;
     }
 
     Repeater {
