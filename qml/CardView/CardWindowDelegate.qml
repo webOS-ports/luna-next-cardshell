@@ -148,13 +148,22 @@ Item {
 
     BorderImage {
         id: cardShadow
+        objectName: "cardShadow"
         source: Qt.resolvedUrl("../images/card-shadow-tile.png");
 
-        anchors.centerIn: cardWindowWrapper
-        width: cardWindowWrapper.width+2*30
-        height: cardWindowWrapper.height+2*30
+        // As LunaSysMgr's CardDropShadowEffect: the tile cut in halves, around
+        // the window grown by 20 px on each side and moved 5 px down, in window
+        // pixels at a grid unit of 10. It was drawn on the card, so it shrinks
+        // with it, as the card's corners do.
+        readonly property real tileScale: cardDelegateContainer.fullWidth > 0 && cardWindowWrapper.width > 0
+                                          ? Units.gu(1) / 10 * cardWindowWrapper.width / cardDelegateContainer.fullWidth : 1
+        width: cardWindowWrapper.width / tileScale + 2*20
+        height: cardWindowWrapper.height / tileScale + 2*20
+        x: (cardWindowWrapper.width - width) / 2
+        y: (cardWindowWrapper.height - height) / 2 + 5 * tileScale
+        scale: tileScale
 
-        border { left: 30; top: 30; right: 30; bottom: 30 }
+        border { left: 43; top: 43; right: 43; bottom: 43 }
         horizontalTileMode: BorderImage.Stretch
         verticalTileMode: BorderImage.Stretch
     }
