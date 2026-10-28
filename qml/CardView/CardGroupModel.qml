@@ -107,6 +107,16 @@ ListModel {
         newCardInserted(groupIndex, cardIndex, newWindow);
     }
 
+    //! Put a window that is in no group back, in a group of its own, without
+    //! bringing it forward; returns its group's index.
+    function restoreWindow(window) {
+        var pos = find(window);
+        if( pos ) return pos.group;
+        var groupIndex = (activeGroupIndex >= 0 && activeGroupIndex < count) ? activeGroupIndex + 1 : count;
+        createNewGroup(window, groupIndex);
+        return groupIndex;
+    }
+
     function getCurrentCardOfGroup(group) {
         if( !group ) return null;
 
