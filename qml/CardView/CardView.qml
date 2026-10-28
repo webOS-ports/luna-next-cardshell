@@ -36,7 +36,11 @@ Item {
     //! to. It goes back to null by itself when the window is destroyed.
     property Item stageWindow: null
 
-    property real cornerRadius: 20
+    // The corner radius of a window at full size. LunaSysMgr clipped a card to
+    // a rounded rect of 25 px in window pixels (CardWindow.cpp, on devices with
+    // a grid unit of 10) and its screen corners were 24 px, so 2.5 grid units;
+    // each card scales it down with itself (CardWindowWrapper).
+    property real cornerRadius: Units.gu(2.5)
 
     signal currentCardChanged();
 
@@ -379,8 +383,7 @@ Item {
             var windowWrapperComponent = Qt.createComponent("CardWindowWrapper.qml");
             var windowWrapper = windowWrapperComponent.createObject(cardViewItem, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2,
                                                                                    "y": gestureAreaInstance.y,
-                                                                                   "cardView": cardViewItem,
-                                                                                   "cornerRadius": cornerRadius});
+                                                                                   "cardView": cardViewItem});
             // Bind the container with its app window
             windowWrapper.setWrappedWindow(window);
         }
