@@ -50,7 +50,9 @@ Item {
     readonly property bool lockedOut: lockoutLeft > 0
 
     signal canceled
-    signal unlock
+    //! token: luna-authmanager's unlockToken for the right passcode, which
+    //! com.palm.display wants before it unlocks.
+    signal unlock(string token)
 
     signal requestFocusChange(bool focusRequest);
     signal passwordSubmitted(string password, bool isPIN);
@@ -193,10 +195,11 @@ Item {
     function handlePasscodeResult(message) {
         var response = JSON.parse(message.payload);
 
-        console.log("response: " + message.payload);
+        // Not the payload: on a match it carries the unlock token.
+        console.log("passcode " + (response.returnValue ? "matched" : "refused"));
 
         if (response.returnValue) {
-            pinPasswordLock.unlock();
+            pinPasswordLock.unlock(response.unlockToken !== undefined ? response.unlockToken : "");
             passwordField.clearAll();
         }
         else if (Lockout.secondsFrom(response) > 0) {

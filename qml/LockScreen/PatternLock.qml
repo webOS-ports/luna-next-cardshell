@@ -50,7 +50,8 @@ Item {
     readonly property bool lockedOut: lockoutLeft > 0
 
     signal canceled
-    signal unlock
+    //! token: luna-authmanager's unlockToken for the right pattern.
+    signal unlock(string token)
 
     width: Units.gu(320/10) + 2 * patternLock.edgeOffset
     height: buttonGrid.y + buttonGrid.height + patternLock.edgeOffset + patternLock.margin + patternLock.buttonSpacing
@@ -208,7 +209,7 @@ Item {
         var response = JSON.parse(message.payload);
 
         if (response.returnValue) {
-            patternLock.unlock();
+            patternLock.unlock(response.unlockToken !== undefined ? response.unlockToken : "");
         } else if (Lockout.secondsFrom(response) > 0) {
             mismatchTimer.stop();
             resetEntry();
