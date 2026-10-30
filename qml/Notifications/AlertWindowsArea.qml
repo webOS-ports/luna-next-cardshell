@@ -31,15 +31,42 @@ Rectangle {
     // the window alerts behind it, so the area is its size alone while it is
     // up; a tablet shows it in the middle of the screen, apart from this panel.
     readonly property int maxHeight: {
-        if (notificationAlerts.showing && !Settings.tabletUi)
+        if (notificationAlerts.showing && !Settings.tabletUi && !rootAlertsArea.callAlertShowing)
             return notificationAlerts.height;
         var height = 0;
         for (var i = 0; i < listPopupAlertsModel.count; ++i) {
             var window = listPopupAlertsModel.get(i);
-            if (window && window.height > height)
+            if (!window || (rootAlertsArea.screenLocked && !rootAlertsArea.isCallAlert(window)))
+                continue;
+            if (window.height > height)
                 height = window.height;
         }
-        return height;
+        return Math.max(0, Math.min(height, rootAlertsArea.maxAlertHeight));
+    }
+
+    /*!
+     * The most an alert may take: the space between the status bar and the
+     * gesture area. An alert asking for more - the incoming call asks for the
+     * whole screen - is fitted into it, client window included, rather than
+     * running under the status bar.
+     */
+    property real maxAlertHeight: parent ? parent.height : 0
+
+    /*!
+     * An alert that flags itself with LuneOS_overLockScreen - the incoming
+     * call - is shown over the lock screen, as legacy showed its incoming call
+     * popup there, and is not closed by a tap outside it or on the gesture
+     * area: a call is answered or declined, not swiped away.
+     */
+    function isCallAlert(window) {
+        return !!window && window.windowProperties["LuneOS_overLockScreen"] === "true";
+    }
+    readonly property bool callAlertShowing: {
+        for (var i = 0; i < listPopupAlertsModel.count; ++i) {
+            if (rootAlertsArea.isCallAlert(listPopupAlertsModel.get(i)))
+                return true;
+        }
+        return false;
     }
     property Item windowManagerItem
     property var compositorInstance
@@ -58,8 +85,11 @@ Rectangle {
      * runs and for a tap anywhere outside the alerts (see CardsArea).
      */
     function closeAll() {
-        for (var i = listPopupAlertsModel.count - 1; i >= 0; --i)
-            compositorInstance.closeWindow(listPopupAlertsModel.get(i));
+        for (var i = listPopupAlertsModel.count - 1; i >= 0; --i) {
+            var window = listPopupAlertsModel.get(i);
+            if (!rootAlertsArea.isCallAlert(window))
+                rootAlertsArea.compositorInstance.closeWindow(window);
+        }
         // A notification alert goes too, unless it is modal: that one has to
         // be answered, and the tap stays with it.
         notificationAlerts.dismiss();
@@ -99,13 +129,27 @@ Rectangle {
             // of it in the phone's bar; it comes back once that alert is
             // answered. A tablet shows the alert in the middle instead, clear
             // of this panel.
-            visible: !(notificationAlerts.showing && !Settings.tabletUi)
+            // A call alert stays in front of a notification alert, and is the
+            // only kind shown over the lock screen.
+            readonly property bool isCall: rootAlertsArea.isCallAlert(alertItem.window)
+            visible: alertItem.isCall || !(notificationAlerts.showing && !Settings.tabletUi) && !rootAlertsArea.screenLocked
+            z: alertItem.isCall ? 2 : 0
             x: rootAlertsArea.contentMargin
             y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
             width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
-            height: window ? window.height : 0
+            height: alertItem.window ? Math.min(alertItem.window.height, rootAlertsArea.maxAlertHeight) : 0
 
-            onWidthChanged: if(window && window.height>0) window.changeSize(Qt.size(alertItem.width, alertItem.height));
+            function fit() {
+                var w = alertItem.window;
+                if (w && w.height > 0)
+                    w.changeSize(Qt.size(alertItem.width, Math.min(w.height, rootAlertsArea.maxAlertHeight)));
+            }
+
+            onWidthChanged: fit()
+            Connections {
+                target: rootAlertsArea
+                function onMaxAlertHeightChanged() { alertItem.fit(); }
+            }
 
             children: [ window ]
 
@@ -140,10 +184,10 @@ Rectangle {
 
                     // be careful here: at this point in time, window.height is usually not yet set
                     if(window.height>0) {
-                        window.changeSize(Qt.size(alertItem.width, window.height));
+                        alertItem.fit();
                     }
                     else {
-                        window.onHeightChanged.connect(function() { window.changeSize(Qt.size(alertItem.width, window.height)); });
+                        window.onHeightChanged.connect(alertItem.fit);
                     }
 
                     if( windowManagerItem ) {
@@ -261,6 +305,24 @@ Rectangle {
         }
         property int __previousCount: 0
     }
+
+    /*
+     * A ringing call keeps the display on and lights it from off, which the
+     * generic alert above does only for a while: legacy told the display
+     * manager "phonecall-activated" for its incoming call popup, and the
+     * display then went back to the state it had once the call was answered
+     * or ended.
+     */
+    QtObject {
+        property bool ringing: rootAlertsArea.callAlertShowing
+        onRingingChanged: {
+            displayService.call("luna://com.palm.display/control/alert",
+                                JSON.stringify({"status": ringing ? "phonecall-activated" : "phonecall-deactivated"}),
+                                undefined,
+                                function(message) { console.log("Failed to call display service: " + message); });
+        }
+    }
+
     LunaService {
         id: displayService
 
