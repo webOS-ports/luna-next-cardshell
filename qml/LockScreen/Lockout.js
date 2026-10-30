@@ -25,7 +25,9 @@
  * entered, so the lock screens stop taking input and count the time down.
  */
 
-// The seconds to wait from a matchDevicePasscode reply, 0 if not locked out.
+// The seconds to wait from a matchDevicePasscode or getDeviceLockMode reply,
+// 0 if not locked out. An authmanager that does not report a lockout in
+// getDeviceLockMode leaves lockedOut out, which reads as none.
 // An older authmanager sends lockedOut without lockoutSeconds; its lockout
 // was 15 seconds.
 function secondsFrom(response) {

@@ -226,6 +226,21 @@ Item {
         console.log("Service error: " + message);
     }
 
+    // A lockout can be running before any try here: one saved before a
+    // reboot, or begun on the other pad. Ask when the pad opens, so it never
+    // takes a passcode the daemon would refuse unseen.
+    onVisibleChanged: {
+        if (visible)
+            service.call("luna://com.palm.systemmanager/getDeviceLockMode", "{}",
+                         handleLockModeResult, handleServiceError);
+    }
+
+    function handleLockModeResult(message) {
+        var seconds = Lockout.secondsFrom(JSON.parse(message.payload));
+        if (seconds > 0)
+            startLockout(seconds);
+    }
+
     function startLockout(seconds) {
         queuedTitle = "";
         queuedHint = "";

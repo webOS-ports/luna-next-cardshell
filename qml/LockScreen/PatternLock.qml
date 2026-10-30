@@ -72,9 +72,15 @@ Item {
     // the pad is shown again. Without it the drawn trace from whatever was
     // entered last - a correct pattern in green, a wrong one in red - just
     // sat there through the next lock, showing the real pattern's shape.
+    // As in PinPasswordLock, it also asks whether a lockout is running - one
+    // from before a reboot, or from the other pad - rather than finding out
+    // with a try.
     onVisibleChanged: {
-        if (visible)
+        if (visible) {
             resetEntry();
+            service.call("luna://com.palm.systemmanager/getDeviceLockMode", "{}",
+                         handleLockModeResult, handleServiceError);
+        }
     }
 
     function resetEntry() {
@@ -211,9 +217,7 @@ Item {
         if (response.returnValue) {
             patternLock.unlock(response.unlockToken !== undefined ? response.unlockToken : "");
         } else if (Lockout.secondsFrom(response) > 0) {
-            mismatchTimer.stop();
-            resetEntry();
-            lockoutLeft = Lockout.secondsFrom(response);
+            startLockout(Lockout.secondsFrom(response));
         } else {
             grid.showError();
             mismatchTimer.restart();
@@ -222,6 +226,18 @@ Item {
 
     function handleServiceError(message) {
         console.log("Service error: " + message);
+    }
+
+    function handleLockModeResult(message) {
+        var seconds = Lockout.secondsFrom(JSON.parse(message.payload));
+        if (seconds > 0)
+            startLockout(seconds);
+    }
+
+    function startLockout(seconds) {
+        mismatchTimer.stop();
+        resetEntry();
+        lockoutLeft = seconds;
     }
 
     // As in PinPasswordLock: counts down while the display is on, as the
