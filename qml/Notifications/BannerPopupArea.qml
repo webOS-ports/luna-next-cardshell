@@ -21,6 +21,8 @@ import QtMultimedia 6.3
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
+import "NotificationSound.js" as NotificationSound
+
 Item {
     id: bannerItemsPopups
     property string color: Settings.tabletUi? "transparent" : "black";
@@ -142,23 +144,7 @@ Item {
             return "";
         }
 
-        var streamClass = soundClass;
-
-        if (streamClass === "alert"){
-            streamClass = "alerts";
-        } else if (streamClass === "notification") {
-            streamClass = "notifications";
-        } else if (streamClass === "ringtone") {
-            streamClass = "ringtones";
-        }
-        if (streamClass !== "alerts" &&
-                streamClass !== "alarm" &&
-                streamClass !== "calendar" &&
-                streamClass !== "notifications" &&
-                streamClass !== "ringtones" &&
-                streamClass !== "feedback"){
-            streamClass = "notifications";
-        }
+        var streamClass = NotificationSound.streamClassFor(soundClass);
 
         var mySoundFilePath = "";
 
@@ -199,6 +185,20 @@ Item {
         } else {
             return "";
         }
+    }
+
+    // On its class's stream through audiod, so audiod lowers the music under
+    // an alert; the banner's own player is the fallback.
+    function playNotificationSound(player, soundClass) {
+        // The player resolved the path to a file:// URL; audiod wants the path.
+        var path = decodeURIComponent(player.source.toString().replace(/^file:\/\//, ""));
+        NotificationSound.play(path, NotificationSound.streamClassFor(soundClass),
+            function(request, onReply) {
+                service.call("luna://com.webos.service.audio/playSound", JSON.stringify(request),
+                             function(message) { onReply(JSON.parse(message.payload)); },
+                             function(error) { onReply(null); });
+            },
+            function() { player.play(); });
     }
 
     function getSoundFileDuration(duration){
@@ -291,7 +291,7 @@ Item {
                     script: {
                         if(!isEmpty(notifsound.source))
                         {
-                            notifsound.play();
+                            playNotificationSound(notifsound, object.soundClass);
                         }
 
                     }
