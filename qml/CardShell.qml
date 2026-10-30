@@ -207,6 +207,13 @@ Rectangle {
         onOutputChanged: (kind, connected) => audioOutputAlert.showOutput(kind, connected)
     }
 
+    /* "Allow USB debugging?" for a computer adbd does not know yet: over the
+     * alerts, since it waits on the user and refuses once it times out. */
+    UsbDebuggingPromptArea {
+        id: usbDebuggingPrompt
+        z: 950
+    }
+
     PowerMenu {
         id: powerMenuAlert
         z: 800
