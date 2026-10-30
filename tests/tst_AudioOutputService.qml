@@ -36,6 +36,7 @@ TestCase {
         service.headsetMic = false;
         service.bluetoothAudio = false;
         service.bluetoothAudioName = "";
+        service.inCall = false;
         changes.clear();
     }
 
@@ -94,5 +95,31 @@ TestCase {
         compare(service.headset, false);
         compare(service._hadFirstStatus, false);
         compare(changes.count, 0);
+    }
+
+    function test_a_call_is_reported_and_is_not_an_output_change() {
+        // HardwareKeys leaves the media keys alone while this is true.
+        status({});
+        compare(service.inCall, false);
+        status({ inCall: true });
+        compare(service.inCall, true);
+        compare(changes.count, 0);
+        status({ inCall: false });
+        compare(service.inCall, false);
+    }
+
+    function test_audiod_going_away_ends_the_call() {
+        status({ inCall: true });
+        compare(service.inCall, true);
+        // The bus mock reports audiod as up; take it down by hand.
+        var watcher = null;
+        for (var i = 0; i < service.data.length; ++i)
+            if (service.data[i].serviceName === "org.webosports.service.audio")
+                watcher = service.data[i];
+        verify(watcher !== null, "no ServiceStatus for audiod");
+        watcher._available = false;
+        compare(service.serviceAvailable, false);
+        compare(service.inCall, false, "the media keys would stay with the focused window");
+        watcher._available = true;
     }
 }

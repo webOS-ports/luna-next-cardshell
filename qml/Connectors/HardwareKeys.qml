@@ -19,6 +19,8 @@ import QtQuick 2.0
 import LuneOS.Service 1.0
 import WebOSCoreCompositor 1.0
 
+import "HeadsetButton.js" as HeadsetButton
+
 /*!
  * \brief Gives a phone's hardware call keys something to do.
  *
@@ -41,6 +43,15 @@ import WebOSCoreCompositor 1.0
  * three only apply while navigationKeysEnabled, which the shell ties to a tweak
  * that by default follows whether a hardware keyboard is present. A device's
  * own override of one of them always applies: it was asked for.
+ *
+ * Media keys go to mediacontroller, whatever has focus: the play/pause button
+ * of a wired headset reaches the compositor as Key_MediaTogglePlayPause, and
+ * handed to the focused window it only worked with the music app in front.
+ * mediacontroller passes them to the session that last started playing, as
+ * it does a Bluetooth headset's. The headset button counts presses, as
+ * webOS 2.x did: one is play/pause, two the next track, three the previous
+ * one; a hold is left free. During a call they are left alone, as before,
+ * so a press cannot start the music under the call.
  */
 Item {
     id: hardwareKeys
@@ -52,6 +63,9 @@ Item {
      * so this is wired up where both are in scope.
      */
     signal launcherToggleRequested()
+
+    //! A media key went to mediacontroller as keyEvent.
+    signal mediaKeySent(string keyEvent)
 
     //! What WebOSKeyFilter::Result is worth. The enum is not registered for QML,
     //! so these have to be the numbers - and getting them wrong decides the fate
@@ -66,7 +80,8 @@ Item {
     //! The actions this understands. "shell.back" is a deliberate no-op: see _act().
     readonly property var knownActions: [
         "call.answer", "call.hangup", "shell.launcher", "shell.back",
-        "audio.mute", "display.sleep", "none"
+        "audio.mute", "display.sleep", "media.headset", "media.play",
+        "media.pause", "media.stop", "media.next", "media.previous", "none"
     ]
 
     //! Qt key name -> keycode, for reading the override file. Only the keys a
@@ -78,10 +93,20 @@ Item {
         "Key_HomePage": Qt.Key_HomePage,
         "Key_Menu": Qt.Key_Menu,
         "Key_Back": Qt.Key_Back,
-        "Key_VolumeMute": Qt.Key_VolumeMute
+        "Key_VolumeMute": Qt.Key_VolumeMute,
+        "Key_MediaTogglePlayPause": Qt.Key_MediaTogglePlayPause,
+        "Key_MediaPlay": Qt.Key_MediaPlay,
+        "Key_MediaPause": Qt.Key_MediaPause,
+        "Key_MediaStop": Qt.Key_MediaStop,
+        "Key_MediaNext": Qt.Key_MediaNext,
+        "Key_MediaPrevious": Qt.Key_MediaPrevious
     })
 
     readonly property var actions: _loaded.actions
+
+    //! A call is up (audiod's inCall): the media keys are left to the focused
+    //! window, as they were before there was anywhere else for them to go.
+    property bool inCall: false
 
     //! Whether the default actions of Back, HomePage and Menu apply.
     property bool navigationKeysEnabled: true
@@ -101,6 +126,9 @@ Item {
     property bool _muted: false
     property bool _installed: false
 
+    //! The headset button's presses so far; see HeadsetButton.js.
+    property var _headset: HeadsetButton.initial()
+
     LunaService {
         id: service
         name: "com.webos.surfacemanager-cardshell"
@@ -109,6 +137,12 @@ Item {
     }
 
     KeyFilter { id: hardwareKeyFilter }
+
+    Timer {
+        id: headsetTimer
+        repeat: false
+        onTriggered: hardwareKeys._headsetStep(HeadsetButton.timeout(hardwareKeys._headset, Date.now()))
+    }
 
     /*!
      * \brief The default mapping: each key read at face value.
@@ -125,6 +159,12 @@ Item {
         d[Qt.Key_Menu] = "shell.launcher";
         d[Qt.Key_Back] = "shell.back";
         d[Qt.Key_VolumeMute] = "audio.mute";
+        d[Qt.Key_MediaTogglePlayPause] = "media.headset";
+        d[Qt.Key_MediaPlay] = "media.play";
+        d[Qt.Key_MediaPause] = "media.pause";
+        d[Qt.Key_MediaStop] = "media.stop";
+        d[Qt.Key_MediaNext] = "media.next";
+        d[Qt.Key_MediaPrevious] = "media.previous";
         return d;
     }
 
@@ -211,6 +251,14 @@ Item {
         if (action === undefined || action === "none")
             return hardwareKeys.resultNextPolicy;
 
+        if (action.indexOf("media.") === 0) {
+            if (hardwareKeys.inCall)
+                return hardwareKeys.resultNextPolicy;
+            if (!autoRepeat)
+                hardwareKeys._media(action, pressed, Date.now());
+            return hardwareKeys.resultAccepted;
+        }
+
         // Act on the press. A release is the same event twice and an auto-repeat
         // would answer a call or toggle mute for as long as the key is held.
         if (pressed && !autoRepeat)
@@ -220,6 +268,42 @@ Item {
         // own gives whatever has focus half an event.
         return hardwareKeys._consumes(action) ? hardwareKeys.resultAccepted
                                               : hardwareKeys.resultNextPolicy;
+    }
+
+    //! A media key: the headset button is counted on press and release, the
+    //! others go on the press.
+    function _media(action, pressed, now) {
+        if (action === "media.headset") {
+            hardwareKeys._headsetStep(pressed ? HeadsetButton.press(hardwareKeys._headset, now)
+                                              : HeadsetButton.release(hardwareKeys._headset, now));
+            return;
+        }
+        if (pressed)
+            hardwareKeys._sendMediaKey(action.substring("media.".length));
+    }
+
+    //! Acts on what a step of the headset button's count decided, and runs its timer.
+    function _headsetStep(step) {
+        headsetTimer.stop();
+        if (step.timerMs > 0) {
+            headsetTimer.interval = step.timerMs;
+            headsetTimer.start();
+        }
+        // "hold" is left free.
+        if (step.action !== "" && step.action !== "hold")
+            hardwareKeys._sendMediaKey(step.action);
+    }
+
+    function _sendMediaKey(keyEvent) {
+        hardwareKeys.mediaKeySent(keyEvent);
+        hardwareKeys._call("luna://com.webos.service.mediacontroller/injectMediaKeyEvent",
+                           hardwareKeys._mediaKeyPayload(keyEvent));
+    }
+
+    //! The phone has one display; mediacontroller hands the key to the
+    //! session on it that last started playing.
+    function _mediaKeyPayload(keyEvent) {
+        return JSON.stringify({ displayId: 0, keyEvent: keyEvent });
     }
 
     //! Every action we handle swallows its key: having acted on it, letting it
