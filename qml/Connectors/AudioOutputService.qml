@@ -41,6 +41,8 @@ Item {
     property bool headsetMic: false
     property bool bluetoothAudio: false
     property string bluetoothAudioName: ""
+    /* A call is up, cellular or VoIP. */
+    property bool inCall: false
 
     /* Emitted when headphones are plugged or pulled, or a Bluetooth headset
      * starts or stops carrying the audio. kind is "wired" or "bluetooth".
@@ -72,6 +74,7 @@ Item {
             audioOutputService.headsetMic = false;
             audioOutputService.bluetoothAudio = false;
             audioOutputService.bluetoothAudioName = "";
+            audioOutputService.inCall = false;
             audioOutputService._hadFirstStatus = false;
             return;
         }
@@ -94,6 +97,7 @@ Item {
         audioOutputService.headsetMic = payload.headsetMic === true;
         audioOutputService.bluetoothAudio = payload.bluetoothAudio === true;
         audioOutputService.bluetoothAudioName = payload.bluetoothAudioName || "";
+        audioOutputService.inCall = payload.inCall === true;
 
         if (!audioOutputService._hadFirstStatus) {
             audioOutputService._hadFirstStatus = true;

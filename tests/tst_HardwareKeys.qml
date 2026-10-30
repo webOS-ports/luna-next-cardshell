@@ -106,4 +106,95 @@ TestCase {
         compare(keys.actionFor(Qt.Key_Back), "none");
         compare(press(keys, Qt.Key_Back), keys.resultNextPolicy);
     }
+
+    SignalSpy {
+        id: mediaSpy
+        signalName: "mediaKeySent"
+    }
+
+    function mediaKeys(inCall) {
+        const keys = createKeys("", false);
+        keys.inCall = inCall;
+        mediaSpy.target = keys;
+        mediaSpy.clear();
+        return keys;
+    }
+
+    function sent() {
+        var out = [];
+        for (var i = 0; i < mediaSpy.count; ++i)
+            out.push(mediaSpy.signalArguments[i][0]);
+        return out.join(",");
+    }
+
+    function test_mediaKeysGoToMediacontroller_data() {
+        return [
+            { tag: "Key_MediaPlay", key: Qt.Key_MediaPlay, keyEvent: "play" },
+            { tag: "Key_MediaPause", key: Qt.Key_MediaPause, keyEvent: "pause" },
+            { tag: "Key_MediaStop", key: Qt.Key_MediaStop, keyEvent: "stop" },
+            { tag: "Key_MediaNext", key: Qt.Key_MediaNext, keyEvent: "next" },
+            { tag: "Key_MediaPrevious", key: Qt.Key_MediaPrevious, keyEvent: "previous" }
+        ];
+    }
+
+    function test_mediaKeysGoToMediacontroller(data) {
+        const keys = mediaKeys(false);
+        compare(press(keys, data.key), keys.resultAccepted, "not handed to the focused window too");
+        compare(sent(), data.keyEvent, "sent once, on the press");
+    }
+
+    function test_theHeadsetButtonIsCounted() {
+        const keys = mediaKeys(false);
+        compare(press(keys, Qt.Key_MediaTogglePlayPause), keys.resultAccepted);
+        compare(sent(), "", "waits for a second press");
+        tryCompare(mediaSpy, "count", 1, 2000);
+        compare(sent(), "playPause");
+
+        mediaSpy.clear();
+        press(keys, Qt.Key_MediaTogglePlayPause);
+        press(keys, Qt.Key_MediaTogglePlayPause);
+        tryCompare(mediaSpy, "count", 1, 2000);
+        wait(600);
+        compare(sent(), "next", "two presses: the next track and nothing else");
+
+        mediaSpy.clear();
+        press(keys, Qt.Key_MediaTogglePlayPause);
+        press(keys, Qt.Key_MediaTogglePlayPause);
+        press(keys, Qt.Key_MediaTogglePlayPause);
+        compare(sent(), "previous", "three: the previous one, at once");
+    }
+
+    function test_anAutoRepeatIsNotAnotherPress() {
+        const keys = mediaKeys(false);
+        keys._onKey(Qt.Key_MediaNext, true, false, 0);
+        compare(keys._onKey(Qt.Key_MediaNext, true, true, 0), keys.resultAccepted);
+        keys._onKey(Qt.Key_MediaNext, false, false, 0);
+        compare(sent(), "next");
+    }
+
+    function test_inACallMediaKeysAreLeftAlone() {
+        const keys = mediaKeys(true);
+        compare(press(keys, Qt.Key_MediaTogglePlayPause), keys.resultNextPolicy);
+        compare(press(keys, Qt.Key_MediaPlay), keys.resultNextPolicy);
+        wait(600);
+        compare(mediaSpy.count, 0, "nothing may start the music under a call");
+    }
+
+    function test_aDeviceCanTurnTheHeadsetButtonOff() {
+        const keys = mediaKeys(false);
+        compare(keys.knownActions.indexOf("media.headset") >= 0, true);
+        compare(keys.keyNames["Key_MediaTogglePlayPause"], Qt.Key_MediaTogglePlayPause);
+        compare(keys.actionFor(Qt.Key_MediaTogglePlayPause), "media.headset");
+    }
+
+    function test_aHoldSendsNothing() {
+        const keys = mediaKeys(false);
+        keys._headsetStep({ action: "hold", timerMs: 0 });
+        compare(mediaSpy.count, 0, "a hold is left free");
+    }
+
+    function test_whatMediacontrollerIsSent() {
+        const keys = mediaKeys(false);
+        compare(JSON.parse(keys._mediaKeyPayload("next")), { displayId: 0, keyEvent: "next" });
+    }
 }

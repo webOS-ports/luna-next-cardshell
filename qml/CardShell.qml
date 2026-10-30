@@ -247,6 +247,8 @@ Rectangle {
                                (AppTweaks.hardwareNavigationKeysTweakValue !== "off" &&
                                 hardwareKeyboardStatus.hardwareKeyboardPresent)
 
+        inCall: shellAudioOutputService.inCall
+
         onLauncherToggleRequested: cardsArea.toggleLauncher()
     }
 
