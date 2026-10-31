@@ -45,6 +45,15 @@ Item {
         repeat: false
     }
 
+    /* Emitted each time the alert comes up, for CentreAlertSlot. */
+    signal shown()
+
+    /* Takes the alert down before its time, when another one takes the
+     * centre of the screen. */
+    function dismiss() {
+        hideTimer.stop();
+    }
+
     /*
      * No scrim, matching legacy. VolumeControlAlertWindow painted no
      * background at all - its only fillRect is commented out - and bell_off.png
@@ -98,6 +107,7 @@ Item {
 
         image.source = source;
         hideTimer.restart();
+        root.shown();
     }
 
     /*

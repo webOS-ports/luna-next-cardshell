@@ -207,6 +207,12 @@ Rectangle {
         onOutputChanged: (kind, connected) => audioOutputAlert.showOutput(kind, connected)
     }
 
+    /* The three alerts above all sit in the middle of the screen: the newest
+     * replaces the one showing, as LunaSysMgr's single alert window did. */
+    CentreAlertSlot {
+        alerts: [volumeControlAlert, audioOutputAlert, killSwitchAlert]
+    }
+
     /* "Allow USB debugging?" for a computer adbd does not know yet: over the
      * alerts, since it waits on the user and refuses once it times out. */
     UsbDebuggingPromptArea {
