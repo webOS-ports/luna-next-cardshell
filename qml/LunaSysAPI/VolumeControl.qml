@@ -17,8 +17,11 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
+
+import "VolumeKeyRequest.js" as VolumeKeyRequest
 
 Item {
     id: volumeControl
@@ -42,12 +45,43 @@ Item {
     // is what the old service did.
     property string soundOutput: "pcm_output"
     property int currentVolume: 50
-    readonly property int volumeStep: 10
+    readonly property int volumeStep: VolumeKeyRequest.step
+
+    //! A call is up: the keys move its volume (see VolumeKeyRequest.js).
+    property bool inCall: false
 
     Component.onCompleted: {
         audioService.subscribe("luna://com.webos.service.audio/master/getVolume",
                                JSON.stringify({"subscribe": true}),
                                handleVolumeStatus, handleVolumeError);
+    }
+
+    // Subscribed again whenever audiod comes back, so a restarted audiod
+    // does not leave the keys on the master volume during a call.
+    ServiceStatus {
+        id: phoneStatusService
+        serviceName: "com.palm.audio"
+        clientName: "com.webos.surfacemanager-cardshell"
+
+        onAvailableChanged: {
+            if (available) {
+                audioService.subscribe("luna://com.palm.audio/phone/status",
+                                       JSON.stringify({"subscribe": true}),
+                                       volumeControl.handlePhoneStatus,
+                                       volumeControl.handlePhoneError);
+            } else {
+                volumeControl.inCall = false;
+            }
+        }
+    }
+
+    function handlePhoneStatus(message) {
+        volumeControl.inCall = VolumeKeyRequest.inCallOf(JSON.parse(message.payload));
+    }
+
+    function handlePhoneError(message) {
+        console.log("VolumeControl: cannot follow the call: " + message.payload);
+        volumeControl.inCall = false;
     }
 
     function handleVolumeStatus(message) {
@@ -64,23 +98,21 @@ Item {
         console.log("VolumeControl: cannot track the volume: " + message.payload);
     }
 
-    // soundOutput is required by audiod's schema (REQUIRED_2(soundOutput, volume));
-    // sending {} - as the calls to the old service did - is rejected outright.
-    function applyVolume(volume) {
-        if (volume < 0) volume = 0;
-        if (volume > 100) volume = 100;
-        volumeControl.currentVolume = volume;
-        audioService.call("luna://com.webos.service.audio/master/setVolume",
-                          JSON.stringify({"soundOutput": volumeControl.soundOutput,
-                                          "volume": volume}), null, null);
+    function handleKey(up) {
+        var request = VolumeKeyRequest.forKey(up, volumeControl.inCall,
+                                              volumeControl.soundOutput,
+                                              volumeControl.currentVolume);
+        if (request.volume >= 0)
+            volumeControl.currentVolume = request.volume;
+        audioService.call(request.uri, JSON.stringify(request.payload), null, null);
     }
 
     function handleVolumeUp() {
-        applyVolume(volumeControl.currentVolume + volumeControl.volumeStep);
+        handleKey(true);
     }
 
     function handleVolumeDown() {
-        applyVolume(volumeControl.currentVolume - volumeControl.volumeStep);
+        handleKey(false);
     }
 
     function setMute(mute) {

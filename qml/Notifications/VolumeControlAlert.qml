@@ -23,6 +23,8 @@ import LunaNext.Common 0.1
 import "../Connectors"
 import "../Utils"
 
+import "VolumeAlert.js" as VolumeAlert
+
 Item {
     id: root
 
@@ -101,6 +103,21 @@ Item {
         }
     }
 
+    // The call volume, which the volume keys move during a call: audiod
+    // tells it on /phone/status with "changed":["volume"].
+    ServiceStatus {
+        id: phoneServiceStatus
+        serviceName: "com.palm.audio"
+        clientName: "com.webos.surfacemanager-cardshell"
+
+        onAvailableChanged: {
+            if (available)
+                audioService.subscribe("luna://com.palm.audio/phone/status",
+                                       "{\"subscribe\":true}",
+                                       root.onPhoneStatusChanged, root.onError);
+        }
+    }
+
     LunaService {
         id: audioService
 
@@ -148,16 +165,27 @@ Item {
             image.height = Units.gu(9.6)
         }
         else {
-            var normalizedVolume = 0;
-            if (response.volume > 0)
-                normalizedVolume = ((Math.round(response.volume/11))*10);
-            if (normalizedVolume < 0)
-                normalizedVolume = 0;
-            image.source = ("../images/notification-music-indicator-" + normalizedVolume + ".png");
+            image.source = VolumeAlert.musicImage(response.volume);
             image.width = Units.gu(24)
             image.height = Units.gu(7.2)
         }
 
+        root.visible = true;
+        hideTimer.restart();
+        root.shown();
+    }
+
+    // Only the user changing it: a route change or the call starting is
+    // told on the same subscription without "changed". No click: the call
+    // is in the user's ear, and legacy webOS played none for the phone.
+    function onPhoneStatusChanged(message) {
+        var payload = JSON.parse(message.payload);
+        if (!VolumeAlert.isCallVolumeChange(payload))
+            return;
+
+        image.source = VolumeAlert.phoneImage(payload.volume);
+        image.width = Units.gu(24)
+        image.height = Units.gu(7.2)
         root.visible = true;
         hideTimer.restart();
         root.shown();
