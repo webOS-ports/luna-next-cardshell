@@ -89,8 +89,8 @@ function release(state, now) {
 function timeout(state, now) {
     if (state.down) {
         if (!state.held && now - state.downAt >= holdMs) {
-            // Left free for a voice assistant. The presses before it go
-            // with it when the button comes up.
+            // Rejects a ringing call; nothing else takes it yet. The
+            // presses before it go with it when the button comes up.
             state.held = true;
             return { action: "hold", timerMs: 0 };
         }

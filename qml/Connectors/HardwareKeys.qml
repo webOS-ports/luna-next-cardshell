@@ -252,7 +252,10 @@ Item {
             return hardwareKeys.resultNextPolicy;
 
         if (action.indexOf("media.") === 0) {
-            if (hardwareKeys.inCall)
+            // During a call the media keys are the focused window's, but the
+            // headset button is the call's: mediacontroller hands it to the
+            // Phone app, which answers, hangs up or rejects with it.
+            if (hardwareKeys.inCall && action !== "media.headset")
                 return hardwareKeys.resultNextPolicy;
             if (!autoRepeat)
                 hardwareKeys._media(action, pressed, Date.now());
@@ -289,8 +292,9 @@ Item {
             headsetTimer.interval = step.timerMs;
             headsetTimer.start();
         }
-        // "hold" is left free.
-        if (step.action !== "" && step.action !== "hold")
+        // "hold" too: during a call it rejects (the Phone app, through
+        // mediacontroller); with none, nothing takes it.
+        if (step.action !== "")
             hardwareKeys._sendMediaKey(step.action);
     }
 

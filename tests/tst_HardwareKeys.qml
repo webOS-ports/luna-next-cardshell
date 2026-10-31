@@ -174,10 +174,30 @@ TestCase {
 
     function test_inACallMediaKeysAreLeftAlone() {
         const keys = mediaKeys(true);
-        compare(press(keys, Qt.Key_MediaTogglePlayPause), keys.resultNextPolicy);
         compare(press(keys, Qt.Key_MediaPlay), keys.resultNextPolicy);
+        compare(press(keys, Qt.Key_MediaNext), keys.resultNextPolicy);
         wait(600);
         compare(mediaSpy.count, 0, "nothing may start the music under a call");
+    }
+
+    function test_inACallTheHeadsetButtonIsTheCalls() {
+        // mediacontroller gives it to the Phone app: a press answers or hangs up
+        const keys = mediaKeys(true);
+        compare(press(keys, Qt.Key_MediaTogglePlayPause), keys.resultAccepted,
+                "handed to the focused window as well");
+        tryCompare(mediaSpy, "count", 1, 2000);
+        compare(sent(), "playPause");
+    }
+
+    function test_inACallAHoldIsSent() {
+        // a long press rejects a ringing call
+        const keys = mediaKeys(true);
+        compare(keys._onKey(Qt.Key_MediaTogglePlayPause, true, false, 0), keys.resultAccepted);
+        tryCompare(mediaSpy, "count", 1, 3000);
+        compare(sent(), "hold");
+        compare(keys._onKey(Qt.Key_MediaTogglePlayPause, false, false, 0), keys.resultAccepted);
+        wait(600);
+        compare(sent(), "hold", "the release after a hold is no press");
     }
 
     function test_aDeviceCanTurnTheHeadsetButtonOff() {
@@ -187,10 +207,12 @@ TestCase {
         compare(keys.actionFor(Qt.Key_MediaTogglePlayPause), "media.headset");
     }
 
-    function test_aHoldSendsNothing() {
+    function test_aHoldIsSentAsHold() {
+        // mediacontroller hands it to the Phone app during a call and drops it otherwise
         const keys = mediaKeys(false);
         keys._headsetStep({ action: "hold", timerMs: 0 });
-        compare(mediaSpy.count, 0, "a hold is left free");
+        compare(sent(), "hold");
+        compare(JSON.parse(keys._mediaKeyPayload("hold")), { displayId: 0, keyEvent: "hold" });
     }
 
     function test_whatMediacontrollerIsSent() {
