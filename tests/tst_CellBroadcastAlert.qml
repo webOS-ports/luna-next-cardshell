@@ -15,6 +15,8 @@ Item {
 
     property var calls: []
     property var vibrations: []
+    property var masterStatus: null
+    property var muteCalls: []
 
     CellBroadcastAlert {
         id: alert
@@ -24,6 +26,14 @@ Item {
             calls = calls.concat([uri]);
             if (payload.duration)
                 vibrations = vibrations.concat([payload.duration]);
+        }
+
+        function readMaster(onStatus) {
+            onStatus(masterStatus);
+        }
+
+        function setMasterMute(soundOutput, mute) {
+            muteCalls = muteCalls.concat([soundOutput + ":" + mute]);
         }
     }
 
@@ -43,6 +53,10 @@ Item {
             alert.toneOwed = false;
             alert.inCall = false;
             alert.headphones = false;
+            alert.throughMute = false;
+            alert._liftedOutput = "";
+            masterStatus = { muted: true, soundOutput: "pcm_output" };
+            muteCalls = [];
             calls = [];
             vibrations = [];
         }
@@ -176,6 +190,43 @@ Item {
             tryVerify(function() { return !alert.toneOwed; }, 5000);
             alert.show("Threat", shortTone());
             tryCompare(player, "playbackState", MediaPlayer.PlayingState);
+        }
+
+        function test_a_mute_stays_without_the_override() {
+            alert.show("one", shortTone(), false);
+            compare(muteCalls, []);
+        }
+
+        function test_the_override_lifts_the_mute_and_puts_it_back() {
+            alert.show("one", shortTone(), true);
+            compare(muteCalls, ["pcm_output:false"]);
+            alert.acknowledge();
+            compare(muteCalls, ["pcm_output:false", "pcm_output:true"]);
+            verify(!alert.throughMute);
+        }
+
+        function test_the_override_leaves_an_unmuted_phone_alone() {
+            masterStatus = { muted: false, soundOutput: "pcm_output" };
+            alert.show("one", shortTone(), true);
+            alert.acknowledge();
+            compare(muteCalls, []);
+        }
+
+        function test_the_override_waits_for_a_call_to_end() {
+            alert.inCall = true;
+            alert.show("one", shortTone(), true);
+            compare(muteCalls, []);
+            alert.inCall = false;
+            compare(muteCalls, ["pcm_output:false"]);
+            alert.inCall = true;
+            compare(muteCalls, ["pcm_output:false", "pcm_output:true"]);
+        }
+
+        function test_no_volume_status_leaves_the_mute() {
+            masterStatus = null;
+            alert.show("one", shortTone(), true);
+            alert.acknowledge();
+            compare(muteCalls, []);
         }
 
         function test_markup_in_a_message_stays_text() {

@@ -36,7 +36,7 @@ Item {
     property int repeatWindowMs: 24 * 60 * 60 * 1000
 
     /* soundFile is empty for a warning that does not get the tone. */
-    signal warningReceived(string text, string soundFile)
+    signal warningReceived(string text, string soundFile, bool throughMute)
 
     property var _seen: ({})
 
@@ -46,7 +46,8 @@ Item {
         if (CellBroadcast.isRepeat(_seen, properties.Topic, text, Date.now(), repeatWindowMs))
             return;
         console.log("CellBroadcastService: warning on " + modemPath + " topic " + properties.Topic);
-        warningReceived(text, CellBroadcast.attentionSoundFile(properties));
+        warningReceived(text, CellBroadcast.attentionSoundFile(properties),
+                        CellBroadcast.soundsThroughMute(properties));
     }
 
     DBusInterface {

@@ -24,6 +24,11 @@
 
 .pragma library
 
+// Channels whose tone sounds through the mute: 4371, which NL-Alert uses for
+// every alert, and 4372. Android's Dutch configuration marks the same two
+// override_dnd. Not tied to the country, so a mute abroad gives way as well.
+var throughMuteTopics = [4371, 4372];
+
 // 3GPP TS 23.041 9.4.1.2.2: ETWS from 0x1100, CMAS and EU-Alert up to 0x112F.
 // Past that are the geo-fencing trigger (4400), which is no message for people,
 // and identifiers not assigned yet.
@@ -34,6 +39,11 @@ var lastWarningTopic = 4399;
 function attentionSoundFile(properties) {
     var file = properties ? properties.CellBroadcastAttentionSoundFile : "";
     return file ? String(file) : "";
+}
+
+/// Whether this broadcast's tone sounds even with the phone muted.
+function soundsThroughMute(properties) {
+    return !!properties && throughMuteTopics.indexOf(properties.Topic) !== -1;
 }
 
 /// Whether a broadcast is a warning for the screen, not an ordinary one.

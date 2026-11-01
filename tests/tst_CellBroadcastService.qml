@@ -41,6 +41,7 @@ TestCase {
         compare(warnings.count, 1);
         compare(warnings.signalArguments[0][0], "Dreiging");
         compare(warnings.signalArguments[0][1], toneFile);
+        compare(warnings.signalArguments[0][2], false);
     }
 
     function test_warning_without_the_tone_file_still_shows() {
@@ -48,6 +49,15 @@ TestCase {
         service.handleBroadcast("/ril_0", "Dreiging", { Topic: 4370 });
         compare(warnings.count, 1);
         compare(warnings.signalArguments[0][1], "");
+    }
+
+    function test_the_real_nl_alert_channels_sound_through_a_mute() {
+        service.handleBroadcast("/ril_0", "een", attention(4371));
+        service.handleBroadcast("/ril_0", "twee", attention(4372));
+        service.handleBroadcast("/ril_0", "drie", attention(4373));
+        compare(warnings.signalArguments[0][2], true);
+        compare(warnings.signalArguments[1][2], true);
+        compare(warnings.signalArguments[2][2], false);
     }
 
     function test_range_of_warnings() {

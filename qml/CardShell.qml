@@ -231,7 +231,8 @@ Rectangle {
     }
 
     CellBroadcastService {
-        onWarningReceived: (text, soundFile) => cellBroadcastAlert.show(text, soundFile)
+        onWarningReceived: (text, soundFile, throughMute) =>
+            cellBroadcastAlert.show(text, soundFile, throughMute)
     }
 
     PowerMenu {

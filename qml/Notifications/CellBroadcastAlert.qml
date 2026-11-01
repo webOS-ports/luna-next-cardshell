@@ -31,8 +31,9 @@ import "../Utils"
  *
  * It plays on palerts, whose volume is its own: the ringtone slider does not
  * turn a warning down, and no system volume has to be raised and put back
- * for it. The master mute does apply, as the ringer mode does on Android for a
- * channel not marked to override it.
+ * for it. The master mute applies, as the ringer mode does on Android for a
+ * channel not marked to override it, except on a channel that is: the mute is
+ * lifted for as long as the tone plays and put back after it.
  *
  * Never during a call. On MediaTek's HAL whatever reaches the primary sink
  * during a call goes to the modem as background sound, so a call gets no tone
@@ -57,15 +58,38 @@ Item {
     property bool toneOwed: false
     readonly property bool toneWanted: toneOwed && !inCall
 
+    /* The owed tone sounds through the mute. */
+    property bool throughMute: false
+    readonly property bool liftMute: toneWanted && throughMute
+    /* The output whose mute was lifted, to put it back on. */
+    property string _liftedOutput: ""
+
+    onLiftMuteChanged: {
+        if (liftMute) {
+            readMaster(function(status) {
+                if (root.liftMute && status && status.muted) {
+                    root._liftedOutput = status.soundOutput;
+                    root.setMasterMute(status.soundOutput, false);
+                }
+            });
+        } else if (_liftedOutput.length > 0) {
+            setMasterMute(_liftedOutput, true);
+            _liftedOutput = "";
+        }
+    }
+
+    onToneOwedChanged: if (!toneOwed) throughMute = false
+
     readonly property string currentText: pending.length > 0 ? pending[0] : ""
 
     visible: pending.length > 0
 
-    function show(text, soundFile) {
+    function show(text, soundFile, soundsThroughMute) {
         pending = pending.concat([text]);
         vibrate();
         if (soundFile.length > 0) {
             tone.source = "file://" + soundFile;
+            throughMute = throughMute || soundsThroughMute === true;
             toneOwed = true;
         }
         wakeDisplay();
@@ -83,6 +107,21 @@ Item {
         service.call(uri, JSON.stringify(payload), undefined, function(message) {
             console.warn("CellBroadcastAlert: " + uri + " failed: " + message);
         });
+    }
+
+    function readMaster(onStatus) {
+        service.call("luna://com.webos.service.audio/master/getVolume", "{}",
+                     function(message) {
+                         onStatus(JSON.parse(message.payload).volumeStatus);
+                     },
+                     function(message) {
+                         console.warn("CellBroadcastAlert: master/getVolume failed: " + message);
+                     });
+    }
+
+    function setMasterMute(soundOutput, mute) {
+        callService("luna://com.webos.service.audio/master/muteVolume",
+                    {"soundOutput": soundOutput, "mute": mute});
     }
 
     /* ETSI TS 102 900 6.1.2 asks for a vibration cadence of its own, so it
