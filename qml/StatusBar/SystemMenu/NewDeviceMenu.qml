@@ -149,6 +149,9 @@ Item {
         name: "cellular"
     }
 
+    // A device the user disconnects here is not brought back by bluetooth2.
+    property BluetoothDisconnect bluetoothDisconnect: BluetoothDisconnect { }
+
     BluetoothDevicesModel {
         id: bluetoothList
         filterRole: 256 + 109 /*PairedRole*/
@@ -867,7 +870,7 @@ Item {
                         (BluetoothManager.connectingDevice &&
                          BluetoothManager.connectingDevice.address === delegateDevice.Address))
                     {
-                        BluetoothManager.disconnectDeviceAddress(delegateDevice.Address);
+                        bluetoothDisconnect.disconnect(delegateDevice.Address);
                         closeMenuTimer.interval = 350;
                         closeMenuTimer.start();
                     }
