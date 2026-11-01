@@ -220,6 +220,20 @@ Rectangle {
         z: 950
     }
 
+    /* Over everything, the lock screen included: see CellBroadcastAlert. */
+    CellBroadcastAlert {
+        id: cellBroadcastAlert
+        z: 950
+        anchors.fill: parent
+
+        inCall: shellAudioOutputService.inCall
+        headphones: shellAudioOutputService.headset || shellAudioOutputService.bluetoothAudio
+    }
+
+    CellBroadcastService {
+        onWarningReceived: (text, soundFile) => cellBroadcastAlert.show(text, soundFile)
+    }
+
     PowerMenu {
         id: powerMenuAlert
         z: 800
