@@ -34,6 +34,20 @@ Item {
 
     property bool _hadFirstAudioStatus: false
 
+    /* The output the last status was about, to tell a routing change from
+     * a volume change. */
+    property string _lastSoundOutput: ""
+
+    /* Emitted each time the alert comes up, for CentreAlertSlot. */
+    signal shown()
+
+    /* Takes the alert down before its time, when another one takes the
+     * centre of the screen. */
+    function dismiss() {
+        hideTimer.stop();
+        root.visible = false;
+    }
+
     // Was a hand-rolled playFeedback call of its own, which meant the volume
     // click was the one feedback sound Settings' "System Sounds" switch did
     // not silence.
@@ -99,10 +113,31 @@ Item {
         // audio-service had them at the top level. Accept either.
         var response = payload.hasOwnProperty("volumeStatus") ? payload.volumeStatus : payload;
 
+        var previousOutput = _lastSoundOutput;
+        if (response.hasOwnProperty("soundOutput"))
+            _lastSoundOutput = response.soundOutput;
+
         if (!_hadFirstAudioStatus) {
             _hadFirstAudioStatus = true;
             return;
         }
+
+        /*
+         * A status that comes from the audio moving somewhere else is not
+         * the user changing the volume, and shows nothing. LunaSysMgr's
+         * NativeAlertManager::cbAudioControlsChanged() gated the volume alert
+         * the same way: a change that came with a "scenario" change (a
+         * headset plugged in, Bluetooth taking over) never reached
+         * actOnChanged(). Without that, the volume level came up on top of
+         * the headphones AudioOutputAlert shows for the same plug.
+         *
+         * audiod's equivalents: it restores the stored volume of an output
+         * that connects and reports that with callerId "internal"
+         * (OSEMasterVolumeManager::DBSetVoulumeCallbackPA), and a status
+         * naming another output than the last one is the route changing.
+         */
+        if (isRoutingChange(payload, response, previousOutput))
+            return;
 
         adjustVolumeSound.play();
 
@@ -124,7 +159,15 @@ Item {
         }
 
         root.visible = true;
-        hideTimer.start();
+        hideTimer.restart();
+        root.shown();
+    }
+
+    function isRoutingChange(payload, response, previousOutput) {
+        if (payload.callerId === "internal")
+            return true;
+        return previousOutput !== "" && response.hasOwnProperty("soundOutput") &&
+               response.soundOutput !== previousOutput;
     }
 
     function onError(message) {
