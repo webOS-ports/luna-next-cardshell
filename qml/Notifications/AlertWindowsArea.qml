@@ -36,7 +36,7 @@ Rectangle {
         var height = 0;
         for (var i = 0; i < listPopupAlertsModel.count; ++i) {
             var window = listPopupAlertsModel.get(i);
-            if (!window || (rootAlertsArea.screenLocked && !rootAlertsArea.isCallAlert(window)))
+            if (!window || (rootAlertsArea.screenLocked && !rootAlertsArea.isLockScreenAlert(window)))
                 continue;
             if (window.height > height)
                 height = window.height;
@@ -64,6 +64,24 @@ Rectangle {
     readonly property bool callAlertShowing: {
         for (var i = 0; i < listPopupAlertsModel.count; ++i) {
             if (rootAlertsArea.isCallAlert(listPopupAlertsModel.get(i)))
+                return true;
+        }
+        return false;
+    }
+    /*!
+     * An alert that asks to be usable while the device is locked - the Clock's
+     * alarm, opened with the window attribute clickableWhenLocked, which WAM
+     * hands on as LuneOS_clickablewhenlocked - is shown over the lock screen
+     * too, as LunaSysMgr's LockWindow showed the active popup alert there
+     * (PopUpAlert). Unlike a call, a tap outside it still closes it.
+     */
+    function isLockScreenAlert(window) {
+        return rootAlertsArea.isCallAlert(window) ||
+               (!!window && String(window.windowProperties["LuneOS_clickablewhenlocked"]) === "true");
+    }
+    readonly property bool lockScreenAlertShowing: {
+        for (var i = 0; i < listPopupAlertsModel.count; ++i) {
+            if (rootAlertsArea.isLockScreenAlert(listPopupAlertsModel.get(i)))
                 return true;
         }
         return false;
@@ -129,10 +147,11 @@ Rectangle {
             // of it in the phone's bar; it comes back once that alert is
             // answered. A tablet shows the alert in the middle instead, clear
             // of this panel.
-            // A call alert stays in front of a notification alert, and is the
-            // only kind shown over the lock screen.
+            // A call alert stays in front of a notification alert. Over the
+            // lock screen only a call and an alert that asked for it show.
             readonly property bool isCall: rootAlertsArea.isCallAlert(alertItem.window)
-            visible: alertItem.isCall || !(notificationAlerts.showing && !Settings.tabletUi) && !rootAlertsArea.screenLocked
+            visible: alertItem.isCall || !(notificationAlerts.showing && !Settings.tabletUi)
+                     && (!rootAlertsArea.screenLocked || rootAlertsArea.isLockScreenAlert(alertItem.window))
             z: alertItem.isCall ? 2 : 0
             x: rootAlertsArea.contentMargin
             y: rootAlertsArea.height - rootAlertsArea.contentMargin - height

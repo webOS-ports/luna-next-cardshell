@@ -455,8 +455,9 @@ WindowManager {
 
         // The tablet panel is a rounded black rectangle even when empty, so it must only exist
         // while an alert does (maxHeight is 0 otherwise); the phone bar is a plain strip.
-        // Over the lock screen only for an incoming call.
-        visible: (!lockScreen.visible || callAlertShowing) && (!Settings.tabletUi || maxHeight > 0)
+        // Over the lock screen only for an incoming call or an alert that asked
+        // to be usable while locked, the alarm.
+        visible: (!lockScreen.visible || lockScreenAlertShowing) && (!Settings.tabletUi || maxHeight > 0)
         windowManagerItem: windowManager
         compositorInstance: compositor
         screenLocked: lockScreen.visible
@@ -464,7 +465,7 @@ WindowManager {
         maxAlertHeight: modalSpaceBottom - (statusBarInstance.y + statusBarInstance.height)
                         - (Settings.tabletUi ? 2 * tabletInset : 0)
 
-        z: lockScreen.visible && callAlertShowing ? lockScreen.z + 1 : 4 // just under the keyboard
+        z: lockScreen.visible && lockScreenAlertShowing ? lockScreen.z + 1 : 4 // just under the keyboard
     }
 
     KeyboardOverlay {
