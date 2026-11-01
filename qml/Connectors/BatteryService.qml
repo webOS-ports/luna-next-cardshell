@@ -73,22 +73,18 @@ Item {
         audioOutput: AudioOutput {}
     }
 
-    MediaPlayer {
-        id: batteryLowSound
-        source: "/usr/palm/sounds/battery_low.mp3"
-        audioOutput: AudioOutput {}
-    }
-
+    /*
+     * The charged sound is the only one the shell plays for the battery, as in LunaSysMgr's
+     * StatusBarBattery. A low battery is systemui's to announce (PowerdService.js): the 20% and 10% banners
+     * carry the notification tone, the 5% popup carries battery_low.mp3 in its own sound attribute. Playing
+     * anything here as well would sound each of them twice.
+     */
     onPercentageChanged: {
         if (percentage < 95)
             _playSoundWhenCharged = true;
         else if (percentage === 100 && _playSoundWhenCharged) {
             _playSoundWhenCharged = false;
             chargedSound.play();
-        }
-        else if ((percentage === 20 || percentage === 10 || percentage === 5) && _playSoundWhenCharged)
-        {
-            batteryLowSound.play();
         }
     }
 
