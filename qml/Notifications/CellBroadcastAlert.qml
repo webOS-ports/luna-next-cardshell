@@ -82,6 +82,10 @@ Item {
 
     readonly property string currentText: pending.length > 0 ? pending[0] : ""
 
+    /* Read at arm's length, possibly in a hurry. */
+    readonly property real titleSize: FontUtils.sizeToPixels("x-large")
+    readonly property real messageSize: FontUtils.sizeToPixels("large") * 1.2
+
     visible: pending.length > 0
 
     function show(text, soundFile, soundsThroughMute) {
@@ -230,7 +234,7 @@ Item {
             width: content.width
             text: "Emergency Alert"
             color: "white"
-            font.pixelSize: FontUtils.sizeToPixels("large")
+            font.pixelSize: root.titleSize
             font.bold: true
             horizontalAlignment: Text.AlignHCenter
         }
@@ -240,18 +244,21 @@ Item {
             id: messageArea
             width: content.width
             height: content.height - title.height - okButton.height - 2 * content.spacing
-            contentHeight: message.height
+            contentHeight: message.y + message.height
             clip: true
 
             Text {
                 id: message
                 objectName: "cellBroadcastMessage"
                 width: messageArea.width
+                // In the middle of the screen, unless it needs the whole area.
+                y: Math.max(0, (messageArea.height - height) / 2)
                 // Network text, so it is never taken for markup.
                 textFormat: Text.PlainText
                 text: root.currentText
                 color: "white"
-                font.pixelSize: FontUtils.sizeToPixels("medium")
+                font.pixelSize: root.messageSize
+                horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
             }
         }

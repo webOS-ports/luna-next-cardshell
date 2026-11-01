@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import QtTest 1.0
+import LunaNext.Common 0.1
 import QtMultimedia 6.3
 
 import "../qml/Notifications"
@@ -63,6 +64,36 @@ Item {
 
         function called(uri) {
             return calls.filter(function(c) { return c === uri; }).length;
+        }
+
+        function messageItem() {
+            return findChild(alert, "cellBroadcastMessage");
+        }
+
+        function test_a_short_message_sits_in_the_middle() {
+            alert.show("Dreiging", "");
+            var text = messageItem();
+            compare(text.horizontalAlignment, Text.AlignHCenter);
+            var middle = text.mapToItem(alert, 0, text.height / 2).y;
+            verify(Math.abs(middle - alert.height / 2) < alert.height / 8,
+                   "middle at " + middle + " of " + alert.height);
+        }
+
+        function test_a_long_message_starts_at_the_top_and_scrolls() {
+            var long = "";
+            for (var i = 0; i < 400; i++)
+                long += "Dreiging in uw omgeving. ";
+            alert.show(long, "");
+            var text = messageItem();
+            compare(text.y, 0);
+            var area = text.parent.parent;
+            verify(area.contentHeight > area.height);
+            verify(text.mapToItem(alert, 0, 0).y > 0);
+        }
+
+        function test_the_message_is_larger_than_the_shell_text() {
+            verify(messageItem().font.pixelSize > FontUtils.sizeToPixels("large"));
+            verify(alert.titleSize > alert.messageSize);
         }
 
         function test_hidden_with_nothing_to_show() {
