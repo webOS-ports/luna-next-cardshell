@@ -22,6 +22,7 @@ import WebOSCoreCompositor 1.0
 import LuneOS.Service 1.0
 
 import "../Utils"
+import "NotificationSound.js" as NotificationSound
 
 Rectangle {
     id: rootAlertsArea
@@ -116,6 +117,40 @@ Rectangle {
             // TBC: is this check correct ?
             return (surfaceItem.type === "_WEBOS_WINDOW_TYPE_SYSTEM_UI" &&
                     surfaceItem.windowProperties["LuneOS_window"] === "popupalert");
+        }
+    }
+
+    SoundNotifications {
+        id: soundNotifications
+        objectName: "soundNotifications"
+        tones: typeof preferences === "undefined" ? null : preferences
+    }
+
+    /*
+     * A popup alert's sound, the "sound" and "soundclass" attributes of its
+     * window.open() or what setAlertSound() set, as LunaSysMgr's AlertWindow
+     * played it: once, when the window shows, and cut off when it goes. The
+     * delegates below move from window to window as alerts close, so this
+     * goes by the windows themselves. Over the lock screen as well: a reminder
+     * sounds with the display off, even though its window waits.
+     */
+    QtObject {
+        id: alertSounds
+
+        property int count: listPopupAlertsModel.count
+        property var known: []
+
+        function start(window) {
+            var properties = window.windowProperties;
+            return soundNotifications.play(properties["LuneOS_soundclass"] || "",
+                                           properties["LuneOS_sound"] || "", -1, false, true);
+        }
+
+        onCountChanged: {
+            var windows = [];
+            for (var i = 0; i < listPopupAlertsModel.count; ++i)
+                windows.push(listPopupAlertsModel.get(i));
+            known = NotificationSound.trackAlerts(windows, known, start, soundNotifications.stop);
         }
     }
 
