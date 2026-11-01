@@ -105,3 +105,112 @@ function play(path, streamClass, callAudiod, playLocally) {
         playLocally();
     });
 }
+
+// The folders an app's sound may come from. LunaSysMgr played any regular file
+// an app named. Here the name reaches a media player in the shell from any app,
+// so it has to be a sound where sounds live - the system's, an app's own, or
+// the user's media - and not, say, a device node or a file of another's.
+var soundFolders = [
+    "/usr/palm/sounds/",
+    "/usr/share/systemsounds/",
+    "/usr/palm/applications/",
+    "/media/cryptofs/apps/usr/palm/applications/",
+    "/media/internal/"
+];
+
+/// Whether an app's `path` may be played. Goes by the name alone.
+function isPlayablePath(path) {
+    if (typeof path !== "string" || path.length === 0 || path.length > 4096)
+        return false;
+    if (/[\x00-\x1f\x7f]/.test(path) || /(^|\/)\.\.(\/|$)/.test(path))
+        return false;
+    if (!/\.(wav|pcm|mp3|ogg|oga|opus|flac|aac|m4a|amr|wma)$/i.test(path))
+        return false;
+    return soundFolders.some(function(folder) {
+        return path.indexOf(folder) === 0;
+    });
+}
+
+/**
+ * What an app's soundClass and soundFile come to, as LunaSysMgr's
+ * BannerMessageHandler::playSound and AlertWindow::extractSoundParams worked it
+ * out: nothing (null), a vibration ({vibrate: true}), or a file on a stream
+ * ({path, streamClass}). A file that cannot be played gives way to the tone the
+ * user picked for the class, and that to the system's alert tone.
+ *
+ * tones is {ringtone, alerttone, notificationtone, fallback}; fileExists(path)
+ * says whether a file is there.
+ *
+ * LunaSysMgr also played a popup alert that named no sound at all, on the
+ * notification tone; asked for nothing here, nothing plays: LuneOS's own alerts
+ * (the incoming call, the alarm) sound for themselves. Its popups also turned
+ * the class "vibrate" into a notification tone, which Calendar's vibrate choice
+ * cannot have meant.
+ */
+function resolve(soundClass, soundFile, tones, fileExists) {
+    if (!soundClass && !soundFile)
+        return null;
+    if (soundClass === "none")
+        return null;
+    if (soundClass === "vibrate")
+        return { vibrate: true };
+
+    var streamClass = streamClassFor(soundClass);
+    if (soundFile && isPlayablePath(soundFile) && fileExists(soundFile))
+        return { path: soundFile, streamClass: streamClass };
+
+    var tone;
+    if (streamClass === "ringtones")
+        tone = tones.ringtone;
+    else if (streamClass === "alerts" || streamClass === "alarm" || streamClass === "calendar")
+        tone = tones.alerttone;
+    else
+        tone = tones.notificationtone;
+
+    var path = tone && fileExists(tone) ? tone : tones.fallback;
+    if (!path || !fileExists(path))
+        return null;
+    return { path: path, streamClass: streamClass };
+}
+
+/// How long a sound plays, in ms; -1 for the length of the file. A notification
+/// is cut off at the system's maximum, as LunaSysMgr did.
+function durationFor(streamClass, duration, notificationMaximum) {
+    if (duration > 0)
+        return duration;
+    return streamClass === "notifications" ? notificationMaximum : -1;
+}
+
+/// A ringtone goes on until it is stopped, as a popup alert's did.
+function loopsFor(streamClass) {
+    return streamClass === "ringtones";
+}
+
+/// `path` as the url a media player takes.
+function urlFor(path) {
+    return "file://" + path.split("/").map(encodeURIComponent).join("/");
+}
+
+/**
+ * Keeps the alert windows' sounds in step with the windows that are up: each
+ * window sounds once, when it first shows, and is stopped when it goes. known
+ * holds what the last call returned.
+ *
+ * start(window) returns a handle for stop(handle), or null when it played
+ * nothing.
+ */
+function trackAlerts(windows, known, start, stop) {
+    var tracked = [];
+    known.forEach(function(entry) {
+        if (windows.indexOf(entry.window) !== -1)
+            tracked.push(entry);
+        else if (entry.handle)
+            stop(entry.handle);
+    });
+    windows.forEach(function(window) {
+        var seen = tracked.some(function(entry) { return entry.window === window; });
+        if (!seen)
+            tracked.push({ window: window, handle: start(window) });
+    });
+    return tracked;
+}
