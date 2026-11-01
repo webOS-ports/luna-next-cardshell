@@ -44,6 +44,16 @@ Item {
         onTriggered: root.visible = false
     }
 
+    /* Emitted each time the alert comes up, for CentreAlertSlot. */
+    signal shown()
+
+    /* Takes the alert down before its time, when another one takes the
+     * centre of the screen. */
+    function dismiss() {
+        hideTimer.stop();
+        root.visible = false;
+    }
+
     Rectangle {
         anchors.fill: parent
         color: "black"
@@ -81,5 +91,6 @@ Item {
 
         root.visible = true;
         hideTimer.restart();
+        root.shown();
     }
 }

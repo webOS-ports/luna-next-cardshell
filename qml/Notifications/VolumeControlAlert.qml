@@ -23,6 +23,8 @@ import LunaNext.Common 0.1
 import "../Connectors"
 import "../Utils"
 
+import "VolumeAlert.js" as VolumeAlert
+
 Item {
     id: root
 
@@ -33,6 +35,20 @@ Item {
     height: image.height
 
     property bool _hadFirstAudioStatus: false
+
+    /* The output the last status was about, to tell a routing change from
+     * a volume change. */
+    property string _lastSoundOutput: ""
+
+    /* Emitted each time the alert comes up, for CentreAlertSlot. */
+    signal shown()
+
+    /* Takes the alert down before its time, when another one takes the
+     * centre of the screen. */
+    function dismiss() {
+        hideTimer.stop();
+        root.visible = false;
+    }
 
     // Was a hand-rolled playFeedback call of its own, which meant the volume
     // click was the one feedback sound Settings' "System Sounds" switch did
@@ -87,6 +103,21 @@ Item {
         }
     }
 
+    // The call volume, which the volume keys move during a call: audiod
+    // tells it on /phone/status with "changed":["volume"].
+    ServiceStatus {
+        id: phoneServiceStatus
+        serviceName: "com.palm.audio"
+        clientName: "com.webos.surfacemanager-cardshell"
+
+        onAvailableChanged: {
+            if (available)
+                audioService.subscribe("luna://com.palm.audio/phone/status",
+                                       "{\"subscribe\":true}",
+                                       root.onPhoneStatusChanged, root.onError);
+        }
+    }
+
     LunaService {
         id: audioService
 
@@ -99,10 +130,31 @@ Item {
         // audio-service had them at the top level. Accept either.
         var response = payload.hasOwnProperty("volumeStatus") ? payload.volumeStatus : payload;
 
+        var previousOutput = _lastSoundOutput;
+        if (response.hasOwnProperty("soundOutput"))
+            _lastSoundOutput = response.soundOutput;
+
         if (!_hadFirstAudioStatus) {
             _hadFirstAudioStatus = true;
             return;
         }
+
+        /*
+         * A status that comes from the audio moving somewhere else is not
+         * the user changing the volume, and shows nothing. LunaSysMgr's
+         * NativeAlertManager::cbAudioControlsChanged() gated the volume alert
+         * the same way: a change that came with a "scenario" change (a
+         * headset plugged in, Bluetooth taking over) never reached
+         * actOnChanged(). Without that, the volume level came up on top of
+         * the headphones AudioOutputAlert shows for the same plug.
+         *
+         * audiod's equivalents: it restores the stored volume of an output
+         * that connects and reports that with callerId "internal"
+         * (OSEMasterVolumeManager::DBSetVoulumeCallbackPA), and a status
+         * naming another output than the last one is the route changing.
+         */
+        if (isRoutingChange(payload, response, previousOutput))
+            return;
 
         adjustVolumeSound.play();
 
@@ -113,18 +165,37 @@ Item {
             image.height = Units.gu(9.6)
         }
         else {
-            var normalizedVolume = 0;
-            if (response.volume > 0)
-                normalizedVolume = ((Math.round(response.volume/11))*10);
-            if (normalizedVolume < 0)
-                normalizedVolume = 0;
-            image.source = ("../images/notification-music-indicator-" + normalizedVolume + ".png");
+            image.source = VolumeAlert.musicImage(response.volume);
             image.width = Units.gu(24)
             image.height = Units.gu(7.2)
         }
 
         root.visible = true;
-        hideTimer.start();
+        hideTimer.restart();
+        root.shown();
+    }
+
+    // Only the user changing it: a route change or the call starting is
+    // told on the same subscription without "changed". No click: the call
+    // is in the user's ear, and legacy webOS played none for the phone.
+    function onPhoneStatusChanged(message) {
+        var payload = JSON.parse(message.payload);
+        if (!VolumeAlert.isCallVolumeChange(payload))
+            return;
+
+        image.source = VolumeAlert.phoneImage(payload.volume);
+        image.width = Units.gu(24)
+        image.height = Units.gu(7.2)
+        root.visible = true;
+        hideTimer.restart();
+        root.shown();
+    }
+
+    function isRoutingChange(payload, response, previousOutput) {
+        if (payload.callerId === "internal")
+            return true;
+        return previousOutput !== "" && response.hasOwnProperty("soundOutput") &&
+               response.soundOutput !== previousOutput;
     }
 
     function onError(message) {
