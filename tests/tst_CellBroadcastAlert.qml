@@ -79,21 +79,42 @@ Item {
                    "middle at " + middle + " of " + alert.height);
         }
 
-        function test_a_long_message_starts_at_the_top_and_scrolls() {
+        function test_a_long_message_stays_on_screen_and_scrolls() {
             var long = "";
             for (var i = 0; i < 400; i++)
                 long += "Dreiging in uw omgeving. ";
             alert.show(long, "");
-            var text = messageItem();
-            compare(text.y, 0);
-            var area = text.parent.parent;
+            wait(0);
+            var area = findChild(alert, "cellBroadcastMessageArea");
             verify(area.contentHeight > area.height);
-            verify(text.mapToItem(alert, 0, 0).y > 0);
+            var title = area.mapToItem(alert, 0, 0).y;
+            verify(title > 0, "message from " + title);
+            var ok = findChild(alert, "cellBroadcastOk");
+            var foot = ok.mapToItem(alert, 0, ok.height).y;
+            verify(foot < alert.height, "OK ends at " + foot + " of " + alert.height);
         }
 
-        function test_the_message_is_larger_than_the_shell_text() {
-            verify(messageItem().font.pixelSize > FontUtils.sizeToPixels("large"));
+        function test_a_short_message_is_a_dialog_not_the_whole_screen() {
+            alert.show("Dreiging", "");
+            var ok = findChild(alert, "cellBroadcastOk");
+            tryVerify(function() {
+                return ok.mapToItem(alert, 0, ok.height).y < alert.height * 0.75;
+            }, 1000, "OK ends at " + ok.mapToItem(alert, 0, ok.height).y);
+        }
+
+        function test_OK_acknowledges() {
+            alert.show("Dreiging", "");
+            findChild(alert, "cellBroadcastOk").clicked();
+            verify(!alert.visible);
+        }
+
+        function test_the_text_is_larger_than_a_dialogs() {
+            verify(messageItem().font.pixelSize > FontUtils.sizeToPixels("medium"));
             verify(alert.titleSize > alert.messageSize);
+        }
+
+        function test_text_is_never_markup() {
+            compare(messageItem().textFormat, Text.PlainText);
         }
 
         function test_hidden_with_nothing_to_show() {

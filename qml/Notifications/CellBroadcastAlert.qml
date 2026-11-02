@@ -19,8 +19,7 @@ import QtQuick 2.0
 import QtMultimedia 6.3
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
-
-import "../Utils"
+import LuneOS.Components 1.0
 
 /*
  * A public warning, over everything including the lock screen, until it is
@@ -82,9 +81,9 @@ Item {
 
     readonly property string currentText: pending.length > 0 ? pending[0] : ""
 
-    /* Read at arm's length, possibly in a hurry. */
-    readonly property real titleSize: FontUtils.sizeToPixels("x-large")
-    readonly property real messageSize: FontUtils.sizeToPixels("large") * 1.2
+    /* Larger than a dialog's usual words: read at arm's length, in a hurry. */
+    readonly property real titleSize: FontUtils.sizeToPixels("large") * 1.2
+    readonly property real messageSize: FontUtils.sizeToPixels("large")
 
     visible: pending.length > 0
 
@@ -212,64 +211,57 @@ Item {
         }
     }
 
-    // Nothing behind a warning can be touched until it has been read.
-    MouseArea {
-        anchors.fill: parent
-    }
+    // Over the rest of the screen, which it dims and which takes no presses
+    // until the warning has been read. ETSI TS 102 900 6.1.2 asks for the
+    // message to show unprompted and to stay; a full screen is not asked for.
+    Dialog {
+        id: dialog
+        objectName: "cellBroadcastDialog"
+        title: "Emergency Alert"
+        titlePixelSize: root.titleSize
+        dialogWidth: Math.min(Units.gu(36), root.width - Units.gu(2))
+        dialogHeight: fittedHeight
 
-    Rectangle {
-        anchors.fill: parent
-        color: "black"
-        opacity: 0.8
-    }
+        // As UsbDebuggingPrompt: an older Dialog has no contentWidth.
+        readonly property real textWidth: dialog.contentWidth !== undefined
+                                          ? dialog.contentWidth : dialogWidth - Units.gu(3.2)
 
-    Column {
-        id: content
-        anchors.fill: parent
-        anchors.margins: Units.gu(2)
-        spacing: Units.gu(1)
-
-        Text {
-            id: title
-            width: content.width
-            text: "Emergency Alert"
-            color: "white"
-            font.pixelSize: root.titleSize
-            font.bold: true
-            horizontalAlignment: Text.AlignHCenter
-        }
-
-        // A message can run to fifteen pages.
+        // A message can run to fifteen pages. 6.1.2(5) wants as little
+        // scrolling as can be, so it takes all the height the screen has.
         Flickable {
             id: messageArea
-            width: content.width
-            height: content.height - title.height - okButton.height - 2 * content.spacing
-            contentHeight: message.y + message.height
+            objectName: "cellBroadcastMessageArea"
+            width: dialog.textWidth
+            height: Math.min(message.height, root.height - Units.gu(16))
+            contentHeight: message.height
             clip: true
 
             Text {
                 id: message
                 objectName: "cellBroadcastMessage"
                 width: messageArea.width
-                // In the middle of the screen, unless it needs the whole area.
-                y: Math.max(0, (messageArea.height - height) / 2)
                 // Network text, so it is never taken for markup.
                 textFormat: Text.PlainText
                 text: root.currentText
-                color: "white"
+                color: "#292929"
                 font.pixelSize: root.messageSize
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.Wrap
             }
         }
 
-        ActionButton {
-            id: okButton
-            width: content.width
-            height: Units.gu(5)
-            caption: "OK"
-            affirmative: true
-            onAction: root.acknowledge()
+        // A spacer: the Dialog's Column has only 0.5 gu between its children.
+        Item {
+            width: 1
+            height: Units.gu(1)
+        }
+
+        DialogButton {
+            objectName: "cellBroadcastOk"
+            width: dialog.textWidth
+            text: "OK"
+            fontcolor: "white"
+            onClicked: root.acknowledge()
         }
     }
 }
