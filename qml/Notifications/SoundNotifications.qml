@@ -24,7 +24,7 @@ import "NotificationSound.js" as NotificationSound
 /*
  * The sounds of apps that are no banner: what LunaSysMgr's BannerMessageHandler
  * played for PalmSystem.playSoundNotification, which reaches this from
- * WebAppMgr as luna://org.webosports.notifications/playSoundNotification, and
+ * WebAppMgr as luna://com.webos.surfacemanager.sound/playSoundNotification, and
  * for popup alert windows (AlertWindowsArea). A banner's own sound stays with
  * the banner. Nothing here takes the name "com.webos.surfacemanager-cardshell":
  * the bus does not parse a "-" in a luna:// url, so a method there has no caller.
@@ -58,7 +58,7 @@ Item {
 
     LunaService {
         id: service
-        name: "org.webosports.notifications"
+        name: "com.webos.surfacemanager.sound"
         onInitialized: service.registerMethod("/", "playSoundNotification", root.handlePlay)
     }
 
