@@ -143,31 +143,43 @@ Item {
             unlockFeedbackTimer.restart();
         }
         else if (response.identified === false && response.finished === false) {
-            // A rejected touch: fpd stays armed, so DON'T cancel/re-arm.
-            // Flash red every time, but rate-limit the lockout counter so
-            // several captures within one press don't burn attempts.
+            // A rejected touch: fpd stays armed, so DON'T cancel/re-arm. Every
+            // one counts: nothing tells quick taps from a resting finger, and
+            // the sensor sets no limit of its own here.
             padLock.fingerprintFeedback(false);
-            if (!missCooldown.running) {
-                fingerprintFailedAttempts++;
-                missCooldown.restart();
-                if (fingerprintFailedAttempts >= maxFingerprintAttempts)
-                    padLock.showFingerprintLockout(deviceLockMode);
-            }
+            fingerprintFailedAttempts++;
+            if (fingerprintFailedAttempts >= maxFingerprintAttempts)
+                padLock.showFingerprintLockout(deviceLockMode);
         }
         else if (response.identified === false) {
             // Terminal end (cancel / 30s timeout, errorText "Aborted"): not a
             // failed read, just re-arm if we are still meant to be listening.
-            _endIdentify();
-            if (fingerprintActive)
-                identifyRestartTimer.restart();
+            _endFingerprintIdentify(response);
         }
     }
 
     function handleFingerprintError(message) {
         console.log("Fingerprint identify error: " + message.payload);
+        var response = {};
+        try {
+            response = JSON.parse(message.payload);
+        } catch (e) {
+            // Not from the adapter: nothing here but the re-arm below.
+        }
+        _endFingerprintIdentify(response);
+    }
+
+    function _endFingerprintIdentify(response) {
         _endIdentify();
-        if (fingerprintActive)
+        if (response.lockedOut === true) {
+            // The sensor has locked itself after too many misses. Re-arming
+            // would only fail again, so stop and say so; a passcode unlock
+            // resets the count like any other lockout here.
+            fingerprintFailedAttempts = maxFingerprintAttempts;
+            padLock.showFingerprintLockout(deviceLockMode);
+        } else if (fingerprintActive) {
             identifyRestartTimer.restart();
+        }
     }
 
     // Face unlock, backed by com.webos.service.faceunlock (luneos-faced ->
@@ -351,12 +363,6 @@ Item {
         interval: 3000
         repeat: false
         onTriggered: service.subscribeFingerprintStatus()
-    }
-
-    Timer {
-        id: missCooldown
-        interval: 1200
-        repeat: false
     }
 
     Timer {
