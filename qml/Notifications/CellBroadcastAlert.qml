@@ -217,8 +217,6 @@ Item {
     Dialog {
         id: dialog
         objectName: "cellBroadcastDialog"
-        title: "Emergency Alert"
-        titlePixelSize: root.titleSize
         dialogWidth: Math.min(Units.gu(36), root.width - Units.gu(2))
         dialogHeight: fittedHeight
 
@@ -226,13 +224,38 @@ Item {
         readonly property real textWidth: dialog.contentWidth !== undefined
                                           ? dialog.contentWidth : dialogWidth - Units.gu(3.2)
 
+        // The triangle over the words, as legacy webOS's full screen errors
+        // (Mojo's .palm-fullscreen-error .large-icon.error, warning-large.png)
+        // had it, in the size that leaves the message its room. The title is
+        // not the Dialog's own, which has a fixed colour. Its red is Onyx's
+        // for a negative button, #be0003.
+        Image {
+            objectName: "cellBroadcastIcon"
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: Units.gu(7)
+            height: Units.gu(7)
+            sourceSize.width: 128
+            sourceSize.height: 128
+            source: "../images/warning-large.png"
+        }
+
+        Text {
+            objectName: "cellBroadcastTitle"
+            width: dialog.textWidth
+            text: "Emergency Alert"
+            color: "#be0003"
+            font.pixelSize: root.titleSize
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+        }
+
         // A message can run to fifteen pages. 6.1.2(5) wants as little
         // scrolling as can be, so it takes all the height the screen has.
         Flickable {
             id: messageArea
             objectName: "cellBroadcastMessageArea"
             width: dialog.textWidth
-            height: Math.min(message.height, root.height - Units.gu(16))
+            height: Math.min(message.height, root.height - Units.gu(24))
             contentHeight: message.height
             clip: true
 

@@ -113,6 +113,17 @@ Item {
             verify(alert.titleSize > alert.messageSize);
         }
 
+        function test_it_carries_the_legacy_warning_triangle() {
+            alert.show("Dreiging", "");
+            tryCompare(findChild(alert, "cellBroadcastIcon"), "status", Image.Ready);
+        }
+
+        function test_the_title_is_red() {
+            var title = findChild(alert, "cellBroadcastTitle");
+            compare(title.text, "Emergency Alert");
+            compare(title.color, "#be0003");
+        }
+
         function test_text_is_never_markup() {
             compare(messageItem().textFormat, Text.PlainText);
         }
