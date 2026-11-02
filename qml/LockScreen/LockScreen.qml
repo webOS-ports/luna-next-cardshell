@@ -715,6 +715,19 @@ Item {
 
         visible: lockScreen.state === "pad"
 
+        // The sensors are off, so say why. authmanager decides; nothing here
+        // tells the reasons apart, and the answer to all of them is the same.
+        passcodeHint: lockScreen.locked && lockScreen.deviceLockMode !== "none" &&
+                      !lockScreen.biometricAllowed
+                      ? biometricPasscodeHint(lockScreen.deviceLockMode,
+                                              lockScreen.fingerprintAvailable &&
+                                              lockScreen.fingerprintUnlockEnabled &&
+                                              lockScreen.fingerprintCount > 0,
+                                              lockScreen.faceAvailable &&
+                                              lockScreen.faceUnlockEnabled &&
+                                              lockScreen.faceEnrolled)
+                      : ""
+
         onUnlock: padUnlock()
     }
 

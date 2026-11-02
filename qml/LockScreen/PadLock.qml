@@ -82,6 +82,25 @@ Item {
         showBiometricLockout(deviceLockMode, "fingerprint");
     }
 
+    // Set while a finger or a face is enrolled but may not unlock for now: after
+    // a restart, 72 hours on, or a passcode lockout. The sensors stay off then,
+    // so with nothing here the phone just looks as if it had stopped reacting.
+    // Stays up, unlike the status line, but the lockout says more when it shows.
+    property string passcodeHint: ""
+
+    function biometricPasscodeHint(deviceLockMode, fingerprint, face) {
+        if (!fingerprint && !face)
+            return "";
+        var passcode = (deviceLockMode === "pin") ? "PIN"
+                     : (deviceLockMode === "password") ? "password"
+                     : (deviceLockMode === "pattern") ? "pattern"
+                     : "passcode";
+        var what = (fingerprint && face) ? "your fingerprint or face"
+                 : fingerprint ? "your fingerprint"
+                 : "your face";
+        return "Enter your " + passcode + " to use " + what;
+    }
+
     Timer {
         id: fpStatusTimer
         interval: 2500
@@ -196,6 +215,21 @@ Item {
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
         text: ""
+        color: "white"
+        font.pixelSize: FontUtils.sizeToPixels("medium")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: pad.top
+        anchors.bottomMargin: Units.gu(3)
+    }
+
+    Text {
+        id: passcodeHintText
+        visible: padLock.passcodeHint !== "" && !fpLockoutText.visible &&
+                 !fpStatusTimer.running && !pad.on
+        width: parent.width - Units.gu(4)
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+        text: padLock.passcodeHint
         color: "white"
         font.pixelSize: FontUtils.sizeToPixels("medium")
         anchors.horizontalCenter: parent.horizontalCenter
