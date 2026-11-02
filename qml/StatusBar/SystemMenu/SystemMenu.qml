@@ -76,6 +76,10 @@ Item {
         id: telephonyServiceConnector
     }
 
+    TorchService {
+        id: torchServiceConnector
+    }
+
     width: Math.min(preferredWidth, Screen.width - Units.gu(2))
     // No taller than what is drawn, so the empty space under a short menu is
     // not counted as part of it when a tap decides whether to close it.
@@ -399,6 +403,22 @@ Item {
                 }
 
                 MenuDivider {visible: rotation.visible; widthOffset: dividerWidthOffset}
+
+                FlashlightElement {
+                    id: flashlight
+                    visible: torchServiceConnector.available
+                    ident: headerIdent
+                    on: torchServiceConnector.on
+
+                    onAction: {
+                        torchServiceConnector.toggle();
+
+                        closeMenuTimer.interval = 250;
+                        closeMenuTimer.start();
+                    }
+                }
+
+                MenuDivider {visible: flashlight.visible; widthOffset: dividerWidthOffset}
 
                 // Only where it means something: without a physical keyboard the
                 // on-screen one is already there and this would do nothing.
