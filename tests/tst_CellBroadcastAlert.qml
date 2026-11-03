@@ -80,10 +80,10 @@ Item {
         }
 
         function test_a_long_message_stays_on_screen_and_scrolls() {
-            var long = "";
+            var longText = "";
             for (var i = 0; i < 400; i++)
-                long += "Dreiging in uw omgeving. ";
-            alert.show(long, "");
+                longText += "Dreiging in uw omgeving. ";
+            alert.show(longText, "");
             wait(0);
             var area = findChild(alert, "cellBroadcastMessageArea");
             verify(area.contentHeight > area.height);
