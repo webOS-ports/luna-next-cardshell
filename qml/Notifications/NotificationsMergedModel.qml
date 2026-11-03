@@ -80,16 +80,22 @@ ListModel {
             // entry below is not enough: a banner still on screen when its
             // toast is withdrawn would sit there until its own timer expired.
             removeBannerNotification(notifObject);
-
-            for( var i=0; i<mergedModel.count; ++i ) {
-                if( mergedModel.get(i).notifObject &&
-                    getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
-                    mergedModel.remove(i);
-                    break;
-                }
+            removeToastEntry(toastId);
+        }
+    }
+    // Removes the sticky entry for one toast, if it is still listed. Both the
+    // user closing it and notificationmgr withdrawing it end up here, in
+    // either order, so finding nothing is normal.
+    function removeToastEntry(toastId) {
+        for( var i=0; i<mergedModel.count; ++i ) {
+            if( mergedModel.get(i).notifObject &&
+                getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
+                mergedModel.remove(i);
+                return;
             }
         }
     }
+
     property WindowModel listDashboardsModel : WindowModel {
         surfaceSource: compositorInstance.surfaceModel
         acceptFunction: "filter"
@@ -167,11 +173,15 @@ ListModel {
             }
 
             onClosed: {
+                var toastId = getToastIdFromNotif(notifObject);
                 notificationLunaService.call(
                             "luna://com.webos.notification/closeToast",
-                            JSON.stringify({"toastId": getToastIdFromNotif(notifObject)}), undefined, onCloseNotifError);
+                            JSON.stringify({"toastId": toastId}), undefined, onCloseNotifError);
 
-                mergedModel.remove(notificationItem.index);
+                // By id, not by row: this item is built from a component that
+                // lives here, outside the list's delegate, so it has no model
+                // index. remove(undefined) removed row 0 as well.
+                removeToastEntry(toastId);
             }
 
             MouseArea {
