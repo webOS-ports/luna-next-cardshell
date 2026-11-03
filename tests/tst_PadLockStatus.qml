@@ -59,6 +59,44 @@ Item {
             verify(!item.visible);
         }
 
+        function hint() {
+            return textItem(function(t) { return t.text.indexOf("Enter your") === 0 &&
+                                                 t.text.indexOf("Too many") !== 0; });
+        }
+
+        function test_the_hint_names_the_passcode_and_what_was_enrolled() {
+            compare(padLock.biometricPasscodeHint("pin", true, true),
+                    "Enter your PIN to use your fingerprint or face");
+            compare(padLock.biometricPasscodeHint("password", true, false),
+                    "Enter your password to use your fingerprint");
+            compare(padLock.biometricPasscodeHint("pattern", false, true),
+                    "Enter your pattern to use your face");
+        }
+
+        function test_no_hint_with_nothing_enrolled() {
+            compare(padLock.biometricPasscodeHint("pin", false, false), "");
+        }
+
+        function test_hint_stays_up_but_gives_way() {
+            padLock.passcodeHint = padLock.biometricPasscodeHint("pin", true, true);
+            var item = hint();
+            verify(item.visible);
+            wait(2600);
+            verify(item.visible, "it must outlast the status line's timer");
+
+            padLock.showBiometricStatus("Checking");
+            verify(!item.visible);
+            padLock.clearBiometricStatus();
+            verify(item.visible);
+
+            padLock.showBiometricLockout("pin", "fingerprint");
+            verify(!item.visible);
+
+            lockout().visible = false;
+            padLock.passcodeHint = "";
+            verify(!item.visible);
+        }
+
         function test_lockout_wins() {
             padLock.showBiometricStatus("Checking");
             var item = status();
