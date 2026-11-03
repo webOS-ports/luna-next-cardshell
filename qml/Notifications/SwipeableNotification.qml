@@ -56,8 +56,17 @@ Item {
             target: flickableArea
             property: "contentX"
             duration: 200
-            to: swipeableRoot.contentX>=0 ? swipeableRoot.width : -swipeableRoot.width
             onStopped: requestDestruction(); // delete card
+        }
+
+        /* Slides the notification out the way it was swiped: a positive
+         * contentX (or velocity) is the content moving left. The direction used
+         * to come from swipeableRoot.contentX, which does not exist - always
+         * undefined, so every notification left to the right, whichever way it
+         * was swiped. */
+        function swipeOut(toLeft) {
+            swipeoutNotification.to = toLeft ? swipeableRoot.width : -swipeableRoot.width;
+            swipeoutNotification.start();
         }
 
         onDraggingChanged: {
@@ -65,7 +74,7 @@ Item {
                 if(contentX>(swipeableRoot.width*0.5) ||
                    contentX<(-swipeableRoot.width*0.5))
                 {
-                    swipeoutNotification.start();
+                    swipeOut(contentX > 0);
                 }
             }
         }
@@ -74,7 +83,7 @@ Item {
                 if( ((!swipeableRoot.blockSwipesToLeft)&&(horizontalVelocity>1000)) ||
                    horizontalVelocity<-1000)
                 {
-                    swipeoutNotification.start();
+                    swipeOut(horizontalVelocity > 0);
                 }
             }
         }
