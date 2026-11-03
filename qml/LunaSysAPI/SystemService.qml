@@ -38,9 +38,13 @@ Item {
 
     property variant currentWindow: null
 
+    // Methods are registered on a name without a "-": LSUriParse takes only
+    // letters, digits and "_" between the dots of a luna:// or palm:// url, so
+    // "com.webos.surfacemanager-cardshell", the shell's name as a client, can
+    // be called by no one.
     LunaService {
         id: systemServicePrivate
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
             systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);
@@ -56,7 +60,7 @@ Item {
 
     LunaService {
         id: systemServicePublic
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
             systemServicePublic.registerMethod("/", "enableFullScreenMode", handleEnableFullScreenMode);
