@@ -83,6 +83,10 @@ Rectangle {
             model: mergedModel
             delegate: Image {
                     id: notifIconImage
+                    // One icon per application (see firstIndexOfApp). Reading
+                    // count re-evaluates this as entries come and go.
+                    visible: mergedModel.count > 0 &&
+                             (model.appKey === "" || mergedModel.firstIndexOfApp(model.appKey) === index)
                     height: minimizedListView.height
                     width: height
                     fillMode: Image.PreserveAspectFit
