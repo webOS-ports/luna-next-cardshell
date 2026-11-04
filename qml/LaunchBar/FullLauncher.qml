@@ -207,13 +207,16 @@ Item {
         height: Units.gu(4)        
         orientation: ListView.Horizontal
 
-        interactive: !draggedLauncherIcon.draggingActive
+        // A row whose tabs all fit (a tablet) has nothing to scroll to.
+        interactive: !draggedLauncherIcon.draggingActive && (scrollingTabs || !fixedWidthTabs)
 
-        // In the default layout the tabs do not all fit: the current one sits
-        // at the left edge, where the first tab is, whichever tab it is. The
-        // footer lets the last tabs scroll that far too.
-        readonly property bool scrollingTabs: AppTweaks.tabIndicatorNumberTweakValue === "default"
+        // The default layout gives every tab the same width. Where they do not
+        // all fit (a phone) the current one sits at the left edge, where the
+        // first tab is, whichever tab it is, and the footer lets the last tabs
+        // scroll that far too. Where they do fit the row stays where it is.
+        readonly property bool fixedWidthTabs: AppTweaks.tabIndicatorNumberTweakValue === "default"
         readonly property real scrollingTabWidth: Units.gu(20)
+        readonly property bool scrollingTabs: fixedWidthTabs && count * scrollingTabWidth > width
 
         // Scrolling tabs follow the pages below instead (see tabContentList's
         // onContentXChanged), so they move with the finger rather than after it.
@@ -278,7 +281,7 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: tabRowList.scrollingTabs ? tabRowList.scrollingTabWidth :
+            width: tabRowList.fixedWidthTabs ? tabRowList.scrollingTabWidth :
                    AppTweaks.tabIndicatorNumberTweakValue === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count :
                                                                       tabRowList.width / AppTweaks.tabIndicatorNumberTweakValue
             height: tabRowList.height
