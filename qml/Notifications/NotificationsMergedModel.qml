@@ -37,6 +37,22 @@ ListModel {
         return notifObject.sourceId+"-"+notifObject.timestamp;
     }
 
+    /*
+     * The minimized bar shows one icon per application, however many entries
+     * it has. Legacy drew an icon per dashboard window, and Messaging kept
+     * every new message in a single dashboard, so it was one icon there; here
+     * Messaging posts one notificationmgr toast per message, and a busy
+     * evening became a row of identical icons. Tapping the icon still opens
+     * the list with every entry in it.
+     */
+    function firstIndexOfApp(appKey) {
+        for( var i=0; i<mergedModel.count; ++i ) {
+            if( mergedModel.get(i).appKey === appKey )
+                return i;
+        }
+        return -1;
+    }
+
     property IconPathServices iconPathServices: IconPathServices {}
     property NotificationService notificationService: NotificationService {}
 
@@ -67,6 +83,7 @@ ListModel {
             if( createStickyNotification ) {
                 // Sticky notification
                 mergedModel.append({"notifType": "notification",
+                                    "appKey": notifObject.sourceId || notifObject.ownerId || "",
                                     "window": null,
                                     "notifObject": notifObject,
                                     "notifHeight": dashboardCardFixedHeight});
@@ -130,6 +147,7 @@ ListModel {
                 notificationArea.state = "minimized";
             }
             mergedModel.append({"notifType": "dashboard",
+                                "appKey": window.appId || "",
                                 "window": window,
                                 "notifObject": null,
                                 "notifHeight": dashHeight});
