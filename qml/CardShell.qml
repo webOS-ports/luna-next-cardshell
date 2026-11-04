@@ -285,6 +285,7 @@ Rectangle {
 
         active: cardsArea.applicationForeground
         windowInFront: cardsArea.foregroundWindow
+        arrowKeysWanted: hardwareKeyboardStatus.hardwareKeyboardPresent
     }
 
     // E Ink refresh control (MP01): the connector feeds screen activity to the
