@@ -219,4 +219,123 @@ TestCase {
         const keys = mediaKeys(false);
         compare(JSON.parse(keys._mediaKeyPayload("next")), { displayId: 0, keyEvent: "next" });
     }
+
+    // ---- Keys a user can set up: press and hold, and Settings' choices ----
+    //
+    // data/hardware-keys-buttons.json is what luneos-device-config writes for
+    // a device offering two keys: a camera key that opens Camera when held, and
+    // an assistant button with nothing on it until its owner picks something.
+
+    SignalSpy {
+        id: launchSpy
+        signalName: "appLaunchRequested"
+    }
+
+    function buttonKeys(userActions) {
+        const keys = createTemporaryObject(hardwareKeysComponent, null, {
+            overridePath: pathOf("data/hardware-keys-buttons.json"),
+            navigationKeysEnabled: false,
+            holdMs: 100,
+            userActions: userActions ? JSON.stringify(userActions) : ""
+        });
+        launchSpy.target = keys;
+        launchSpy.clear();
+        return keys;
+    }
+
+    function test_theDeviceSaysWhichKeysCanBeSetUp() {
+        const keys = buttonKeys();
+        compare(keys.configurableKeys, [
+            { name: "Key_Camera", label: "Camera key", press: "none", hold: "app.camera" },
+            { name: "Key_Launch2", label: "Assistant button", press: "none", hold: "none" }
+        ]);
+        // Key_CameraFocus is set by the device but not offered
+        compare(keys.actionFor(Qt.Key_CameraFocus), "none");
+    }
+
+    function test_aShortPressOfAHoldKeyIsNotAHold() {
+        const keys = buttonKeys();
+        compare(keys._onKey(Qt.Key_Camera, true, false, 0), keys.resultAccepted);
+        wait(30);
+        compare(keys._onKey(Qt.Key_Camera, false, false, 0), keys.resultAccepted);
+        wait(200);
+        compare(launchSpy.count, 0, "released before holdMs, and the press does nothing");
+    }
+
+    function test_holdingRunsTheHoldActionOnce() {
+        const keys = buttonKeys();
+        compare(keys._onKey(Qt.Key_Camera, true, false, 0), keys.resultAccepted);
+        tryCompare(launchSpy, "count", 1, 2000);
+        compare(launchSpy.signalArguments[0][0], "org.webosports.app.camera");
+        // auto-repeat while still held
+        compare(keys._onKey(Qt.Key_Camera, true, true, 0), keys.resultAccepted);
+        compare(keys._onKey(Qt.Key_Camera, true, true, 0), keys.resultAccepted);
+        compare(keys._onKey(Qt.Key_Camera, false, false, 0), keys.resultAccepted);
+        wait(200);
+        compare(launchSpy.count, 1, "one hold, one launch; the release is not a press");
+    }
+
+    function test_aShortPressRunsThePressAction() {
+        const keys = buttonKeys({ Key_Launch2: { press: "app.launch:org.webosports.app.memos",
+                                                 hold: "app.camera" } });
+        keys._onKey(Qt.Key_Launch2, true, false, 0);
+        compare(launchSpy.count, 0, "nothing until it is known whether this is a hold");
+        keys._onKey(Qt.Key_Launch2, false, false, 0);
+        compare(launchSpy.count, 1);
+        compare(launchSpy.signalArguments[0][0], "org.webosports.app.memos");
+    }
+
+    function test_aKeyWithNoHoldActionActsOnThePress() {
+        const keys = buttonKeys({ Key_Launch2: { press: "app.camera" } });
+        compare(keys.holdActions[Qt.Key_Launch2], undefined);
+        compare(keys._onKey(Qt.Key_Launch2, true, false, 0), keys.resultAccepted);
+        compare(launchSpy.count, 1, "at once, as every other key");
+        compare(keys._onKey(Qt.Key_Launch2, false, false, 0), keys.resultAccepted);
+        compare(launchSpy.count, 1);
+    }
+
+    function test_theUserCanTakeTheHoldActionOff() {
+        const keys = buttonKeys({ Key_Camera: { hold: "none" } });
+        compare(keys.holdActions[Qt.Key_Camera], undefined);
+        compare(keys._onKey(Qt.Key_Camera, true, false, 0), keys.resultNextPolicy);
+    }
+
+    function test_choicesForKeysTheDeviceDoesNotOfferAreIgnored() {
+        const keys = buttonKeys({ Key_VolumeMute: { press: "none" },
+                                  Key_CameraFocus: { press: "app.camera" },
+                                  Key_NoSuchKey: { press: "app.camera" } });
+        compare(keys.actionFor(Qt.Key_VolumeMute), "audio.mute");
+        compare(keys.actionFor(Qt.Key_CameraFocus), "none");
+    }
+
+    function test_unknownActionsAreIgnored_data() {
+        return [
+            { tag: "made up", action: "shell.selfdestruct" },
+            { tag: "launch with no id", action: "app.launch:" },
+            { tag: "launch of a path", action: "app.launch:../../bin/sh" },
+            { tag: "not a string", action: 42 }
+        ];
+    }
+
+    function test_unknownActionsAreIgnored(data) {
+        const keys = buttonKeys({ Key_Launch2: { press: data.action, hold: data.action } });
+        compare(keys.actionFor(Qt.Key_Launch2), undefined);
+        compare(keys.holdActions[Qt.Key_Launch2], undefined);
+    }
+
+    function test_aChoiceTakesEffectAtOnce() {
+        const keys = buttonKeys();
+        compare(keys.actionFor(Qt.Key_Launch2), undefined);
+        keys.userActions = JSON.stringify({ Key_Launch2: { press: "torch.toggle" } });
+        compare(keys.actionFor(Qt.Key_Launch2), "torch.toggle");
+        keys.userActions = "";
+        compare(keys.actionFor(Qt.Key_Launch2), undefined);
+    }
+
+    function test_unreadableChoicesChangeNothing() {
+        const keys = buttonKeys();
+        keys.userActions = "{not json";
+        compare(keys.holdActions[Qt.Key_Camera], "app.camera");
+        compare(keys.configurableKeys.length, 2);
+    }
 }

@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import WebOSCoreCompositor 1.0
 
 import "HeadsetButton.js" as HeadsetButton
@@ -52,6 +53,25 @@ import "HeadsetButton.js" as HeadsetButton
  * webOS 2.x did: one is play/pause, two the next track, three the previous
  * one; a hold is left free. During a call they are left alone, as before,
  * so a press cannot start the music under the call.
+ *
+ * A key can also have a second action for a long press. The camera key of
+ * the Xperia XA2 opens Camera when held; the assistant button of the FLX1s
+ * does whatever its owner picks. A key with a hold action acts on release
+ * when let go before holdMs, and runs the hold action once holdMs has passed
+ * with the key still down; a key without one acts on the press, as before.
+ *
+ * Which keys a user may set up is the device's call: an entry of
+ * /etc/luneos/hardware-keys.json with a "label" is one, shown in Settings >
+ * Buttons under that label. What the user picks there arrives as
+ * userActions, the shell's hardwareKeyActions tweak, and applies on top of
+ * the device's own defaults - only for the keys the device offers, so a
+ * choice saved on one phone cannot remap the volume keys of another.
+ *
+ * Keys are bound per device and never by a default here, because a keycode
+ * says little about the hardware behind it: the FLX1s reports its camera
+ * *privacy switch* as KEY_CAMERA, held down for as long as the camera is
+ * blocked, and a default "hold the camera key to open Camera" would open the
+ * camera at the very moment its owner switched it off.
  */
 Item {
     id: hardwareKeys
@@ -77,12 +97,29 @@ Item {
     //! luneos-device-config from deviceinfo_key_actions, absent otherwise.
     property string overridePath: "/etc/luneos/hardware-keys.json"
 
+    //! The user's choices, as Settings > Buttons writes them to the
+    //! hardwareKeyActions tweak: JSON text such as
+    //! {"Key_Launch2": {"press": "torch.toggle", "hold": "app.camera"}}.
+    property string userActions: ""
+
+    //! How long a key with a hold action has to stay down for it.
+    property int holdMs: 600
+
     //! The actions this understands. "shell.back" is a deliberate no-op: see _act().
+    //! "app.launch:<appId>" launches any application and is checked by isKnownAction().
     readonly property var knownActions: [
         "call.answer", "call.hangup", "shell.launcher", "shell.back",
         "audio.mute", "display.sleep", "media.headset", "media.play",
-        "media.pause", "media.stop", "media.next", "media.previous", "none"
+        "media.pause", "media.stop", "media.next", "media.previous",
+        "app.camera", "torch.toggle", "none"
     ]
+
+    //! The Camera application, for "app.camera".
+    readonly property string cameraAppId: "org.webosports.app.camera"
+
+    //! An application was asked for by a key. For tests: the launch itself
+    //! goes through the application manager.
+    signal appLaunchRequested(string appId)
 
     //! Qt key name -> keycode, for reading the override file. Only the keys a
     //! toolbelt actually produces; an unknown name is reported rather than
@@ -99,10 +136,27 @@ Item {
         "Key_MediaPause": Qt.Key_MediaPause,
         "Key_MediaStop": Qt.Key_MediaStop,
         "Key_MediaNext": Qt.Key_MediaNext,
-        "Key_MediaPrevious": Qt.Key_MediaPrevious
+        "Key_MediaPrevious": Qt.Key_MediaPrevious,
+        // Camera and programmable keys, in the keymap since qt-features-webos
+        // 0006: KEY_CAMERA and Sony's 766, KEY_CAMERA_FOCUS, KEY_MACRO (the
+        // FLX1s assistant button) and KEY_PROG1.
+        "Key_Camera": Qt.Key_Camera,
+        "Key_CameraFocus": Qt.Key_CameraFocus,
+        "Key_Launch0": Qt.Key_Launch0,
+        "Key_Launch1": Qt.Key_Launch1,
+        "Key_Launch2": Qt.Key_Launch2
     })
 
+    //! What a key does when pressed, keycode -> action.
     readonly property var actions: _loaded.actions
+
+    //! What a key does when held for holdMs, keycode -> action. Keys with no
+    //! hold action are absent.
+    readonly property var holdActions: _loaded.holdActions
+
+    //! The keys a user may set up, for Settings: [{name, label, press, hold}]
+    //! with the device's own defaults, before the user's choices.
+    readonly property var configurableKeys: _loaded.configurable
 
     //! A call is up (audiod's inCall): the media keys are left to the focused
     //! window, as they were before there was anywhere else for them to go.
@@ -117,7 +171,12 @@ Item {
     //! Keycodes the device override names, which navigationKeysEnabled leaves alone.
     readonly property var _overridden: _loaded.overridden
 
-    readonly property var _loaded: _loadActions(overridePath)
+    readonly property var _loaded: _loadActions(overridePath, userActions)
+
+    //! The key being held towards its hold action, -1 for none, and whether
+    //! that action has already run for this press.
+    property int _holdKey: -1
+    property bool _holdFired: false
 
     //! Audio mute is a toggle and com.palm.audio has no "toggle", so the state is
     //! tracked here. It starts false rather than being read back: there is no
@@ -144,6 +203,18 @@ Item {
         onTriggered: hardwareKeys._headsetStep(HeadsetButton.timeout(hardwareKeys._headset, Date.now()))
     }
 
+    Timer {
+        id: holdTimer
+        repeat: false
+        interval: hardwareKeys.holdMs
+        onTriggered: hardwareKeys._holdReached()
+    }
+
+    AppLauncher {
+        id: appLauncher
+        clientName: "com.webos.surfacemanager-cardshell"
+    }
+
     /*!
      * \brief The default mapping: each key read at face value.
      *
@@ -168,10 +239,51 @@ Item {
         return d;
     }
 
-    function _loadActions(path) {
+    //! Whether action is one this understands, "app.launch:<appId>" included.
+    function isKnownAction(action) {
+        if (typeof action !== "string")
+            return false;
+        if (hardwareKeys.knownActions.indexOf(action) >= 0)
+            return true;
+        return /^app\.launch:[A-Za-z0-9][A-Za-z0-9._-]*$/.test(action);
+    }
+
+    /*!
+     * \brief The actions in force: the defaults, the device's file, the user's choices.
+     *
+     * An entry of the device's file is either an action, which is the key's
+     * press action as it always was, or an object:
+     *
+     *   "Key_Launch2": { "label": "Assistant button", "press": "none", "hold": "none" }
+     *
+     * where press and hold are both optional, and a label makes the key one the
+     * user may set up. userActions then gives press and hold for those keys and
+     * no others.
+     */
+    function _loadActions(path, user) {
         var merged = hardwareKeys._defaultActions();
+        var hold = {};
         var overridden = {};
+        var configurable = [];
+        var offered = {};
         var text = hardwareKeys._readFile(path);
+
+        // Takes one slot of one key, if its action is one we know.
+        function take(name, code, slot, action, where) {
+            if (!hardwareKeys.isKnownAction(action)) {
+                console.warn("HardwareKeys: unknown action '" + action + "' for " + name + " in " + where);
+                return;
+            }
+            if (slot === "hold") {
+                if (action === "none")
+                    delete hold[code];
+                else
+                    hold[code] = action;
+            } else {
+                merged[code] = action;
+            }
+            overridden[code] = true;
+        }
 
         if (text) {
             try {
@@ -182,19 +294,57 @@ Item {
                         console.warn("HardwareKeys: unknown key name '" + name + "' in " + path);
                         continue;
                     }
-                    if (hardwareKeys.knownActions.indexOf(override[name]) < 0) {
-                        console.warn("HardwareKeys: unknown action '" + override[name] + "' for " + name);
+                    const entry = override[name];
+                    if (typeof entry === "string") {
+                        take(name, code, "press", entry, path);
                         continue;
                     }
-                    merged[code] = override[name];
-                    overridden[code] = true;
+                    if (!entry || typeof entry !== "object") {
+                        console.warn("HardwareKeys: cannot read the entry for " + name + " in " + path);
+                        continue;
+                    }
+                    if (entry.press !== undefined)
+                        take(name, code, "press", entry.press, path);
+                    if (entry.hold !== undefined)
+                        take(name, code, "hold", entry.hold, path);
+                    if (typeof entry.label === "string" && entry.label !== "") {
+                        offered[code] = true;
+                        configurable.push({
+                            name: name,
+                            label: entry.label,
+                            press: merged[code] !== undefined ? merged[code] : "none",
+                            hold: hold[code] !== undefined ? hold[code] : "none"
+                        });
+                    }
                 }
             } catch (e) {
                 console.warn("HardwareKeys: cannot parse " + path + ": " + e);
             }
         }
 
-        return { actions: merged, overridden: overridden };
+        if (user) {
+            try {
+                const chosen = JSON.parse(user);
+                for (const name in chosen) {
+                    const code = hardwareKeys.keyNames[name];
+                    // Saved for a key this device does not offer: another
+                    // phone's choice, or one the device has since withdrawn.
+                    if (code === undefined || !offered[code])
+                        continue;
+                    const choice = chosen[name];
+                    if (!choice || typeof choice !== "object")
+                        continue;
+                    if (choice.press !== undefined)
+                        take(name, code, "press", choice.press, "the hardwareKeyActions tweak");
+                    if (choice.hold !== undefined)
+                        take(name, code, "hold", choice.hold, "the hardwareKeyActions tweak");
+                }
+            } catch (e) {
+                console.warn("HardwareKeys: cannot parse the hardwareKeyActions tweak: " + e);
+            }
+        }
+
+        return { actions: merged, holdActions: hold, overridden: overridden, configurable: configurable };
     }
 
     //! Synchronous on purpose: this has to be settled before the first key press,
@@ -246,6 +396,9 @@ Item {
     }
 
     function _onKey(keycode, pressed, autoRepeat, nativeModifiers) {
+        if (hardwareKeys.holdActions[keycode] !== undefined)
+            return hardwareKeys._onHoldKey(keycode, pressed, autoRepeat);
+
         var action = hardwareKeys.actionFor(keycode);
 
         if (action === undefined || action === "none")
@@ -271,6 +424,63 @@ Item {
         // own gives whatever has focus half an event.
         return hardwareKeys._consumes(action) ? hardwareKeys.resultAccepted
                                               : hardwareKeys.resultNextPolicy;
+    }
+
+    /*!
+     * \brief A key with a hold action.
+     *
+     * Nothing happens on the press itself: the timer decides. Held to the end
+     * of it, the hold action runs, once; let go before, the press action runs
+     * on the release. The key is consumed either way, press, repeats and
+     * release, since what it means is not known until it is let go.
+     */
+    function _onHoldKey(keycode, pressed, autoRepeat) {
+        if (pressed) {
+            if (!autoRepeat && hardwareKeys._holdKey !== keycode) {
+                hardwareKeys._holdKey = keycode;
+                hardwareKeys._holdFired = false;
+                holdTimer.restart();
+            }
+            return hardwareKeys.resultAccepted;
+        }
+
+        if (hardwareKeys._holdKey === keycode) {
+            holdTimer.stop();
+            const fired = hardwareKeys._holdFired;
+            hardwareKeys._holdKey = -1;
+            hardwareKeys._holdFired = false;
+            if (!fired)
+                hardwareKeys._run(hardwareKeys.actionFor(keycode));
+        }
+        return hardwareKeys.resultAccepted;
+    }
+
+    function _holdReached() {
+        if (hardwareKeys._holdKey < 0 || hardwareKeys._holdFired)
+            return;
+        hardwareKeys._holdFired = true;
+        hardwareKeys._run(hardwareKeys.holdActions[hardwareKeys._holdKey]);
+    }
+
+    //! Runs an action at once, media ones included: for a key with a hold
+    //! action, which has no press and release of its own to count.
+    function _run(action) {
+        if (action === undefined || action === "none")
+            return;
+        if (action.indexOf("media.") === 0) {
+            hardwareKeys._sendMediaKey(action === "media.headset" ? "playPause"
+                                                                  : action.substring("media.".length));
+            return;
+        }
+        hardwareKeys._act(action);
+    }
+
+    //! Launches an application for a key.
+    function _launch(appId) {
+        hardwareKeys.appLaunchRequested(appId);
+        appLauncher.launch(appId, {}, undefined, function (error) {
+            console.warn("HardwareKeys: cannot launch " + appId + ": " + error);
+        });
     }
 
     //! A media key: the headset button is counted on press and release, the
@@ -364,6 +574,19 @@ Item {
 
         case "shell.back":
             hardwareKeys._sendBack();
+            break;
+
+        case "app.camera":
+            hardwareKeys._launch(hardwareKeys.cameraAppId);
+            break;
+
+        case "torch.toggle":
+            hardwareKeys._call("luna://org.webosports.service.torch/toggle", "{}");
+            break;
+
+        default:
+            if (action.indexOf("app.launch:") === 0)
+                hardwareKeys._launch(action.substring("app.launch:".length));
             break;
         }
     }

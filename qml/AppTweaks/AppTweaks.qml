@@ -42,6 +42,7 @@ Item {
     property alias newDeviceMenuTweakValue: newDeviceMenuTweak.value
     property alias disableAnimationsTweakValue: disableAnimationsTweak.value
     property alias hardwareNavigationKeysTweakValue: hardwareNavigationKeysTweak.value
+    property alias hardwareKeyActionsTweakValue: hardwareKeyActionsTweak.value
 
     // Set by CardShell when org.webosports.service.eink reports an E Ink
     // panel. Such a panel flashes for every large greyscale update, and a
@@ -69,6 +70,15 @@ Item {
         serviceName: appTweaks.serviceName
         key: "hardwareNavigationKeys"
         defaultValue: "auto"
+    }
+    // The user's choices for the keys the device offers (Settings > Buttons),
+    // as JSON: {"Key_Launch2": {"press": "none", "hold": "app.camera"}}.
+    Tweak {
+        id: hardwareKeyActionsTweak
+        owner: appTweaks.owner
+        serviceName: appTweaks.serviceName
+        key: "hardwareKeyActions"
+        defaultValue: ""
     }
     Tweak {
         id: showTapRippleTweak
