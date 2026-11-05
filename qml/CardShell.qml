@@ -270,6 +270,10 @@ Rectangle {
 
         inCall: shellAudioOutputService.inCall
 
+        // Settings > Buttons: what the keys the device offers do.
+        userActions: typeof AppTweaks.hardwareKeyActionsTweakValue === "string" ?
+                         AppTweaks.hardwareKeyActionsTweakValue : ""
+
         onLauncherToggleRequested: cardsArea.toggleLauncher()
     }
 

@@ -54,6 +54,15 @@
 					} 	
 				]
             },
+            {
+                "group": "ui",
+                "restart": "none",
+                "label": "Hardware key actions",
+                "help": "What the keys this device offers do when pressed and when held. Set in Settings > Buttons; stored as JSON, e.g. {\"Key_Launch2\": {\"press\": \"none\", \"hold\": \"app.camera\"}}.",
+                "key": "hardwareKeyActions",
+                "type": "TextField",
+                "value": ""
+            },
 			{
                 "group": "launcher",
                 "restart": "none",
