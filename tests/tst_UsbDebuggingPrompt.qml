@@ -220,13 +220,17 @@ Item {
             verify(prompt.titlePixelSize > prompt.messagePixelSize);
         }
 
-        // Allow green and Deny red, LuneOSButton's own colours.
-        function test_allow_is_green_and_deny_red() {
+        // webOS button colours: Allow green, LuneOSButton's affirmative
+        // colour; red is for destructive actions, and denying destroys
+        // nothing, so Deny is the default light button, as ConfirmDialog's
+        // reject.
+        function test_allow_is_green_and_deny_is_light() {
             prompt.ask(fp, 30000);
             compare(child("usbDebuggingAllow").color, LuneOSButton.affirmativeColor);
-            compare(child("usbDebuggingDeny").color, LuneOSButton.negativeColor);
             compare(child("usbDebuggingAllow").fontcolor, Qt.color("white"));
-            compare(child("usbDebuggingDeny").fontcolor, Qt.color("white"));
+            compare(child("usbDebuggingDeny").color, Qt.color("white"));
+            compare(child("usbDebuggingDeny").fontcolor, Qt.color("#292929"));
+            verify(child("usbDebuggingDeny").color !== LuneOSButton.negativeColor);
         }
 
         function test_allow_once() {
