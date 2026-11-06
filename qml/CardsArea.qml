@@ -326,6 +326,7 @@ WindowManager {
         id: systemService
         cardViewInstance: cardViewInstance
         compositorInstance: compositor
+        screenShooter: screenShooter
 
         onPerformanceUIVisibleChanged: {
             performanceOverlay.active = performanceUIVisible;
