@@ -65,3 +65,43 @@ function forKey(up, inCall, soundOutput, currentVolume) {
 function inCallOf(payload) {
     return payload !== null && typeof payload === "object" && payload.inCall === true;
 }
+
+/*
+ * Which output the keys move. audiod's master/getVolume subscription reports
+ * the stored volume of input devices too, under the same "soundOutput" key:
+ * when it (re)connects to PulseAudio it restores pcm_output and pcm_input
+ * with callerId "internal", in either order. Taking every status as the
+ * keys' target left them on pcm_input whenever that one came last, and from
+ * then on every press asked audiod to set the master volume of the
+ * microphone, which PulseAudio has no sink for - the keys did nothing at all
+ * until an output's status came by.
+ */
+
+//! The names of the input devices in a listSupportedDevices reply.
+function inputDevicesOf(payload) {
+    var names = [];
+    if (payload === null || typeof payload !== "object" || !Array.isArray(payload.deviceList))
+        return names;
+    for (var i = 0; i < payload.deviceList.length; i++) {
+        var d = payload.deviceList[i];
+        if (d && d.type === "input" && typeof d.deviceName === "string")
+            names.push(d.deviceName);
+    }
+    return names;
+}
+
+//! The output the keys should move after a master volume status naming
+//! soundOutput: that one if it is an output, otherwise the current one.
+function keyOutputAfterStatus(current, soundOutput, inputDevices) {
+    if (typeof soundOutput !== "string" || soundOutput.length === 0)
+        return current;
+    if (inputDevices.indexOf(soundOutput) >= 0)
+        return current;
+    return soundOutput;
+}
+
+//! The output the keys should move once the input devices are known: an
+//! input taken before the list came in falls back to lastOutput.
+function keyOutputWithInputs(current, lastOutput, inputDevices) {
+    return inputDevices.indexOf(current) >= 0 ? lastOutput : current;
+}

@@ -48,4 +48,47 @@ TestCase {
         verify(!VolumeKeyRequest.inCallOf({ inCall: "true" }));
         verify(!VolumeKeyRequest.inCallOf(null));
     }
+
+    readonly property var deviceList: ({ returnValue: true, deviceList: [
+        { deviceName: "usb_mic0", type: "input", connected: false },
+        { deviceName: "pcm_input", type: "input", connected: true },
+        { deviceName: "pcm_output", type: "output", connected: true },
+        { deviceName: "pcm_headphone", type: "output", connected: true },
+        { deviceName: "bluetooth_speaker0", type: "output", connected: false }
+    ] })
+
+    function test_inputDevicesComeFromTheDeviceList() {
+        compare(JSON.stringify(VolumeKeyRequest.inputDevicesOf(deviceList)),
+                JSON.stringify(["usb_mic0", "pcm_input"]));
+        compare(VolumeKeyRequest.inputDevicesOf({ returnValue: false }).length, 0);
+        compare(VolumeKeyRequest.inputDevicesOf(null).length, 0);
+    }
+
+    // What audiod sends when it reconnects to PulseAudio: both stored volumes,
+    // the input's last. The keys stayed on pcm_input and did nothing.
+    function test_anInputsStatusDoesNotTakeTheKeys() {
+        var inputs = VolumeKeyRequest.inputDevicesOf(deviceList);
+        var out = VolumeKeyRequest.keyOutputAfterStatus("pcm_output", "pcm_output", inputs);
+        out = VolumeKeyRequest.keyOutputAfterStatus(out, "pcm_input", inputs);
+        compare(out, "pcm_output");
+        compare(VolumeKeyRequest.forKey(true, false, out, 20).payload.soundOutput, "pcm_output");
+    }
+
+    function test_anOutputsStatusMovesTheKeysThere() {
+        var inputs = VolumeKeyRequest.inputDevicesOf(deviceList);
+        compare(VolumeKeyRequest.keyOutputAfterStatus("pcm_output", "bluetooth_speaker0", inputs),
+                "bluetooth_speaker0");
+        compare(VolumeKeyRequest.keyOutputAfterStatus("pcm_output", "", inputs), "pcm_output");
+        compare(VolumeKeyRequest.keyOutputAfterStatus("pcm_output", undefined, inputs), "pcm_output");
+    }
+
+    // The statuses can come before the device list does.
+    function test_anInputTakenBeforeTheListFallsBack() {
+        var out = VolumeKeyRequest.keyOutputAfterStatus("pcm_output", "pcm_input", []);
+        compare(out, "pcm_input", "nothing is known to be an input yet");
+        var inputs = VolumeKeyRequest.inputDevicesOf(deviceList);
+        compare(VolumeKeyRequest.keyOutputWithInputs(out, "pcm_output", inputs), "pcm_output");
+        compare(VolumeKeyRequest.keyOutputWithInputs("bluetooth_speaker0", "pcm_output", inputs),
+                "bluetooth_speaker0");
+    }
 }

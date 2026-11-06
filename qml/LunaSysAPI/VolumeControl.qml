@@ -44,6 +44,10 @@ Item {
     // tenth of a step, so set the volume directly in steps of 10 instead, which
     // is what the old service did.
     property string soundOutput: "pcm_output"
+    //! The last status that named an output, and audiod's input devices:
+    //! the keys never move an input (see VolumeKeyRequest.js).
+    property string _lastOutput: "pcm_output"
+    property var _inputDevices: []
     property int currentVolume: 50
     readonly property int volumeStep: VolumeKeyRequest.step
 
@@ -54,6 +58,16 @@ Item {
         audioService.subscribe("luna://com.webos.service.audio/master/getVolume",
                                JSON.stringify({"subscribe": true}),
                                handleVolumeStatus, handleVolumeError);
+        audioService.subscribe("luna://com.webos.service.audio/listSupportedDevices",
+                               JSON.stringify({"subscribe": true}),
+                               handleDeviceList, handleVolumeError);
+    }
+
+    function handleDeviceList(message) {
+        volumeControl._inputDevices = VolumeKeyRequest.inputDevicesOf(JSON.parse(message.payload));
+        volumeControl.soundOutput = VolumeKeyRequest.keyOutputWithInputs(volumeControl.soundOutput,
+                                                                          volumeControl._lastOutput,
+                                                                          volumeControl._inputDevices);
     }
 
     // Subscribed again whenever audiod comes back, so a restarted audiod
@@ -88,10 +102,19 @@ Item {
         var payload = JSON.parse(message.payload);
         // audiod nests these under volumeStatus; accept a flat payload too.
         var status = payload.hasOwnProperty("volumeStatus") ? payload.volumeStatus : payload;
+        var named = typeof status.soundOutput === "string" && status.soundOutput.length > 0;
+        var output = VolumeKeyRequest.keyOutputAfterStatus(volumeControl.soundOutput,
+                                                           status.soundOutput,
+                                                           volumeControl._inputDevices);
+        // An input's status says nothing about the volume the keys move.
+        if (named && output !== status.soundOutput)
+            return;
         if (status.hasOwnProperty("volume"))
             volumeControl.currentVolume = status.volume;
-        if (status.hasOwnProperty("soundOutput") && status.soundOutput.length > 0)
-            volumeControl.soundOutput = status.soundOutput;
+        if (named) {
+            volumeControl.soundOutput = output;
+            volumeControl._lastOutput = output;
+        }
     }
 
     function handleVolumeError(message) {
