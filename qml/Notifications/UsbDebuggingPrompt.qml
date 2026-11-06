@@ -90,11 +90,14 @@ Dialog {
     // Column, and the gap falls back to 0.5 gu.
     property real _buttonGap: Units.gu(1.5)
 
-    // LuneOSButton's affirmativeColor and negativeColor (QtQuick.Controls.LuneOS),
-    // as LuneOS.Forms' Colors does: the shell's dialogs are not drawn by that
-    // style, so the prompt does not load its plugin for two colours.
+    // webOS button colours: green (LuneOSButton's affirmativeColor,
+    // QtQuick.Controls.LuneOS) for the positive choice; denying destroys
+    // nothing, so it is the default light button, as ConfirmDialog's reject.
+    // Red is for destructive actions only. The shell's dialogs are not drawn
+    // by that style, so the prompt does not load its plugin for the colours.
     readonly property color _allowColor: "#2aa100"
-    readonly property color _denyColor: "#be0003"
+    readonly property color _denyColor: "white"
+    readonly property color _denyTextColor: "#292929"
 
     // "SHA256:" on a line of its own, then the key's hash in groups of four,
     // four groups a line, so it breaks between groups and is read a group at
@@ -236,7 +239,7 @@ Dialog {
         objectName: "usbDebuggingDeny"
         text: "Deny"
         color: prompt._denyColor
-        fontcolor: "white"
+        fontcolor: prompt._denyTextColor
         buttonWidth: prompt._buttonWidth
         anchors.horizontalCenter: parent.horizontalCenter
         onClicked: prompt._answer(false)
