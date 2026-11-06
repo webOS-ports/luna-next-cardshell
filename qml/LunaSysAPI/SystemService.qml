@@ -58,15 +58,6 @@ Item {
         }
     }
 
-    LunaService {
-        id: systemServicePublic
-        name: "com.webos.surfacemanager.cardshell"
-        onInitialized: {
-            systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
-            systemServicePublic.registerMethod("/", "enableFullScreenMode", handleEnableFullScreenMode);
-        }
-    }
-
     function buildErrorResponse(message, subscribed) {
         var response = { "returnValue": false, "errorMessage": message, "errorCode": -1};
 
