@@ -71,7 +71,7 @@ Item {
     SystemPreferences {
         id: prefs
 
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         keys: ["wallpaper","airplaneMode","rotationLock","muteSound","ringtone","notificationtone","alerttone","locale","uiScale"]
 
         onUpdated: (response) => {

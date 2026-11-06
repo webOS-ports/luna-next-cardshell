@@ -50,7 +50,7 @@ Item {
 
     ServiceStatus {
         serviceName: "com.palm.telephony"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: available ? connected() : disconnected()
 
@@ -115,12 +115,12 @@ Item {
 
     LunaService {
         id: telephonyCall
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     LunaService {
         id: simListQuery
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         service: "luna://com.palm.telephony"
         method: "simListQuery"
 
@@ -140,7 +140,7 @@ Item {
 
     LunaService {
         id: powerQuery
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         service: "luna://com.palm.telephony"
         method: "powerQuery"
 
@@ -163,7 +163,7 @@ Item {
 
     LunaService {
         id: networkStatusQuery
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         service: "luna://com.palm.telephony"
         method: "networkStatusQuery"
 
@@ -190,7 +190,7 @@ Item {
 
     LunaService {
         id: signalStrengthQuery
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         service: "luna://com.palm.telephony"
         method: "signalStrengthQuery"
 

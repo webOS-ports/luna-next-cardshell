@@ -6,7 +6,7 @@ import LuneOS.Service 1.0
 QtObject {
 
     property LunaService service: LunaService {
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     function setIconUrlFromWindow(window, setterFct) {

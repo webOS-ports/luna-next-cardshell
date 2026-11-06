@@ -92,7 +92,7 @@ Item {
 
     LunaService {
         id: imeService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             imeService.subscribe("luna://com.webos.service.ime/getKeyboardStatus",

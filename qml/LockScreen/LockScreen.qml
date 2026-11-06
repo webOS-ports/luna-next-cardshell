@@ -480,7 +480,7 @@ Item {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             // com.palm.display and com.palm.systemmanager are subscribed from
             // the ServiceStatus watches below instead of here: a plain
@@ -657,7 +657,7 @@ Item {
     // answered, so those subscriptions have to be re-established every time
     // the service comes back, not once at startup.
     SystemPreferences {
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         keys: ["enableFingerprintUnlock", "enableFaceUnlock"]
         onUpdated: (response) => service.handleBiometricPreferences(response)
         onError: (message) => console.warn("LockScreen: cannot read the biometric preferences: " + message)
@@ -666,7 +666,7 @@ Item {
     ServiceStatus {
         id: displayServiceStatus
         serviceName: "com.palm.display"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: available ? connected() : disconnected()
 
@@ -682,7 +682,7 @@ Item {
     ServiceStatus {
         id: systemManagerServiceStatus
         serviceName: "com.palm.systemmanager"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: available ? connected() : disconnected()
 

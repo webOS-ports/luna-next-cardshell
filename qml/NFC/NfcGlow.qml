@@ -122,7 +122,7 @@ Item {
     LunaService {
         id: nfcStatusQuery
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             subscribe("luna://com.webos.service.nfc/getStatus",

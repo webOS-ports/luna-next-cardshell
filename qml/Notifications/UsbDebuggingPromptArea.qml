@@ -40,7 +40,7 @@ import LuneOS.System 1.0
 Item {
     id: area
 
-    readonly property string busName: "com.webos.surfacemanager-cardshell"
+    readonly property string busName: "com.webos.surfacemanager.cardshell"
     readonly property string devmode: "luna://org.webosports.service.devmode"
 
     //! The question shown, "" when none.

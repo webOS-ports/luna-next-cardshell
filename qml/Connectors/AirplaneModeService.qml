@@ -370,11 +370,11 @@ Item {
 
     LunaService {
         id: telephony
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     LunaService {
         id: systemService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

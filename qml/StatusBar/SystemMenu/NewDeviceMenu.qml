@@ -172,7 +172,7 @@ Item {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             // Media volume, kept in sync the same way VolumeElement does it.
             service.subscribe("luna://com.webos.service.audio/master/getVolume",
@@ -205,7 +205,7 @@ Item {
      */
     ServiceStatus {
         serviceName: "org.webosports.service.torch"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: available ? connected() : disconnected()
 

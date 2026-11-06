@@ -219,7 +219,7 @@ Item {
 
     LunaService {
         id: ledService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             ledService.subscribe("luna://com.palm.display/control/status",
@@ -232,7 +232,7 @@ Item {
     }
 
     SystemPreferences {
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         keys: ["BlinkNotifications", "notificationLedColors"]
         onUpdated: (response) => notificationLed.handlePreferences(response)
         onError: (message) => console.warn("NotificationLed: preference subscription failed: " + message)

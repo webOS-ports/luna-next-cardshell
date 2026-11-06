@@ -139,7 +139,7 @@ Item {
     ServiceStatus {
         id: notificationManagerStatus
         serviceName: "com.webos.notification"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         onAvailableChanged: available ? notificationManager.subscribe() : notificationManager.unsubscribe()
     }
 

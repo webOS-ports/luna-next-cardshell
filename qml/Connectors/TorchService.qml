@@ -47,13 +47,13 @@ Item {
 
     LunaService {
         id: lunaService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     ServiceStatus {
         id: torchStatus
         serviceName: "org.webosports.service.torch"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         onAvailableChanged: torchService.handleServiceStatus()
     }
 

@@ -184,7 +184,7 @@ Item {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     // A tap elsewhere in the system counts as activity because it is a

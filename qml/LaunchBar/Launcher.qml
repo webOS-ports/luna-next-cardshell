@@ -61,7 +61,7 @@ Item {
 
     property QtObject appLauncher: AppLauncher {
         id: appLauncher
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
     }
 
     Keys.forwardTo: [ justTypeFieldInstance, fullLauncherInstance ]
