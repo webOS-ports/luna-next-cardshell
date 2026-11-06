@@ -86,7 +86,7 @@ Item {
         if (typeof request.file !== 'undefined' && request.file.length !== 0)
             path = request.file;
 
-        if (systemService.screenShooter === null)
+        if (!systemService.screenShooter)
             return buildErrorResponse("Internal error.");
 
         // The camera shutter, as LunaSysMgr played before capturing
