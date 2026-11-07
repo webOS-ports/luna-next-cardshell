@@ -271,7 +271,7 @@ Item {
                         launcherInstance.launchApplication("org.webosports.app.settings.wifi",{});
                     }
 
-                    onUserInputRequested: {
+                    onUserInputRequested: function(servicePath) {
                         var target = {};
                         target["servicePath"] = servicePath;
                         launcherInstance.launchApplication("org.webosports.app.settings.wifi",{"target":target});
@@ -324,7 +324,6 @@ Item {
                     maxViewHeight : maxHeight - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin;
 
                     onPrefsTriggered: {
-                        //TODO needs page in Settings
                         launcherInstance.launchApplication("org.webosports.app.settings.bluetooth",{});
                     }
 

@@ -158,15 +158,34 @@ Item {
         filterRegularExpression: /true/
     }
 
+    /*
+     * Opens the Wi-Fi app on one network. Given {"target": {"servicePath"}},
+     * it connects to that network itself, so connman asks the app's agent for
+     * the passphrase and the app's prompt comes up.
+     */
+    function joinInWifiApp(servicePath) {
+        launcherInstance.launchApplication("org.webosports.app.settings.wifi",
+                                           {"target": {"servicePath": servicePath}});
+        closeMenuTimer.interval = 300;
+        closeMenuTimer.start();
+    }
+
+    /*
+     * connman sends RequestInput to the agent of whoever called Connect. A
+     * network with no saved passphrase goes to the Wi-Fi app before anything
+     * connects (see wifiListDelegate), so this only hears from connman when a
+     * saved network wants something new - a changed passphrase, say. This
+     * menu has no field to type it in: cancel at once (an empty reply is
+     * net.connman.Agent.Error.Canceled), or connman keeps the service
+     * mid-connect waiting for an answer and every tap in the app gets
+     * InProgress. The app then connects itself and its agent asks.
+     */
     UserAgent {
         id: connmanUserAgent
-        onUserInputRequested: {
-            // Delegate password entry etc. to the wifi prefs app
-            var target = {};
-            target["servicePath"] = servicePath;
-            launcherInstance.launchApplication("org.webosports.app.settings.wifi",{"target":target});
-            closeMenuTimer.interval = 300;
-            closeMenuTimer.start();
+        objectName: "connmanUserAgent"
+        onUserInputRequested: function(servicePath, fields) {
+            connmanUserAgent.sendUserReply({});
+            deviceMenu.joinInWifiApp(servicePath);
         }
     }
 
@@ -827,9 +846,15 @@ Item {
                     if (delegateService.connected) {
                         delegateService.requestDisconnect();
                     }
+                    else if (delegateService.securityType !== NetworkService.SecurityNone &&
+                             delegateService.securityType !== NetworkService.SecurityUnknown &&
+                             !delegateService.favorite) {
+                        // Secured and never joined: the Wi-Fi app asks for the
+                        // passphrase (see joinInWifiApp).
+                        deviceMenu.joinInWifiApp(delegateService.path);
+                        return;
+                    }
                     else {
-                        // if this service needs a password and we don't have it yet,
-                        // connman will ask the user through the UserAgent
                         delegateService.requestConnect();
                     }
                     closeMenuTimer.interval = 300;
