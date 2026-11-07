@@ -191,7 +191,14 @@ ListModel {
             }
 
             onClosed: {
-                var toastId = getToastIdFromNotif(notifObject);
+                // The id of the toast as it is now. A toast that repeats the
+                // last one (same source, message and type) overwrites that row
+                // in place with its own timestamp, and the copy taken above
+                // still has the old one: closing by it closed nothing, and the
+                // entry could not be swiped away. The copy is only for once
+                // the row has gone.
+                var live = loaderNotifObject;
+                var toastId = getToastIdFromNotif(live && live.timestamp !== undefined ? live : notifObject);
                 notificationLunaService.call(
                             "luna://com.webos.notification/closeToast",
                             JSON.stringify({"toastId": toastId}), undefined, onCloseNotifError);
