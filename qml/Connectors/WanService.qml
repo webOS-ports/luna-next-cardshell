@@ -64,7 +64,7 @@ Item {
 
     ServiceStatus {
         serviceName: "com.palm.connectionmanager"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: available ? connected() : disconnected()
 
@@ -80,7 +80,7 @@ Item {
 
     LunaService {
         id: getConnMgrWanStatus
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         service: "luna://com.palm.connectionmanager"
         method: "getStatus"
 
@@ -106,7 +106,7 @@ Item {
 
     ServiceStatus {
         serviceName: "com.palm.wan"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: available ? connected() : disconnected()
 
@@ -122,12 +122,12 @@ Item {
 
     LunaService {
         id: setWanConfig
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     LunaService {
         id: getWanStatus
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         service: "luna://com.palm.wan"
         method: "getstatus"
 

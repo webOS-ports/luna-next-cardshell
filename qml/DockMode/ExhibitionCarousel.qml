@@ -94,7 +94,7 @@ Item {
 
     property LunaService launchService: LunaService {
         id: launchService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             carousel.__serviceReady = true;

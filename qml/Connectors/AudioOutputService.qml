@@ -54,13 +54,13 @@ Item {
 
     LunaService {
         id: lunaService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     ServiceStatus {
         id: audioStatus
         serviceName: "org.webosports.service.audio"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         onAvailableChanged: audioOutputService.handleServiceStatus()
     }
 

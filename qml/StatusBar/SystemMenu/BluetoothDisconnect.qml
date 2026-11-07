@@ -36,7 +36,7 @@ QtObject {
     // Stand-ins in the tests.
     property QtObject manager: BluetoothManager
     property QtObject luna: LunaService {
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     readonly property string forgetUri: "luna://com.webos.service.bluetooth2/autoReconnect/forget"

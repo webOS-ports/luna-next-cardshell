@@ -103,7 +103,7 @@ Item {
     LunaService {
         id: shutdownWatch
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             /* The signal is what matters; register second so sleepd waits
@@ -120,7 +120,7 @@ Item {
             root.shutdownClientId = "";
             shutdownWatch.subscribe(
                 "luna://com.webos.service.sleep/shutdown/shutdownApplicationsRegister",
-                JSON.stringify({ "clientName": "com.webos.surfacemanager-cardshell",
+                JSON.stringify({ "clientName": "com.webos.surfacemanager.cardshell",
                                  "subscribe": true }),
                 handleRegisterMessage, handleRegisterError);
         }

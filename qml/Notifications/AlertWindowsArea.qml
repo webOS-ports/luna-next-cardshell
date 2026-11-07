@@ -380,6 +380,6 @@ Rectangle {
     LunaService {
         id: displayService
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

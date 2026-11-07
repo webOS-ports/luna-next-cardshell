@@ -30,7 +30,7 @@ Item {
             for (var k in fields)
                 status[k] = fields[k];
             var payload = { volumeStatus: status, returnValue: true,
-                            callerId: callerId === undefined ? "com.webos.surfacemanager-cardshell"
+                            callerId: callerId === undefined ? "com.webos.surfacemanager.cardshell"
                                                              : callerId };
             volumeAlert.onAudioStatusChanged({ payload: JSON.stringify(payload) });
         }

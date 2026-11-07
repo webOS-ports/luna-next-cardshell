@@ -40,7 +40,7 @@ Item {
     }
 
     SystemPreferences {
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         keys: ["timeFormat"]
         onUpdated: (response) => title.onTimeFormatChanged(response)
         onError: (message) => title.onTimeFormatError(message)

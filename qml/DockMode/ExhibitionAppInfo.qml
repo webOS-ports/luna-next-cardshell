@@ -27,7 +27,7 @@ QtObject {
 
     property LunaService service: LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     // Resolves appId's icon and hands the path to setterFct. Stays quiet if

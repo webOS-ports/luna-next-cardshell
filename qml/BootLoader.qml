@@ -60,19 +60,19 @@ Item {
 
     ServiceStatus {
         serviceName: "org.webosports.bootmgr"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         onAvailableChanged: if (available) systemService.subscribeBootStatus()
     }
 
     ServiceStatus {
         serviceName: "com.webos.service.audio"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         onAvailableChanged: if (available) audioSettleDelay.start()
     }
 
     LunaService {
         id: systemService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         function subscribeBootStatus() {
             console.log("Calling boot status service ...");
             systemService.subscribe("luna://org.webosports.bootmgr/getStatus",

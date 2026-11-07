@@ -424,7 +424,7 @@ Item {
             LunaService {
                 id: networkStatusQuery
 
-                name: "com.webos.surfacemanager-cardshell"
+                name: "com.webos.surfacemanager.cardshell"
 
                 onInitialized: {
                     probeNetworkStatus()
@@ -435,7 +435,7 @@ Item {
             LunaService {
                 id: simListQuery
 
-                name: "com.webos.surfacemanager-cardshell"
+                name: "com.webos.surfacemanager.cardshell"
 
                 onInitialized: {
                     probeSimList()

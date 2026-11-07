@@ -285,9 +285,9 @@ ListModel {
         property int __previousCount: 0
     }
     property LunaService notificationLunaService: LunaService {
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
     property LunaService displayService: LunaService {
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

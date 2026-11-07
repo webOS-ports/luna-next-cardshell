@@ -39,7 +39,7 @@ Item {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     // No preference subscription of its own: the sounds and the locale used

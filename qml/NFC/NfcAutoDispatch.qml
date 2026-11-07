@@ -31,7 +31,7 @@ Item {
     LunaService {
         id: nfcStatusQuery
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             subscribe("luna://com.webos.service.nfc/getTagInfo",
@@ -42,12 +42,12 @@ Item {
 
     AppLauncher {
         id: appLauncher
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
     }
 
     LunaService {
         id: notificationService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     function onTagInfoChanged(message) {
@@ -108,7 +108,7 @@ Item {
 
     function showToast(message) {
         notificationService.call("luna://com.webos.notification/createToast",
-                                  JSON.stringify({"sourceId": "com.webos.surfacemanager-cardshell",
+                                  JSON.stringify({"sourceId": "com.webos.surfacemanager.cardshell",
                                                   "message": message}),
                                   function () {}, function () {});
     }

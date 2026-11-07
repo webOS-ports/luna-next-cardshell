@@ -83,7 +83,7 @@ Item {
     ServiceStatus {
         id: audioServiceStatus
         serviceName: "com.webos.service.audio"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: available ? connected() : disconnected()
 
@@ -108,7 +108,7 @@ Item {
     ServiceStatus {
         id: phoneServiceStatus
         serviceName: "com.palm.audio"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: {
             if (available)
@@ -121,7 +121,7 @@ Item {
     LunaService {
         id: audioService
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     function onAudioStatusChanged(message) {

@@ -90,7 +90,7 @@ Item {
 
     LunaService {
         id: lunaService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             lunaService.subscribe("luna://com.palm.bus/signal/addmatch",
@@ -109,7 +109,7 @@ Item {
     ServiceStatus {
         id: batterydStatus
         serviceName: "com.webos.service.battery"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         onAvailableChanged: batteryService.handleBatterydServiceStatus()
     }
 

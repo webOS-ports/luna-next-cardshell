@@ -37,7 +37,7 @@ ListModel {
 
     // The bus, replaceable by the tests.
     property QtObject lunaNextLS2Service: LunaService {
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     // SAM posts a change for one launch point after another while it rescans the
@@ -152,7 +152,7 @@ ListModel {
     // A property: a ListModel takes nothing but ListElements as children
     property QtObject applicationManagerStatus: ServiceStatus {
         serviceName: "com.webos.service.applicationmanager"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         onAvailableChanged: if (available) applicationModel.handleApplicationManagerUp()
     }
 

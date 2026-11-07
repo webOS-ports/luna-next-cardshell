@@ -38,10 +38,9 @@ Item {
 
     property variant currentWindow: null
 
-    // Methods are registered on a name without a "-": LSUriParse takes only
-    // letters, digits and "_" between the dots of a luna:// or palm:// url, so
-    // "com.webos.surfacemanager-cardshell", the shell's name as a client, can
-    // be called by no one.
+    // The shell's name has no "-": LSUriParse takes only letters, digits and
+    // "_" between the dots of a luna:// or palm:// url, so the old
+    // "com.webos.surfacemanager-cardshell" could be called by no one.
     LunaService {
         id: systemServicePrivate
         name: "com.webos.surfacemanager.cardshell"

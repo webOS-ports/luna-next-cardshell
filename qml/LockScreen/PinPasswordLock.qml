@@ -180,7 +180,7 @@ Item {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     function submitPassword(password, isPin) {

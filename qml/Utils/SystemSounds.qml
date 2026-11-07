@@ -40,7 +40,7 @@ QtObject {
     property bool enabled: true
 
     property var _prefs: SystemPreferences {
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         keys: ["systemSounds"]
 
         onUpdated: (response) => {

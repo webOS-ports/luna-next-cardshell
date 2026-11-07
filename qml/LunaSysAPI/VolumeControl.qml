@@ -75,7 +75,7 @@ Item {
     ServiceStatus {
         id: phoneStatusService
         serviceName: "com.palm.audio"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
 
         onAvailableChanged: {
             if (available) {
@@ -146,6 +146,6 @@ Item {
 
     LunaService {
         id: audioService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

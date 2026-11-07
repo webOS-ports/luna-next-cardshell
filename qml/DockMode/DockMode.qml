@@ -88,14 +88,14 @@ Item {
 
     LunaService {
         id: setDisplayState
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         service: "luna://com.palm.display"
         method: "control/setState"
     }
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             service.subscribe("luna://com.palm.display/control/lockStatus", "{\"subscribe\":true}", handleLockStatus, handleError);
         }

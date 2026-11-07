@@ -79,7 +79,7 @@ Item {
 
 
     SystemPreferences {
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         keys: ["timeFormat", "locale"]
         onUpdated: (response) => clockItem.onPrefsChanged(response)
         onError: (message) => clockItem.onPrefsError(message)

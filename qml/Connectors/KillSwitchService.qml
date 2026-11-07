@@ -74,13 +74,13 @@ Item {
 
     LunaService {
         id: lunaService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     ServiceStatus {
         id: killSwitchStatus
         serviceName: "org.webosports.service.killswitch"
-        clientName: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
         onAvailableChanged: killSwitchService.handleServiceStatus()
     }
 

@@ -764,7 +764,7 @@ Item {
     // ls2 management
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
     // ls2 launchPoint removal
     function removeApplication(id) {
