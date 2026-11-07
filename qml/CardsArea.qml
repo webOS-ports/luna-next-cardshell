@@ -758,4 +758,31 @@ WindowManager {
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
     }
+
+    /*
+     * The Gesture Tutorial once first use is over, and webOS 3.0's one-time
+     * "Dismissing Cards" note the first time a card goes to Card View: see
+     * GestureTutorial. The note only while Card View is what is showing.
+     */
+    GestureTutorial {
+        id: gestureTutorial
+        shellState: windowManager.state
+        blocked: cardViewInstance.state !== "cardList" || !cardViewInstance.visible
+                 || lockScreen.visible || dockMode.visible
+                 || launcherInstance.launcherActive || launcherInstance.fullLauncherVisible
+        onShowHint: cardDismissHint.open()
+    }
+
+    Connections {
+        target: cardViewInstance
+        function onCardMinimized(window) {
+            gestureTutorial.cardMinimized(window && window.appId ? window.appId : "");
+        }
+    }
+
+    CardDismissHint {
+        id: cardDismissHint
+        objectName: "cardDismissHint"
+        z: 950 // over the cards, the launcher bar and the gesture area
+    }
 }

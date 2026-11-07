@@ -44,6 +44,12 @@ Item {
 
     signal currentCardChanged();
 
+    //! The card that held the stage went to Card View: swiped up, the
+    //! gesture area tapped, or another card picked over it. LunaSysMgr's
+    //! MinimizeState::onEntry, which showed the "Dismissing Cards" note the
+    //! first time (CardWindowManager::firstCardAlert).
+    signal cardMinimized(Item window);
+
     focus: true
     Keys.forwardTo: cardGroupListViewInstance
 
@@ -479,8 +485,10 @@ Item {
         // Carded is Minimized to the client: it no longer holds the stage. It
         // is still on screen in the card view, hence the true.
         __publishWindowState(window, Qt.WindowMinimized);
-        if (stageWindow === window)
+        if (stageWindow === window) {
             stageWindow = null;
+            cardMinimized(window);
+        }
     }
 
     // The state a card opens in: maximized, or fullscreen if its app asked.
