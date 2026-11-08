@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 /*
@@ -113,7 +114,8 @@ Item {
     readonly property bool ledShouldBlink: blinkNotifications && !displayOn &&
                                            activeAppId !== ""
 
-    property var _pendingAppIds: []
+    readonly property var _pendingAppIds: _pendingFrom(notificationModel,
+                                                       notificationModel ? notificationModel.count : 0)
 
     // What was last handed to nyx, so that an unchanged state is not re-sent.
     // A toast arriving while the screen is on changes activeAppId but must not
@@ -125,18 +127,20 @@ Item {
 
     /*
      * Distinct source ids of the toasts still waiting, oldest first.
+     * Follows the model's count: parseModelData()'s in-place set() cannot
+     * change which applications are waiting.
      *
      * "light" toasts are skipped for the same reason NotificationsMergedModel
      * does not give them a sticky entry: they are transient status messages
      * that leave nothing behind to go back to, so there is nothing for the LED
      * to point at.
      */
-    function _recomputePending() {
+    function _pendingFrom(model, count) {
         var ids = [];
 
-        if (notificationModel) {
-            for (var i = 0; i < notificationModel.count; i++) {
-                var notif = notificationModel.get(i);
+        if (model) {
+            for (var i = 0; i < count; i++) {
+                var notif = model.get(i);
                 if (!notif || !notif.sourceId)
                     continue;
                 if (notif.type === "light")
@@ -152,7 +156,7 @@ Item {
             }
         }
 
-        _pendingAppIds = ids;
+        return ids;
     }
 
     /*
@@ -209,38 +213,15 @@ Item {
     onActiveAppIdChanged: _apply()
     onAppColorsChanged: _apply()
 
-    /*
-     * count covers both directions: the model appends on arrival and removes on
-     * withdrawal, and parseModelData()'s in-place set() cannot change which
-     * applications are waiting. Using it avoids having to read a row that
-     * rowsAboutToBeRemoved has not taken out yet.
-     */
-    onNotificationModelChanged: _recomputePending()
-
-    Connections {
-        target: notificationLed.notificationModel
-        ignoreUnknownSignals: true
-        function onCountChanged() { notificationLed._recomputePending(); }
-    }
-
     // Leaving the LED lit after the shell goes away would strand it on, with
     // nothing left to turn it off.
     Component.onDestruction: Leds.stopAll()
 
     LunaService {
         id: ledService
-        name: "com.webos.surfacemanager-cardshell"
-
-        readonly property var keysToWatch: ["BlinkNotifications", "notificationLedColors"]
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
-            ledService.subscribe("luna://com.webos.service.systemservice/getPreferences",
-                                 JSON.stringify({"keys": keysToWatch, "subscribe": true}),
-                                 notificationLed.handlePreferences,
-                                 function (error) {
-                                     console.warn("NotificationLed: preference subscription failed: " + JSON.stringify(error));
-                                 });
-
             ledService.subscribe("luna://com.palm.display/control/status",
                                  JSON.stringify({"subscribe": true}),
                                  notificationLed.handleDisplayStatus,
@@ -250,8 +231,14 @@ Item {
         }
     }
 
-    function handlePreferences(message) {
-        var response = JSON.parse(message.payload);
+    SystemPreferences {
+        clientName: "com.webos.surfacemanager.cardshell"
+        keys: ["BlinkNotifications", "notificationLedColors"]
+        onUpdated: (response) => notificationLed.handlePreferences(response)
+        onError: (message) => console.warn("NotificationLed: preference subscription failed: " + message)
+    }
+
+    function handlePreferences(response) {
 
         if (response.hasOwnProperty("BlinkNotifications"))
             blinkNotifications = response.BlinkNotifications;

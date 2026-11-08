@@ -64,7 +64,9 @@ Item {
 
     anchors.fill: parent
     visible: opacity > 0
-    opacity: 0
+    opacity: shuttingDown ? 1 : 0
+
+    property bool shuttingDown: false
 
     /* Disc diameter as a fraction of the screen's short edge -- the one knob
        worth tuning here.
@@ -88,24 +90,20 @@ Item {
     property string shutdownClientId: ""
 
     function start() {
-        if (opacity > 0)
-            return;
-        orb.running = true;
-        root.opacity = 1;
+        root.shuttingDown = true;
     }
 
     /* Nothing is going down after all -- used when the register/ack path
        reports failure, so the shell is not left behind an animation that
        never ends and swallows all input. */
     function cancel() {
-        root.opacity = 0;
-        orb.running = false;
+        root.shuttingDown = false;
     }
 
     LunaService {
         id: shutdownWatch
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             /* The signal is what matters; register second so sleepd waits
@@ -122,7 +120,7 @@ Item {
             root.shutdownClientId = "";
             shutdownWatch.subscribe(
                 "luna://com.webos.service.sleep/shutdown/shutdownApplicationsRegister",
-                JSON.stringify({ "clientName": "com.webos.surfacemanager-cardshell",
+                JSON.stringify({ "clientName": "com.webos.surfacemanager.cardshell",
                                  "subscribe": true }),
                 handleRegisterMessage, handleRegisterError);
         }
@@ -217,6 +215,6 @@ Item {
         id: orb
         anchors.fill: parent
         orbRadius: root.orbRadius
-        running: false
+        running: root.shuttingDown
     }
 }

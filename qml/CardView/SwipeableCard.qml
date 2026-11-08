@@ -9,6 +9,25 @@ Item {
 
     signal requestDestruction()
 
+    /*
+     * Always a little wider than the card, and never seen or touched.
+     *
+     * Qt Quick skips an item for a press outside it when it has found all its
+     * children inside it, and remembers that. When the Flickable below grows
+     * past the card, Qt rechecks only the card, which then fits its group as
+     * it did, and stops there: the group kept "all inside", and every press
+     * outside the carded width went past the maximized window (Qt 6.12, after
+     * the card was pressed while carded, as when opening it from the card
+     * view). With this the card and its group never count as holding all
+     * their children, so they are always looked into.
+     */
+    Item {
+        x: -1
+        width: swipeableRoot.width + 2
+        height: 1
+        Item {}
+    }
+
     Flickable {
         id: flickableArea
 

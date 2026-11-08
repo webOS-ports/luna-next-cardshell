@@ -93,6 +93,21 @@ Item {
      */
     property int spentIgnoreMs: 250
 
+    /*!
+     * \brief Whether arrow keys from the hardware mean anything on this device.
+     *
+     * Only with a hardware keyboard, which is where a trackpad comes with it.
+     * A phone without one can still send arrows from something that is no
+     * pointer at all - the Pixel 3a's fingerprint sensor reports Up, Down, Left
+     * and Right when it is touched - and a thumb resting on the sensor must not
+     * scroll the application, switch cards or put a selection on the launcher.
+     * So while this is false the arrows are dropped here, before the shell or
+     * any application sees them. The on-screen keyboard's own arrow keys go to
+     * the application through the input method, not through here, and are not
+     * affected.
+     */
+    property bool arrowKeysWanted: true
+
     //! What WebOSKeyFilter::Result is worth. The enum is not registered for QML,
     //! so these have to be the numbers - see HardwareKeys, which says the same.
     readonly property int resultAccepted: 1     //!< ours; goes no further
@@ -168,13 +183,16 @@ Item {
     }
 
     function _onKey(keycode, pressed, autoRepeat, nativeModifiers) {
-        if (!trackpadScroll.active || trackpadScroll.typing)
-            return trackpadScroll.resultNextPolicy;
-
         const dx = keycode === Qt.Key_Left ? -1 : keycode === Qt.Key_Right ? 1 : 0;
         const dy = keycode === Qt.Key_Up ? -1 : keycode === Qt.Key_Down ? 1 : 0;
 
         if (dx === 0 && dy === 0)
+            return trackpadScroll.resultNextPolicy;
+
+        if (!trackpadScroll.arrowKeysWanted)
+            return trackpadScroll.resultAccepted; // dropped, see arrowKeysWanted
+
+        if (!trackpadScroll.active || trackpadScroll.typing)
             return trackpadScroll.resultNextPolicy;
 
         // Auto-repeat counts: a held arrow key is somebody asking to keep

@@ -4,7 +4,9 @@ import LunaNext.Common 0.1
 MouseArea {
     id: swipeArea
 
-    signal clicked()
+    //! A tap: pressed and let go without a swipe or a hold. Not clicked(),
+    //! which MouseArea already has (clicked(mouse)).
+    signal tapped()
     signal swipeCanceled()
     signal swipeUpGesture(int modifiers)
     signal swipeDownGesture(int modifiers)
@@ -154,7 +156,7 @@ MouseArea {
                 swipeCanceled();
             }
             else if( !mouse.wasHeld ) {
-                clicked();
+                tapped();
             }
         }
 

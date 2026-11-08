@@ -54,7 +54,7 @@ MenuListEntry {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             service.subscribe("luna://com.palm.bus/signal/addmatch",
                                   JSON.stringify({"category":"/com/palm/power","method":"batteryStatus"}),

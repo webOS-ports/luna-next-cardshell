@@ -41,7 +41,8 @@ import Connman 0.2
  *    depends on service start order.
  *
  * The state is therefore read back from ConnMan, never from the airplaneMode
- * preference: that preference is only a mirror kept for other clients.
+ * preference: that preference is a mirror kept for other clients, and the way
+ * for them to ask for a change (see AirplaneModePreference).
  */
 Item {
     id: airplaneModeService
@@ -297,6 +298,7 @@ Item {
          * shell reads it back - ConnMan is the source of truth - but it is the
          * key the settings apps and first-use are expected to look at.
          */
+        preference.noteWritten(__target);
         systemService.call("luna://com.webos.service.systemservice/setPreferences",
                            JSON.stringify({"airplaneMode": __target}),
                            function (message) { },
@@ -305,6 +307,22 @@ Item {
                            });
 
         transitionFinished(__target);
+    }
+
+    AirplaneModePreference {
+        id: preference
+        active: airplaneModeService.active
+        busy: airplaneModeService.inProgress
+        onRequested: (enabled) => airplaneModeService.setActive(enabled)
+    }
+
+    Component.onCompleted: {
+        systemService.subscribe("luna://com.webos.service.systemservice/getPreferences",
+                                JSON.stringify({"keys": ["airplaneMode"], "subscribe": true}),
+                                preference.handle,
+                                function (message) {
+                                    console.log("AirplaneModeService: failed to watch airplaneMode preference: " + message.payload);
+                                });
     }
 
     NetworkManager {
@@ -352,11 +370,11 @@ Item {
 
     LunaService {
         id: telephony
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     LunaService {
         id: systemService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

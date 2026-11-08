@@ -17,8 +17,9 @@
  */
 
 import QtQuick 2.5
-import Qt5Compat.GraphicalEffects
 import LunaNext.Common 0.1
+
+import "../Utils"
 
 Item {
     id: padLock
@@ -51,15 +52,13 @@ Item {
         if (fpLockoutText.visible)
             return;
         fpStatusText.text = message;
-        fpStatusText.visible = message !== "";
-        if (fpStatusText.visible)
+        if (message !== "")
             fpStatusTimer.restart();
         else
             fpStatusTimer.stop();
     }
 
     function clearBiometricStatus() {
-        fpStatusText.visible = false;
         fpStatusTimer.stop();
     }
 
@@ -83,11 +82,29 @@ Item {
         showBiometricLockout(deviceLockMode, "fingerprint");
     }
 
+    // Set while a finger or a face is enrolled but may not unlock for now: after
+    // a restart, 72 hours on, or a passcode lockout. The sensors stay off then,
+    // so with nothing here the phone just looks as if it had stopped reacting.
+    // Stays up, unlike the status line, but the lockout says more when it shows.
+    property string passcodeHint: ""
+
+    function biometricPasscodeHint(deviceLockMode, fingerprint, face) {
+        if (!fingerprint && !face)
+            return "";
+        var passcode = (deviceLockMode === "pin") ? "PIN"
+                     : (deviceLockMode === "password") ? "password"
+                     : (deviceLockMode === "pattern") ? "pattern"
+                     : "passcode";
+        var what = (fingerprint && face) ? "your fingerprint or face"
+                 : fingerprint ? "your fingerprint"
+                 : "your face";
+        return "Enter your " + passcode + " to use " + what;
+    }
+
     Timer {
         id: fpStatusTimer
         interval: 2500
         repeat: false
-        onTriggered: fpStatusText.visible = false
     }
 
     Timer {
@@ -206,8 +223,23 @@ Item {
     }
 
     Text {
+        id: passcodeHintText
+        visible: padLock.passcodeHint !== "" && !fpLockoutText.visible &&
+                 !fpStatusTimer.running && !pad.on
+        width: parent.width - Units.gu(4)
+        horizontalAlignment: Text.AlignHCenter
+        wrapMode: Text.WordWrap
+        text: padLock.passcodeHint
+        color: "white"
+        font.pixelSize: FontUtils.sizeToPixels("medium")
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: pad.top
+        anchors.bottomMargin: Units.gu(3)
+    }
+
+    Text {
         id: fpStatusText
-        visible: false
+        visible: fpStatusTimer.running
         width: parent.width - Units.gu(4)
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
@@ -219,15 +251,15 @@ Item {
         anchors.bottomMargin: Units.gu(3)
     }
 
-    // Halo around the (lit) padlock; the artwork itself stays untinted.
-    Glow {
+    // Halo around the (lit) padlock; the artwork itself stays untinted. Under the
+    // padlock, which comes first in the file, so it shows through it.
+    IconGlow {
         id: fpGlow
         anchors.fill: pad
+        z: pad.z - 1
         source: pad
         visible: false
         radius: Units.gu(1.6)
-        samples: 33
-        spread: 0.3
         color: "#2aa100"
     }
 }

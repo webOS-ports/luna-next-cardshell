@@ -84,6 +84,13 @@ WindowManager {
     function foregroundWindow() {
         return applicationForeground ? cardViewInstance.currentActiveWindow() : null;
     }
+
+    //! The window whose application SAM is told is in front (LuneOSViewRoot
+    //! hands it to surface-manager's getForegroundAppInfo): the card that holds
+    //! the stage, unless the launcher covers it. Unlike applicationForeground it
+    //! includes first use, whose card is just as much an application in front.
+    readonly property Item appForegroundWindow:
+        launcherInstance.launcherActive ? null : cardViewInstance.stageWindow
     function isScreenLocked() {
         return lockScreen.locked;
     }
@@ -274,9 +281,14 @@ WindowManager {
         id: nfcAutoDispatchInstance
     }
 
-    Connections {
-        target: gestureAreaInstance
-        function onSwipeRightGesture(modifiers) {
+    // Volume down + power together take a screenshot. A right swipe on the
+    // gesture area does, on a device without those two buttons.
+    ScreenshotChord {
+        id: screenshotChord
+        volumeControl: volumeControl
+        gestureArea: gestureAreaInstance
+
+        onTriggered: {
             shutterSound.play();
             screenShooter.capture("");
             screenShooterGradient.startShootEffect();
@@ -319,6 +331,7 @@ WindowManager {
         id: systemService
         cardViewInstance: cardViewInstance
         compositorInstance: compositor
+        screenShooter: screenShooter
 
         onPerformanceUIVisibleChanged: {
             performanceOverlay.active = performanceUIVisible;
@@ -331,11 +344,14 @@ WindowManager {
         compositorInstance: compositor
         gestureAreaInstance: gestureAreaInstance
         windowManagerInstance: windowManager
+        appLifeEvents: LS.applicationManager
 
         maximizedCardTopMargin: cardViewInstance.state === "fullscreenCard" ? 0 : statusBarInstance.y + statusBarInstance.height
 
         anchors.top: parent.top
-        anchors.bottom: cardViewInstance.state === "fullscreenCard" ? notificationAreaInstance.bottom : notificationAreaInstance.top
+        // Fullscreen covers the gesture area too, which is hidden then; the
+        // bottom margin under it (a notch turned to the bottom) stays clear.
+        anchors.bottom: cardViewInstance.state === "fullscreenCard" ? gestureAreaInstance.bottom : notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -377,7 +393,14 @@ WindowManager {
     Loader {
         id: notificationAreaInstance
 
-        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
+        /*
+         * Always above the gesture area, also while the lock screen hides it. The cards hang from
+         * this area, and following the gesture area's visibility made every open application's
+         * window 40 pixels taller when the screen locked and shorter again on unlocking: each
+         * display off and on resized and reallocated their buffers, for nothing, as the lock
+         * screen covers them. With the gesture area switched off its height is 0, so top is bottom.
+         */
+        anchors.bottom: gestureAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -484,11 +507,19 @@ WindowManager {
         width: Settings.tabletUi ? Units.length(320) + 2 * contentMargin : parent.width
         x: Settings.tabletUi ? parent.width - width - tabletInset : 0
 
-        visible: !lockScreen.visible
+        // The tablet panel is a rounded black rectangle even when empty, so it must only exist
+        // while an alert does (maxHeight is 0 otherwise); the phone bar is a plain strip.
+        // Over the lock screen only for an incoming call or an alert that asked
+        // to be usable while locked, the alarm.
+        visible: (!lockScreen.visible || lockScreenAlertShowing) && (!Settings.tabletUi || maxHeight > 0)
         windowManagerItem: windowManager
         compositorInstance: compositor
+        screenLocked: lockScreen.visible
+        modalSpaceBottom: gestureAreaInstance.visible ? gestureAreaInstance.y : gestureAreaInstance.y + gestureAreaInstance.height
+        maxAlertHeight: modalSpaceBottom - (statusBarInstance.y + statusBarInstance.height)
+                        - (Settings.tabletUi ? 2 * tabletInset : 0)
 
-        z: 4 // just under the keyboard
+        z: lockScreen.visible && lockScreenAlertShowing ? lockScreen.z + 1 : 4 // just under the keyboard
     }
 
     KeyboardOverlay {
@@ -562,6 +593,10 @@ WindowManager {
         anchors.fill: parent
         compositorInstance: compositor
         foregroundWindow: windowManager.foregroundWindow
+        // Just Type is an application too, shown by the launcher rather than
+        // the card view, so it is not covered by applicationForeground.
+        applicationForeground: windowManager.applicationForeground ||
+                               (!lockScreen.locked && launcherInstance.justTypeLauncherActive)
 
         keyboardService: KeyboardService {}
     }
@@ -592,12 +627,26 @@ WindowManager {
             //! Where the finger went down, to tell a hold from a drag.
             property point pressedAt
 
+            //! Whether there was a selection under the finger as it went down.
+            property bool selectedAtPress: false
+
             onActiveChanged: {
                 if (editPressMonitor.active) {
                     editPressMonitor.pressedAt = editPressMonitor.point.position;
+                    editPressMonitor.selectedAtPress = editOverlay.hasSelection;
+                    editTapTimer.stop();
+                    spellingTapTimer.stop();
                     editPressTimer.restart();
                 } else {
+                    // The hold timer still running means the finger neither
+                    // moved off nor stayed down long enough: that was a tap.
+                    var wasTap = editPressTimer.running;
                     editPressTimer.stop();
+
+                    if (wasTap && editPressMonitor.selectedAtPress)
+                        editTapTimer.restart();
+                    else if (wasTap)
+                        spellingTapTimer.restart();
                 }
             }
 
@@ -615,11 +664,60 @@ WindowManager {
             }
         }
 
+        /*
+         * A tap on a selection raises the pill at once, as legacy's did: its
+         * mouse-down remembered a press on the selected text and the mouse-up
+         * showed the widget with no hold in between.
+         *
+         * The shell does not know where the selection is, so it asks the other
+         * way round: the press found a selection, and a moment after the lift
+         * it is still there. A tap anywhere else collapses the selection, so
+         * that one does not come back as a selection and gets no pill. The
+         * moment is for the input method's report to arrive.
+         */
+        Timer {
+            id: editTapTimer
+
+            interval: 150
+            repeat: false
+
+            onTriggered: if (editOverlay.editable && editOverlay.hasSelection && !editOverlay.visible)
+                             editOverlay.showAt(editPressMonitor.pressedAt.x,
+                                                editPressMonitor.pressedAt.y)
+        }
+
+        /*
+         * A tap on a misspelled word raises its suggestions, as legacy's
+         * spelling widget did on a tap.
+         *
+         * The shell does not know where the words are, and the keyboard is what
+         * says which one is wrong: it reports the misspelled word the caret is in
+         * after the tap has put the caret there, so there is a moment to wait for
+         * that report, a little longer than the selection tap's. A tap on a word
+         * that is fine, or anywhere else, leaves nothing reported and no pill.
+         */
+        Timer {
+            id: spellingTapTimer
+
+            interval: 250
+            repeat: false
+
+            onTriggered: {
+                var suggestions = editOverlay.keyboardService
+                                  ? editOverlay.keyboardService.spellingSuggestions : [];
+
+                if (editOverlay.editable && !editOverlay.visible
+                        && !editOverlay.hasSelection && suggestions.length > 0)
+                    editOverlay.showSuggestionsAtWord(editPressMonitor.pressedAt.x,
+                                                      editPressMonitor.pressedAt.y)
+            }
+        }
+
         Timer {
             id: editPressTimer
 
-            //! Long enough not to fire on a tap, short enough to feel deliberate.
-            interval: 600
+            //! Legacy's tap-and-hold time, from startTapAndHoldTimer: 700 ms.
+            interval: 700
             repeat: false
 
             onTriggered: editOverlay.showAt(editPressMonitor.point.position.x,
@@ -705,7 +803,11 @@ WindowManager {
         anchors.right: parent.right
         height: gestureAreaInstance.enableGestureArea ? Units.gu(4) : Units.gu(0);
 
+        // Hidden under a fullscreen card. A flick up from the bottom edge of
+        // the screen still takes it back to the cards: see
+        // onScreenEdgeFlickEdgeBottom, which stands in for a hidden area.
         visible: !lockScreen.visible && gestureAreaInstance.enableGestureArea
+                 && cardViewInstance.state !== "fullscreenCard"
 
         z: 3 // the gesture area is in front of everything, like the fullscreen window
     }

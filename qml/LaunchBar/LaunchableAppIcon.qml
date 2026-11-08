@@ -17,10 +17,10 @@
  */
 
 import QtQuick 2.0
-import Qt5Compat.GraphicalEffects
 import LunaNext.Common 0.1
 
 import "LauncherTabs.js" as LauncherTabs
+import "../Utils"
 
 Item {
     id: launchableAppIcon
@@ -50,42 +50,43 @@ Item {
 
         width: parent.width
 
-        Image {
-            id: appIconImage
+        Item {
             width: iconSize
             height: iconSize
             anchors.horizontalCenter: parent.horizontalCenter
 
-            fillMode: Image.PreserveAspectFit
+            // Behind the icon, so it reaches round it and shows through it
+            IconGlow {
+                id: glowingIcon
+                anchors.fill: parent
+                visible: glow
+                radius: launchableAppIcon.pulse ? 4 : 12
+                color: "white"
+                source: appIconImage
 
-            sourceSize.height: height
-            sourceSize.width: width
-            source: FileUtils.exists(launchableAppIcon.appIcon) ? launchableAppIcon.appIcon : Qt.resolvedUrl("../images/default-app-icon.png")
-
-            visible: !glow
-        }
-        Glow {
-            id: glowingIcon
-            width: iconSize
-            height: iconSize
-            anchors.horizontalCenter: parent.horizontalCenter
-            visible: glow
-            radius: launchableAppIcon.pulse ? 4 : 12
-            color: "white"
-            transparentBorder: true
-            source: appIconImage
-
-            SequentialAnimation on radius {
-                running: glow && launchableAppIcon.pulse
-                loops: Animation.Infinite
-                NumberAnimation {
-                    from: 4; to: 20
-                    duration: 500
+                SequentialAnimation on radius {
+                    running: glow && launchableAppIcon.pulse
+                    loops: Animation.Infinite
+                    NumberAnimation {
+                        from: 4; to: 20
+                        duration: 500
+                    }
+                    NumberAnimation {
+                        from: 20; to: 4
+                        duration: 500
+                    }
                 }
-                NumberAnimation {
-                    from: 20; to: 4
-                    duration: 500
-                }
+            }
+
+            Image {
+                id: appIconImage
+                anchors.fill: parent
+
+                fillMode: Image.PreserveAspectFit
+
+                sourceSize.height: height
+                sourceSize.width: width
+                source: FileUtils.exists(launchableAppIcon.appIcon) ? launchableAppIcon.appIcon : Qt.resolvedUrl("../images/default-app-icon.png")
             }
         }
 

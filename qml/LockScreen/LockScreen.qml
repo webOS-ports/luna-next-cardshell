@@ -18,6 +18,7 @@
 
 import QtQuick 2.5
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 import "../Connectors"
@@ -42,6 +43,18 @@ Item {
     property bool needKeyboard: pinPasswordLock.visible && deviceLockMode === "password"
 
     property string deviceLockMode: "none"
+
+    // luna-authmanager's word on whether a finger or face may unlock now:
+    // not before the passcode after a boot, not 72 h after it, not during a
+    // passcode lockout and not after five rejections in a row. Only which
+    // sensor to arm follows from it here; the say is authmanager's, which
+    // gives the biometric service no token to hand on otherwise. False
+    // until it answers, and from an authmanager too old to say.
+    property bool biometricAllowed: false
+
+    // The unlock token a finger or face earned, kept for the moment between
+    // the green flash and unlockDisplay().
+    property string _biometricToken: ""
 
     // Fingerprint unlock, backed by com.webos.service.fingerprint
     // (webos-fingerprint-adapter -> biomd -> Android biometrics HAL).
@@ -71,6 +84,7 @@ Item {
     // Arming the sensor there just holds the HAL awake for an unlock the user
     // already gets for free.
     readonly property bool fingerprintActive: locked && deviceLockMode !== "none" &&
+                                              biometricAllowed &&
                                               fingerprintAvailable &&
                                               fingerprintUnlockEnabled &&
                                               fingerprintCount > 0 &&
@@ -116,37 +130,56 @@ Item {
         if (response.identified === true) {
             _endIdentify();
             fingerprintFailedAttempts = 0;
+            if (!response.unlockToken) {
+                // Matched, but luna-authmanager wants the passcode now
+                // (after a boot, after too many misses, ...).
+                padLock.showFingerprintLockout(deviceLockMode);
+                return;
+            }
+            lockScreen._biometricToken = response.unlockToken;
             // flash the padlock green, then unlock just after so the
             // feedback is actually visible
             padLock.fingerprintFeedback(true);
             unlockFeedbackTimer.restart();
         }
         else if (response.identified === false && response.finished === false) {
-            // A rejected touch: fpd stays armed, so DON'T cancel/re-arm.
-            // Flash red every time, but rate-limit the lockout counter so
-            // several captures within one press don't burn attempts.
+            // A rejected touch: fpd stays armed, so DON'T cancel/re-arm. Every
+            // one counts: nothing tells quick taps from a resting finger, and
+            // the sensor sets no limit of its own here.
             padLock.fingerprintFeedback(false);
-            if (!missCooldown.running) {
-                fingerprintFailedAttempts++;
-                missCooldown.restart();
-                if (fingerprintFailedAttempts >= maxFingerprintAttempts)
-                    padLock.showFingerprintLockout(deviceLockMode);
-            }
+            fingerprintFailedAttempts++;
+            if (fingerprintFailedAttempts >= maxFingerprintAttempts)
+                padLock.showFingerprintLockout(deviceLockMode);
         }
         else if (response.identified === false) {
             // Terminal end (cancel / 30s timeout, errorText "Aborted"): not a
             // failed read, just re-arm if we are still meant to be listening.
-            _endIdentify();
-            if (fingerprintActive)
-                identifyRestartTimer.restart();
+            _endFingerprintIdentify(response);
         }
     }
 
     function handleFingerprintError(message) {
         console.log("Fingerprint identify error: " + message.payload);
+        var response = {};
+        try {
+            response = JSON.parse(message.payload);
+        } catch (e) {
+            // Not from the adapter: nothing here but the re-arm below.
+        }
+        _endFingerprintIdentify(response);
+    }
+
+    function _endFingerprintIdentify(response) {
         _endIdentify();
-        if (fingerprintActive)
+        if (response.lockedOut === true) {
+            // The sensor has locked itself after too many misses. Re-arming
+            // would only fail again, so stop and say so; a passcode unlock
+            // resets the count like any other lockout here.
+            fingerprintFailedAttempts = maxFingerprintAttempts;
+            padLock.showFingerprintLockout(deviceLockMode);
+        } else if (fingerprintActive) {
             identifyRestartTimer.restart();
+        }
     }
 
     // Face unlock, backed by com.webos.service.faceunlock (luneos-faced ->
@@ -159,11 +192,11 @@ Item {
     // attempt (luneos-faced budgets 3s), and we make at most maxFaceAttempts of
     // them with a gap in between, then stop until the next lock.
     //
-    // NOTE: this is a *third* independent attempt counter, next to
-    // fingerprintFailedAttempts here and s_defaultMaxRetries in luna-sysmgr's
-    // Security.cpp. None of the three knows about the others. That is the
-    // defect luna-authmanager is meant to fix by owning one budget across every
-    // factor; until it lands, face unlock should stay out of the default image.
+    // The attempt counters here only pace the sensor and the camera. The
+    // budget that decides is luna-authmanager's, shared by finger and face
+    // and kept across wakes, restarts and reboots: luneos-faced and the
+    // fingerprint adapter report every rejection to it, and it gives them
+    // no unlock token once the passcode is needed (biometricAllowed).
     property bool faceAvailable: false
     property bool faceEnrolled: false
     property bool faceServiceSeen: false
@@ -186,6 +219,7 @@ Item {
     // Same as fingerprintActive: nothing to stand in for without a passcode,
     // and here it would hold the camera open as well.
     readonly property bool faceActive: locked && deviceLockMode !== "none" &&
+                                       biometricAllowed &&
                                        displayOn && faceAvailable &&
                                        faceUnlockEnabled && faceEnrolled &&
                                        faceFailedAttempts < maxFaceAttempts
@@ -247,6 +281,12 @@ Item {
             _endFaceIdentify();
             faceFailedAttempts = 0;
             padLock.clearBiometricStatus();
+            if (!response.unlockToken) {
+                // Recognized, but luna-authmanager wants the passcode now.
+                padLock.showBiometricLockout(deviceLockMode, "face");
+                return;
+            }
+            lockScreen._biometricToken = response.unlockToken;
             padLock.biometricFeedback(true);
             unlockFeedbackTimer.restart();
             return;
@@ -326,16 +366,14 @@ Item {
     }
 
     Timer {
-        id: missCooldown
-        interval: 1200
-        repeat: false
-    }
-
-    Timer {
         id: unlockFeedbackTimer
         interval: 300
         repeat: false
-        onTriggered: lockScreen.unlockDisplay()
+        onTriggered: {
+            var token = lockScreen._biometricToken;
+            lockScreen._biometricToken = "";
+            lockScreen.unlockDisplay(token);
+        }
     }
 
     Timer {
@@ -384,8 +422,14 @@ Item {
                      null, function(message) { console.warn("setLockStatus lock failed: " + message.payload); });
     }
 
-    function unlockDisplay() {
-        service.call("luna://com.palm.display/control/setLockStatus", "{\"status\":\"unlock\"}",
+    // token: what luna-authmanager gave for the passcode, finger or face
+    // just shown. With a passcode set com.palm.display unlocks for nothing
+    // less; without one, none is needed.
+    function unlockDisplay(token) {
+        var request = { "status": "unlock" };
+        if (token)
+            request.token = token;
+        service.call("luna://com.palm.display/control/setLockStatus", JSON.stringify(request),
                      function(message) { console.warn("setLockStatus unlock reply: " + message.payload); },
                      function(message) { console.warn("setLockStatus unlock failed: " + message.payload); });
     }
@@ -393,7 +437,7 @@ Item {
     function padUnlock() {
         // if we don't have a lock mode set directly unlock the display
         if (deviceLockMode === "none")
-            unlockDisplay()
+            unlockDisplay("")
         else if (deviceLockMode === "pin" || deviceLockMode === "password")
             lockScreen.state = "pin-password";
         else if (deviceLockMode === "pattern")
@@ -436,7 +480,7 @@ Item {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             // com.palm.display and com.palm.systemmanager are subscribed from
             // the ServiceStatus watches below instead of here: a plain
@@ -444,9 +488,6 @@ Item {
             // restarting LunaDisplayManager left the shell with a dead
             // lockStatus subscription. It then never heard about another lock
             // or unlock - no padlock, and no way back short of a reboot.
-            service.subscribe("luna://com.palm.systemservice/getPreferences",
-                              "{\"keys\":[\"enableFingerprintUnlock\",\"enableFaceUnlock\"],\"subscribe\":true}",
-                              handleBiometricPreferences, handleError);
             // webos-fingerprint-adapter is only present on devices with a
             // fingerprint sensor; on others this subscription simply fails
             // and fingerprintAvailable stays false.
@@ -504,8 +545,7 @@ Item {
             }
         }
 
-        function handleBiometricPreferences(message) {
-            var response = JSON.parse(message.payload);
+        function handleBiometricPreferences(response) {
             if (response.enableFingerprintUnlock !== undefined)
                 lockScreen.fingerprintUnlockEnabled = response.enableFingerprintUnlock;
             if (response.enableFaceUnlock !== undefined)
@@ -604,6 +644,7 @@ Item {
 
             var response = JSON.parse(message.payload);
             lockScreen.deviceLockMode = response.lockMode;
+            lockScreen.biometricAllowed = (response.biometricAllowed === true);
         }
 
         function handleError(message) {
@@ -615,18 +656,43 @@ Item {
     // running shell. LunaService.subscribe() binds to the provider that
     // answered, so those subscriptions have to be re-established every time
     // the service comes back, not once at startup.
+    SystemPreferences {
+        clientName: "com.webos.surfacemanager.cardshell"
+        keys: ["enableFingerprintUnlock", "enableFaceUnlock"]
+        onUpdated: (response) => service.handleBiometricPreferences(response)
+        onError: (message) => console.warn("LockScreen: cannot read the biometric preferences: " + message)
+    }
+
     ServiceStatus {
         id: displayServiceStatus
         serviceName: "com.palm.display"
-        onConnected: service.subscribeDisplayStatus()
-        onDisconnected: console.warn("LockScreen: lost com.palm.display, will resubscribe when it returns")
+        clientName: "com.webos.surfacemanager.cardshell"
+
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
+            service.subscribeDisplayStatus();
+        }
+
+        function disconnected() {
+            console.warn("LockScreen: lost com.palm.display, will resubscribe when it returns");
+        }
     }
 
     ServiceStatus {
         id: systemManagerServiceStatus
         serviceName: "com.palm.systemmanager"
-        onConnected: service.subscribeDeviceLockMode()
-        onDisconnected: console.warn("LockScreen: lost com.palm.systemmanager, will resubscribe when it returns")
+        clientName: "com.webos.surfacemanager.cardshell"
+
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
+            service.subscribeDeviceLockMode();
+        }
+
+        function disconnected() {
+            console.warn("LockScreen: lost com.palm.systemmanager, will resubscribe when it returns");
+        }
     }
 
 
@@ -655,6 +721,19 @@ Item {
 
         visible: lockScreen.state === "pad"
 
+        // The sensors are off, so say why. authmanager decides; nothing here
+        // tells the reasons apart, and the answer to all of them is the same.
+        passcodeHint: lockScreen.locked && lockScreen.deviceLockMode !== "none" &&
+                      !lockScreen.biometricAllowed
+                      ? biometricPasscodeHint(lockScreen.deviceLockMode,
+                                              lockScreen.fingerprintAvailable &&
+                                              lockScreen.fingerprintUnlockEnabled &&
+                                              lockScreen.fingerprintCount > 0,
+                                              lockScreen.faceAvailable &&
+                                              lockScreen.faceUnlockEnabled &&
+                                              lockScreen.faceEnrolled)
+                      : ""
+
         onUnlock: padUnlock()
     }
 
@@ -668,7 +747,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: (Qt.inputMethod.keyboardRectangle.height/2)*-1
 
-        onUnlock: unlockDisplay()
+        onUnlock: (token) => unlockDisplay(token)
         onCanceled: {
             lockScreen.state = "pad";
         }
@@ -681,7 +760,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
 
-        onUnlock: unlockDisplay()
+        onUnlock: (token) => unlockDisplay(token)
         onCanceled: {
             lockScreen.state = "pad";
         }

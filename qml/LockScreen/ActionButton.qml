@@ -1,6 +1,7 @@
 /* @@@LICENSE
 *
 *      Copyright (c) 2009-2013 LG Electronics, Inc.
+*      Copyright (c) 2026 Herman van Hazendonk <github.com@herrie.org>
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,69 +17,69 @@
 *
 * LICENSE@@@ */
 
-import QtQuick 2.1
+import QtQuick 2.12
+import QtQuick.Controls.LuneOS 2.0 as LuneOS
 import LunaNext.Common 0.1
 
+/*
+ * The shell's dialog button - the lock screen's Cancel and Done, the power
+ * and e-ink menus, notification alerts and message dialogs - as
+ * luneos-components' styled Button, the one Settings and the apps use.
+ *
+ * It used to be drawn from 208-pixel Palm images sliced a grid unit in, so
+ * the rounded corners were cut from the tip of the curve and stretched; and
+ * "negative" pointed at images that never existed, so red buttons had no
+ * background at all.
+ *
+ * The style is imported by name: the shell does not run with
+ * QT_QUICK_CONTROLS_STYLE set, and a plain QtQuick.Controls Button would be
+ * Qt's Basic one. The interface is the one the callers already use, kept on
+ * an Item around the Button: Button has an "action" property of its own
+ * (QtQuick Controls' Action), so it could not also carry the action()
+ * signal they connect to with onAction.
+ */
 Item {
-    property bool   isPressed: false
-    property bool   active: true
+    id: actionButton
+
     property string caption: "Button"
+    property bool   active: true
     property bool   affirmative: false
-    property bool   negative:    false
-    property real   inactiveOpacity: 0.70
-
-    width:  Units.gu(200/10);
-    height:  Units.gu(40/10);
-
-    BorderImage {
-        id: pressedBkg
-        source: affirmative ? ( !isPressed ? "../images/pin/button-green.png" : "../images/pin/button-green-press.png") :
-                 ( negative ? ( !isPressed ? "../images/pin/button-red.png"   : "../images/pin/button-red-press.png")   :
-                              ( !isPressed ? "../images/pin/button-black.png" : "../images/pin/button-black-press.png")  )
-        visible: true;
-        width: parent.width;
-        height: parent.height;
-        border { left: Units.gu(10/10); top: Units.gu(10/10); right: Units.gu(10/10); bottom: Units.gu(10/10) }
-        opacity: active ? 1.0 : inactiveOpacity
-        smooth: true
-    }
-
-    Text {
-        id: buttonText
-        text: caption
-        anchors.centerIn: parent
-        color: "#FFF";
-        font.bold: true;
-        font.pixelSize: FontUtils.sizeToPixels("medium") //16
-        font.family: "Prelude"
-        opacity: active ? 1.0 : inactiveOpacity
-    }
-
-    MouseArea {
-        id: mouseArea
-        enabled: true;
-        anchors.fill: parent
-        onPressAndHold:  setPressed(true);
-        onPressed: { mouse.accepted = true; setPressed(true); }
-        onReleased: {setPressed(false);}
-        onExited: {setPressed(false);}
-        onCanceled: {setPressed(false);}
-        onClicked: {
-            actionPerformed()
-        }
-    }
-
-    function setPressed (pressed) {
-        if(active) {
-            isPressed = pressed;
-        }
-    }
-
-    function actionPerformed () {
-        if(active) {
-            action()
-        }
-    }
+    property bool   negative: false
+    property real   inactiveOpacity: 1.0
 
     signal action()
+
+    width:  Units.gu(200/10)
+    height: Units.gu(40/10)
+
+    LuneOS.Button {
+        anchors.fill: parent
+
+        text: actionButton.caption
+        // Bold, as the shell's buttons always were: the style's Light
+        // reads too faint over the translucent dark cards.
+        font.bold: true
+
+        // Not "enabled: active": the style draws a disabled button at 0.4,
+        // background and text each, and on the shell's dark cards a
+        // disabled Done all but disappeared. An inactive button is drawn
+        // whole at inactiveOpacity, as before, and neither looks pressed nor
+        // acts.
+        opacity: actionButton.active ? 1.0 : actionButton.inactiveOpacity
+        down: actionButton.active && pressed
+
+        // Neutral is the style's opaque gray. Its translucent primaryColor
+        // let the button's outer row of pixels vanish into the dark cards,
+        // so a neutral button looked a pixel shorter at the top and at the
+        // bottom than a green or red one beside it. Settings' light popups
+        // use secondaryColor.
+        LuneOS.LuneOSButton.mainColor: actionButton.affirmative ? LuneOS.LuneOSButton.affirmativeColor
+                                     : actionButton.negative ? LuneOS.LuneOSButton.negativeColor
+                                     : LuneOS.LuneOSButton.grayColor
+
+        onClicked: {
+            if (actionButton.active)
+                actionButton.action();
+        }
+    }
 }

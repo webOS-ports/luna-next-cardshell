@@ -30,6 +30,9 @@ Drawer {
     property bool closeOnConnect: false
     property string deviceAddressInError: ""
 
+    // A device the user disconnects here is not brought back by bluetooth2.
+    property BluetoothDisconnect bluetoothDisconnect: BluetoothDisconnect { }
+
     BluetoothDevicesModel {
         id: bluetoothList
         filterRole: 256 + 109 /*PairedRole*/
@@ -198,13 +201,13 @@ Drawer {
                        (BluetoothManager.connectingDevice &&
                         BluetoothManager.connectingDevice.address === delegateDevice.Address))
                     {
-                        BluetoothManager.disconnectDeviceAddress(btDevice.Address);
+                        bluetoothDisconnect.disconnect(delegateDevice.Address);
                         // close whatever happens
                         menuCloseRequest(350);
                     }
                     else
                     {
-                        var pendingCall = BluetoothManager.connectDeviceAddress(btDevice.Address);
+                        var pendingCall = BluetoothManager.connectDeviceAddress(delegateDevice.Address);
                         if(pendingCall) {
                             pendingCall.finished.connect(function(call) {
                                 if(call.error !== 0)

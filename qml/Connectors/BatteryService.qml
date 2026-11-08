@@ -20,6 +20,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 import QtMultimedia 6.3
 
@@ -29,6 +30,19 @@ Item {
     property int level: -1
     property int percentage: 0
     property bool charging: false
+
+    /*
+     * The battery is full while a charger is still connected. batteryd's "Charging" is "a charger is
+     * delivering power" (the display manager's inductive-dock handling and systemui's not-charging alert read
+     * it that way) and stays true at 100%, so whether to show a full battery rather than a charging one is
+     * decided here:
+     * 100%, and no more than _fullMaxCurrentMa flowing either way (the sign of the current differs per
+     * device). Once full it stays full until the level drops below 100%, so a top-off current tapering
+     * through the threshold cannot make the indicator flicker.
+     */
+    readonly property bool full: charging && _batteryFull
+    property bool _batteryFull: false
+    readonly property int _fullMaxCurrentMa: 50
 
     /*
      * Every battery batteryd knows about, primary first, as
@@ -46,7 +60,7 @@ Item {
      */
     property var auxBatteries: []
 
-    property bool batterydAvailable: false
+    readonly property bool batterydAvailable: batterydStatus.available
 
     property bool _playSoundWhenCharged: false
 
@@ -59,12 +73,12 @@ Item {
         audioOutput: AudioOutput {}
     }
 
-    MediaPlayer {
-        id: batteryLowSound
-        source: "/usr/palm/sounds/battery_low.mp3"
-        audioOutput: AudioOutput {}
-    }
-
+    /*
+     * The charged sound is the only one the shell plays for the battery, as in LunaSysMgr's
+     * StatusBarBattery. A low battery is systemui's to announce (PowerdService.js): the 20% and 10% banners
+     * carry the notification tone, the 5% popup carries battery_low.mp3 in its own sound attribute. Playing
+     * anything here as well would sound each of them twice.
+     */
     onPercentageChanged: {
         if (percentage < 95)
             _playSoundWhenCharged = true;
@@ -72,20 +86,13 @@ Item {
             _playSoundWhenCharged = false;
             chargedSound.play();
         }
-        else if ((percentage === 20 || percentage === 10 || percentage === 5) && _playSoundWhenCharged)
-        {
-            batteryLowSound.play();
-        }
     }
 
     LunaService {
         id: lunaService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
-            lunaService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-                                  "{\"serviceName\":\"com.webos.service.battery\"}",
-                                  handleBatterydServiceStatus, handleError);
             lunaService.subscribe("luna://com.palm.bus/signal/addmatch",
                                   "{\"category\":\"/com/palm/power\",\"method\":\"batteryStatus\"}",
                                   handlePowerdBatteryEvent, handleError);
@@ -99,12 +106,18 @@ Item {
         console.log("Service error: " + message);
     }
 
-    function handleBatterydServiceStatus(message) {
-        var response = JSON.parse(message.payload);
+    ServiceStatus {
+        id: batterydStatus
+        serviceName: "com.webos.service.battery"
+        clientName: "com.webos.surfacemanager.cardshell"
+        onAvailableChanged: batteryService.handleBatterydServiceStatus()
+    }
 
-        batterydAvailable = response.connected;
-        if (!batterydAvailable)
-            batteryLevel = -1;
+    function handleBatterydServiceStatus() {
+        // Unknown until batteryd is back. This wrote "batteryLevel", which
+        // does not exist, so the indicator kept the last level it had.
+        if (!batterydStatus.available)
+            level = -1;
         else {
             /* query initial values */
             lunaService.call("luna://com.webos.service.battery/com/palm/power/chargerStatusQuery",
@@ -148,6 +161,14 @@ Item {
         batteryService.error = false;
         level = __levelForPercentage(response.percent_ui);
         percentage = response.percent_ui
+
+        if (response.percent_ui < 100) {
+            _batteryFull = false;
+        } else if (!_batteryFull) {
+            // Some gauges carry the reading on only one of the two; prefer whichever is not zero.
+            var current = response.current_mA || response.avg_current_mA || 0;
+            _batteryFull = Math.abs(current) <= _fullMaxCurrentMa;
+        }
 
         /*
          * batteryd sends "batteries" only on a device that has more than one -

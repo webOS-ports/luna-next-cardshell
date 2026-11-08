@@ -68,7 +68,7 @@ MenuListEntry {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: subscribeBrightness()
     }
 

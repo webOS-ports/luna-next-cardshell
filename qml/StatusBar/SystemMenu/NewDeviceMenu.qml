@@ -23,6 +23,7 @@
 import QtQuick 2.5
 import QtQuick.Window 2.2
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
 // Connman
@@ -38,7 +39,9 @@ Item {
     // 320x480 screen: almost the full screen width, centered, with a
     // small margin on either side.
     property int  preferredWidth: Units.gu(40)
-    property int  maxHeight: Math.min(Units.gu(45), Screen.height - Units.gu(6))
+    // availableHeight is on the StatusBar's Loader: the room left under the
+    // bar in the rotated scene.
+    property int  maxHeight: Math.min(Units.gu(45), availableHeight - Units.gu(3))
     property int  ident: Units.gu(1.8)
     property int  subIdent: Units.gu(2)
     property int  dividerWidthOffset: Units.gu(0.7)
@@ -146,27 +149,49 @@ Item {
         name: "cellular"
     }
 
+    // A device the user disconnects here is not brought back by bluetooth2.
+    property BluetoothDisconnect bluetoothDisconnect: BluetoothDisconnect { }
+
     BluetoothDevicesModel {
         id: bluetoothList
         filterRole: 256 + 109 /*PairedRole*/
         filterRegularExpression: /true/
     }
 
+    /*
+     * Opens the Wi-Fi app on one network. Given {"target": {"servicePath"}},
+     * it connects to that network itself, so connman asks the app's agent for
+     * the passphrase and the app's prompt comes up.
+     */
+    function joinInWifiApp(servicePath) {
+        launcherInstance.launchApplication("org.webosports.app.settings.wifi",
+                                           {"target": {"servicePath": servicePath}});
+        closeMenuTimer.interval = 300;
+        closeMenuTimer.start();
+    }
+
+    /*
+     * connman sends RequestInput to the agent of whoever called Connect. A
+     * network with no saved passphrase goes to the Wi-Fi app before anything
+     * connects (see wifiListDelegate), so this only hears from connman when a
+     * saved network wants something new - a changed passphrase, say. This
+     * menu has no field to type it in: cancel at once (an empty reply is
+     * net.connman.Agent.Error.Canceled), or connman keeps the service
+     * mid-connect waiting for an answer and every tap in the app gets
+     * InProgress. The app then connects itself and its agent asks.
+     */
     UserAgent {
         id: connmanUserAgent
-        onUserInputRequested: {
-            // Delegate password entry etc. to the wifi prefs app
-            var target = {};
-            target["servicePath"] = servicePath;
-            launcherInstance.launchApplication("org.webosports.app.settings.wifi",{"target":target});
-            closeMenuTimer.interval = 300;
-            closeMenuTimer.start();
+        objectName: "connmanUserAgent"
+        onUserInputRequested: function(servicePath, fields) {
+            connmanUserAgent.sendUserReply({});
+            deviceMenu.joinInWifiApp(servicePath);
         }
     }
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             // Media volume, kept in sync the same way VolumeElement does it.
             service.subscribe("luna://com.webos.service.audio/master/getVolume",
@@ -199,8 +224,11 @@ Item {
      */
     ServiceStatus {
         serviceName: "org.webosports.service.torch"
+        clientName: "com.webos.surfacemanager.cardshell"
 
-        onConnected: {
+        onAvailableChanged: available ? connected() : disconnected()
+
+        function connected() {
             service.subscribe("luna://org.webosports.service.torch/getStatus",
                  JSON.stringify({"subscribe": true}),
                  function(message) {
@@ -216,7 +244,7 @@ Item {
                  });
         }
 
-        onDisconnected: {
+        function disconnected() {
             deviceMenu.flashlightAvailable = false;
             deviceMenu.flashlightOn = false;
         }
@@ -818,9 +846,15 @@ Item {
                     if (delegateService.connected) {
                         delegateService.requestDisconnect();
                     }
+                    else if (delegateService.securityType !== NetworkService.SecurityNone &&
+                             delegateService.securityType !== NetworkService.SecurityUnknown &&
+                             !delegateService.favorite) {
+                        // Secured and never joined: the Wi-Fi app asks for the
+                        // passphrase (see joinInWifiApp).
+                        deviceMenu.joinInWifiApp(delegateService.path);
+                        return;
+                    }
                     else {
-                        // if this service needs a password and we don't have it yet,
-                        // connman will ask the user through the UserAgent
                         delegateService.requestConnect();
                     }
                     closeMenuTimer.interval = 300;
@@ -861,7 +895,7 @@ Item {
                         (BluetoothManager.connectingDevice &&
                          BluetoothManager.connectingDevice.address === delegateDevice.Address))
                     {
-                        BluetoothManager.disconnectDeviceAddress(delegateDevice.Address);
+                        bluetoothDisconnect.disconnect(delegateDevice.Address);
                         closeMenuTimer.interval = 350;
                         closeMenuTimer.start();
                     }

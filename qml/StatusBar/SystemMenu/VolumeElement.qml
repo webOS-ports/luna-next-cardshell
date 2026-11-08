@@ -33,7 +33,7 @@ MenuListEntry {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             // org.webosports.service.audio is the audio-service LuneOS no longer
             // ships, so this subscription never delivered anything and the slider

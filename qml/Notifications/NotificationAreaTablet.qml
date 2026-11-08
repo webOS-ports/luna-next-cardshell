@@ -130,6 +130,10 @@ Rectangle {
             model: mergedModel
             delegate: Image {
                     id: notifIconImage
+                    // One icon per application (see firstIndexOfApp). Reading
+                    // count re-evaluates this as entries come and go.
+                    visible: mergedModel.count > 0 &&
+                             (model.appKey === "" || mergedModel.firstIndexOfApp(model.appKey) === index)
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     anchors.margins: Units.gu(1)/2
