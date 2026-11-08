@@ -973,15 +973,9 @@ Item {
         Behavior on opacity { NumberAnimation{ duration: 70} }
     }
 
-    InverseMouseArea {
-        width: mainMenu.width;
-        height: Math.min(deviceMenu.height - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin, mainMenu.height);
-        sensingArea: root
-        onClicked: {
-            resetMenu()
-            toggleState()
-        }
-    }
+    // A tap outside the menu closes it through StatusBar's systemMenuDismissArea.
+    // An InverseMouseArea here never received those presses on Qt 6, and
+    // would close the menu a second time - reopening it - if it ever did.
 
     Timer {
         id: closeMenuTimer

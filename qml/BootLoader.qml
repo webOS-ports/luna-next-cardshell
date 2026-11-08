@@ -58,6 +58,12 @@ Item {
         }
     }
 
+    // Warns when bootmgr stays short of "normal"/"firstuse": the shell then
+    // keeps an empty state, with its gestures and the system menu off.
+    BootStateWatchdog {
+        id: bootStateWatchdog
+    }
+
     ServiceStatus {
         serviceName: "org.webosports.bootmgr"
         clientName: "com.webos.surfacemanager.cardshell"
@@ -87,6 +93,7 @@ Item {
 
             if( response.hasOwnProperty("state") ) {
                 console.log("boot state changed to: " + response.state);
+                bootStateWatchdog.report(response.state);
                 if( response.state === "firstuse" || response.state === "normal" )
                     shellLoader.state = response.state;
 
