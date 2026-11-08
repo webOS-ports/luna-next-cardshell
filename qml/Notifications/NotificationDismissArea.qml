@@ -18,7 +18,9 @@
 import QtQuick 2.0
 
 /*
- * Collapses the expanded (phone) notification area on a tap anywhere above it.
+ * Collapses the expanded notification area on a tap anywhere outside it: above
+ * it on a phone, anywhere under the status bar on a tablet, whose list hangs
+ * from the bar (and stays over this, being part of the bar).
  *
  * Opening it registers a tap action, but tap actions only run for a tap on
  * the gesture area - a tap anywhere else left the notifications expanded
@@ -29,15 +31,11 @@ import QtQuick 2.0
  * Swiping up for the launcher, or into Just Type, does not go through this
  * area at all - those collapse it too, rather than leave the notifications
  * expanded under the launcher.
- *
- * The tablet's notification area lives in the status bar and closes on an
- * outside tap by itself (its InverseMouseArea); notificationArea is null there
- * and this stays off.
  */
 MouseArea {
     id: dismissArea
 
-    // the phone NotificationArea, or null
+    // NotificationArea (phone) or NotificationAreaTablet, or null
     property Item notificationArea: null
     // the Launcher, for fullLauncherVisible and justTypeLauncherActive
     property Item launcher: null

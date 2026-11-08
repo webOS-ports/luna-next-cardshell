@@ -5,10 +5,12 @@ import WebOSCompositorBase 1.0
 import "../qml/Notifications"
 
 /*
- * The phone's expanded notification area collapses on a press anywhere above
- * it, and when the launcher or Just Type opens; the press is taken, so nothing
+ * The expanded notification area collapses on a press anywhere outside it, and
+ * when the launcher or Just Type opens; the press is taken, so nothing
  * underneath reacts to it. Wired as CardsArea wires it, around the real
- * NotificationArea.
+ * NotificationArea (phone: above the gesture area, the dismiss area above it)
+ * and the real NotificationAreaTablet (in the status bar, its list hanging
+ * from the bar over the dismiss area). Every case runs on both.
  *
  * Its tap action ("minimizeNotificationArea", for a tap on the gesture area)
  * goes whenever the area leaves "open" - also when the last notification goes
@@ -56,46 +58,108 @@ Item {
         onPressed: presses++
     }
 
-    // CardsArea's Loader hides it under the lock screen; visible here
-    NotificationArea {
-        id: area
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        compositorInstance: QtObject {
-            property ListModel surfaceModel: ListModel {}
-        }
-        windowManagerInstance: windowManager
-        maxDashboardWindowHeight: 240
-    }
-
-    NotificationDismissArea {
-        id: dismiss
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: area.top
-        z: 2
-        notificationArea: area
-        launcher: fakeLauncher
-    }
-
-    // the tablet: CardsArea's Loader stays empty, its item is null
+    // CardsArea on a phone: the area over the gesture area, the dismiss area
+    // from the top down to it.
     Component {
-        id: tabletDismiss
-        NotificationDismissArea {
+        id: phoneShell
+        Item {
+            property alias area: area
+            property alias dismiss: dismiss
+            // a point outside the area
+            property point outside: Qt.point(100, 50)
+            function openArea() {
+                mouseClickOn(area, area.width - 20, area.height / 2);
+            }
             anchors.fill: parent
-            z: 3
-            notificationArea: null
-            launcher: fakeLauncher
+
+            NotificationArea {
+                id: area
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                compositorInstance: QtObject {
+                    property ListModel surfaceModel: ListModel {}
+                }
+                windowManagerInstance: windowManager
+                maxDashboardWindowHeight: 240
+            }
+
+            NotificationDismissArea {
+                id: dismiss
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: area.top
+                z: 2
+                notificationArea: area
+                launcher: fakeLauncher
+            }
         }
+    }
+
+    // CardsArea on a tablet: the area in the status bar, its list hanging
+    // below the bar; the dismiss area covers the screen under the bar.
+    Component {
+        id: tabletShell
+        Item {
+            property alias area: area
+            property alias dismiss: dismiss
+            property point outside: Qt.point(20, 400)
+            function openArea() {
+                area.clicked();   // as the bar does for a tap on its icons
+            }
+            anchors.fill: parent
+
+            NotificationDismissArea {
+                id: dismiss
+                anchors.fill: parent
+                z: 2
+                notificationArea: area
+                launcher: fakeLauncher
+            }
+
+            Item {
+                id: bar
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 30
+                z: 2   // declared after the dismiss area, as in CardsArea
+
+                NotificationAreaTablet {
+                    id: area
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    height: parent.height
+                    width: 100
+                    compositorInstance: QtObject {
+                        property ListModel surfaceModel: ListModel {}
+                    }
+                    windowManagerInstance: windowManager
+                    maxDashboardWindowHeight: 240
+                }
+            }
+        }
+    }
+
+    Component {
+        id: noAreaDismiss
+        NotificationDismissArea { anchors.fill: parent; z: 3 }
+    }
+
+    function mouseClickOn(item, x, y) {
+        testCase.mouseClick(item, x, y);
     }
 
     TestCase {
+        id: testCase
         name: "NotificationDismissArea"
         when: windowShown
 
         property int stamp: 0
+        property Item shell: null
+        property Item area: shell ? shell.area : null
+        property Item dismiss: shell ? shell.dismiss : null
 
         function addToast() {
             stamp++;
@@ -125,33 +189,55 @@ Item {
             return null;
         }
 
-        // two notifications, banners gone, then a tap on the icons opens it
+        function build(form) {
+            shell = createTemporaryObject(form === "tablet" ? tabletShell : phoneShell, root);
+            verify(shell);
+            tryCompare(area, "state", "hidden");
+        }
+
+        // two notifications, banners gone, then open it as a tap on the icons does
         function openArea() {
             addToast();
             addToast();
             bannerModel().clear();
             tryCompare(area, "state", "minimized");
             tryVerify(function() { return area.height > 0; });
-            mouseClick(area, area.width - 20, area.height / 2);
+            shell.openArea();
             tryCompare(area, "state", "open");
             compare(windowManager.countOf("minimizeNotificationArea"), 1);
             tryVerify(function() { return dismiss.enabled && dismiss.height > 0; });
         }
 
-        function init() {
-            area.visible = true;
-            fakeLauncher.fullLauncherVisible = false;
-            fakeLauncher.justTypeLauncherActive = false;
-            clearToasts();
-            windowManager.tapActions = [];
-            underneath.presses = 0;
-            tryCompare(area, "state", "hidden");
+        function pressOutside() {
+            mousePress(root, shell.outside.x, shell.outside.y);
+        }
+        function releaseOutside() {
+            mouseRelease(root, shell.outside.x, shell.outside.y);
         }
 
-        function test_offUnlessOpen() {
+        function init() {
+            clearToasts();
+            fakeLauncher.fullLauncherVisible = false;
+            fakeLauncher.justTypeLauncherActive = false;
+            windowManager.tapActions = [];
+            underneath.presses = 0;
+        }
+
+        function cleanup() {
+            clearToasts();
+            shell = null;
+        }
+
+        function forms() {
+            return [ { tag: "phone", form: "phone" }, { tag: "tablet", form: "tablet" } ];
+        }
+
+        function test_offUnlessOpen_data() { return forms(); }
+        function test_offUnlessOpen(data) {
+            build(data.form);
             verify(!dismiss.enabled);
-            mousePress(root, 100, 100);
-            mouseRelease(root, 100, 100);
+            pressOutside();
+            releaseOutside();
             compare(underneath.presses, 1);
 
             addToast();
@@ -160,67 +246,90 @@ Item {
             verify(!dismiss.enabled);
         }
 
-        function test_pressAboveCollapsesAndIsTaken() {
+        function test_pressOutsideCollapsesAndIsTaken_data() { return forms(); }
+        function test_pressOutsideCollapsesAndIsTaken(data) {
+            build(data.form);
             openArea();
-            mousePress(root, 100, 50);
+            pressOutside();
             compare(area.state, "minimized");
             compare(underneath.presses, 0);
-            mouseRelease(root, 100, 50);
+            releaseOutside();
             compare(underneath.presses, 0);
             compare(windowManager.countOf("minimizeNotificationArea"), 0);
             verify(!dismiss.enabled);
 
             // and the next press is an ordinary one again
-            mouseClick(root, 100, 50);
+            pressOutside();
+            releaseOutside();
             compare(underneath.presses, 1);
         }
 
-        function test_gestureAreaTapStillCollapses() {
+        // a press on the open area itself is the area's, and leaves it open
+        function test_pressOnAreaKeepsItOpen_data() { return forms(); }
+        function test_pressOnAreaKeepsItOpen(data) {
+            build(data.form);
+            openArea();
+            // the open list, once its height has animated in
+            var list = null;
+            for (var i = 0; i < area.children.length; i++)
+                if (area.children[i].orientation !== undefined && area.children[i].visible)
+                    list = area.children[i];
+            verify(list);
+            tryVerify(function() { return list.height > 20; });
+            var p = list.mapToItem(root, list.width / 2, list.height / 2);
+            mousePress(root, p.x, p.y);
+            mouseRelease(root, p.x, p.y);
+            compare(underneath.presses, 0);
+            compare(area.state, "open");
+        }
+
+        function test_gestureAreaTapStillCollapses_data() { return forms(); }
+        function test_gestureAreaTapStillCollapses(data) {
+            build(data.form);
             openArea();
             windowManager.tap();
             compare(area.state, "minimized");
             compare(windowManager.tapActions.length, 0);
         }
 
-        function test_launcherCollapses() {
+        function test_launcherCollapses_data() { return forms(); }
+        function test_launcherCollapses(data) {
+            build(data.form);
             openArea();
             fakeLauncher.fullLauncherVisible = true;
             compare(area.state, "minimized");
             compare(windowManager.countOf("minimizeNotificationArea"), 0);
         }
 
-        function test_justTypeCollapses() {
+        function test_justTypeCollapses_data() { return forms(); }
+        function test_justTypeCollapses(data) {
+            build(data.form);
             openArea();
             fakeLauncher.justTypeLauncherActive = true;
             compare(area.state, "minimized");
             compare(windowManager.countOf("minimizeNotificationArea"), 0);
         }
 
-        function test_tabletStaysOff() {
-            var tablet = createTemporaryObject(tabletDismiss, root);
-            verify(tablet);
-            verify(!tablet.enabled);
-            mouseClick(root, 100, 50);
-            compare(underneath.presses, 1);
-            fakeLauncher.fullLauncherVisible = true;   // no area to collapse, no error
-            tablet.collapse();
-        }
-
         // The lock screen hides the area's Loader. That already collapsed it
         // (the "minimized" state's when reads the list's effective
         // visibility), but left the tap action behind.
-        function test_lockScreenCollapsesAndDropsTapAction() {
+        function test_lockScreenCollapsesAndDropsTapAction_data() { return forms(); }
+        function test_lockScreenCollapsesAndDropsTapAction(data) {
+            build(data.form);
             openArea();
             area.visible = false;
             verify(!dismiss.enabled);
             compare(area.state, "minimized");
             compare(windowManager.countOf("minimizeNotificationArea"), 0);
-            mouseClick(root, 100, 50);
+            pressOutside();
+            releaseOutside();
             compare(underneath.presses, 1);
         }
 
         // the last notification going while open: no tap action left behind
-        function test_lastNotificationGoneDropsTapAction() {
+        function test_lastNotificationGoneDropsTapAction_data() { return forms(); }
+        function test_lastNotificationGoneDropsTapAction(data) {
+            build(data.form);
             openArea();
             clearToasts();
             tryCompare(area, "state", "hidden");
@@ -228,7 +337,9 @@ Item {
         }
 
         // a new notification while open shows its banner instead: same
-        function test_newNotificationDropsTapAction() {
+        function test_newNotificationDropsTapAction_data() { return forms(); }
+        function test_newNotificationDropsTapAction(data) {
+            build(data.form);
             openArea();
             addToast();
             tryCompare(area, "state", "banner");
@@ -237,12 +348,29 @@ Item {
         }
 
         // opening again after any of those registers exactly one action
-        function test_reopenRegistersOne() {
+        function test_reopenRegistersOne_data() { return forms(); }
+        function test_reopenRegistersOne(data) {
+            build(data.form);
             openArea();
             clearToasts();
             tryCompare(area, "state", "hidden");
             openArea();
             compare(windowManager.countOf("minimizeNotificationArea"), 1);
+        }
+
+        // no notification area at all (CardsArea's phone Loader on a tablet
+        // before this, or a shell without one): off, and nothing breaks
+        function test_noAreaStaysOff() {
+            var none = createTemporaryObject(noAreaDismiss, root);
+            verify(none);
+            verify(!none.enabled);
+            pressOutside_at(100, 50);
+            compare(underneath.presses, 1);
+            none.collapse();
+        }
+        function pressOutside_at(x, y) {
+            mousePress(root, x, y);
+            mouseRelease(root, x, y);
         }
     }
 }
