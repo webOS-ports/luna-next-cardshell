@@ -35,6 +35,8 @@ Item {
 
     property Item windowManagerInstance
     property Item gestureHandlerInstance
+    // the tablet's notification area, which lives in the bar; null on phones
+    readonly property Item notificationArea: notificationAreaInstance.item
     property bool fullLauncherVisible: false
     property bool justTypeLauncherActive: false
     property Item batteryService

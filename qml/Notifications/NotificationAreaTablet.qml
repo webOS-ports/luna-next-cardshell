@@ -188,14 +188,15 @@ Rectangle {
         }
     }
 
-    InverseMouseArea {
-        anchors.fill: openListView
-        enabled: openListView.visible
-        sensingArea: root
-        z: -1
-        onClicked: {
-            notificationArea.clicked();
-        }
+    // A tap outside the open list closes it through NotificationDismissArea,
+    // in CardsArea. An InverseMouseArea here never saw those presses on
+    // Qt 6, and the list stayed open.
+
+    // As on the phone: whatever takes the area out of "open" drops the tap
+    // action it registered, or the next tap on the gesture area only ran that.
+    onStateChanged: {
+        if (notificationArea.state !== "open" && windowManagerInstance)
+            windowManagerInstance.removeTapAction("minimizeNotificationArea");
     }
 
     BorderImage {

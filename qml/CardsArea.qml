@@ -416,6 +416,23 @@ WindowManager {
         }
     }
 
+    // Collapses the expanded notification area on a tap anywhere outside it; see
+    // NotificationDismissArea. Declared after the cards, launcher and
+    // notification area and before the status bar, so it sits over the first
+    // two and under the bar - and under the tablet's list, which hangs from it.
+    NotificationDismissArea {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: notificationAreaInstance.top
+        z: 2
+
+        // the phone's area sits above the gesture area, the tablet's in the bar
+        notificationArea: Settings.tabletUi ? statusBarInstance.notificationArea
+                                            : notificationAreaInstance.item
+        launcher: launcherInstance
+    }
+
     // While an alert is up, a press anywhere outside it closes it, as a tap
     // on the gesture area already did; until now tapping elsewhere left it
     // sitting there. The press is taken, so what is underneath does not also
