@@ -124,7 +124,7 @@ QtObject {
     // db8 management
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     function __handleDBError(message) {

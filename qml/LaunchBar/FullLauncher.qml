@@ -207,13 +207,16 @@ Item {
         height: Units.gu(4)        
         orientation: ListView.Horizontal
 
-        interactive: !draggedLauncherIcon.draggingActive
+        // A row whose tabs all fit (a tablet) has nothing to scroll to.
+        interactive: !draggedLauncherIcon.draggingActive && (scrollingTabs || !fixedWidthTabs)
 
-        // In the default layout the tabs do not all fit: the current one sits
-        // at the left edge, where the first tab is, whichever tab it is. The
-        // footer lets the last tabs scroll that far too.
-        readonly property bool scrollingTabs: AppTweaks.tabIndicatorNumberTweakValue === "default"
+        // The default layout gives every tab the same width. Where they do not
+        // all fit (a phone) the current one sits at the left edge, where the
+        // first tab is, whichever tab it is, and the footer lets the last tabs
+        // scroll that far too. Where they do fit the row stays where it is.
+        readonly property bool fixedWidthTabs: AppTweaks.tabIndicatorNumberTweakValue === "default"
         readonly property real scrollingTabWidth: Units.gu(20)
+        readonly property bool scrollingTabs: fixedWidthTabs && count * scrollingTabWidth > width
 
         // Scrolling tabs follow the pages below instead (see tabContentList's
         // onContentXChanged), so they move with the finger rather than after it.
@@ -278,7 +281,7 @@ Item {
 
         delegate: Button {
             id: tabRowDelegate
-            width: tabRowList.scrollingTabs ? tabRowList.scrollingTabWidth :
+            width: tabRowList.fixedWidthTabs ? tabRowList.scrollingTabWidth :
                    AppTweaks.tabIndicatorNumberTweakValue === "all" ? tabRowList.width / tabRowDelegate.ListView.view.count :
                                                                       tabRowList.width / AppTweaks.tabIndicatorNumberTweakValue
             height: tabRowList.height
@@ -599,6 +602,38 @@ Item {
 
             interactive: !dragArea.held
 
+            /* Flick speed follows the finger. Qt caps a flick at a fixed
+               2500 px/s by default, which on a phone's dense panel is about
+               two screens a second: a hard flick moved no faster than a
+               moderate one. The ceiling and the slow-down are now in screen
+               heights, so they mean the same on every display. */
+            maximumFlickVelocity: height * 8
+            flickDeceleration: height * 1.5
+
+            /* A long, fast flick is someone heading for the top or the bottom
+               of the list: rather than coast part of the way there, go all
+               the way. */
+            readonly property real fastFlickVelocity: height * 4
+
+            NumberAnimation {
+                id: flingToEnd
+                target: flkMouseArea
+                property: "contentY"
+                duration: AppTweaks.disableAnimations ? 0 : 350
+                easing.type: Easing.OutCubic
+            }
+
+            onFlickStarted: {
+                if (Math.abs(verticalVelocity) < fastFlickVelocity || contentHeight <= height * 2)
+                    return;
+                // A positive velocity is the content heading down the list.
+                flingToEnd.to = verticalVelocity > 0 ? originY + contentHeight - height : originY;
+                cancelFlick();
+                flingToEnd.start();
+            }
+            // Touching the list again stops it where it is.
+            onMovementStarted: flingToEnd.stop()
+
             contentHeight: tabContentList.currentItem.launcherGridView.contentHeight
             contentWidth: tabContentList.currentItem.launcherGridView.contentWidth
 
@@ -729,7 +764,7 @@ Item {
     // ls2 management
     property QtObject lunaNextLS2Service: LunaService {
         id: lunaNextLS2Service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
     // ls2 launchPoint removal
     function removeApplication(id) {

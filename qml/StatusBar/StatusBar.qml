@@ -424,7 +424,7 @@ Item {
             LunaService {
                 id: networkStatusQuery
 
-                name: "com.webos.surfacemanager-cardshell"
+                name: "com.webos.surfacemanager.cardshell"
 
                 onInitialized: {
                     probeNetworkStatus()
@@ -435,7 +435,7 @@ Item {
             LunaService {
                 id: simListQuery
 
-                name: "com.webos.surfacemanager-cardshell"
+                name: "com.webos.surfacemanager.cardshell"
 
                 onInitialized: {
                     probeSimList()
@@ -635,6 +635,13 @@ Item {
                : item.centered ? Math.round((parent.width - item.width) / 2)
                                : parent.width - item.width + item.edgeOffset
             source: AppTweaks.newDeviceMenuTweakValue ? "SystemMenu/NewDeviceMenu.qml" : "SystemMenu/SystemMenu.qml"
+
+            // The room the menu has to fit in: from below the bar to the
+            // bottom of the (rotated) scene. Both menus read it by name, as a
+            // Loader's properties are in scope for what it loads.
+            property real availableHeight: (windowManagerInstance ? windowManagerInstance.height
+                                                                  : orientationHelper.height)
+                                           - statusBar.barHeight
 
             onLoaded: item.visible = false
 

@@ -26,11 +26,17 @@ Item {
     id: systemMenu
     // The menu was a fixed gu(40) square. On a small panel (e.g. 480px wide)
     // that overflows the screen and hangs off both edges, since it is placed
-    // at x = parent.width - width. Clamp both axes to the real screen so the
-    // menu fits at any resolution/grid unit; on roomy screens gu(40) still
-    // wins and nothing changes.
+    // at x = parent.width - width, so the width is clamped to the screen.
+    //
+    // The height is not capped at gu(40) any more: the entries add up to about
+    // gu(48), so with that cap the menu scrolled on every device, however much
+    // room there was below it. It now grows to fit its contents and only
+    // scrolls when the space under the status bar runs out. That space is
+    // availableHeight on the StatusBar's Loader, which knows the bar's height
+    // and the rotated scene size; Screen.height is the unrotated panel and
+    // would be wrong in landscape.
     property int  preferredWidth: Units.gu(40)
-    property int  maxHeight: Math.min(Units.gu(40), Screen.height - Units.gu(4))
+    property int  maxHeight: availableHeight - Units.gu(1)
     property int  headerIdent: Units.gu (1.4) 
     property int  subItemIdent: Units.gu (1.6) 
     property int  dividerWidthOffset: Units.gu(0.7)
@@ -70,8 +76,14 @@ Item {
         id: telephonyServiceConnector
     }
 
+    TorchService {
+        id: torchServiceConnector
+    }
+
     width: Math.min(preferredWidth, Screen.width - Units.gu(2))
-    height: maxHeight
+    // No taller than what is drawn, so the empty space under a short menu is
+    // not counted as part of it when a tap decides whether to close it.
+    height: Math.min(maxHeight, mainMenu.height + clipRect.anchors.topMargin + clipRect.anchors.bottomMargin)
     state: "hidden"
 
     function isVisible() {
@@ -259,7 +271,7 @@ Item {
                         launcherInstance.launchApplication("org.webosports.app.settings.wifi",{});
                     }
 
-                    onUserInputRequested: {
+                    onUserInputRequested: function(servicePath) {
                         var target = {};
                         target["servicePath"] = servicePath;
                         launcherInstance.launchApplication("org.webosports.app.settings.wifi",{"target":target});
@@ -312,7 +324,6 @@ Item {
                     maxViewHeight : maxHeight - clipRect.anchors.topMargin - clipRect.anchors.bottomMargin;
 
                     onPrefsTriggered: {
-                        //TODO needs page in Settings
                         launcherInstance.launchApplication("org.webosports.app.settings.bluetooth",{});
                     }
 
@@ -391,6 +402,22 @@ Item {
                 }
 
                 MenuDivider {visible: rotation.visible; widthOffset: dividerWidthOffset}
+
+                FlashlightElement {
+                    id: flashlight
+                    visible: torchServiceConnector.available
+                    ident: headerIdent
+                    on: torchServiceConnector.on
+
+                    onAction: {
+                        torchServiceConnector.toggle();
+
+                        closeMenuTimer.interval = 250;
+                        closeMenuTimer.start();
+                    }
+                }
+
+                MenuDivider {visible: flashlight.visible; widthOffset: dividerWidthOffset}
 
                 // Only where it means something: without a physical keyboard the
                 // on-screen one is already there and this would do nothing.

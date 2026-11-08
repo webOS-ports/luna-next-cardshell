@@ -42,8 +42,11 @@ FocusScope {
 
     property bool isFullScreenMode: false
 
-    // this is the radius that should be applied to the corners of this window container
-    property real cornerRadius: 20
+    // this is the radius that should be applied to the corners of this window container:
+    // the card view's, shrunk with the card as LunaSysMgr's did, so a card has
+    // the same corners as the window it is a picture of
+    property real cornerRadius: cardView && cardView.width > 0 ? cardView.cornerRadius * width / cardView.width
+                                                               : 0
     property bool useShaderCorner: true
 
     signal clicked();
@@ -104,16 +107,46 @@ FocusScope {
         anchors.fill: cardWrapperItem
         visible: !useShaderCorner && windowState !== WindowState.Fullscreen
         cornerRadius: cardWrapperItem.cornerRadius
-        // MultiEffect samples its mask as a texture, so the mask has to be a layer
-        layer.enabled: useShaderCorner
+    }
+    // The same corners, as the mask of the shader version. MultiEffect samples
+    // its mask as a texture, so the mask has to be a layer - and one that stays
+    // on: when the layer was switched off for a maximized window and back on
+    // for the card, MultiEffect kept sampling the texture of the old layer, so
+    // every card that had been maximized once lost its corners.
+    RoundedItem {
+        id: cornerShaderMask
+        objectName: "cornerShaderMask"
+        anchors.fill: cardWrapperItem
+        visible: false
+        cornerRadius: cardWrapperItem.cornerRadius
+        layer.enabled: true
+    }
+    // The window with a transparent pixel round it, so the edge of a card
+    // tilted in a stack is filtered instead of drawn as a staircase.
+    // MultiEffect's own paddingRect cannot do this: it sizes the padded source
+    // from the window before the window has followed a resize, and never
+    // again, so after a maximize the card showed a squeezed window.
+    // No source while maximized, so the window is not also drawn off screen.
+    ShaderEffectSource {
+        id: paddedWindow
+        objectName: "paddedWindow"
+        anchors.fill: cardWrapperItem
+        anchors.margins: -1
+        visible: false
+        sourceItem: useShaderCorner ? childWrapper : null
+        sourceRect: Qt.rect(-1, -1, childWrapper.width + 2, childWrapper.height + 2)
     }
     // Rounded corners (shader version)
     MultiEffect {
-        anchors.fill: cardWrapperItem
-        source: childWrapper
+        anchors.fill: paddedWindow
+        source: paddedWindow
         maskEnabled: true
         maskInverted: true
-        maskSource: cornerStaticMask
+        maskSource: cornerShaderMask
+        // By default the mask cuts at the first non-zero alpha, which throws
+        // away the antialiased rim of the corner images; fade across it instead.
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
         visible: useShaderCorner
     }
 
@@ -131,12 +164,15 @@ FocusScope {
         drag.target: held ? cardWrapperItem : undefined
         drag.axis: Drag.XAndYAxis
         drag.filterChildren: true
+        // The card stays under the finger, as on LunaSysMgr: smoothed, it
+        // trails it by the drag threshold, and so does where it is dropped.
+        drag.smoothed: false
 
         onClicked: {
             cardWrapperItem.clicked();
         }
 
-        onPressAndHold: {
+        onPressAndHold: (mouse) => {
             // switch to drag'n'drop state
             console.log("Card wrapper: press and hold");
 
@@ -144,19 +180,31 @@ FocusScope {
             cardWrapperItem.Drag.hotSpot.x = mouse.x
             cardWrapperItem.Drag.hotSpot.y = mouse.y
             held = true;
-            cardWrapperItem.startDrag();
+            // Active before anyone hears of it, so that the card view can
+            // still refuse the drag with cancelDrag().
             cardWrapperItem.Drag.active = true;
+            cardWrapperItem.startDrag();
         }
         onReleased: {
             // stop the drag'n'drop
             if( held ) {
                 console.log("Card wrapper: released drag");
                 cardWrapperItem.Drag.drop();
-                cardWrapperItem.Drag.active = false;
-                held = false;
-                cardWrapperItem.stopDrag();
+                cardWrapperItem.cancelDrag();
             }
         }
+        // The touch can be taken away (a flickable, a gesture, a popup): a
+        // drag left active would leave the card out of its group for good.
+        onCanceled: if( held ) cardWrapperItem.cancelDrag();
+    }
+
+    //! End a drag of this card without dropping it anywhere
+    function cancelDrag() {
+        if( !dragMouseArea.held && !cardWrapperItem.Drag.active )
+            return;
+        cardWrapperItem.Drag.active = false;
+        dragMouseArea.held = false;
+        cardWrapperItem.stopDrag();
     }
 
     state: windowState === WindowState.Fullscreen ? "fullscreen" : windowState === WindowState.Maximized ? "maximized" : "card"
@@ -188,10 +236,25 @@ FocusScope {
         }
     }
 
+    // An app asks for its card to cover the whole screen, status bar
+    // included, with the window property "LuneOS_fullscreen" set to "true"
+    // (a video player while it plays); "false" gives the bar back. Window
+    // properties arrive as strings, and can be set before the window is
+    // wrapped. Only a change of this one property counts, so a new title
+    // does not undo enableFullScreenMode().
+    readonly property string fullScreenProperty: {
+        var properties = wrappedWindow ? wrappedWindow.windowProperties : null;
+        return (properties && properties["LuneOS_fullscreen"] !== undefined) ? String(properties["LuneOS_fullscreen"]) : "";
+    }
+    onFullScreenPropertyChanged: cardView.setFullScreenMode(wrappedWindow, fullScreenProperty === "true")
+
     function setWrappedWindow(window) {
         childWrapper.setWrappedChild(window);
         if( window ) {
             window.userData = this
+            // The property was read before there was a userData to set.
+            if (fullScreenProperty === "true")
+                cardView.setFullScreenMode(window, true);
         }
     }
 

@@ -17,6 +17,7 @@
 
 import QtQuick 2.5
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 
 // Tap-and-go: when a tag with a dispatchable NDEF record comes into range,
 // act on it immediately (open a link, call a number, ...) instead of only
@@ -30,7 +31,7 @@ Item {
     LunaService {
         id: nfcStatusQuery
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             subscribe("luna://com.webos.service.nfc/getTagInfo",
@@ -39,14 +40,14 @@ Item {
         }
     }
 
-    LunaService {
+    AppLauncher {
         id: appLauncher
-        name: "com.webos.surfacemanager-cardshell"
+        clientName: "com.webos.surfacemanager.cardshell"
     }
 
     LunaService {
         id: notificationService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     function onTagInfoChanged(message) {
@@ -94,22 +95,20 @@ Item {
             appId = "org.webosports.app.atlas";
             label = "Opening location";
         } else if (uri.indexOf("http://") === 0 || uri.indexOf("https://") === 0) {
-            appId = "com.webos.app.enactbrowser";
+            appId = "org.webosports.app.atlas";
             label = "Opening " + uri;
         } else {
             return;
         }
 
-        appLauncher.call("luna://com.webos.service.applicationManager/launch",
-                          JSON.stringify({"id": appId, "params": {"target": uri}}),
-                          function () {}, function () {});
+        appLauncher.launch(appId, {"target": uri});
 
         nfcAutoDispatch.showToast(label);
     }
 
     function showToast(message) {
         notificationService.call("luna://com.webos.notification/createToast",
-                                  JSON.stringify({"sourceId": "com.webos.surfacemanager-cardshell",
+                                  JSON.stringify({"sourceId": "com.webos.surfacemanager.cardshell",
                                                   "message": message}),
                                   function () {}, function () {});
     }

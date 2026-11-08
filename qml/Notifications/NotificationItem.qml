@@ -63,10 +63,14 @@ Item {
             font.pixelSize: FontUtils.sizeToPixels("medium")
             color: "white"
             text: notification.title
+            textFormat: Text.PlainText
+            elide: Text.ElideRight
             anchors.top: parent.top
             anchors.left: parent.left
+            anchors.right: parent.right
             anchors.topMargin: 3
             anchors.leftMargin: 10
+            anchors.rightMargin: 10
             anchors.bottomMargin: 5
         }
 
@@ -76,10 +80,14 @@ Item {
             font.bold: false
             color: "white"
             text: notification.body
+            textFormat: Text.PlainText
+            elide: Text.ElideRight
             anchors.top: summaryText.bottom
             anchors.left: parent.left
+            anchors.right: parent.right
             anchors.bottom: parent.bottom
             anchors.leftMargin: 10
+            anchors.rightMargin: 10
             anchors.bottomMargin: 3
         }
     }

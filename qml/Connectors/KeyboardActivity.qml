@@ -52,7 +52,7 @@ Item {
 
     LunaService {
         id: displayService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: keyboardActivity._install()
     }

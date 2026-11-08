@@ -21,6 +21,8 @@ import QtMultimedia 6.3
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 
+import "NotificationSound.js" as NotificationSound
+
 Item {
     id: bannerItemsPopups
     property string color: Settings.tabletUi? "transparent" : "black";
@@ -37,48 +39,12 @@ Item {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
-    LunaService {
-            id: systemService
-
-            name: "com.webos.surfacemanager-cardshell"
-
-            property variant keysToWatch: ["ringtone","alerttone","notificationtone","locale"]
-
-            onInitialized: {
-                console.log("Calling preferences service for system sounds and locale...");
-
-                // subscribe to preference change events so that we know when something has changed
-                // and we can notify the relevant parts about this
-                systemService.call("luna://com.webos.service.systemservice/getPreferences",
-                                        JSON.stringify({"keys": keysToWatch,"subscribe":true}),
-                                        handlePreferencesResponse,
-                                        handleError);
-            }
-
-            function handlePreferencesResponse(message) {
-                var response = JSON.parse(message.payload);
-
-                if (response.hasOwnProperty("ringtone")) {
-                    preferences.ringtoneFullPath = response.ringtone.fullPath;
-                }
-                if (response.hasOwnProperty("alerttone")) {
-                    preferences.alerttoneFullPath = response.alerttone.fullPath;
-                }
-                if (response.hasOwnProperty("notificationtone")) {
-                    preferences.notificationtoneFullPath = response.notificationtone.fullPath;
-                }
-                if (response.hasOwnProperty("locale")) {
-                    preferences.locale = response.locale.languageCode+"_"+response.locale.countryCode;
-                }
-            }
-
-            function handleError(message) {
-                console.log("Failed to call preferences service: " + message);
-            }
-        }
+    // No preference subscription of its own: the sounds and the locale used
+    // below are the shell's Preferences ("preferences"), which follows them.
+    // This one asked for the same keys again, once, and wrote them back there.
 
     Loader {
         active: !Settings.tabletUi
@@ -178,23 +144,7 @@ Item {
             return "";
         }
 
-        var streamClass = soundClass;
-
-        if (streamClass === "alert"){
-            streamClass = "alerts";
-        } else if (streamClass === "notification") {
-            streamClass = "notifications";
-        } else if (streamClass === "ringtone") {
-            streamClass = "ringtones";
-        }
-        if (streamClass !== "alerts" &&
-                streamClass !== "alarm" &&
-                streamClass !== "calendar" &&
-                streamClass !== "notifications" &&
-                streamClass !== "ringtones" &&
-                streamClass !== "feedback"){
-            streamClass = "notifications";
-        }
+        var streamClass = NotificationSound.streamClassFor(soundClass);
 
         var mySoundFilePath = "";
 
@@ -206,7 +156,10 @@ Item {
             mySoundFilePath = getResourcePathFromString(soundFile, appId, Settings.lunaSystemSoundsPath);
         }
 
-        if (isEmpty(soundFilePath)) {
+        // Only when neither soundFilePath nor soundFile gave a sound: testing
+        // the soundFilePath argument here replaced a toast's own soundFile with
+        // the preference tone every time.
+        if (isEmpty(mySoundFilePath)) {
             if (streamClass === "ringtones") {
                 mySoundFilePath = preferences.ringtoneFullPath;
             } else if (streamClass === "alerts" ||
@@ -232,6 +185,20 @@ Item {
         } else {
             return "";
         }
+    }
+
+    // On its class's stream through audiod, so audiod lowers the music under
+    // an alert; the banner's own player is the fallback.
+    function playNotificationSound(player, soundClass) {
+        // The player resolved the path to a file:// URL; audiod wants the path.
+        var path = decodeURIComponent(player.source.toString().replace(/^file:\/\//, ""));
+        NotificationSound.play(path, NotificationSound.streamClassFor(soundClass),
+            function(request, onReply) {
+                service.call("luna://com.webos.service.audio/playSound", JSON.stringify(request),
+                             function(message) { onReply(JSON.parse(message.payload)); },
+                             function(error) { onReply(null); });
+            },
+            function() { player.play(); });
     }
 
     function getSoundFileDuration(duration){
@@ -324,7 +291,7 @@ Item {
                     script: {
                         if(!isEmpty(notifsound.source))
                         {
-                            notifsound.play();
+                            playNotificationSound(notifsound, object.soundClass);
                         }
 
                     }

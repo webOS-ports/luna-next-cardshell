@@ -76,6 +76,25 @@ QtObject {
         return exhibitionState.ownedAppIds.indexOf(appId) >= 0;
     }
 
+    // Of an application's windows, the one exhibition mode should take: its
+    // dock window when it has one - an application that is also running as
+    // a card (Music, playing) has both, and taking the card would put the
+    // user's card in the carousel and close it on undocking - otherwise its
+    // card, from a runtime that knows nothing of dock mode. null for none.
+    function pickWindow(windows, appId) {
+        var card = null;
+        for (var i = 0; i < windows.length; i++) {
+            var window = windows[i];
+            if (!window || window.appId !== appId)
+                continue;
+            if (window.type === exhibitionState.dockWindowType)
+                return window;
+            if (!card)
+                card = window;
+        }
+        return card;
+    }
+
     // True for a surface the card views should leave alone: either it carries
     // the dock window type, or it belongs to an application exhibition mode
     // is currently hosting.

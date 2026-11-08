@@ -94,7 +94,7 @@ Item {
 
     property LunaService launchService: LunaService {
         id: launchService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             carousel.__serviceReady = true;
@@ -141,12 +141,10 @@ Item {
     property ExhibitionAppInfo appInfo: ExhibitionAppInfo {}
 
     function findWindowForAppId(appId) {
-        for (let i = 0; i < cardWindows.count; i++) {
-            let window = cardWindows.get(i);
-            if (window && window.appId === appId)
-                return window;
-        }
-        return null;
+        let windows = [];
+        for (let i = 0; i < cardWindows.count; i++)
+            windows.push(cardWindows.get(i));
+        return ExhibitionState.pickWindow(windows, appId);
     }
 
     function launchExhibitionApp(appId) {
