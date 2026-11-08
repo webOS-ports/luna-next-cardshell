@@ -139,6 +139,27 @@ Item {
         }
     }
 
+    // An app dragged out of the full launcher, drawn again here above the
+    // launch bar so it is not hidden behind the bar while it goes onto it.
+    // The dragged item itself stays where it is - moving it to another parent
+    // in mid-drag stops the bar's DropArea from following it - and is only
+    // hidden from view while this copy shows it.
+    ShaderEffectSource {
+        id: draggedIconAboveBar
+
+        readonly property Item icon: fullLauncherInstance.draggedIcon
+
+        sourceItem: icon
+        visible: icon.draggingActive
+        hideSource: visible
+        width: icon.width
+        height: icon.height
+        // The grid does not scroll during a drag, so following the item's own
+        // x and y is enough to keep the copy over it.
+        x: { icon.x; return icon.parent ? icon.parent.mapToItem(launcherItem, icon.x, icon.y).x : 0; }
+        y: { icon.y; return icon.parent ? icon.parent.mapToItem(launcherItem, icon.x, icon.y).y : 0; }
+    }
+
     // JustType launcher window container
     JustTypeLauncher {
         id: justTypeLauncherInstance

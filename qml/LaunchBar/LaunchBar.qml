@@ -59,7 +59,17 @@ Item {
      * equal slots, each icon centred in its own, so the gaps between all of
      * them - the button included - are the same.
      */
-    readonly property real slotWidth: launchBarItem.width / (launchBarListView.count + 1)
+    readonly property real slotWidth: launchBarItem.width /
+                                      (launchBarListView.count + 1 + (launcherAppDropArea.gapIndex >= 0 ? 1 : 0))
+
+    //! slotWidth as drawn: when a place opens for an app from the launcher,
+    //! or closes again, the icons slide to their new spacing rather than
+    //! jumping to it.
+    property real shownSlotWidth: slotWidth
+    Behavior on shownSlotWidth {
+        enabled: launcherAppDropArea.containsDrag
+        NumberAnimation { duration: launchBarItem.animationDuration; easing.type: Easing.OutQuad }
+    }
 
     states: [
         State {
@@ -136,7 +146,13 @@ Item {
 
                 anchors.verticalCenter: parent ? parent.verticalCenter : undefined
                 height: launcherIcon.height
-                width: launchBarItem.slotWidth
+                width: launchBarItem.shownSlotWidth
+
+                // The icons after the place an app from the launcher would go
+                // in move aside, leaving that place open.
+                property real shift: launcherAppDropArea.gapIndex >= 0 && index >= launcherAppDropArea.gapIndex ? 1 : 0
+                Behavior on shift { NumberAnimation { duration: launchBarItem.animationDuration; easing.type: Easing.OutQuad } }
+                transform: Translate { x: launcherIconDelegate.shift * launchBarItem.shownSlotWidth }
 
                 LaunchableAppIcon {
                     id: launcherIcon
@@ -154,7 +170,12 @@ Item {
 
                     // Dragged up out of the bar, the icon is on its way off it.
                     readonly property bool outOfBar: dragArea.held && y + height / 2 < 0
-                    opacity: outOfBar ? 0.5 : 1
+                    // An app from the launcher hovering over this one would take its place.
+                    readonly property bool toBeReplaced: launcherAppDropArea.replaceIndex === index
+                    opacity: outOfBar ? 0.5 : (toBeReplaced ? 0.25 : 1)
+                    scale: toBeReplaced ? 0.8 : 1
+                    Behavior on opacity { NumberAnimation { duration: launchBarItem.animationDuration } }
+                    Behavior on scale { NumberAnimation { duration: launchBarItem.animationDuration } }
 
                     Drag.active: dragArea.held
                     Drag.source: launcherIconDelegate
@@ -227,10 +248,14 @@ Item {
     }
 
     /*!
-     * Takes an app dragged out of the full launcher. Dropped on an app, it
-     * takes that app's place; with a slot to spare it goes in where it was
-     * dropped instead. An app already on the bar just moves. The app stays in
-     * the launcher grid either way, as it did on webOS.
+     * Takes an app dragged out of the full launcher, and shows where it will
+     * land before it is let go:
+     *  - with a slot to spare, the icons move aside and leave an open place
+     *    for it, and it goes in there;
+     *  - on a full bar, the app it is over fades and shrinks: that is the one
+     *    it replaces;
+     *  - an app already on the bar moves to the slot it is dropped on.
+     * The app stays in the launcher grid either way, as it did on webOS.
      */
     DropArea {
         id: launcherAppDropArea
@@ -240,48 +265,71 @@ Item {
         // What FullLauncher checks before calling Drag.drop() on the bar.
         readonly property bool acceptsLauncherApps: true
 
-        // Slot the drag is over, or -1.
-        property int hoveredSlot: -1
+        //! Where the hovering app would go in, the icons from there on
+        //! moving aside; else -1.
+        property int gapIndex: -1
+        //! The app on a full bar the hovering app would replace; else -1.
+        property int replaceIndex: -1
+        //! The slot an app already on the bar would move to; else -1.
+        property int moveIndex: -1
 
-        function slotAt(x) {
-            return Math.max(0, Math.min(launchBarListView.count, Math.floor(x / launchBarItem.slotWidth)));
+        function clear() {
+            gapIndex = -1;
+            replaceIndex = -1;
+            moveIndex = -1;
         }
 
-        onEntered: (drag) => { hoveredSlot = slotAt(drag.x); }
-        onPositionChanged: (drag) => { hoveredSlot = slotAt(drag.x); }
-        onExited: hoveredSlot = -1;
-        onDropped: (drop) => {
-            var slot = slotAt(drop.x);
-            hoveredSlot = -1;
+        // Works the three out from the drag's place on the bar. Each is found
+        // on a grid that stays put while it is shown - the open place counts
+        // as a slot of its own - so the preview does not jump back and forth
+        // under the finger.
+        function follow(drag) {
+            var appId = drag.source ? drag.source.modelId : "";
+            var count = launchBarListView.count;
+            var ids = launchBarItem.currentLayout();
+            clear();
+            if (!appId)
+                return;
 
-            var appId = drop.source.modelId;
+            if (ids.indexOf(appId) !== -1) {
+                var slot = launchBarItem.width / (count + 1);
+                moveIndex = Math.max(0, Math.min(count - 1, Math.floor(drag.x / slot)));
+            }
+            else if (count < launchBarItem.maxIcons) {
+                var withGap = launchBarItem.width / (count + 2);
+                gapIndex = Math.max(0, Math.min(count, Math.floor(drag.x / withGap)));
+            }
+            else {
+                var full = launchBarItem.width / (count + 1);
+                replaceIndex = Math.max(0, Math.min(count - 1, Math.floor(drag.x / full)));
+            }
+        }
+
+        onEntered: (drag) => follow(drag)
+        onPositionChanged: (drag) => follow(drag)
+        onExited: clear()
+        onDropped: (drop) => {
+            var appId = drop.source ? drop.source.modelId : "";
+            var gap = gapIndex, replace = replaceIndex, move = moveIndex;
+            clear();
             if (!appId)
                 return;
 
             var ids = launchBarItem.currentLayout();
-            var existing = ids.indexOf(appId);
-            if (existing !== -1) {
-                ids.splice(existing, 1);
-                ids.splice(Math.min(slot, ids.length), 0, appId);
+            if (move >= 0) {
+                ids.splice(ids.indexOf(appId), 1);
+                ids.splice(move, 0, appId);
             }
-            else if (ids.length < launchBarItem.maxIcons) {
-                ids.splice(Math.min(slot, ids.length), 0, appId);
+            else if (gap >= 0) {
+                ids.splice(gap, 0, appId);
+            }
+            else if (replace >= 0) {
+                ids[replace] = appId;
             }
             else {
-                ids[Math.min(slot, ids.length - 1)] = appId;
+                return;
             }
             launchBarItem.applyLayout(ids);
-        }
-
-        // Marks where the app will land.
-        Rectangle {
-            visible: launcherAppDropArea.hoveredSlot >= 0
-            x: Math.min(launcherAppDropArea.hoveredSlot, Math.max(0, launchBarListView.count - (launchBarListView.count < launchBarItem.maxIcons ? 0 : 1))) * launchBarItem.slotWidth
-            width: launchBarItem.slotWidth
-            height: launchBarItem.height
-            color: "white"
-            opacity: 0.25
-            radius: height / 6
         }
     }
 
@@ -296,7 +344,9 @@ Item {
             id: launchBarListView
             Layout.fillWidth: false
             Layout.preferredHeight: launchBarItem.height
-            Layout.preferredWidth: launchBarItem.slotWidth * count
+            // With room left for the open place an app from the launcher is
+            // shown going into.
+            Layout.preferredWidth: launchBarItem.shownSlotWidth * (count + (launcherAppDropArea.gapIndex >= 0 ? 1 : 0))
             Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
 
             spacing: 0

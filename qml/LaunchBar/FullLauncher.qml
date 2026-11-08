@@ -51,6 +51,10 @@ Item {
 
     property bool isEditionActive: false
 
+    //! The app being dragged out of the grid (its draggingActive says when).
+    //! Launcher draws it again above the launch bar while it is dragged.
+    readonly property Item draggedIcon: draggedLauncherIcon
+
     // The Android tab is optional: it is only useful on the devices that ship
     // Waydroid, and without it the Android apps stay on the Apps tab.
     readonly property bool androidTabEnabled: AppTweaks.androidTabTweakValue === true ||
