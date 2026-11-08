@@ -26,9 +26,25 @@ import "VolumeKeyRequest.js" as VolumeKeyRequest
 Item {
     id: volumeControl
 
+    //! A volume key going down and coming up, auto-repeats left out. Only from
+    //! a luneos-components whose VolumeKeys says so (keyPressed/keyReleased);
+    //! an older one never emits these.
+    signal volumeKeyPressed(int key)
+    signal volumeKeyReleased(int key)
+
     VolumeKeys {
+        id: volumeKeys
         onVolumeUp: handleVolumeUp()
         onVolumeDown: handleVolumeDown()
+    }
+
+    // Not onKeyPressed in VolumeKeys itself: with a VolumeKeys that lacks the
+    // signal, that would stop this whole file from loading.
+    Connections {
+        target: volumeKeys
+        ignoreUnknownSignals: true
+        function onKeyPressed(key) { volumeControl.volumeKeyPressed(key); }
+        function onKeyReleased(key) { volumeControl.volumeKeyReleased(key); }
     }
 
     // Volume state, tracked from audiod so the keys can step it themselves.

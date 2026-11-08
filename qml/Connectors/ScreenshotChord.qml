@@ -37,7 +37,14 @@ import WebOSCoreCompositor 1.0
  *    steps the volume if power has not come in the meantime - so a chord
  *    never shows the volume indicator or plays its sound. That is the delay
  *    every first volume-down step pays while the display is on; auto-repeats
- *    are not held back.
+ *    are not held back, and a tap let go sooner steps at once.
+ *
+ *    Power may also come later than that, up to pairWindowMs after the
+ *    volume-down press, as long as volume down is still held: two hands do
+ *    not press within 200 ms of each other. The volume has then moved one
+ *    step, as it does on Android. This needs to know when volume down comes
+ *    up, which only a VolumeKeys with keyPressed/keyReleased says; with an
+ *    older one, power must come within chordWindowMs.
  *
  *  - Power. LunaDisplayManager reads it itself and toggles the display on its
  *    release. A chord holds a powerKeyBlock (com.palm.display/control/
@@ -54,16 +61,23 @@ Item {
     //! is in place, and go back to it through volumeControl.stepVolumeDown().
     property var volumeControl: null
 
-    //! How far apart the two presses may be and still count as together.
+    //! How long a volume-down press waits for power before it steps.
     property int chordWindowMs: 200
+
+    //! How long after a volume-down press that is still held power counts as
+    //! pressed together with it.
+    property int pairWindowMs: 500
 
     signal triggered()
 
     readonly property int resultNextPolicy: 2   //!< see HardwareKeys
 
     //! VolumeKeys repeats a held key every 80 ms after 700 ms; anything closer
-    //! than this to the previous step is one of those, not a new press.
-    readonly property int _repeatGapMs: 400
+    //! than this to the previous step is one of those, not a new press. Only
+    //! a guess for a VolumeKeys that does not report presses: it has to clear
+    //! the 700 ms to the first repeat, so two taps closer than this count as
+    //! one held key.
+    readonly property int _repeatGapMs: 800
 
     property bool displayOn: true
 
@@ -73,11 +87,16 @@ Item {
     property bool _suppressRepeats: false
     property real _powerDownAt: 0
     property real _lastVolumeStepAt: 0
+    //! Whether VolumeKeys reports presses and releases (see VolumeControl).
+    property bool _keyEdgesKnown: false
+    property bool _volumeDownHeld: false
+    property bool _volumeDownNewPress: false
+    property real _volumeDownAt: 0
     property var _powerKeyBlock: null
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
 
         onInitialized: {
             screenshotChord._install();
@@ -107,6 +126,19 @@ Item {
         onTriggered: screenshotChord._releasePowerKeyBlock()
     }
 
+    Connections {
+        target: screenshotChord.volumeControl
+        ignoreUnknownSignals: true
+        function onVolumeKeyPressed(key) {
+            if (key === Qt.Key_VolumeDown)
+                screenshotChord.volumeDownPressed();
+        }
+        function onVolumeKeyReleased(key) {
+            if (key === Qt.Key_VolumeDown)
+                screenshotChord.volumeDownReleased();
+        }
+    }
+
     Component.onCompleted: {
         if (screenshotChord.volumeControl)
             screenshotChord.volumeControl.volumeDownHandler = screenshotChord.volumeDown;
@@ -121,7 +153,7 @@ Item {
         if (screenshotChord._installed)
             return;
 
-        if (!compositor) {
+        if (typeof compositor === "undefined" || !compositor) {
             console.warn("ScreenshotChord: no compositor, the screenshot chord is off");
             return;
         }
@@ -148,6 +180,11 @@ Item {
             if (heldVolumeStepTimer.running) {
                 heldVolumeStepTimer.stop();
                 screenshotChord._fire();
+            } else if (screenshotChord._keyEdgesKnown && screenshotChord._volumeDownHeld
+                       && screenshotChord._powerDownAt - screenshotChord._volumeDownAt
+                          <= screenshotChord.pairWindowMs) {
+                // Still held, a little later: the chord too, one step late.
+                screenshotChord._fire();
             }
         } else {
             screenshotChord._powerHeld = false;
@@ -158,11 +195,37 @@ Item {
         return screenshotChord.resultNextPolicy;
     }
 
+    //! Volume down going down; comes just before that press's first step.
+    function volumeDownPressed() {
+        screenshotChord._keyEdgesKnown = true;
+        screenshotChord._volumeDownHeld = true;
+        screenshotChord._volumeDownNewPress = true;
+        screenshotChord._volumeDownAt = Date.now();
+        screenshotChord._suppressRepeats = false;
+    }
+
+    //! Volume down coming up. A tap shorter than chordWindowMs steps now:
+    //! power can no longer be pressed together with it.
+    function volumeDownReleased() {
+        screenshotChord._keyEdgesKnown = true;
+        screenshotChord._volumeDownHeld = false;
+        screenshotChord._suppressRepeats = false;
+        if (heldVolumeStepTimer.running) {
+            heldVolumeStepTimer.stop();
+            screenshotChord._stepVolume();
+        }
+    }
+
     //! Every volume-down step VolumeKeys makes: the press and its auto-repeats.
     function volumeDown() {
         var now = Date.now();
-        var repeat = now - screenshotChord._lastVolumeStepAt < screenshotChord._repeatGapMs;
+        // Known exactly when VolumeKeys reports presses; otherwise guessed
+        // from how soon this step follows the last one.
+        var repeat = screenshotChord._keyEdgesKnown
+                ? !screenshotChord._volumeDownNewPress
+                : now - screenshotChord._lastVolumeStepAt < screenshotChord._repeatGapMs;
         screenshotChord._lastVolumeStepAt = now;
+        screenshotChord._volumeDownNewPress = false;
 
         if (repeat) {
             // A volume-down held on after its chord steps nothing until let go.
@@ -171,7 +234,8 @@ Item {
             screenshotChord._stepVolume();
             return;
         }
-        screenshotChord._suppressRepeats = false;
+        if (!screenshotChord._keyEdgesKnown)
+            screenshotChord._suppressRepeats = false;
 
         if (!screenshotChord.displayOn) {
             screenshotChord._stepVolume();
@@ -200,18 +264,21 @@ Item {
         screenshotChord._firedThisPower = true;
         screenshotChord._suppressRepeats = true;
 
-        if (!screenshotChord._powerKeyBlock) {
-            screenshotChord._powerKeyBlock = service.subscribe(
-                        "luna://com.palm.display/control/setProperty",
-                        JSON.stringify({"client": "screenshot-chord", "powerKeyBlock": true}),
-                        function (message) { },
-                        function (error) {
-                            console.warn("ScreenshotChord: could not block the power key: " + JSON.stringify(error));
-                        });
-        }
+        if (!screenshotChord._powerKeyBlock)
+            screenshotChord._powerKeyBlock = screenshotChord._blockPowerKey();
         releaseBlockTimer.stop();
 
         screenshotChord.triggered();
+    }
+
+    //! The block, as a call kept open: cancelling it lets power through again.
+    function _blockPowerKey() {
+        return service.subscribe("luna://com.palm.display/control/setProperty",
+                                 JSON.stringify({"client": "screenshot-chord", "powerKeyBlock": true}),
+                                 function (message) { },
+                                 function (error) {
+                                     console.warn("ScreenshotChord: could not block the power key: " + JSON.stringify(error));
+                                 });
     }
 
     function _releasePowerKeyBlock() {
