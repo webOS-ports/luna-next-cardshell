@@ -88,6 +88,6 @@ Item {
         onSwipeUpGesture: (modifiers) => { gestureAreaItem.swipeUpGesture(modifiers); }
         onSwipeDownGesture: (modifiers) =>  { gestureAreaItem.swipeDownGesture(modifiers); }
 
-        onClicked: gestureAreaItem.tapGesture();
+        onTapped: gestureAreaItem.tapGesture();
     }
 }
