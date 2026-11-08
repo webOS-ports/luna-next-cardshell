@@ -114,6 +114,15 @@ Rectangle {
         }
     }
 
+    // Opening registers a tap action (below). Whatever takes the area out of
+    // "open" drops it again: not only a tap, but also the last notification
+    // going away ("hidden") or a new one coming in ("banner") - left behind,
+    // the stale action ate the next tap on the gesture area.
+    onStateChanged: {
+        if (notificationArea.state !== "open" && windowManagerInstance)
+            windowManagerInstance.removeTapAction("minimizeNotificationArea");
+    }
+
     function minimizeNotificationArea() {
         if( notificationArea.state === "open" )
             notificationArea.state = "minimized";
