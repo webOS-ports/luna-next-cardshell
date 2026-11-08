@@ -22,14 +22,99 @@ import WebOSCoreCompositor 1.0
 import LuneOS.Service 1.0
 
 import "../Utils"
+import "NotificationSound.js" as NotificationSound
 
 Rectangle {
     id: rootAlertsArea
     height: maxHeight + 2 * contentMargin
 
-    property int maxHeight: 0
+    // The tallest window alert. In the phone's bar a notification alert hides
+    // the window alerts behind it, so the area is its size alone while it is
+    // up; a tablet shows it in the middle of the screen, apart from this panel.
+    readonly property int maxHeight: {
+        if (notificationAlerts.showing && !Settings.tabletUi && !rootAlertsArea.callAlertShowing)
+            return notificationAlerts.height;
+        var height = 0;
+        for (var i = 0; i < listPopupAlertsModel.count; ++i) {
+            var window = listPopupAlertsModel.get(i);
+            if (!window || (rootAlertsArea.screenLocked && !rootAlertsArea.isLockScreenAlert(window)))
+                continue;
+            if (window.height > height)
+                height = window.height;
+        }
+        return Math.max(0, Math.min(height, rootAlertsArea.maxAlertHeight));
+    }
+
+    /*!
+     * The most an alert may take: the space between the status bar and the
+     * gesture area. An alert asking for more - the incoming call asks for the
+     * whole screen - is fitted into it, client window included, rather than
+     * running under the status bar.
+     */
+    property real maxAlertHeight: parent ? parent.height : 0
+
+    /*!
+     * An alert that flags itself with LuneOS_overLockScreen - the incoming
+     * call - is shown over the lock screen, as legacy showed its incoming call
+     * popup there, and is not closed by a tap outside it or on the gesture
+     * area: a call is answered or declined, not swiped away.
+     */
+    function isCallAlert(window) {
+        return !!window && window.windowProperties["LuneOS_overLockScreen"] === "true";
+    }
+    readonly property bool callAlertShowing: {
+        for (var i = 0; i < listPopupAlertsModel.count; ++i) {
+            if (rootAlertsArea.isCallAlert(listPopupAlertsModel.get(i)))
+                return true;
+        }
+        return false;
+    }
+    /*!
+     * An alert that asks to be usable while the device is locked - the Clock's
+     * alarm, opened with the window attribute clickableWhenLocked, which WAM
+     * hands on as LuneOS_clickablewhenlocked - is shown over the lock screen
+     * too, as LunaSysMgr's LockWindow showed the active popup alert there
+     * (PopUpAlert). Unlike a call, a tap outside it still closes it.
+     */
+    function isLockScreenAlert(window) {
+        return rootAlertsArea.isCallAlert(window) ||
+               (!!window && String(window.windowProperties["LuneOS_clickablewhenlocked"]) === "true");
+    }
+    readonly property bool lockScreenAlertShowing: {
+        for (var i = 0; i < listPopupAlertsModel.count; ++i) {
+            if (rootAlertsArea.isLockScreenAlert(listPopupAlertsModel.get(i)))
+                return true;
+        }
+        return false;
+    }
     property Item windowManagerItem
     property var compositorInstance
+    // Set while the lock screen is up. The tablet's centred notification alert
+    // is not in this area, so it cannot go by whether this area is shown, which
+    // is not only a question of the lock screen.
+    property bool screenLocked: false
+    // Where the free space below the status bar ends, in the parent's
+    // coordinates: the top of the gesture area. The tablet's notification
+    // alert is centred in that space, as legacy centred its modals in the
+    // positive space, not in the whole screen.
+    property real modalSpaceBottom: parent ? parent.height : 0
+
+    /*!
+     * Closes every alert. Used both by the tap action a tap on the gesture area
+     * runs and for a tap anywhere outside the alerts (see CardsArea).
+     */
+    function closeAll() {
+        for (var i = listPopupAlertsModel.count - 1; i >= 0; --i) {
+            var window = listPopupAlertsModel.get(i);
+            if (!rootAlertsArea.isCallAlert(window))
+                rootAlertsArea.compositorInstance.closeWindow(window);
+        }
+        // A notification alert goes too, unless it is modal: that one has to
+        // be answered, and the tap stays with it.
+        notificationAlerts.dismiss();
+        if (windowManagerItem && !notificationAlerts.showing)
+            windowManagerItem.removeTapAction("hideAlertWindow");
+    }
 
     /* Phone ui fills its bar edge to edge with the alert. Tablet ui floats it,
      * so the alert needs room to breathe inside a rounded panel - measured off
@@ -53,19 +138,72 @@ Rectangle {
         }
     }
 
+    SoundNotifications {
+        id: soundNotifications
+        objectName: "soundNotifications"
+        tones: typeof preferences === "undefined" ? null : preferences
+    }
+
+    /*
+     * A popup alert's sound, the "sound" and "soundclass" attributes of its
+     * window.open() or what setAlertSound() set, as LunaSysMgr's AlertWindow
+     * played it: once, when the window shows, and cut off when it goes. The
+     * delegates below move from window to window as alerts close, so this
+     * goes by the windows themselves. Over the lock screen as well: a reminder
+     * sounds with the display off, even though its window waits.
+     */
+    QtObject {
+        id: alertSounds
+
+        property int count: listPopupAlertsModel.count
+        property var known: []
+
+        function start(window) {
+            var properties = window.windowProperties;
+            return soundNotifications.play(properties["LuneOS_soundclass"] || "",
+                                           properties["LuneOS_sound"] || "", -1, false, true);
+        }
+
+        onCountChanged: {
+            var windows = [];
+            for (var i = 0; i < listPopupAlertsModel.count; ++i)
+                windows.push(listPopupAlertsModel.get(i));
+            known = NotificationSound.trackAlerts(windows, known, start, soundNotifications.stop);
+        }
+    }
+
     Component {
         id: alertComponent
         FocusScope {
             id: alertItem
 
             property Item window: listPopupAlertsModel.get(index /* index is set by Repeater */)
+            // Kept out of sight while a notification alert is shown in front
+            // of it in the phone's bar; it comes back once that alert is
+            // answered. A tablet shows the alert in the middle instead, clear
+            // of this panel.
+            // A call alert stays in front of a notification alert. Over the
+            // lock screen only a call and an alert that asked for it show.
+            readonly property bool isCall: rootAlertsArea.isCallAlert(alertItem.window)
+            visible: alertItem.isCall || !(notificationAlerts.showing && !Settings.tabletUi)
+                     && (!rootAlertsArea.screenLocked || rootAlertsArea.isLockScreenAlert(alertItem.window))
+            z: alertItem.isCall ? 2 : 0
             x: rootAlertsArea.contentMargin
             y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
             width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
-            height: window ? window.height : 0
-            onHeightChanged: computeNewRootHeight();
+            height: alertItem.window ? Math.min(alertItem.window.height, rootAlertsArea.maxAlertHeight) : 0
 
-            onWidthChanged: if(window && window.height>0) window.changeSize(Qt.size(alertItem.width, alertItem.height));
+            function fit() {
+                var w = alertItem.window;
+                if (w && w.height > 0)
+                    w.changeSize(Qt.size(alertItem.width, Math.min(w.height, rootAlertsArea.maxAlertHeight)));
+            }
+
+            onWidthChanged: fit()
+            Connections {
+                target: rootAlertsArea
+                function onMaxAlertHeightChanged() { alertItem.fit(); }
+            }
 
             children: [ window ]
 
@@ -100,14 +238,14 @@ Rectangle {
 
                     // be careful here: at this point in time, window.height is usually not yet set
                     if(window.height>0) {
-                        window.changeSize(Qt.size(alertItem.width, window.height));
+                        alertItem.fit();
                     }
                     else {
-                        window.onHeightChanged.connect(function() { window.changeSize(Qt.size(alertItem.width, window.height)); });
+                        window.onHeightChanged.connect(alertItem.fit);
                     }
 
                     if( windowManagerItem ) {
-                        windowManagerItem.addTapAction("hideAlertWindow", function () { compositorInstance.closeWindow(window); });
+                        windowManagerItem.addTapAction("hideAlertWindow", function () { rootAlertsArea.closeAll(); });
                     }
 
                     alertItem.focus = true;
@@ -116,18 +254,77 @@ Rectangle {
         }
     }
 
-    function computeNewRootHeight()
-    {
-        var i=0;
-        var newMaxHeight = 0;
-        var currentMaxHeight = 0;
-        for( i=0; i < listPopupAlertsModel.count; ++i ) {
-            currentMaxHeight = listPopupAlertsModel.get(i).height;
-            if( currentMaxHeight > newMaxHeight )
-                newMaxHeight = currentMaxHeight;
+    /*
+     * The alerts com.webos.notification hands out - a web app asking for
+     * permission, for one. These are an application's question, and legacy
+     * asked those where the frameworks put their dialogs:
+     *
+     * - on a phone at the foot of the screen, as Mojo's .palm-dialog-box did -
+     *   so here in this bar, over any window alert, gone with a tap outside
+     *   unless it is modal;
+     * - on a tablet in the middle, over a scrim that a tap does not dismiss,
+     *   as Enyo's ModalDialog did (scrim, modal, dismissWithClick: false,
+     *   openAtCenter) - so in tabletModal below, not in this corner panel.
+     */
+    NotificationAlertsArea {
+        id: notificationAlerts
+
+        parent: Settings.tabletUi ? tabletModalPanel : rootAlertsArea
+        x: Settings.tabletUi ? tabletModalPanel.margin : rootAlertsArea.contentMargin
+        y: Settings.tabletUi ? tabletModalPanel.margin
+                             : rootAlertsArea.height - rootAlertsArea.contentMargin - height
+        width: Settings.tabletUi ? tabletModalPanel.width - 2 * tabletModalPanel.margin
+                                 : rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
+        z: 1
+
+        onShowingChanged: {
+            if (showing && windowManagerItem)
+                windowManagerItem.addTapAction("hideAlertWindow", function () { rootAlertsArea.closeAll(); });
+        }
+    }
+
+    // Tablet ui: the scrim and the centred panel a notification alert is shown
+    // in, over everything below the status bar.
+    Item {
+        id: tabletModal
+
+        parent: rootAlertsArea.parent
+        // Not over the lock screen, and above the window alerts' panel when
+        // both are up.
+        visible: Settings.tabletUi && notificationAlerts.showing && !rootAlertsArea.screenLocked
+        z: rootAlertsArea.z + 0.5
+
+        x: 0
+        width: parent ? parent.width : 0
+        // From the foot of the status bar, which is where this area hangs from
+        // on a tablet less the inset it hangs by, down to the gesture area,
+        // which stays free for the tap that dismisses.
+        y: rootAlertsArea.y - rootAlertsArea.anchors.topMargin
+        height: rootAlertsArea.modalSpaceBottom - y
+
+        Rectangle {
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.5)
+
+            // The question has to be answered; nothing behind takes the press,
+            // and neither does a tap here dismiss it.
+            MouseArea {
+                anchors.fill: parent
+                preventStealing: true
+            }
         }
 
-        rootAlertsArea.maxHeight = newMaxHeight;
+        Rectangle {
+            id: tabletModalPanel
+
+            readonly property real margin: rootAlertsArea.contentMargin
+
+            anchors.centerIn: parent
+            width: Units.length(320) + 2 * margin
+            height: notificationAlerts.height + 2 * margin
+            color: Qt.rgba(0, 0, 0, 0.85)
+            radius: margin
+        }
     }
 
     Repeater {
@@ -138,14 +335,6 @@ Rectangle {
         anchors.bottom: rootAlertsArea.bottom
         model: listPopupAlertsModel.count
         delegate: alertComponent
-
-        onItemAdded: (index, item) => {
-            if( item.height > rootAlertsArea.maxHeight )
-                rootAlertsArea.maxHeight = item.height;
-        }
-        onItemRemoved: (index, item) => {
-            computeNewRootHeight();
-        }
     }
 
     // have an object that surveys the count of alerts and notify the display if something interesting happens
@@ -170,9 +359,27 @@ Rectangle {
         }
         property int __previousCount: 0
     }
+
+    /*
+     * A ringing call keeps the display on and lights it from off, which the
+     * generic alert above does only for a while: legacy told the display
+     * manager "phonecall-activated" for its incoming call popup, and the
+     * display then went back to the state it had once the call was answered
+     * or ended.
+     */
+    QtObject {
+        property bool ringing: rootAlertsArea.callAlertShowing
+        onRingingChanged: {
+            displayService.call("luna://com.palm.display/control/alert",
+                                JSON.stringify({"status": ringing ? "phonecall-activated" : "phonecall-deactivated"}),
+                                undefined,
+                                function(message) { console.log("Failed to call display service: " + message); });
+        }
+    }
+
     LunaService {
         id: displayService
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

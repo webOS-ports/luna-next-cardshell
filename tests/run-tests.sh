@@ -13,10 +13,20 @@
 # panel shape behaves exactly as it did before there was such a thing.
 #
 # Override COMPONENTS or QMLTESTRUNNER if your checkout or Qt lives elsewhere.
+#
+# A Qt 6 qmltestrunner is looked for before the one on PATH: on Debian and
+# Ubuntu that one is often qtchooser's wrapper, which runs Qt 5's.
 COMPONENTS=${COMPONENTS:-../../luneos-components}
-QMLTESTRUNNER=${QMLTESTRUNNER:-$(command -v qmltestrunner \
-    || ls /usr/lib/qt6/bin/qmltestrunner 2>/dev/null \
-    || ls -d "$HOME"/Qt/6.*/gcc_64/bin/qmltestrunner 2>/dev/null | sort -V | tail -1)}
+if [ -z "${QMLTESTRUNNER:-}" ]; then
+    for candidate in /usr/lib/qt6/bin/qmltestrunner \
+            $(ls -d "$HOME"/Qt/6.*/gcc_64/bin/qmltestrunner 2>/dev/null | sort -V | tail -1) \
+            "$(command -v qmltestrunner)"; do
+        if [ -x "$candidate" ]; then
+            QMLTESTRUNNER=$candidate
+            break
+        fi
+    done
+fi
 
 cd "$(dirname "$0")" || exit 1
 
@@ -25,6 +35,11 @@ if [ ! -x "$QMLTESTRUNNER" ]; then
     exit 1
 fi
 
+# As on the device, where luna-surfacemanager's launcher exports it: HardwareKeys
+# reads its per-device override with a file:// XMLHttpRequest, which Qt refuses
+# without this, and tst_HardwareKeys feeds it the override files in data/.
+export QML_XHR_ALLOW_FILE_READ=1
+
 status=0
 for t in tst_*.qml; do
     echo "--- $t"
@@ -32,6 +47,7 @@ for t in tst_*.qml; do
     # shell itself imports.
     "$QMLTESTRUNNER" -input "$t" \
         -import ../qml \
+        -import imports \
         -import "$COMPONENTS/modules" \
         -import "$COMPONENTS/test/imports" "$@" || status=1
 done

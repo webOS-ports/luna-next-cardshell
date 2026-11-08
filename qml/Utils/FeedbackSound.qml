@@ -23,7 +23,7 @@ import LuneOS.Service 1.0
 // /usr/share/systemsounds (<name>.pcm) and plays it on its feedback stream,
 // at the feedback volume.
 LunaService {
-    name: "com.webos.surfacemanager-cardshell"
+    name: "com.webos.surfacemanager.cardshell"
     service: "luna://com.webos.service.audio"
     method: "systemsounds/playFeedback"
 

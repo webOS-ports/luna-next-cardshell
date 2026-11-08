@@ -147,7 +147,7 @@ Item {
 
     LunaService {
         id: webAppMgrService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             orientationHelperItem.publishOrientation();
             webAppMgrService.subscribe("luna://com.palm.display/control/status",

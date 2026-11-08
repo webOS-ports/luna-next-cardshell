@@ -38,9 +38,12 @@ Item {
 
     property variant currentWindow: null
 
+    // The shell's name has no "-": LSUriParse takes only letters, digits and
+    // "_" between the dots of a luna:// or palm:// url, so the old
+    // "com.webos.surfacemanager-cardshell" could be called by no one.
     LunaService {
         id: systemServicePrivate
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
         onInitialized: {
             systemServicePrivate.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
             systemServicePrivate.registerMethod("/", "focusApplication", handleFocusApplication);
@@ -51,15 +54,6 @@ Item {
             systemServicePrivate.registerMethod("/", "showFps", handleShowFps)
             systemServicePrivate.registerMethod("/", "getStatus", handleGetStatus);
             systemServicePrivate.registerMethod("/", "restart", handleRestart);
-        }
-    }
-
-    LunaService {
-        id: systemServicePublic
-        name: "com.webos.surfacemanager-cardshell"
-        onInitialized: {
-            systemServicePublic.registerMethod("/", "takeScreenShot", handleTakeScreenShot);
-            systemServicePublic.registerMethod("/", "enableFullScreenMode", handleEnableFullScreenMode);
         }
     }
 
@@ -82,7 +76,7 @@ Item {
         if (typeof request.file !== 'undefined' && request.file.length !== 0)
             path = request.file;
 
-        if (systemService.screenShooter === null)
+        if (!systemService.screenShooter)
             return buildErrorResponse("Internal error.");
 
         // The camera shutter, as LunaSysMgr played before capturing

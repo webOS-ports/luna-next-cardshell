@@ -13,14 +13,34 @@ Item {
     property QtObject compositorInstance
     property Item gestureAreaInstance
     property Item windowManagerInstance
+    // SAM's application life events (LS.applicationManager); see below.
+    property QtObject appLifeEvents
 
     property real maximizedCardTopMargin;
     property real defaultWindowWidth: cardViewItem.width
     property real defaultWindowHeight: cardViewItem.height - maximizedCardTopMargin
 
+    // A new xdg_shell window starts at the size its card is about to give it,
+    // not at the output size: for Waydroid each size change is a display
+    // hotplug in Android, and two in a row can crash it.
+    Binding {
+        target: cardViewItem.compositorInstance
+        property: "defaultWindowSize"
+        value: Qt.size(cardViewItem.defaultWindowWidth, cardViewItem.defaultWindowHeight)
+    }
+
     property bool keepCurrentCardMaximized: false
 
-    property real cornerRadius: 20
+    //! The card that holds the stage - maximized or fullscreen - or null while
+    //! every card is carded. Unlike currentActiveWindow(), this can be bound
+    //! to. It goes back to null by itself when the window is destroyed.
+    property Item stageWindow: null
+
+    // The corner radius of a window at full size. LunaSysMgr clipped a card to
+    // a rounded rect of 25 px in window pixels (CardWindow.cpp, on devices with
+    // a grid unit of 10) and its screen corners were 24 px, so 2.5 grid units;
+    // each card scales it down with itself (CardWindowWrapper).
+    property real cornerRadius: Units.gu(2.5)
 
     signal currentCardChanged();
 
@@ -54,6 +74,7 @@ Item {
 
     CardGroupListView {
         id: cardGroupListViewInstance
+        objectName: "cardGroupListView"
 
         anchors.fill: cardViewItem
         maximizedCardTopMargin: cardViewItem.maximizedCardTopMargin
@@ -62,12 +83,7 @@ Item {
         onCardRemove: (window) => { cardViewItem.removeCard(window); }
         onCardSelect: (window) => {
             setCurrentCard(window);
-            if(window.userData.isFullScreenMode) {
-                setCurrentCardState(WindowState.Fullscreen);
-            }
-            else {
-                setCurrentCardState(WindowState.Maximized);
-            }
+            setCurrentCardState(cardViewItem.__openState(window));
         }
         onCurrentCardChanged: {
             if( cardViewItem.keepCurrentCardMaximized ) setCurrentCardState(WindowState.Maximized);
@@ -136,6 +152,29 @@ Item {
         }
     }
 
+    // A window that outlives its app's process comes forward when the app is
+    // launched again. Waydroid's hwcomposer owns the windows of Android apps:
+    // the webOS app behind such a card is only a launcher script, so launching
+    // it again starts a new process while the old card stays - and an
+    // xdg_shell client has no set_state to raise itself with, the way WAM
+    // raises a web app's card. The launch went through, and the card and the
+    // Android app with it sat there in the stack.
+    //
+    // SAM's "launch" life event means a new process. A running web app that is
+    // launched again gets no such event, and a native app's window goes when
+    // its process does, so a card that already carries the app id here can
+    // only be one of these windows. focusApplication() returns false when there
+    // is no card, which is the case for every other launch.
+    Connections {
+        target: cardViewItem.appLifeEvents
+        ignoreUnknownSignals: true
+
+        function onAppLifeEventsChanged(appId, event) {
+            if (event === "launch" && appId)
+                cardViewItem.focusApplication(appId);
+        }
+    }
+
     function focusApplication(appId) {
         if (typeof appId === 'undefined' || appId.length === 0)
             return false;
@@ -147,7 +186,9 @@ Item {
         if (appId === "com.palm.launcher")
             return false;
 
-        if (getAppIdForFocusApplication() === appId)
+        // Nothing to do when it is already open - but a carded card can be
+        // the current one too, and that still has to come out of the stack.
+        if (getAppIdForFocusApplication() === appId && isCurrentCardActive())
             return true;
 
         var window=null;
@@ -156,7 +197,7 @@ Item {
             window = cardsModel.get(i)
             if(window && window.appId === appId) {
                 setCurrentCard(window);
-                setCurrentCardState(WindowState.Maximized);
+                setCurrentCardState(__openState(window));
                 return true;
             }
         }
@@ -177,21 +218,30 @@ Item {
         var i=0;
         for(i=0; i<cardsModel.count;i++) {
             window = cardsModel.get(i)
-            if(window && window.appId === appId) {
-                if(window.userData) {
-                    window.userData.isFullScreenMode = enableFS;
-                    if(window.userData.windowState === WindowState.Maximized) {
-                        windowManagerInstance.switchToFullscreen(window);
-                    }
-                    else if(window.userData.windowState === WindowState.Fullscreen) {
-                        windowManagerInstance.switchToMaximize(window);
-                    }
-                    return true;
-                }
-            }
+            if(window && window.appId === appId)
+                return setFullScreenMode(window, enableFS);
         }
 
         return false;
+    }
+
+    // Whether a card covers the whole screen, status bar included, whenever
+    // it is open; a carded window keeps it for when it is opened again.
+    // Asked for by the app through the "LuneOS_fullscreen" window property
+    // (CardWindowWrapper) or enableFullScreenMode() above.
+    function setFullScreenMode(window, enableFS) {
+        if (!window || !window.userData)
+            return false;
+
+        if (window.userData.isFullScreenMode === enableFS)
+            return true;
+
+        window.userData.isFullScreenMode = enableFS;
+        if (enableFS && window.userData.windowState === WindowState.Maximized)
+            windowManagerInstance.switchToFullscreen(window);
+        else if (!enableFS && window.userData.windowState === WindowState.Fullscreen)
+            windowManagerInstance.switchToMaximize(window);
+        return true;
     }
 
     state: "cardList"
@@ -284,7 +334,7 @@ Item {
                     cardViewItem.setCurrentCardState(WindowState.Carded);
                 }
                 else {
-                    cardViewItem.setCurrentCardState(WindowState.Maximized);
+                    cardViewItem.setCurrentCardState(cardViewItem.__openState(cardViewItem.currentActiveWindow()));
                 }
             }
         }
@@ -333,8 +383,7 @@ Item {
             var windowWrapperComponent = Qt.createComponent("CardWindowWrapper.qml");
             var windowWrapper = windowWrapperComponent.createObject(cardViewItem, {"x": gestureAreaInstance.x + gestureAreaInstance.width/2,
                                                                                    "y": gestureAreaInstance.y,
-                                                                                   "cardView": cardViewItem,
-                                                                                   "cornerRadius": cornerRadius});
+                                                                                   "cardView": cardViewItem});
             // Bind the container with its app window
             windowWrapper.setWrappedWindow(window);
         }
@@ -406,6 +455,7 @@ Item {
         // switch the state to maximized
         window.userData.windowState = WindowState.Maximized;
         __publishWindowState(window, Qt.WindowMaximized);
+        stageWindow = window;
         if( !!window )
             window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height - maximizedCardTopMargin));
     }
@@ -418,6 +468,7 @@ Item {
         // switch the state to fullscreen
         window.userData.windowState = WindowState.Fullscreen;
         __publishWindowState(window, Qt.WindowFullScreen);
+        stageWindow = window;
         if( !!window )
             window.changeSize(Qt.size(cardViewItem.width, cardViewItem.height));
     }
@@ -428,6 +479,14 @@ Item {
         // Carded is Minimized to the client: it no longer holds the stage. It
         // is still on screen in the card view, hence the true.
         __publishWindowState(window, Qt.WindowMinimized);
+        if (stageWindow === window)
+            stageWindow = null;
+    }
+
+    // The state a card opens in: maximized, or fullscreen if its app asked.
+    function __openState(window) {
+        return (window && window.userData && window.userData.isFullScreenMode) ? WindowState.Fullscreen
+                                                                               : WindowState.Maximized;
     }
 
     function __setCurrentActiveWindow(window) {

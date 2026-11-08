@@ -18,6 +18,9 @@
 import QtQuick 2.5
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
+import LuneOS.Passcode 1.0
+
+import "Lockout.js" as Lockout
 
 /*
  * The lock screen's half of Pattern unlock, alongside PinPasswordLock.
@@ -36,13 +39,22 @@ Item {
     property int edgeOffset: Units.gu(11/10)
     property int margin: Units.gu(6/10)
     property int topOffset: Units.gu(4/10)
+    // Above and below the Cancel button, as PinPasswordLock has it.
+    property int buttonSpacing: Units.gu(14/10)
     property string queuedTitle: ""
+    property string _title: "Device Locked"
+    property bool _mismatched: false
+
+    //! Seconds until luna-authmanager takes passcodes again; see Lockout.js.
+    property int lockoutLeft: 0
+    readonly property bool lockedOut: lockoutLeft > 0
 
     signal canceled
-    signal unlock
+    //! token: luna-authmanager's unlockToken for the right pattern.
+    signal unlock(string token)
 
     width: Units.gu(320/10) + 2 * patternLock.edgeOffset
-    height: buttonGrid.y + buttonGrid.height + patternLock.edgeOffset + patternLock.margin
+    height: buttonGrid.y + buttonGrid.height + patternLock.edgeOffset + patternLock.margin + patternLock.buttonSpacing
     focus: true
 
     function queueUpTitle(newTitle) {
@@ -60,15 +72,21 @@ Item {
     // the pad is shown again. Without it the drawn trace from whatever was
     // entered last - a correct pattern in green, a wrong one in red - just
     // sat there through the next lock, showing the real pattern's shape.
+    // As in PinPasswordLock, it also asks whether a lockout is running - one
+    // from before a reboot, or from the other pad - rather than finding out
+    // with a try.
     onVisibleChanged: {
-        if (visible)
+        if (visible) {
             resetEntry();
+            service.call("luna://com.palm.systemmanager/getDeviceLockMode", "{}",
+                         handleLockModeResult, handleServiceError);
+        }
     }
 
     function resetEntry() {
-        titleText.text = "Device Locked";
-        hintText.text = "Draw your pattern";
         queuedTitle = "";
+        _title = "Device Locked";
+        _mismatched = false;
         grid.reset();
     }
 
@@ -98,7 +116,7 @@ Item {
         color: "#FFF"
         anchors.horizontalCenter: parent.horizontalCenter
         y: patternLock.edgeOffset + patternLock.margin + patternLock.topOffset
-        text: "Device Locked"
+        text: patternLock.lockedOut ? "Too many tries" : patternLock._title
     }
 
     Text {
@@ -108,16 +126,17 @@ Item {
         color: "#CCC"
         anchors.horizontalCenter: parent.horizontalCenter
         y: titleText.y + titleText.height + Units.gu(4/10)
-        text: "Draw your pattern"
+        text: patternLock.lockedOut ? Lockout.waitText(patternLock.lockoutLeft)
+            : patternLock._mismatched ? "Pattern incorrect. Try again."
+            : "Draw your pattern"
     }
 
     /*
-     * The nine-dot grid. A single MouseArea covering the whole square, not
-     * one per dot, so the finger only has to pass near a node to select it -
-     * the settings app's PatternLockGrid works the same way and for the same
-     * reason.
+     * The nine-dot grid: LuneOS.Passcode's, the same one Settings draws when
+     * a pattern is chosen, so both turn a drawn pattern into the same
+     * passCode string.
      */
-    Item {
+    PatternLockGrid {
         id: grid
         // Fills the card the same width the Cancel button below it does,
         // rather than the arbitrary narrower square this started as.
@@ -125,134 +144,23 @@ Item {
         height: width
         anchors.horizontalCenter: parent.horizontalCenter
         y: hintText.y + hintText.height + Units.gu(8/10)
+        enabled: !patternLock.lockedOut
 
-        readonly property int columns: 3
-        readonly property real cellSize: width / columns
-        readonly property real nodeRadius: cellSize * 0.1
-        readonly property real hitRadius: cellSize * 0.38
+        dotColor: "#FFFFFF"
+        dotOpacity: 0.6
+        selectedColor: "#2aa100"
+        errorColor: "#be0003"
+        nodeSize: 0.1
 
-        property var selected: []
-        property bool dragging: false
-        property bool showError: false
-        property point dragPoint: Qt.point(0, 0)
-
-        function nodeCenter(index) {
-            var col = index % columns;
-            var row = Math.floor(index / columns);
-            return Qt.point((col + 0.5) * cellSize, (row + 0.5) * cellSize);
+        // Every new attempt starts clean, regardless of whether the last
+        // one was still mid-mismatchTimer - not just on first showing the
+        // pad.
+        onStarted: {
+            mismatchTimer.stop();
+            patternLock._mismatched = false;
         }
-
-        function nodeAt(point) {
-            for (var i = 0; i < columns * columns; i++) {
-                var center = nodeCenter(i);
-                var dx = point.x - center.x;
-                var dy = point.y - center.y;
-                if (Math.sqrt(dx * dx + dy * dy) <= hitRadius)
-                    return i;
-            }
-            return -1;
-        }
-
-        function reset() {
-            selected = [];
-            dragging = false;
-            showError = false;
-            canvas.requestPaint();
-        }
-
-        MouseArea {
-            anchors.fill: parent
-
-            onPressed: (mouse) => {
-                // Every new attempt starts clean, regardless of whether the
-                // last one was still mid-mismatchTimer or left any other
-                // stale visual behind - not just on first showing the pad.
-                mismatchTimer.stop();
-                hintText.text = "Draw your pattern";
-                grid.showError = false;
-                var node = grid.nodeAt(Qt.point(mouse.x, mouse.y));
-                grid.selected = node >= 0 ? [node] : [];
-                grid.dragging = true;
-                grid.dragPoint = Qt.point(mouse.x, mouse.y);
-                canvas.requestPaint();
-            }
-
-            onPositionChanged: (mouse) => {
-                if (!grid.dragging)
-                    return;
-
-                grid.dragPoint = Qt.point(mouse.x, mouse.y);
-
-                var node = grid.nodeAt(Qt.point(mouse.x, mouse.y));
-                if (node >= 0 && grid.selected.indexOf(node) < 0) {
-                    var updated = grid.selected.slice();
-                    updated.push(node);
-                    grid.selected = updated;
-                }
-                canvas.requestPaint();
-            }
-
-            onReleased: {
-                grid.dragging = false;
-                canvas.requestPaint();
-
-                // The same four-dot minimum Android and the settings app use.
-                if (grid.selected.length >= 4)
-                    patternLock.submitPattern(grid.selected.join("-"));
-                else if (grid.selected.length > 0)
-                    grid.reset();
-            }
-        }
-
-        Canvas {
-            id: canvas
-            anchors.fill: parent
-
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.reset();
-
-                var lineColor = grid.showError ? "#be0003" : "#2aa100";
-
-                if (grid.selected.length > 0) {
-                    ctx.strokeStyle = lineColor;
-                    ctx.lineWidth = Units.gu(0.5);
-                    ctx.lineCap = "round";
-                    ctx.lineJoin = "round";
-                    ctx.beginPath();
-
-                    var start = grid.nodeCenter(grid.selected[0]);
-                    ctx.moveTo(start.x, start.y);
-                    for (var i = 1; i < grid.selected.length; i++) {
-                        var point = grid.nodeCenter(grid.selected[i]);
-                        ctx.lineTo(point.x, point.y);
-                    }
-                    if (grid.dragging)
-                        ctx.lineTo(grid.dragPoint.x, grid.dragPoint.y);
-                    ctx.stroke();
-                }
-
-                for (var n = 0; n < 9; n++) {
-                    var center = grid.nodeCenter(n);
-                    var visited = grid.selected.indexOf(n) >= 0;
-
-                    ctx.beginPath();
-                    ctx.arc(center.x, center.y, grid.nodeRadius, 0, Math.PI * 2);
-                    ctx.fillStyle = visited ? lineColor : "#FFFFFF";
-                    ctx.globalAlpha = visited ? 1.0 : 0.6;
-                    ctx.fill();
-                    ctx.globalAlpha = 1.0;
-
-                    if (visited) {
-                        ctx.beginPath();
-                        ctx.arc(center.x, center.y, grid.nodeRadius * 2.2, 0, Math.PI * 2);
-                        ctx.strokeStyle = lineColor;
-                        ctx.lineWidth = Units.gu(0.15);
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
+        onPatternDrawn: (encoded) => patternLock.submitPattern(encoded)
+        onTooShort: grid.reset()
     }
 
     Grid {
@@ -260,7 +168,7 @@ Item {
         width: Units.gu(320/10) - 2 * patternLock.margin
         x: patternLock.edgeOffset + patternLock.margin
         anchors.top: grid.bottom
-        anchors.topMargin: Units.gu(6/10)
+        anchors.topMargin: patternLock.buttonSpacing
 
         columns: 1
         rows: 1
@@ -269,14 +177,14 @@ Item {
         ActionButton {
             caption: "Cancel"
             width: buttonGrid.width
-            height: Units.gu(52/10)
+            height: Math.round(Units.gu(4))
             onAction: canceled()
         }
     }
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 
     // A tap elsewhere in the system counts as activity because it is a
@@ -290,7 +198,7 @@ Item {
         id: keepAwakeTimer
         interval: 2000
         repeat: true
-        running: grid.dragging
+        running: grid.drawing
         triggeredOnStart: true
         onTriggered: service.call("luna://com.palm.display/control/setState",
                                   "{\"state\":\"on\"}", null, null)
@@ -307,10 +215,11 @@ Item {
         var response = JSON.parse(message.payload);
 
         if (response.returnValue) {
-            patternLock.unlock();
+            patternLock.unlock(response.unlockToken !== undefined ? response.unlockToken : "");
+        } else if (Lockout.secondsFrom(response) > 0) {
+            startLockout(Lockout.secondsFrom(response));
         } else {
-            grid.showError = true;
-            canvas.requestPaint();
+            grid.showError();
             mismatchTimer.restart();
         }
     }
@@ -319,16 +228,38 @@ Item {
         console.log("Service error: " + message);
     }
 
+    function handleLockModeResult(message) {
+        var seconds = Lockout.secondsFrom(JSON.parse(message.payload));
+        if (seconds > 0)
+            startLockout(seconds);
+    }
+
+    function startLockout(seconds) {
+        mismatchTimer.stop();
+        resetEntry();
+        lockoutLeft = seconds;
+    }
+
+    // As in PinPasswordLock: counts down while the display is on, as the
+    // daemon's monotonic clock does, and the daemon has the last word.
+    Timer {
+        id: lockoutTimer
+        interval: 1000
+        repeat: true
+        running: patternLock.lockedOut
+        onTriggered: patternLock.lockoutLeft--
+    }
+
     Timer {
         id: mismatchTimer
         interval: 500
         repeat: false
         onTriggered: {
-            if (queuedTitle !== "") {
-                titleText.text = queuedTitle;
-                queuedTitle = "";
+            if (patternLock.queuedTitle !== "") {
+                patternLock._title = patternLock.queuedTitle;
+                patternLock.queuedTitle = "";
             }
-            hintText.text = "Pattern incorrect. Try again.";
+            patternLock._mismatched = true;
             grid.reset();
         }
     }

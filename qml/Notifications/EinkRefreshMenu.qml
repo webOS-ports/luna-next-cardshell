@@ -113,7 +113,7 @@ Item {
             width: menuColumn.width
             height: menuColumn.buttonsHeight
             caption: "Cancel"
-            negative: true
+            // The way out: the neutral button (red is for destructive actions).
             onAction: root.visible = false
         }
     }

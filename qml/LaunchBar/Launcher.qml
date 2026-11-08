@@ -19,6 +19,7 @@
 import QtQuick 2.9
 import LunaNext.Common 0.1
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import WebOSCompositorBase 1.0
 import WebOSCoreCompositor 1.0
 
@@ -38,13 +39,29 @@ Item {
     onFullLauncherVisibleChanged: fullLauncherVisible ? launcherOpenSound.play() : launcherCloseSound.play()
 
     property bool launcherActive: state === "fullLauncher" || state === "justTypeLauncher"
+
+    /*!
+     * When a hardware key last toggled the launcher (CardsArea.toggleLauncher).
+     *
+     * On a phone with capacitive keys under the screen (BlackBerry KEY2), a
+     * swipe up that starts low enough brushes the Home key on its way to the
+     * gesture area: Home toggles the launcher as the finger lands, and the
+     * gesture area toggles it again ~70-90 ms later when it recognises the
+     * swipe - so the launcher flashed open and shut, or shut and open, on
+     * roughly every other swipe. A swipe-up this soon after a key toggle is
+     * the same intent and is not acted on twice. The window is a double
+     * tap's 500 ms: several times the gap measured, and short enough not to
+     * eat a deliberate swipe made just after pressing Home.
+     */
+    property real lastHardwareKeyToggleAt: 0
+    readonly property int keyThenSwipeWindowMs: 500
     property bool justTypeLauncherActive: state === "justTypeLauncher"
 
     property ListModel appsModel: LunaSysAPI.ApplicationModel {}
 
-    property QtObject lunaNextLS2Service: LunaService {
-        id: lunaNextLS2Service
-        name: "com.webos.surfacemanager-cardshell"
+    property QtObject appLauncher: AppLauncher {
+        id: appLauncher
+        clientName: "com.webos.surfacemanager.cardshell"
     }
 
     Keys.forwardTo: [ justTypeFieldInstance, fullLauncherInstance ]
@@ -63,6 +80,28 @@ Item {
 
         onShowJustType: (pressedKey, modifiers) => {
             if( !!__justTypeLauncherWindow ) {
+                /*
+                 * Focus first, then show.
+                 *
+                 * The state below takes the focus too, from its
+                 * StateChangeScript, and that is too late: the launcher page
+                 * reacts to being shown by focusing its search field, and the
+                 * keyboard focus has to travel to the client before the client
+                 * asks for an input panel. Lose that race and the web runtime
+                 * creates the text model and sets its content type but never
+                 * activates it - no activation request reaches the compositor,
+                 * the input method is never told a field wants input, and no
+                 * keyboard appears. Nothing retriggers it either, which is why
+                 * leaving Just Type and coming back was the only way to get a
+                 * keyboard: the second time, the window already had the focus.
+                 *
+                 * Measured on a sargo with the web runtime's own logging on:
+                 * SetContentType at the tap and no panel, then a panel the
+                 * moment the field was focused again with the window already
+                 * focused.
+                 */
+                __justTypeLauncherWindow.takeFocus();
+
                 launcherItem.state = "justTypeLauncher";
                 launcherItem.__handOverJustTypeKey(pressedKey, modifiers);
             }
@@ -199,8 +238,7 @@ Item {
     function launchApplication(id, params, successCB) {
         console.log("launching app " + id + " with params " + JSON.stringify(params));
         state = "launchbar";
-        lunaNextLS2Service.call("luna://com.webos.service.applicationManager/launch",
-            JSON.stringify({"id": id, "params": params}), successCB, handleLaunchAppError)
+        appLauncher.launch(id, params, successCB, handleLaunchAppError)
     }
 
     Connections {
@@ -262,6 +300,8 @@ Item {
         id: gestureAreaConnections
         target: gestureAreaInstance
         function onSwipeUpGesture(modifiers) {
+            if( Date.now() - launcherItem.lastHardwareKeyToggleAt < launcherItem.keyThenSwipeWindowMs )
+                return;
             if( state === "launchbar" ) {
                 state = "fullLauncher";
             }

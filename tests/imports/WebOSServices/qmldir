@@ -1,0 +1,3 @@
+module WebOSServices
+singleton LS 1.0 LS.qml
+Service 1.0 Service.qml

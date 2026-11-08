@@ -34,7 +34,7 @@ import LunaNext.Common 0.1
 Item {
     id: root
 
-    visible: false
+    visible: hideTimer.running
     anchors.centerIn: parent
     width: image.width + Units.gu(1)
     height: image.height
@@ -43,8 +43,15 @@ Item {
         id: hideTimer
         interval: 2000
         repeat: false
-        running: false
-        onTriggered: root.visible = false
+    }
+
+    /* Emitted each time the alert comes up, for CentreAlertSlot. */
+    signal shown()
+
+    /* Takes the alert down before its time, when another one takes the
+     * centre of the screen. */
+    function dismiss() {
+        hideTimer.stop();
     }
 
     /*
@@ -73,6 +80,8 @@ Item {
         opacity: 1.0
         mipmap: true
         fillMode: Image.PreserveAspectFit
+        /* Height only - width comes from the source aspect. */
+        height: Units.gu(9.6)
         width: implicitHeight > 0 ? Math.round(implicitWidth * (height / implicitHeight))
                                   : height
     }
@@ -97,11 +106,8 @@ Item {
             return;
 
         image.source = source;
-        /* Height only - width comes from the source aspect, see the Image. */
-        image.height = Units.gu(9.6);
-
-        root.visible = true;
         hideTimer.restart();
+        root.shown();
     }
 
     /*

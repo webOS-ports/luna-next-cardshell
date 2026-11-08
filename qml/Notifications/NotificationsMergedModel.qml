@@ -37,6 +37,22 @@ ListModel {
         return notifObject.sourceId+"-"+notifObject.timestamp;
     }
 
+    /*
+     * The minimized bar shows one icon per application, however many entries
+     * it has. Legacy drew an icon per dashboard window, and Messaging kept
+     * every new message in a single dashboard, so it was one icon there; here
+     * Messaging posts one notificationmgr toast per message, and a busy
+     * evening became a row of identical icons. Tapping the icon still opens
+     * the list with every entry in it.
+     */
+    function firstIndexOfApp(appKey) {
+        for( var i=0; i<mergedModel.count; ++i ) {
+            if( mergedModel.get(i).appKey === appKey )
+                return i;
+        }
+        return -1;
+    }
+
     property IconPathServices iconPathServices: IconPathServices {}
     property NotificationService notificationService: NotificationService {}
 
@@ -67,6 +83,7 @@ ListModel {
             if( createStickyNotification ) {
                 // Sticky notification
                 mergedModel.append({"notifType": "notification",
+                                    "appKey": notifObject.sourceId || notifObject.ownerId || "",
                                     "window": null,
                                     "notifObject": notifObject,
                                     "notifHeight": dashboardCardFixedHeight});
@@ -80,16 +97,22 @@ ListModel {
             // entry below is not enough: a banner still on screen when its
             // toast is withdrawn would sit there until its own timer expired.
             removeBannerNotification(notifObject);
-
-            for( var i=0; i<mergedModel.count; ++i ) {
-                if( mergedModel.get(i).notifObject &&
-                    getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
-                    mergedModel.remove(i);
-                    break;
-                }
+            removeToastEntry(toastId);
+        }
+    }
+    // Removes the sticky entry for one toast, if it is still listed. Both the
+    // user closing it and notificationmgr withdrawing it end up here, in
+    // either order, so finding nothing is normal.
+    function removeToastEntry(toastId) {
+        for( var i=0; i<mergedModel.count; ++i ) {
+            if( mergedModel.get(i).notifObject &&
+                getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
+                mergedModel.remove(i);
+                return;
             }
         }
     }
+
     property WindowModel listDashboardsModel : WindowModel {
         surfaceSource: compositorInstance.surfaceModel
         acceptFunction: "filter"
@@ -124,6 +147,7 @@ ListModel {
                 notificationArea.state = "minimized";
             }
             mergedModel.append({"notifType": "dashboard",
+                                "appKey": window.appId || "",
                                 "window": window,
                                 "notifObject": null,
                                 "notifHeight": dashHeight});
@@ -167,11 +191,15 @@ ListModel {
             }
 
             onClosed: {
+                var toastId = getToastIdFromNotif(notifObject);
                 notificationLunaService.call(
                             "luna://com.webos.notification/closeToast",
-                            JSON.stringify({"toastId": getToastIdFromNotif(notifObject)}), undefined, onCloseNotifError);
+                            JSON.stringify({"toastId": toastId}), undefined, onCloseNotifError);
 
-                mergedModel.remove(notificationItem.index);
+                // By id, not by row: this item is built from a component that
+                // lives here, outside the list's delegate, so it has no model
+                // index. remove(undefined) removed row 0 as well.
+                removeToastEntry(toastId);
             }
 
             MouseArea {
@@ -257,9 +285,9 @@ ListModel {
         property int __previousCount: 0
     }
     property LunaService notificationLunaService: LunaService {
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
     property LunaService displayService: LunaService {
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

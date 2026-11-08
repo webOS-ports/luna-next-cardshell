@@ -19,6 +19,7 @@
 
 import QtQuick 2.5
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 Item {
@@ -57,7 +58,12 @@ Item {
 
     LunaService {
         id: service
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
+    }
+
+    AppLauncher {
+        id: launcher
+        clientName: "com.webos.surfacemanager.cardshell"
     }
 
     function determineActiveWindowAppId() {
@@ -89,9 +95,7 @@ Item {
 
         if (activeWindowAppId.length === 0)
             return;
-        var params = {"id":activeWindowAppId, "params":{"palm-command":"open-app-menu"}};
-        service.call("luna://com.webos.service.applicationManager/launch", JSON.stringify(params),
-                     function(message) { }, function(error) { });
+        launcher.launch(activeWindowAppId, {"palm-command":"open-app-menu"});
     }
 
     function handleGetAppInfoResponse(message) {

@@ -17,6 +17,7 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 /*
@@ -48,9 +49,9 @@ Item {
     property var switches: []
 
     /* Just those currently engaged - what the status bar draws. */
-    property var blockedSwitches: []
+    readonly property var blockedSwitches: switches.filter(function(s) { return s.state === "blocked"; })
 
-    property bool serviceAvailable: false
+    readonly property bool serviceAvailable: killSwitchStatus.available
 
     /* Emitted when a switch changes position, so the shell can flash an alert.
      * Not emitted for the first status after (re)connecting: that is the
@@ -73,24 +74,21 @@ Item {
 
     LunaService {
         id: lunaService
-        name: "com.webos.surfacemanager-cardshell"
-
-        onInitialized: {
-            lunaService.subscribe("luna://com.palm.bus/signal/registerServerStatus",
-                                  JSON.stringify({"serviceName": "org.webosports.service.killswitch"}),
-                                  handleServiceStatus, handleError);
-        }
+        name: "com.webos.surfacemanager.cardshell"
     }
 
-    function handleServiceStatus(message) {
-        var response = JSON.parse(message.payload);
-        killSwitchService.serviceAvailable = response.connected === true;
+    ServiceStatus {
+        id: killSwitchStatus
+        serviceName: "org.webosports.service.killswitch"
+        clientName: "com.webos.surfacemanager.cardshell"
+        onAvailableChanged: killSwitchService.handleServiceStatus()
+    }
 
-        if (!killSwitchService.serviceAvailable) {
+    function handleServiceStatus() {
+        if (!killSwitchStatus.available) {
             /* Do not keep drawing stale indicators for a service that went
              * away - we no longer know anything about the hardware. */
             killSwitchService.switches = [];
-            killSwitchService.blockedSwitches = [];
             killSwitchService._hadFirstStatus = false;
             killSwitchService._previousState = ({});
             return;
@@ -107,18 +105,12 @@ Item {
             return;
 
         var list = payload.switches;
-        var blocked = [];
         var current = ({});
 
-        for (var i = 0; i < list.length; i++) {
-            var entry = list[i];
-            current[entry.id] = entry.state;
-            if (entry.state === "blocked")
-                blocked.push(entry);
-        }
+        for (var i = 0; i < list.length; i++)
+            current[list[i].id] = list[i].state;
 
         killSwitchService.switches = list;
-        killSwitchService.blockedSwitches = blocked;
 
         if (!killSwitchService._hadFirstStatus) {
             killSwitchService._hadFirstStatus = true;

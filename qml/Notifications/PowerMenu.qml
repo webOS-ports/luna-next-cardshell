@@ -142,6 +142,6 @@ Item {
     LunaService {
         id: powerKeyService
 
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

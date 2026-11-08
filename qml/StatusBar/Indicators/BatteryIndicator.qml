@@ -84,19 +84,22 @@ BaseIndicator {
         }
     }
 
+    // Tints taken from legacy's own status bar battery frames
+    // (battery-11/-1/-0.png): the fill green, the low amber and the empty
+    // red, so the percentage reads in the same colour as the icon beside it.
     function __getColorForBatteryLevel(level) {
         var result = ""
         if (level >= 11 ){
-            result = "lime"
+            result = "#31cd31"
         }
         else if (level > 1 && level <= 10) {
             result = "lightgray"
         }
         else if (level <= 0) {
-            result = "red"
+            result = "#922b1c"
         }
         else if (level === 1) {
-            result = "orange"
+            result = "#ffc61b"
         }
         return result;
     }

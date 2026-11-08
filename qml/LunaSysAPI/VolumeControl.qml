@@ -17,8 +17,11 @@
 
 import QtQuick 2.0
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
+
+import "VolumeKeyRequest.js" as VolumeKeyRequest
 
 Item {
     id: volumeControl
@@ -41,42 +44,94 @@ Item {
     // tenth of a step, so set the volume directly in steps of 10 instead, which
     // is what the old service did.
     property string soundOutput: "pcm_output"
+    //! The last status that named an output, and audiod's input devices:
+    //! the keys never move an input (see VolumeKeyRequest.js).
+    property string _lastOutput: "pcm_output"
+    property var _inputDevices: []
     property int currentVolume: 50
-    readonly property int volumeStep: 10
+    readonly property int volumeStep: VolumeKeyRequest.step
+
+    //! A call is up: the keys move its volume (see VolumeKeyRequest.js).
+    property bool inCall: false
 
     Component.onCompleted: {
         audioService.subscribe("luna://com.webos.service.audio/master/getVolume",
                                JSON.stringify({"subscribe": true}),
                                handleVolumeStatus, handleVolumeError);
+        audioService.subscribe("luna://com.webos.service.audio/listSupportedDevices",
+                               JSON.stringify({"subscribe": true}),
+                               handleDeviceList, handleVolumeError);
+    }
+
+    function handleDeviceList(message) {
+        volumeControl._inputDevices = VolumeKeyRequest.inputDevicesOf(JSON.parse(message.payload));
+        volumeControl.soundOutput = VolumeKeyRequest.keyOutputWithInputs(volumeControl.soundOutput,
+                                                                          volumeControl._lastOutput,
+                                                                          volumeControl._inputDevices);
+    }
+
+    // Subscribed again whenever audiod comes back, so a restarted audiod
+    // does not leave the keys on the master volume during a call.
+    ServiceStatus {
+        id: phoneStatusService
+        serviceName: "com.palm.audio"
+        clientName: "com.webos.surfacemanager.cardshell"
+
+        onAvailableChanged: {
+            if (available) {
+                audioService.subscribe("luna://com.palm.audio/phone/status",
+                                       JSON.stringify({"subscribe": true}),
+                                       volumeControl.handlePhoneStatus,
+                                       volumeControl.handlePhoneError);
+            } else {
+                volumeControl.inCall = false;
+            }
+        }
+    }
+
+    function handlePhoneStatus(message) {
+        volumeControl.inCall = VolumeKeyRequest.inCallOf(JSON.parse(message.payload));
+    }
+
+    function handlePhoneError(message) {
+        console.log("VolumeControl: cannot follow the call: " + message.payload);
+        volumeControl.inCall = false;
     }
 
     function handleVolumeStatus(message) {
         var payload = JSON.parse(message.payload);
         // audiod nests these under volumeStatus; accept a flat payload too.
         var status = payload.hasOwnProperty("volumeStatus") ? payload.volumeStatus : payload;
+        var named = typeof status.soundOutput === "string" && status.soundOutput.length > 0;
+        var output = VolumeKeyRequest.keyOutputAfterStatus(volumeControl.soundOutput,
+                                                           status.soundOutput,
+                                                           volumeControl._inputDevices);
+        // An input's status says nothing about the volume the keys move.
+        if (named && output !== status.soundOutput)
+            return;
         if (status.hasOwnProperty("volume"))
             volumeControl.currentVolume = status.volume;
-        if (status.hasOwnProperty("soundOutput") && status.soundOutput.length > 0)
-            volumeControl.soundOutput = status.soundOutput;
+        if (named) {
+            volumeControl.soundOutput = output;
+            volumeControl._lastOutput = output;
+        }
     }
 
     function handleVolumeError(message) {
         console.log("VolumeControl: cannot track the volume: " + message.payload);
     }
 
-    // soundOutput is required by audiod's schema (REQUIRED_2(soundOutput, volume));
-    // sending {} - as the calls to the old service did - is rejected outright.
-    function applyVolume(volume) {
-        if (volume < 0) volume = 0;
-        if (volume > 100) volume = 100;
-        volumeControl.currentVolume = volume;
-        audioService.call("luna://com.webos.service.audio/master/setVolume",
-                          JSON.stringify({"soundOutput": volumeControl.soundOutput,
-                                          "volume": volume}), null, null);
+    function handleKey(up) {
+        var request = VolumeKeyRequest.forKey(up, volumeControl.inCall,
+                                              volumeControl.soundOutput,
+                                              volumeControl.currentVolume);
+        if (request.volume >= 0)
+            volumeControl.currentVolume = request.volume;
+        audioService.call(request.uri, JSON.stringify(request.payload), null, null);
     }
 
     function handleVolumeUp() {
-        applyVolume(volumeControl.currentVolume + volumeControl.volumeStep);
+        handleKey(true);
     }
 
     // When set, every step the volume-down key makes (the press and each
@@ -94,7 +149,7 @@ Item {
     }
 
     function stepVolumeDown() {
-        applyVolume(volumeControl.currentVolume - volumeControl.volumeStep);
+        handleKey(false);
     }
 
     function setMute(mute) {
@@ -105,6 +160,6 @@ Item {
 
     LunaService {
         id: audioService
-        name: "com.webos.surfacemanager-cardshell"
+        name: "com.webos.surfacemanager.cardshell"
     }
 }

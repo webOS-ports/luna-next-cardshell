@@ -15,11 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.5
-//For future migration
-import Qt5Compat.GraphicalEffects
-//Should be replaced with https://doc.qt.io/qt-6/qml-qtquick-shapes-radialgradient.html#centerRadius-prop
-//import QtQuick.Shapes 1.3
+import QtQuick
+import QtQuick.Shapes
 import LunaNext.Common 0.1
 
 Item {
@@ -44,30 +41,38 @@ Item {
         onStopped: screenShooterGradient.visible = false;
     }
 
-    //FIXME migrate to: https://doc.qt.io/qt-6/qml-qtquick-shapes-radialgradient.html#centerRadius-prop
-    RadialGradient {
-        horizontalRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
-        verticalRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
+    // A shape the size of the item, filled with a radial gradient: a camera
+    // flash that washes the whole screen out, brightest at the centre and a
+    // faint warm white towards the edges. The focal point has to be put on the
+    // centre by hand, it defaults to the origin.
+    Shape {
+        id: flash
         anchors.fill: parent
-        GradientStop {
-            position: 0.0
-            color: "#FFFFFFFF"
-        }
-        GradientStop {
-            position: 0.15
-            color: "#FFFFD0C0"
-        }
-        GradientStop {
-            position: 0.5
-            color: "#FFFFD0F0"
-        }
-        GradientStop {
-            position: 0.75
-            color: "#FFFFD00F"
-        }
-        GradientStop {
-            position: 1.0
-            color: "#FFFFD000"
+        ShapePath {
+            strokeWidth: -1
+            fillGradient: RadialGradient {
+                centerX: flash.width / 2
+                centerY: flash.height / 2
+                focalX: centerX
+                focalY: centerY
+                centerRadius: Math.min(Settings.displayWidth, Settings.displayHeight) / 3
+                GradientStop {
+                    position: 0.0
+                    color: "#FFFFFFFF"
+                }
+                GradientStop {
+                    position: 0.4
+                    color: "#F2FFFFFF"
+                }
+                GradientStop {
+                    position: 1.0
+                    color: "#CCFFF4DC"
+                }
+            }
+            PathRectangle {
+                width: flash.width
+                height: flash.height
+            }
         }
     }
 }

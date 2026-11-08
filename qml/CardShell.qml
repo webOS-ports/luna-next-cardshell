@@ -41,6 +41,9 @@ Rectangle {
     color: "black"
     state: cardShellState // inherited from the main shell Loader
 
+    // For LuneOSViewRoot, which reports it to SAM.
+    readonly property Item appForegroundWindow: cardsArea.appForegroundWindow
+
     Preferences {
         id: preferences
     }
@@ -191,6 +194,47 @@ Rectangle {
         onSwitchChanged: (id, state) => killSwitchAlert.showSwitch(id, state)
     }
 
+    AudioOutputAlert {
+        id: audioOutputAlert
+        z: 900
+    }
+
+    /* Shell-wide, like shellKillSwitchService: one flash per change however
+     * many status bars are drawing the headphone icon. */
+    AudioOutputService {
+        id: shellAudioOutputService
+
+        onOutputChanged: (kind, connected) => audioOutputAlert.showOutput(kind, connected)
+    }
+
+    /* The three alerts above all sit in the middle of the screen: the newest
+     * replaces the one showing, as LunaSysMgr's single alert window did. */
+    CentreAlertSlot {
+        alerts: [volumeControlAlert, audioOutputAlert, killSwitchAlert]
+    }
+
+    /* "Allow USB debugging?" for a computer adbd does not know yet: over the
+     * alerts, since it waits on the user and refuses once it times out. */
+    UsbDebuggingPromptArea {
+        id: usbDebuggingPrompt
+        z: 950
+    }
+
+    /* Over everything, the lock screen included: see CellBroadcastAlert. */
+    CellBroadcastAlert {
+        id: cellBroadcastAlert
+        z: 950
+        anchors.fill: parent
+
+        inCall: shellAudioOutputService.inCall
+        headphones: shellAudioOutputService.headset || shellAudioOutputService.bluetoothAudio
+    }
+
+    CellBroadcastService {
+        onWarningReceived: (text, soundFile, throughMute) =>
+            cellBroadcastAlert.show(text, soundFile, throughMute)
+    }
+
     PowerMenu {
         id: powerMenuAlert
         z: 800
@@ -214,10 +258,27 @@ Rectangle {
     // compositor as ordinary Qt keys and until now had nothing to act on them.
     // Which key means what is a per-device question, so the connector decides
     // that; the launcher is wired here because it is private to CardsArea.
+    //
+    // Back, Home and Menu are also an Android phone's capacitive keys, so by
+    // default they act only where there is a hardware keyboard.
     HardwareKeys {
         id: hardwareKeys
 
+        navigationKeysEnabled: AppTweaks.hardwareNavigationKeysTweakValue === "on" ||
+                               (AppTweaks.hardwareNavigationKeysTweakValue !== "off" &&
+                                hardwareKeyboardStatus.hardwareKeyboardPresent)
+
+        inCall: shellAudioOutputService.inCall
+
+        // Settings > Buttons: what the keys the device offers do.
+        userActions: typeof AppTweaks.hardwareKeyActionsTweakValue === "string" ?
+                         AppTweaks.hardwareKeyActionsTweakValue : ""
+
         onLauncherToggleRequested: cardsArea.toggleLauncher()
+    }
+
+    KeyboardService {
+        id: hardwareKeyboardStatus
     }
 
     // A trackpad is an arrow-key device, and applications were written to be
@@ -228,6 +289,7 @@ Rectangle {
 
         active: cardsArea.applicationForeground
         windowInFront: cardsArea.foregroundWindow
+        arrowKeysWanted: hardwareKeyboardStatus.hardwareKeyboardPresent
     }
 
     // E Ink refresh control (MP01): the connector feeds screen activity to the

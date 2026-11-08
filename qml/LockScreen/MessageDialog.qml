@@ -131,7 +131,7 @@ Item {
         id: button1;
         caption: "Button 1";
         width: dialog.width - 2 * (edgeOffset + margin) - 1;
-        height: visible ? Units.gu(52/10) : 0;
+        height: visible ? Math.round(Units.gu(4)) : 0;
         x: edgeOffset + margin + Units.gu(1/10);
         y: msgText.y + msgText.height + margin;
         visible: numberOfButtons > 0;
@@ -142,7 +142,7 @@ Item {
         id: button2;
         caption: "Button 2";
         width: dialog.width - 2 * (edgeOffset + margin) - Units.gu(1/10);
-        height: visible ? Units.gu(52/10) : 0;
+        height: visible ? Math.round(Units.gu(4)) : 0;
         x: edgeOffset + margin + Units.gu(1/10);
         y: button1.y + button1.height
         visible: numberOfButtons > 1;
@@ -153,7 +153,7 @@ Item {
         id: button3;
         caption: "Button 3";
         width: dialog.width - 2 * (edgeOffset + margin) - Units.gu(1/10);
-        height: visible ? Units.gu(52/10) : 0;
+        height: visible ? Math.round(Units.gu(4)) : 0;
         x: edgeOffset + margin + Units.gu(1/10);
         y: button2.y + button2.height
         visible: numberOfButtons > 2;
