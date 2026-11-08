@@ -16,6 +16,7 @@
  */
 
 import QtQuick 2.0
+import LunaNext.Common 0.1
 import LuneOS.Service 1.0
 import WebOSCoreCompositor 1.0
 
@@ -53,6 +54,10 @@ import WebOSCoreCompositor 1.0
  *
  * Only while the display is on: with it off, power is the way to wake the
  * screen, and volume down is not held back.
+ *
+ * A device without both buttons (the VM, a Raspberry Pi) cannot press the
+ * chord. There a right swipe on the gesture area takes the screenshot, as it
+ * did before the chord.
  */
 Item {
     id: screenshotChord
@@ -60,6 +65,14 @@ Item {
     //! LunaSysAPI's VolumeControl. Its volume-down steps come here while this
     //! is in place, and go back to it through volumeControl.stepVolumeDown().
     property var volumeControl: null
+
+    //! LunaGestureArea. Its right swipe is the screenshot where the chord
+    //! cannot be pressed.
+    property var gestureArea: null
+
+    //! Whether the device has the two buttons the chord needs (luna.conf's
+    //! HasVolumeButton and HasPowerButton, both true unless a device says not).
+    property bool hasChordButtons: Settings.hasVolumeButton && Settings.hasPowerButton
 
     //! How long a volume-down press waits for power before it steps.
     property int chordWindowMs: 200
@@ -136,6 +149,14 @@ Item {
         function onVolumeKeyReleased(key) {
             if (key === Qt.Key_VolumeDown)
                 screenshotChord.volumeDownReleased();
+        }
+    }
+
+    Connections {
+        target: screenshotChord.gestureArea
+        function onSwipeRightGesture(modifiers) {
+            if (!screenshotChord.hasChordButtons)
+                screenshotChord.triggered();
         }
     }
 

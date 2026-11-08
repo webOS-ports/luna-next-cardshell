@@ -281,11 +281,12 @@ WindowManager {
         id: nfcAutoDispatchInstance
     }
 
-    // Volume down + power together take a screenshot, instead of a right
-    // swipe on the gesture area.
+    // Volume down + power together take a screenshot. A right swipe on the
+    // gesture area does, on a device without those two buttons.
     ScreenshotChord {
         id: screenshotChord
         volumeControl: volumeControl
+        gestureArea: gestureAreaInstance
 
         onTriggered: {
             shutterSound.play();

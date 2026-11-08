@@ -41,6 +41,12 @@ TestCase {
 
     SignalSpy { id: shots; signalName: "triggered" }
 
+    // Stands in for LunaGestureArea.
+    QtObject {
+        id: gestureArea
+        signal swipeRightGesture(int modifiers)
+    }
+
     property var chord: null
 
     function init() {
@@ -258,6 +264,26 @@ TestCase {
         compare(shots.count, 0);
         control.volumeKeyReleased(Qt.Key_VolumeUp);
         powerRelease();
+    }
+
+    // The VM and a Raspberry Pi have neither button: a right swipe is the
+    // screenshot there, and only there.
+    function test_rightSwipe_data() {
+        return [ { tag: "both buttons", buttons: true, shot: 0 },
+                 { tag: "a button missing", buttons: false, shot: 1 } ];
+    }
+    function test_rightSwipe(data) {
+        var c = createTemporaryObject(chordComponent, null,
+                                      { volumeControl: control, gestureArea: gestureArea,
+                                        hasChordButtons: data.buttons });
+        shots.target = c;
+        shots.clear();
+        gestureArea.swipeRightGesture(0);
+        compare(shots.count, data.shot);
+    }
+
+    function test_buttonsFromSettings() {
+        verify(chord.hasChordButtons, "a phone has both, as luna.conf defaults");
     }
 
     function test_noVolumeControl() {
