@@ -57,6 +57,52 @@ ListModel {
     property NotificationService notificationService: NotificationService {}
 
     /*
+     * Set during First Use. A toast that arrives then is kept in heldToasts:
+     * no banner, no sound, no entry in the list and no LED, so there is
+     * nothing to tap that would launch an application and take the user out
+     * of First Use - the update service's "System update available" opens
+     * Settings, a message opens Messaging. Nothing is lost: once First Use is
+     * over, whatever notificationmgr still has comes in (see releaseHeld()).
+     */
+    property bool held: false
+    property var heldToasts: []
+
+    onHeldChanged: if (!held) releaseHeld()
+
+    /*
+     * The toasts held during First Use, as they would have come in, less the
+     * banner of each: a row of banners, each with its sound, for messages that
+     * may be minutes old is no way to finish setting up a phone. A sticky toast
+     * goes into the list, where it waits as any other does. One that is not
+     * sticky ("light", or no type at all) is nothing but its banner, so it
+     * still gets that one.
+     */
+    function releaseHeld() {
+        var toasts = heldToasts;
+        heldToasts = [];
+        for (var i = 0; i < toasts.length; ++i)
+            addToast(toasts[i], !isSticky(toasts[i]));
+    }
+
+    // A notification is a toast that is not "light": it goes in the list too.
+    function isSticky(notifObject) {
+        return !!notifObject.type && notifObject.type !== "light";
+    }
+
+    function addToast(notifObject, withBanner) {
+        if (withBanner)
+            addBannerNotification(notifObject);
+
+        if (isSticky(notifObject)) {
+            mergedModel.append({"notifType": "notification",
+                                "appKey": notifObject.sourceId || notifObject.ownerId || "",
+                                "window": null,
+                                "notifObject": notifObject,
+                                "notifHeight": dashboardCardFixedHeight});
+        }
+    }
+
+    /*
      * Drives the notification LED off the same toast model. It lives here
      * rather than in CardShell so that there is exactly one of it: the phone
      * and tablet notification areas each build their own merged model, but only
@@ -65,6 +111,7 @@ ListModel {
      */
     property NotificationLed notificationLed: NotificationLed {
         notificationModel: notificationService.toastModel
+        held: mergedModel.held
     }
     property Connections toastsListModelCnx: Connections {
         target: notificationService.toastModel
@@ -73,21 +120,15 @@ ListModel {
         function onRowsInserted(index, first, last) {
             var notifObject = notificationService.toastModel.get(last);
 
-            // a notification is a non-light toast
-            var createStickyNotification = ( notifObject.type && notifObject.type !== "light" );
-
-            // Banner in all cases
-            addBannerNotification(notifObject);
-
-            // If the notification's isn't "light", also add it to the notification list
-            if( createStickyNotification ) {
-                // Sticky notification
-                mergedModel.append({"notifType": "notification",
-                                    "appKey": notifObject.sourceId || notifObject.ownerId || "",
-                                    "window": null,
-                                    "notifObject": notifObject,
-                                    "notifHeight": dashboardCardFixedHeight});
+            if (mergedModel.held) {
+                // A copy: the row is the model's, and the model may go on
+                // changing it while the toast waits.
+                heldToasts = heldToasts.concat([JSON.parse(JSON.stringify(notifObject))]);
+                return;
             }
+
+            // Banner in all cases; also in the list unless it is "light"
+            addToast(notifObject, true);
         }
         function onRowsAboutToBeRemoved(index, first, last) {
             let notifObject = notificationService.toastModel.get(last);
@@ -98,6 +139,10 @@ ListModel {
             // toast is withdrawn would sit there until its own timer expired.
             removeBannerNotification(notifObject);
             removeToastEntry(toastId);
+            // Withdrawn before First Use was over: it no longer comes in then.
+            heldToasts = heldToasts.filter(function(entry) {
+                return getToastIdFromNotif(entry) !== toastId;
+            });
         }
     }
     // Removes the sticky entry for one toast, if it is still listed. Both the
@@ -205,6 +250,11 @@ ListModel {
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
+                    // Never out of First Use: the list is hidden then, and
+                    // this is the one place a notification launches an app.
+                    if (mergedModel.held)
+                        return;
+
                     // notificationmgr wraps the toast's onclick as
                     // launchParams = {id, params}; hand the app the inner
                     // params, not the whole envelope, so it sees the same

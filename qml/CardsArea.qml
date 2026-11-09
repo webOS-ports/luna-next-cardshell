@@ -484,6 +484,9 @@ WindowManager {
         windowManagerItem: windowManager
         compositorInstance: compositor
         screenLocked: lockScreen.visible
+        // An application's alerts wait for the end of First Use, as its
+        // notifications do; a call and the alarm still come up.
+        appAlertsHeld: windowManager.state === "firstuse"
         modalSpaceBottom: gestureAreaInstance.visible ? gestureAreaInstance.y : gestureAreaInstance.y + gestureAreaInstance.height
         maxAlertHeight: modalSpaceBottom - (statusBarInstance.y + statusBarInstance.height)
                         - (Settings.tabletUi ? 2 * tabletInset : 0)

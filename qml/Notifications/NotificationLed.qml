@@ -111,7 +111,14 @@ Item {
      */
     readonly property string activeAppId: _pendingAppIds.length > 0 ? _pendingAppIds[_pendingAppIds.length - 1] : ""
 
-    readonly property bool ledShouldBlink: blinkNotifications && !displayOn &&
+    /*
+     * Set during First Use, when notifications are held (see
+     * NotificationsMergedModel): the LED would point at something the user
+     * cannot see yet. Once it is cleared, whatever is still waiting blinks.
+     */
+    property bool held: false
+
+    readonly property bool ledShouldBlink: blinkNotifications && !displayOn && !held &&
                                            activeAppId !== ""
 
     readonly property var _pendingAppIds: _pendingFrom(notificationModel,
