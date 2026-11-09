@@ -64,6 +64,79 @@ Item {
     visible: false
     z: 1001
 
+    /*!
+     * \brief Where the on-screen keyboard is, in this item's coordinates.
+     *
+     * Empty while there is none. The keyboard is drawn under this overlay, and
+     * nothing of it may ever be covered or interfered with: a pill over the keys
+     * is a pill in the way of typing, and the press that dismissed it was a key
+     * press the keyboard never got - every key wanted pressing twice.
+     */
+    property rect keyboardRect: Qt.rect(0, 0, 0, 0)
+
+    //! Whether a point is on the keyboard.
+    function onKeyboard(x, y) {
+        var k = editOverlay.keyboardRect;
+        return k.width > 0 && k.height > 0
+               && x >= k.x && x < k.x + k.width
+               && y >= k.y && y < k.y + k.height;
+    }
+
+    /*!
+     * \brief Where the caret of the field being typed into is, in this item's
+     * coordinates, or undefined when that is not known.
+     *
+     * The application tells the compositor, which maps it out of the
+     * application's window when asked: the window moves without the
+     * application saying anything, so this is asked each time rather than
+     * kept. Undefined from an application that does not say, and from a
+     * compositor too old to.
+     */
+    function caretRectangle() {
+        var inputMethod = editOverlay.inputMethod;
+        return inputMethod && typeof inputMethod.cursorRectangleIn === "function"
+               ? inputMethod.cursorRectangleIn(editOverlay) : undefined;
+    }
+
+    //! The compositor's input method, which knows the caret.
+    readonly property var inputMethod: inputMethodOf(compositorInstance)
+    function inputMethodOf(compositor) {
+        return compositor ? compositor.inputMethod : null;
+    }
+
+    /*!
+     * \brief Whether a press at this point is a press on the field.
+     *
+     * The pill is for text fields only, not for a press anywhere in an
+     * application that happens to have one focused. The shell does not know
+     * where a field's edges are - the application only says where its caret
+     * is - but a press on a field puts the caret there: a tap moves it to the
+     * press, a hold selects the word under it. So the press is on the field
+     * when it is on the caret's line. That line is taken with half a line's
+     * slack above and below, for a finger that lands at the edge of the text.
+     *
+     * Nothing about the line is checked sideways: in an empty field, or past
+     * the end of its text, the caret stays at the start or the end however far
+     * across the field the press was.
+     *
+     * An application that has not said where its caret is gets the pill
+     * anywhere, as before there was a caret to go by.
+     */
+    function onField(x, y) {
+        var caret = editOverlay.caretRectangle();
+        if (caret === undefined || caret === null)
+            return true;
+
+        var slack = Math.max(caret.height / 2, Units.gu(1));
+        return y >= caret.y - slack && y <= caret.y + caret.height + slack;
+    }
+
+    //! How far down the pill may reach: the keyboard's top edge while there is
+    //! one, the bottom of the screen otherwise.
+    readonly property real bottomLimit:
+        keyboardRect.width > 0 && keyboardRect.height > 0
+            ? Math.min(height, keyboardRect.y) : height
+
     //! Whether an application is in front. The input method's focus belongs to
     //! whichever client spoke last and outlives the card it came from, so
     //! without this the pill came up over the card list, the launcher and the
@@ -154,6 +227,15 @@ Item {
      * that into ours; without either, the tap point is as good as it gets.
      */
     function showSuggestionsAtWord(tapX, tapY) {
+        // The caret the application gave the compositor is already in our
+        // coordinates, and the tap that raised this put it in the word.
+        var caret = editOverlay.caretRectangle();
+        if (caret !== undefined && caret !== null) {
+            editOverlay.anchorTopY = caret.y;
+            editOverlay.showSuggestionsAt(caret.x, caret.y + caret.height);
+            return;
+        }
+
         var rect = editOverlay.keyboardService ? editOverlay.keyboardService.spellingRect : null;
         var foreground = editOverlay.foregroundWindow ? editOverlay.foregroundWindow() : null;
 
@@ -188,15 +270,105 @@ Item {
         if (editOverlay.items.length === 0)
             return;
 
-        editOverlay.anchorX = x;
-        editOverlay.anchorY = y;
+        // Nor one for a field that has already let go of the focus: a hold on
+        // the application's own buttons takes it away from the field before the
+        // hold is over, and what came up was a Paste greyed out over a toolbar.
+        if (!editOverlay.editable)
+            return;
+
+        // A hold or a tap on a key is typing, not a question about the text.
+        if (editOverlay.onKeyboard(x, y))
+            return;
+
+        // Nor is one anywhere but the field.
+        if (!editOverlay.onField(x, y))
+            return;
+
+        editOverlay.pointAtText(x, y);
         editOverlay.visible = true;
 
         console.log("EditOverlay: shown at " + x + "," + y
                     + " editable=" + editOverlay.editable);
     }
 
+    /*!
+     * \brief Point the pill at the text a press at this point was on.
+     *
+     * At the selection, or the caret, the application reports, not at the
+     * finger: hanging under the press, the pill sat on the very text it is
+     * about. It goes under that text's bottom edge, or over its top edge when
+     * there is no room underneath, the arrow touching it either way. Across,
+     * it points at the middle of a selection and at a caret itself.
+     *
+     * Without a caret to go by - an application that does not say - it is the
+     * press, as before. Unless the spelling widget already put it at the word.
+     */
+    function pointAtText(x, y) {
+        var caret = editOverlay.caretRectangle();
+        if (caret === undefined || caret === null) {
+            editOverlay.anchorX = x;
+            editOverlay.anchorY = y;
+            return;
+        }
+
+        editOverlay.anchorX = caret.x + caret.width / 2;
+        editOverlay.anchorY = caret.y + caret.height;
+        editOverlay.anchorTopY = caret.y;
+    }
+
+    /*!
+     * \brief The pill for a hold at this point.
+     *
+     * Not on the caret's line may only mean not yet: the application moves the
+     * caret to the press in its own time - Chromium when its own long press
+     * selects the word, Qt when the finger lifts. So a hold that missed the
+     * caret waits a moment for it to arrive, and gets the pill if it does.
+     */
+    function showForHold(x, y) {
+        editOverlay.stopWaitingForCaret();
+        editOverlay.showAt(x, y);
+
+        if (!editOverlay.visible && editOverlay.editable) {
+            caretWait.holdAt = Qt.point(x, y);
+            caretWait.restart();
+        }
+    }
+
+    //! A new press: whatever an earlier hold was waiting for is not wanted now.
+    function stopWaitingForCaret() {
+        caretWait.stop();
+    }
+
+    /*
+     * How long a hold waits for the caret to come to it: long enough for the
+     * finger to be lifted after the hold and the application to answer.
+     * Running is the waiting; running out is giving up.
+     */
+    Timer {
+        id: caretWait
+
+        property point holdAt
+
+        interval: 1000
+        repeat: false
+    }
+
+    Connections {
+        target: editOverlay.inputMethod
+        ignoreUnknownSignals: true
+
+        function onCursorRectangleChanged() {
+            if (!caretWait.running)
+                return;
+
+            editOverlay.showAt(caretWait.holdAt.x, caretWait.holdAt.y);
+            if (editOverlay.visible)
+                caretWait.stop();
+        }
+    }
+
     function hide() {
+        caretWait.stop();
         editOverlay.visible = false;
         editOverlay.spellingMode = false;
         editOverlay.anchorTopY = Qt.binding(function() { return editOverlay.anchorY; });
@@ -216,11 +388,30 @@ Item {
     //! The field going away takes the overlay with it once it is up.
     onEditableChanged: if (!editOverlay.editable) editOverlay.hide()
 
-    // A press anywhere else dismisses, the way the legacy pill did. Below the
-    // pill in z order so its own buttons are hit first.
+    //! The keyboard coming up over the text the pill points at takes it away;
+    //! anywhere else the pill only moves above the keyboard, which bottomLimit
+    //! already sees to.
+    onKeyboardRectChanged: {
+        if (editOverlay.visible
+                && (editOverlay.onKeyboard(editOverlay.anchorX, editOverlay.anchorY)
+                    || editOverlay.onKeyboard(editOverlay.anchorX, editOverlay.anchorTopY)))
+            editOverlay.hide();
+    }
+
+    /*
+     * A press anywhere else dismisses, and then goes on to whatever it was on.
+     * Below the pill in z order so its own buttons are hit first.
+     *
+     * It is not spent on taking the pill away. On the keyboard that made every
+     * key want pressing twice; in the text, a tap into the selection to put
+     * the caret there only took the pill down and left the selection as it was.
+     */
     MouseArea {
         anchors.fill: parent
-        onPressed: editOverlay.hide()
+        onPressed: (mouse) => {
+            editOverlay.hide();
+            mouse.accepted = false;
+        }
     }
 
     /*!
@@ -234,6 +425,8 @@ Item {
      */
     Item {
         id: pill
+
+        objectName: "editPill"
 
         /*
          * Every slice is the same 60 px canvas, and the bar does not fill it:
@@ -263,9 +456,14 @@ Item {
         readonly property real barBottom: 49 * px
 
         //! Under the press, pointing up at the text, which is where legacy put
-        //! it. Above it instead when there is no room below, which is what the
-        //! second arrow slice was always there for.
-        readonly property bool below: editOverlay.anchorY + canvas + arrowRise < editOverlay.height
+        //! it. Above it instead when there is no room below - the bottom of the
+        //! screen, or the top of the keyboard, which it must never cover - which
+        //! is what the second arrow slice was always there for.
+        //! Clear space between the arrow's point and the text, so the point
+        //! does not sit on the selection's edge or on the line's descenders.
+        readonly property real textGap: Units.gu(0.8)
+
+        readonly property bool below: editOverlay.anchorY + textGap + canvas + arrowRise < editOverlay.bottomLimit
 
         //! The most the words may take before the pill scrolls instead of growing:
         //! the screen less its margins and the two caps, which is the bound legacy
@@ -273,16 +471,31 @@ Item {
         readonly property real maxViewportWidth:
             editOverlay.width - 2 * Units.gu(0.5) - 2 * capWidth
 
-        width: background.width
+        //! Not background's width: the slices in it are split around the arrow,
+        //! and where the arrow goes depends on where the pill is.
+        width: 2 * capWidth + viewport.width
         height: canvas + arrowRise
+
+        /*
+         * Where the arrow's middle is, along the pill: at the anchor, so it
+         * still points at the text when the pill is held off the edge of the
+         * screen - legacy's balloon slid the same way - but never into a cap.
+         */
+        readonly property real arrowCentre:
+            Math.max(capWidth + arrowWidth / 2,
+                     Math.min(width - capWidth - arrowWidth / 2, editOverlay.anchorX - x))
+        readonly property real leftMiddleWidth:
+            Math.max(0, arrowCentre - capWidth - arrowWidth / 2)
+        readonly property real rightMiddleWidth:
+            Math.max(0, viewport.width - arrowWidth - leftMiddleWidth)
 
         x: Math.max(Units.gu(0.5),
                     Math.min(editOverlay.width - width - Units.gu(0.5),
                              editOverlay.anchorX - width / 2))
-        //! The point sits on what it is pointing at, so the bar hangs the
-        //! slice's own distance away from it rather than a made-up gap.
-        y: below ? editOverlay.anchorY - barTop
-                 : editOverlay.anchorTopY - height + barTop
+        //! The point stops textGap short of what it points at; the bar hangs
+        //! the slice's own distance beyond the point.
+        y: below ? editOverlay.anchorY + textGap - barTop
+                 : editOverlay.anchorTopY - textGap - height + barTop
 
         Row {
             id: background
@@ -295,7 +508,7 @@ Item {
             }
             Image {
                 source: Qt.resolvedUrl("images/edit/ate-middle.png")
-                width: viewport.width / 2 - pill.arrowWidth / 2
+                width: pill.leftMiddleWidth
                 height: pill.canvas
             }
             /*
@@ -321,7 +534,7 @@ Item {
             }
             Image {
                 source: Qt.resolvedUrl("images/edit/ate-middle.png")
-                width: viewport.width / 2 - pill.arrowWidth / 2
+                width: pill.rightMiddleWidth
                 height: pill.canvas
             }
             Image {
