@@ -26,6 +26,37 @@ Item {
         id: mergedModel
     }
 
+    // A model and a view of their own, new for the test: a model takes the
+    // roles its views follow from the rows it has first, so the shared one
+    // above, which other tests fill with toasts first, would not show it.
+    Component {
+        id: freshList
+        Item {
+            property alias model: freshModel
+            property alias view: freshView
+            NotificationsMergedModel { id: freshModel }
+            // each row's delegate reads the roles, as the areas' delegates
+            // read groupCount
+            Repeater {
+                id: freshView
+                model: freshModel
+                delegate: Item {
+                    property int shownCount: typeof groupCount !== 'undefined' && groupCount ? groupCount : 1
+                }
+            }
+        }
+    }
+
+    // A dashboard window, as listDashboardsModel takes it from the surfaces.
+    Component {
+        id: dashboardWindow
+        Item {
+            property string type: "_WEBOS_WINDOW_TYPE_FLOATING"
+            property string appId: "com.palm.systemui"
+            property var windowProperties: ({})
+        }
+    }
+
     // the same wiring as the open list's delegate in NotificationArea.qml
     Component {
         id: loaderComponent
@@ -67,7 +98,7 @@ Item {
             var found = [];
             for (var i = 0; i < mergedModel.count; i++) {
                 var e = mergedModel.get(i);
-                found.push(e.notifObject.title + " x" + e.groupCount);
+                found.push(e.notifType === "dashboard" ? "dashboard" : e.notifObject.title + " x" + e.groupCount);
             }
             return found;
         }
@@ -97,6 +128,7 @@ Item {
 
         function init() {
             ModelSingletons.toastModel.clear();
+            compositorInstance.surfaceModel.clear();
             mergedModel.clear();
         }
 
@@ -181,6 +213,25 @@ Item {
             addToast("org.webosports.app.messaging");
             verify(badge.visible, "a badge for three");
             compare(badge.count, 3);
+        }
+
+        // A dashboard listed before any toast (USB's, at boot) gave the
+        // model its first row; the roles that row did not have were never
+        // followed by the views, and every group showed a single toast.
+        function test_countAfterADashboardIsListedFirst() {
+            var list = createTemporaryObject(freshList, root);
+            var window = createTemporaryObject(dashboardWindow, root);
+            compositorInstance.surfaceModel.append({"obj": window});
+            compare(list.model.count, 1);
+            compare(list.model.get(0).notifType, "dashboard");
+
+            addToast("org.webosports.app.messaging");
+            addToast("org.webosports.app.messaging");
+            addToast("org.webosports.app.messaging");
+            compare(list.model.get(1).groupCount, 3);
+            compare(list.view.count, 2);
+            compare(list.view.itemAt(1).shownCount, 3, "the view sees the group's count");
+            compare(list.view.itemAt(0).shownCount, 1, "a dashboard is one entry");
         }
 
         function test_entryStaysWhereItWas() {

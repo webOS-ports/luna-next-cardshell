@@ -249,6 +249,10 @@ ListModel {
                 notificationArea.state = "minimized";
             }
             mergedModel.append({"notifType": "dashboard",
+                                // the roles a toast's entry has: a view follows only
+                                // the roles the model's first row came with
+                                "groupKey": "",
+                                "groupCount": 1,
                                 "appKey": window.appId || "",
                                 "window": window,
                                 "notifObject": null,
