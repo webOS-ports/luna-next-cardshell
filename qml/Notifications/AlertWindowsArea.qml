@@ -37,7 +37,7 @@ Rectangle {
         var height = 0;
         for (var i = 0; i < listPopupAlertsModel.count; ++i) {
             var window = listPopupAlertsModel.get(i);
-            if (!window || (rootAlertsArea.screenLocked && !rootAlertsArea.isLockScreenAlert(window)))
+            if (!window || rootAlertsArea.isWaiting(window))
                 continue;
             if (window.height > height)
                 height = window.height;
@@ -89,6 +89,26 @@ Rectangle {
     }
     property Item windowManagerItem
     property var compositorInstance
+
+    /*!
+     * Set while First Use runs. An application's alert then waits, as it does
+     * behind the lock screen, and for the same reason: a message alert opens
+     * Messaging when tapped, and that would take the user out of First Use.
+     * Only what the lock screen lets through comes up - the incoming call and
+     * an alert that asked to be usable while locked, the alarm - as both have
+     * to be answered there and then and neither leads into an application.
+     * The alerts that waited come up, with their sounds, once it is over.
+     *
+     * The shell's own alerts (volume, kill switch, power menu, USB debugging,
+     * cell broadcast, SIM PIN) are not in this area and are not held.
+     */
+    property bool appAlertsHeld: false
+
+    //! Whether an alert window waits for the unlock, or for First Use to end.
+    function isWaiting(window) {
+        return (rootAlertsArea.screenLocked || rootAlertsArea.appAlertsHeld) &&
+               !rootAlertsArea.isLockScreenAlert(window);
+    }
     // Set while the lock screen is up. The tablet's centred notification alert
     // is not in this area, so it cannot go by whether this area is shown, which
     // is not only a question of the lock screen.
@@ -106,7 +126,10 @@ Rectangle {
     function closeAll() {
         for (var i = listPopupAlertsModel.count - 1; i >= 0; --i) {
             var window = listPopupAlertsModel.get(i);
-            if (!rootAlertsArea.isCallAlert(window))
+            // What waits for the end of First Use was never seen, so a tap
+            // outside the alarm is not the user turning it down.
+            if (!rootAlertsArea.isCallAlert(window) &&
+                    !(rootAlertsArea.appAlertsHeld && rootAlertsArea.isWaiting(window)))
                 rootAlertsArea.compositorInstance.closeWindow(window);
         }
         // A notification alert goes too, unless it is modal: that one has to
@@ -142,6 +165,7 @@ Rectangle {
         id: soundNotifications
         objectName: "soundNotifications"
         tones: typeof preferences === "undefined" ? null : preferences
+        held: rootAlertsArea.appAlertsHeld
     }
 
     /*
@@ -150,12 +174,15 @@ Rectangle {
      * played it: once, when the window shows, and cut off when it goes. The
      * delegates below move from window to window as alerts close, so this
      * goes by the windows themselves. Over the lock screen as well: a reminder
-     * sounds with the display off, even though its window waits.
+     * sounds with the display off, even though its window waits. Not one that
+     * waits for First Use to end, which the user is looking at the screen
+     * for: that one sounds when it comes up.
      */
     QtObject {
         id: alertSounds
 
         property int count: listPopupAlertsModel.count
+        property bool held: rootAlertsArea.appAlertsHeld
         property var known: []
 
         function start(window) {
@@ -164,12 +191,18 @@ Rectangle {
                                            properties["LuneOS_sound"] || "", -1, false, true);
         }
 
-        onCountChanged: {
+        function update() {
             var windows = [];
-            for (var i = 0; i < listPopupAlertsModel.count; ++i)
-                windows.push(listPopupAlertsModel.get(i));
+            for (var i = 0; i < listPopupAlertsModel.count; ++i) {
+                var window = listPopupAlertsModel.get(i);
+                if (!held || rootAlertsArea.isLockScreenAlert(window))
+                    windows.push(window);
+            }
             known = NotificationSound.trackAlerts(windows, known, start, soundNotifications.stop);
         }
+
+        onCountChanged: update()
+        onHeldChanged: update()
     }
 
     Component {
@@ -186,7 +219,7 @@ Rectangle {
             // lock screen only a call and an alert that asked for it show.
             readonly property bool isCall: rootAlertsArea.isCallAlert(alertItem.window)
             visible: alertItem.isCall || !(notificationAlerts.showing && !Settings.tabletUi)
-                     && (!rootAlertsArea.screenLocked || rootAlertsArea.isLockScreenAlert(alertItem.window))
+                     && !rootAlertsArea.isWaiting(alertItem.window)
             z: alertItem.isCall ? 2 : 0
             x: rootAlertsArea.contentMargin
             y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
@@ -268,6 +301,8 @@ Rectangle {
      */
     NotificationAlertsArea {
         id: notificationAlerts
+
+        held: rootAlertsArea.appAlertsHeld
 
         parent: Settings.tabletUi ? tabletModalPanel : rootAlertsArea
         x: Settings.tabletUi ? tabletModalPanel.margin : rootAlertsArea.contentMargin

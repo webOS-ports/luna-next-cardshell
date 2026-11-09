@@ -41,6 +41,14 @@ Item {
 
     property var players: []
 
+    /*
+     * Set while First Use runs. An application's playSoundNotification is then
+     * turned down: it would sound for a notification that is held and cannot
+     * be seen, and a sound is no use played later. A popup alert's own sound
+     * (play() from AlertWindowsArea) is not affected.
+     */
+    property bool held: false
+
     // luna://, for the tests to replace.
     property var callService: function(url, request, onReply) {
         client.call(url, JSON.stringify(request),
@@ -69,6 +77,8 @@ Item {
         }
         if (!request || typeof request !== "object" || Array.isArray(request))
             return JSON.stringify({ returnValue: false, errorText: "Invalid parameters" });
+        if (held)
+            return JSON.stringify({ returnValue: false, errorText: "Notification sounds are held during First Use" });
 
         play(typeof request.soundClass === "string" ? request.soundClass : "",
              typeof request.soundFile === "string" ? request.soundFile : "",

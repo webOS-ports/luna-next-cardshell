@@ -48,8 +48,15 @@ import "../Utils"
 Item {
     id: root
 
+    /*!
+     * Set while First Use runs: an alert waits until it is over. Its buttons
+     * are whatever luna calls the asker put there - launching an application
+     * among them - and nothing in First Use is waiting on one.
+     */
+    property bool held: false
+
     //! Whether there is an alert to show.
-    readonly property bool showing: alertModel.count > 0
+    readonly property bool showing: !held && alertModel.count > 0
     //! Whether the alert shown has to be answered: no tap elsewhere closes it.
     readonly property bool modal: showing && alertModel.get(0).modal
 

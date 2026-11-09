@@ -502,7 +502,8 @@ Item {
                     "windowManagerInstance": statusBar.windowManagerInstance,
                     "compositorInstance": statusBar.compositorInstance,
                     "maxDashboardWindowHeight": Qt.binding(() => {return windowManagerInstance.height*0.67;}),
-                    "blackMode": statusBar.blackMode,
+                    // Bound, not copied: blackMode ends with First Use.
+                    "blackMode": Qt.binding(() => statusBar.blackMode),
                 });
             }
         }

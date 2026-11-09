@@ -34,6 +34,18 @@ Rectangle {
 
     property QtObject compositorInstance
     property Item windowManagerInstance
+
+    /*
+     * Notifications are held while First Use runs: none of them is shown,
+     * sounds or can be tapped, as tapping one launches its application and
+     * takes the user out of First Use. They come in once it is over; see
+     * NotificationsMergedModel.held.
+     */
+    readonly property bool held: !!windowManagerInstance && windowManagerInstance.state === "firstuse"
+
+    visible: !held
+    enabled: !held
+
     property int maxDashboardWindowHeight: parent.height/2
     readonly property int dashboardCardFixedHeight: Units.gu(5.6) // this value comes from the CSS of the dashboard cards
     readonly property int bannerNotificationFixedHeight: Units.gu(2.4) // this value comes from the CSS of the banner
@@ -49,6 +61,9 @@ Rectangle {
 
     NotificationsMergedModel {
         id: mergedModel
+        objectName: "notificationMergedModel"
+
+        held: notificationArea.held
 
         onAddBannerNotification: (notifObject) => {
            bannerItemsPopups.popupModel.append({"object": notifObject});
@@ -113,6 +128,10 @@ Rectangle {
             }
         }
     }
+
+    // A banner still on its way when the hold starts goes: it would only
+    // come back, half played, once First Use is over.
+    onHeldChanged: if (held) bannerItemsPopups.popupModel.clear()
 
     // Opening registers a tap action (below). Whatever takes the area out of
     // "open" drops it again: not only a tap, but also the last notification
@@ -206,6 +225,7 @@ Rectangle {
     // Banner popup view
     BannerPopupArea {
         id: bannerItemsPopups
+        objectName: "bannerPopupArea"
         visible: height>0
 
         anchors {
@@ -219,6 +239,15 @@ Rectangle {
     }
 
     states: [
+        // First in the list, so it wins over the others while it holds; it
+        // takes no room, so the card above reaches down to the gesture area.
+        State {
+            name: "held"
+            when: notificationArea.held
+            PropertyChanges { target: minimizedListView; visible: false }
+            PropertyChanges { target: openListView; visible: false }
+            PropertyChanges { target: notificationArea; height: 0 }
+        },
         State {
             name: "hidden"
             when: (bannerItemsPopups.popupModel.count + mergedModel.count) === 0
