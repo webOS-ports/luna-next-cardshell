@@ -132,11 +132,50 @@ ListModel {
                                               // point, so a category set there arrives here even
                                               // though SAM itself makes no use of it
                                               category: launchPoint.category || "",
-                                              icon: launchPoint.icon });
+                                              icon: _iconUpdates[launchPoint.launchPointId] || launchPoint.icon });
+                _samIcons[launchPoint.launchPointId] = launchPoint.icon;
             }
         }
 
         appsModelRefreshed();
+    }
+
+    /*
+     * Icons apps set on their own launch points with
+     * com.palm.applicationManager/updateLaunchPointIcon, by launch point id.
+     *
+     * Calendar does this, as on legacy webOS: it ships images/launcher/icon-01
+     * to -31.png and puts today's on its launch point when it runs, and from
+     * an activity it schedules for midnight. That call is luna-appmanager's, which posts
+     * the new icon on launchPointChanges but does not tell SAM, and SAM's list
+     * is what this model is filled from; without this, the icon was lost at
+     * the next refresh.
+     *
+     * luna-appmanager posts "updated" for other reasons too (an install's
+     * progress), with whatever icon it has, so an icon is only taken when it
+     * differs from SAM's for the same launch point (_samIcons).
+     */
+    property var _iconUpdates: ({})
+    property var _samIcons: ({})
+
+    function takeIconUpdate(launchPoint, change) {
+        var id = launchPoint.launchPointId;
+        if (!id)
+            return;
+        if (change === "removed" || !launchPoint.icon || launchPoint.icon === _samIcons[id]) {
+            delete _iconUpdates[id];
+            return;
+        }
+        if (change !== "updated" || _iconUpdates[id] === launchPoint.icon)
+            return;
+        _iconUpdates[id] = launchPoint.icon;
+        for (var i = 0; i < applicationModel.count; ++i) {
+            if (applicationModel.get(i).launchPointId === id) {
+                applicationModel.setProperty(i, "icon", launchPoint.icon);
+                appsModelRefreshed();
+                return;
+            }
+        }
     }
 
     function handleLaunchPointChanges(message) {
@@ -146,6 +185,7 @@ ListModel {
         if (response.subscribed !== undefined)
             return;
 
+        takeIconUpdate(response, response.change);
         refresh();
     }
 

@@ -138,4 +138,68 @@ TestCase {
         verify(tab.count > 0);
         tab.destroy();
     }
+
+    /*
+     * Calendar puts today's date on its icon through luna-appmanager's
+     * updateLaunchPointIcon, which posts the new icon on launchPointChanges
+     * but leaves SAM's list as it was. The icon has to stay through the
+     * refreshes from that list.
+     */
+    readonly property string samIcon: "/usr/palm/applications/com.palm.app.calendar/images/icon-256x256.png"
+    readonly property string todayIcon: "/usr/palm/applications/com.palm.app.calendar/images/launcher/icon-9.png"
+
+    function listWithIcons() {
+        return [
+            { id: "com.palm.app.calendar", launchPointId: "com.palm.app.calendar_default", title: "Calendar", icon: samIcon },
+            { id: "com.palm.app.email", launchPointId: "com.palm.app.email_default", title: "Email", icon: "/usr/palm/applications/com.palm.app.email/icon.png" }
+        ];
+    }
+
+    // What luna-appmanager posts: the launch point as it has it, and the change.
+    function appManagerPosts(icon, change) {
+        model.handleLaunchPointChanges({ payload: JSON.stringify({
+            id: "com.palm.app.calendar", launchPointId: "com.palm.app.calendar_default",
+            title: "Calendar", icon: icon, change: change }) });
+    }
+
+    function listed() {
+        tryVerify(function() { return sam.calls.length > 0; }, 2000);
+        sam.answer(listWithIcons());
+        sam.calls = [];
+    }
+
+    function test_8_an_updated_icon_is_shown_and_kept() {
+        model.handleLaunchPointsPosted({ payload: JSON.stringify({ returnValue: true, launchPoints: listWithIcons() }) });
+        compare(model.get(0).icon, samIcon);
+
+        var refreshed = 0;
+        var counter = function() { refreshed++; };
+        model.appsModelRefreshed.connect(counter);
+        appManagerPosts(todayIcon, "updated");
+        compare(model.get(0).icon, todayIcon, "shown at once");
+        verify(refreshed > 0, "the launch bar is told");
+        model.appsModelRefreshed.disconnect(counter);
+
+        listed();
+        compare(model.get(0).icon, todayIcon, "kept through SAM's list");
+        compare(model.get(1).icon, "/usr/palm/applications/com.palm.app.email/icon.png");
+    }
+
+    function test_9_an_update_with_sams_own_icon_changes_nothing() {
+        model.handleLaunchPointsPosted({ payload: JSON.stringify({ returnValue: true, launchPoints: listWithIcons() }) });
+        appManagerPosts(todayIcon, "updated");
+        listed();
+        // say, an install's progress: luna-appmanager posts the icon SAM has
+        appManagerPosts(samIcon, "updated");
+        listed();
+        compare(model.get(0).icon, samIcon);
+    }
+
+    function test_10_a_removed_launch_point_drops_its_icon() {
+        appManagerPosts(todayIcon, "updated");
+        listed();
+        appManagerPosts(todayIcon, "removed");
+        listed();
+        compare(model.get(0).icon, samIcon);
+    }
 }
