@@ -568,6 +568,12 @@ WindowManager {
                                (!lockScreen.locked && launcherInstance.justTypeLauncherActive)
 
         keyboardService: KeyboardService {}
+
+        // The keyboard is a sibling here, inset by the status bar above it.
+        keyboardRect: Qt.rect(overlaysManagerInstance.x + overlaysManagerInstance.keyboardRect.x,
+                              overlaysManagerInstance.y + overlaysManagerInstance.keyboardRect.y,
+                              overlaysManagerInstance.keyboardRect.width,
+                              overlaysManagerInstance.keyboardRect.height)
     }
 
     /*!
@@ -583,6 +589,10 @@ WindowManager {
      * at all while a text field holds the input method's focus - the same
      * condition the pill is shown under - because otherwise every long press in
      * every application would be a question about pasting.
+     *
+     * Nor is any press that starts on the on-screen keyboard: it lies under
+     * this, and a held key or a key tapped with the caret in a misspelled word
+     * is typing, not a request for a pill on top of the keys.
      */
     Item {
         anchors.fill: parent
@@ -599,14 +609,33 @@ WindowManager {
             //! Whether there was a selection under the finger as it went down.
             property bool selectedAtPress: false
 
+            //! Whether the finger went down on the keyboard, which makes this
+            //! press none of the pill's business from start to finish.
+            property bool pressedOnKeyboard: false
+
             onActiveChanged: {
                 if (editPressMonitor.active) {
+                    editPressMonitor.pressedOnKeyboard =
+                        editOverlay.onKeyboard(editPressMonitor.point.position.x,
+                                               editPressMonitor.point.position.y);
+                    if (editPressMonitor.pressedOnKeyboard) {
+                        editTapTimer.stop();
+                        spellingTapTimer.stop();
+                        editPressTimer.stop();
+                        return;
+                    }
+
                     editPressMonitor.pressedAt = editPressMonitor.point.position;
                     editPressMonitor.selectedAtPress = editOverlay.hasSelection;
                     editTapTimer.stop();
                     spellingTapTimer.stop();
                     editPressTimer.restart();
                 } else {
+                    if (editPressMonitor.pressedOnKeyboard) {
+                        editPressMonitor.pressedOnKeyboard = false;
+                        return;
+                    }
+
                     // The hold timer still running means the finger neither
                     // moved off nor stayed down long enough: that was a tap.
                     var wasTap = editPressTimer.running;
@@ -620,7 +649,7 @@ WindowManager {
             }
 
             onPointChanged: {
-                if (!editPressMonitor.active)
+                if (!editPressMonitor.active || editPressMonitor.pressedOnKeyboard)
                     return;
 
                 var dx = editPressMonitor.point.position.x - editPressMonitor.pressedAt.x;

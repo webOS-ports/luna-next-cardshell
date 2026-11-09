@@ -64,6 +64,30 @@ Item {
     visible: false
     z: 1001
 
+    /*!
+     * \brief Where the on-screen keyboard is, in this item's coordinates.
+     *
+     * Empty while there is none. The keyboard is drawn under this overlay, and
+     * nothing of it may ever be covered or interfered with: a pill over the keys
+     * is a pill in the way of typing, and the press that dismissed it was a key
+     * press the keyboard never got - every key wanted pressing twice.
+     */
+    property rect keyboardRect: Qt.rect(0, 0, 0, 0)
+
+    //! Whether a point is on the keyboard.
+    function onKeyboard(x, y) {
+        var k = editOverlay.keyboardRect;
+        return k.width > 0 && k.height > 0
+               && x >= k.x && x < k.x + k.width
+               && y >= k.y && y < k.y + k.height;
+    }
+
+    //! How far down the pill may reach: the keyboard's top edge while there is
+    //! one, the bottom of the screen otherwise.
+    readonly property real bottomLimit:
+        keyboardRect.width > 0 && keyboardRect.height > 0
+            ? Math.min(height, keyboardRect.y) : height
+
     //! Whether an application is in front. The input method's focus belongs to
     //! whichever client spoke last and outlives the card it came from, so
     //! without this the pill came up over the card list, the launcher and the
@@ -188,6 +212,10 @@ Item {
         if (editOverlay.items.length === 0)
             return;
 
+        // A hold or a tap on a key is typing, not a question about the text.
+        if (editOverlay.onKeyboard(x, y))
+            return;
+
         editOverlay.anchorX = x;
         editOverlay.anchorY = y;
         editOverlay.visible = true;
@@ -216,11 +244,28 @@ Item {
     //! The field going away takes the overlay with it once it is up.
     onEditableChanged: if (!editOverlay.editable) editOverlay.hide()
 
+    //! The keyboard coming up over the text the pill points at takes it away;
+    //! anywhere else the pill only moves above the keyboard, which bottomLimit
+    //! already sees to.
+    onKeyboardRectChanged: {
+        if (editOverlay.visible
+                && (editOverlay.onKeyboard(editOverlay.anchorX, editOverlay.anchorY)
+                    || editOverlay.onKeyboard(editOverlay.anchorX, editOverlay.anchorTopY)))
+            editOverlay.hide();
+    }
+
     // A press anywhere else dismisses, the way the legacy pill did. Below the
     // pill in z order so its own buttons are hit first.
     MouseArea {
         anchors.fill: parent
-        onPressed: editOverlay.hide()
+        onPressed: (mouse) => {
+            editOverlay.hide();
+
+            // On the keyboard it is a key press first: it goes on through to the
+            // keys, rather than being spent on taking the pill away.
+            if (editOverlay.onKeyboard(mouse.x, mouse.y))
+                mouse.accepted = false;
+        }
     }
 
     /*!
@@ -234,6 +279,8 @@ Item {
      */
     Item {
         id: pill
+
+        objectName: "editPill"
 
         /*
          * Every slice is the same 60 px canvas, and the bar does not fill it:
@@ -263,9 +310,10 @@ Item {
         readonly property real barBottom: 49 * px
 
         //! Under the press, pointing up at the text, which is where legacy put
-        //! it. Above it instead when there is no room below, which is what the
-        //! second arrow slice was always there for.
-        readonly property bool below: editOverlay.anchorY + canvas + arrowRise < editOverlay.height
+        //! it. Above it instead when there is no room below - the bottom of the
+        //! screen, or the top of the keyboard, which it must never cover - which
+        //! is what the second arrow slice was always there for.
+        readonly property bool below: editOverlay.anchorY + canvas + arrowRise < editOverlay.bottomLimit
 
         //! The most the words may take before the pill scrolls instead of growing:
         //! the screen less its margins and the two caps, which is the bound legacy
