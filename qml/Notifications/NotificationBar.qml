@@ -27,7 +27,10 @@ import QtQuick 2.0
  * from #262626 to #383838, a 1 px #303030 line along the top and a 1 px
  * #4D4D4D highlight along the bottom, both following the rounded corners.
  * Pressed, the pill turns #616161 to #6E6E6E. The corners are rounded by a
- * sixth of the height, a little tighter than the stock art's quarter.
+ * sixth of an entry's height, a little tighter than the stock art's quarter.
+ * The art was a fixed 52 px tall with fixed corners, so a dashboard that asks
+ * for more height (dashHeight) keeps the corners of a standard entry:
+ * cornerHeight, rather than a sixth of its own height.
  *
  * Shared by toasts (NotificationItem) and dashboards, which sit on it once WAM
  * has made their windows transparent.
@@ -36,7 +39,9 @@ Item {
     id: bar
 
     property bool pressed: false
-    readonly property real radius: height / 6
+    // The height the corners are worked out from: a standard entry's.
+    property real cornerHeight: height
+    readonly property real radius: Math.min(height, cornerHeight) / 6
 
     // Bottom highlight: the base shape, of which only the lowest pixel shows.
     Rectangle {

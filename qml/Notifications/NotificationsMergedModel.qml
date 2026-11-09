@@ -378,6 +378,8 @@ ListModel {
             NotificationBar {
                 anchors.fill: parent
                 visible: !Settings.tabletUi
+                // A tall dashboard (dashHeight) keeps a standard entry's corners.
+                cornerHeight: Units.gu(5.6)
             }
 
             Component.onCompleted: {
