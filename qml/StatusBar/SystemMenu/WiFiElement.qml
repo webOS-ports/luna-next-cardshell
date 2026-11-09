@@ -30,6 +30,15 @@ Drawer {
     readonly property string _wifiState: wifiList.powered ? "ON" : "OFF"
     property bool closeOnConnect: false
 
+    /*
+     * How many networks the menu lists, as the first ones in connman's order:
+     * the connected or connecting one, then the saved ones, then the rest by
+     * signal strength. A long list pushed everything under it - Bluetooth,
+     * the toggles - off the bottom of the menu; the full list is one tap away
+     * in Wi-Fi Preferences. Six fit a Pixel 3a's menu without scrolling.
+     */
+    property int maxListedNetworks: 6
+
     TechnologyModel {
         id: wifiList
         name: "wifi"
@@ -179,6 +188,7 @@ Drawer {
         Column {
             spacing: 0
             width: parent.width
+            visible: index < wifiMenu.maxListedNetworks
 
             property NetworkService delegateService: modelData
 

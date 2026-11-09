@@ -47,6 +47,15 @@ Item {
     property int  dividerWidthOffset: Units.gu(0.7)
     property bool flickableOverride: false
 
+    /*
+     * How many networks the menu lists, as the first ones in connman's order:
+     * the connected or connecting one, then the saved ones, then the rest by
+     * signal strength. A long list pushed everything under it - Bluetooth,
+     * the toggles - off the bottom of the menu; the full list is one tap away
+     * in Wi-Fi Preferences. Six fit a Pixel 3a's menu without scrolling.
+     */
+    property int maxListedNetworks: 6
+
     // Tells the StatusBar to center the menu instead of docking it to
     // the right edge like the classic system menu.
     property bool centered: true
@@ -826,6 +835,7 @@ Item {
         Column {
             spacing: 0
             width: mainMenu.width
+            visible: index < deviceMenu.maxListedNetworks
 
             property NetworkService delegateService: modelData
 

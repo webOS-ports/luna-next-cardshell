@@ -167,6 +167,39 @@ Item {
             compare(heldSpy.count, 0);
         }
 
+        // --- how many networks are listed: the first ones in connman's order
+
+        // The rows of the networks the menu lists, by name, in order.
+        function listedNames(menu) {
+            var names = [];
+            ["My Own Wifi", securedName, openName].forEach(function (name) {
+                var entry = null;
+                tryVerify(function () { entry = findEntry(menu, name); return entry !== null; }, 2000);
+                if (entry.parent.visible)
+                    names.push(name);
+            });
+            return names;
+        }
+
+        function test_newMenuListsSixByDefault() {
+            var menu = makeNewMenu();
+            compare(menu.maxListedNetworks, 6);
+            compare(listedNames(menu).length, 3);
+        }
+
+        function test_newMenuListsNoMoreThanTheCap() {
+            var menu = makeNewMenu();
+            menu.maxListedNetworks = 2;
+            compare(listedNames(menu), ["My Own Wifi", securedName]);
+        }
+
+        function test_classicMenuListsNoMoreThanTheCap() {
+            var element = makeElement();
+            compare(element.maxListedNetworks, 6);
+            element.maxListedNetworks = 2;
+            compare(listedNames(element), ["My Own Wifi", securedName]);
+        }
+
         // --- the new menu
 
         // Held: the network's details in the Wi-Fi app, without connecting.
