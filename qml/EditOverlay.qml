@@ -82,6 +82,55 @@ Item {
                && y >= k.y && y < k.y + k.height;
     }
 
+    /*!
+     * \brief Where the caret of the field being typed into is, in this item's
+     * coordinates, or undefined when that is not known.
+     *
+     * The application tells the compositor, which maps it out of the
+     * application's window when asked: the window moves without the
+     * application saying anything, so this is asked each time rather than
+     * kept. Undefined from an application that does not say, and from a
+     * compositor too old to.
+     */
+    function caretRectangle() {
+        var inputMethod = editOverlay.inputMethod;
+        return inputMethod && typeof inputMethod.cursorRectangleIn === "function"
+               ? inputMethod.cursorRectangleIn(editOverlay) : undefined;
+    }
+
+    //! The compositor's input method, which knows the caret.
+    readonly property var inputMethod: inputMethodOf(compositorInstance)
+    function inputMethodOf(compositor) {
+        return compositor ? compositor.inputMethod : null;
+    }
+
+    /*!
+     * \brief Whether a press at this point is a press on the field.
+     *
+     * The pill is for text fields only, not for a press anywhere in an
+     * application that happens to have one focused. The shell does not know
+     * where a field's edges are - the application only says where its caret
+     * is - but a press on a field puts the caret there: a tap moves it to the
+     * press, a hold selects the word under it. So the press is on the field
+     * when it is on the caret's line. That line is taken with half a line's
+     * slack above and below, for a finger that lands at the edge of the text.
+     *
+     * Nothing about the line is checked sideways: in an empty field, or past
+     * the end of its text, the caret stays at the start or the end however far
+     * across the field the press was.
+     *
+     * An application that has not said where its caret is gets the pill
+     * anywhere, as before there was a caret to go by.
+     */
+    function onField(x, y) {
+        var caret = editOverlay.caretRectangle();
+        if (caret === undefined || caret === null)
+            return true;
+
+        var slack = Math.max(caret.height / 2, Units.gu(1));
+        return y >= caret.y - slack && y <= caret.y + caret.height + slack;
+    }
+
     //! How far down the pill may reach: the keyboard's top edge while there is
     //! one, the bottom of the screen otherwise.
     readonly property real bottomLimit:
@@ -178,6 +227,15 @@ Item {
      * that into ours; without either, the tap point is as good as it gets.
      */
     function showSuggestionsAtWord(tapX, tapY) {
+        // The caret the application gave the compositor is already in our
+        // coordinates, and the tap that raised this put it in the word.
+        var caret = editOverlay.caretRectangle();
+        if (caret !== undefined && caret !== null) {
+            editOverlay.anchorTopY = caret.y;
+            editOverlay.showSuggestionsAt(caret.x, caret.y + caret.height);
+            return;
+        }
+
         var rect = editOverlay.keyboardService ? editOverlay.keyboardService.spellingRect : null;
         var foreground = editOverlay.foregroundWindow ? editOverlay.foregroundWindow() : null;
 
@@ -216,6 +274,10 @@ Item {
         if (editOverlay.onKeyboard(x, y))
             return;
 
+        // Nor is one anywhere but the field.
+        if (!editOverlay.onField(x, y))
+            return;
+
         editOverlay.anchorX = x;
         editOverlay.anchorY = y;
         editOverlay.visible = true;
@@ -224,7 +286,59 @@ Item {
                     + " editable=" + editOverlay.editable);
     }
 
+    /*!
+     * \brief The pill for a hold at this point.
+     *
+     * Not on the caret's line may only mean not yet: the application moves the
+     * caret to the press in its own time - Chromium when its own long press
+     * selects the word, Qt when the finger lifts. So a hold that missed the
+     * caret waits a moment for it to arrive, and gets the pill if it does.
+     */
+    function showForHold(x, y) {
+        editOverlay.stopWaitingForCaret();
+        editOverlay.showAt(x, y);
+
+        if (!editOverlay.visible && editOverlay.editable) {
+            caretWait.holdAt = Qt.point(x, y);
+            caretWait.restart();
+        }
+    }
+
+    //! A new press: whatever an earlier hold was waiting for is not wanted now.
+    function stopWaitingForCaret() {
+        caretWait.stop();
+    }
+
+    /*
+     * How long a hold waits for the caret to come to it: long enough for the
+     * finger to be lifted after the hold and the application to answer.
+     * Running is the waiting; running out is giving up.
+     */
+    Timer {
+        id: caretWait
+
+        property point holdAt
+
+        interval: 1000
+        repeat: false
+    }
+
+    Connections {
+        target: editOverlay.inputMethod
+        ignoreUnknownSignals: true
+
+        function onCursorRectangleChanged() {
+            if (!caretWait.running)
+                return;
+
+            editOverlay.showAt(caretWait.holdAt.x, caretWait.holdAt.y);
+            if (editOverlay.visible)
+                caretWait.stop();
+        }
+    }
+
     function hide() {
+        caretWait.stop();
         editOverlay.visible = false;
         editOverlay.spellingMode = false;
         editOverlay.anchorTopY = Qt.binding(function() { return editOverlay.anchorY; });

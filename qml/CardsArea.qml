@@ -622,6 +622,7 @@ WindowManager {
                         editTapTimer.stop();
                         spellingTapTimer.stop();
                         editPressTimer.stop();
+                        editOverlay.stopWaitingForCaret();
                         return;
                     }
 
@@ -629,6 +630,7 @@ WindowManager {
                     editPressMonitor.selectedAtPress = editOverlay.hasSelection;
                     editTapTimer.stop();
                     spellingTapTimer.stop();
+                    editOverlay.stopWaitingForCaret();
                     editPressTimer.restart();
                 } else {
                     if (editPressMonitor.pressedOnKeyboard) {
@@ -718,8 +720,8 @@ WindowManager {
             interval: 700
             repeat: false
 
-            onTriggered: editOverlay.showAt(editPressMonitor.point.position.x,
-                                            editPressMonitor.point.position.y)
+            onTriggered: editOverlay.showForHold(editPressMonitor.point.position.x,
+                                                 editPressMonitor.point.position.y)
         }
     }
 
