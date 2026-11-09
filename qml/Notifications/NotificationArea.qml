@@ -184,6 +184,9 @@ Rectangle {
                 property Item delegateWindow: typeof window !== 'undefined' ? window : null;
                 property string delegateType: notifType;
                 property int delegateHeight: notifHeight
+                property int delegateGroupCount: typeof groupCount !== 'undefined' && groupCount ? groupCount : 1
+                // the next toast of a group whose top one was swiped away
+                onDelegateNotifObjectChanged: comeBack()
                 property int delegateIndex: index
 
                 notifComponent: notificationItemLoaderComponent
@@ -205,6 +208,7 @@ Rectangle {
 
                         property var loaderNotifObject: slidingNotificationArea.delegateNotifObject
                         property Item loaderWindow: slidingNotificationArea.delegateWindow
+                        property int loaderGroupCount: slidingNotificationArea.delegateGroupCount
                         property QtObject loaderCompositorInstance: compositorInstance
 
                         signal closed()

@@ -25,12 +25,18 @@ Item {
         name: "NotificationItem"
         when: windowShown
 
+        // The title and the body, wherever the layout puts them.
         function texts() {
             var found = [];
-            var content = item.children[1];
-            for (var i = 0; i < content.children.length; i++)
-                if (content.children[i].hasOwnProperty("elide"))
-                    found.push(content.children[i]);
+            (function walk(node) {
+                for (var i = 0; i < node.children.length; i++) {
+                    var child = node.children[i];
+                    if (child.hasOwnProperty("elide") && child.visible)
+                        found.push(child);
+                    else
+                        walk(child);
+                }
+            })(item);
             return found;
         }
 

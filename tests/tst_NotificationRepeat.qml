@@ -66,6 +66,8 @@ Item {
             var t = toast(ts);
             t.message = "hello " + ts;
             t.title = "Ann";
+            // another conversation: an entry of its own
+            t.groupId = "chat with Ann";
             return t;
         }
 

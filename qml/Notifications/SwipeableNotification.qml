@@ -10,6 +10,14 @@ Item {
 
     signal requestDestruction()
 
+    // An entry for a group of toasts outlives a swipe: only the toast on top
+    // goes. The area calls this when the entry has taken up the next one, and
+    // it is back in place, showing that.
+    function comeBack() {
+        if (!swipeoutNotification.running)
+            flickableArea.settled = true;
+    }
+
     Flickable {
         id: flickableArea
 

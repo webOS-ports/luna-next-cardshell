@@ -89,16 +89,60 @@ ListModel {
         return !!notifObject.type && notifObject.type !== "light";
     }
 
+    /*
+     * Toasts are listed in groups, as legacy webOS listed dashboards: one
+     * entry per group, showing the newest toast, with the count badged on its
+     * icon once there is more than one.
+     *
+     * On legacy the app chose the groups, by putting notifications in one
+     * dashboard window or another: Email had one per account, Messaging one
+     * for all messages. Here a group is an app's toasts with the same groupId,
+     * which the app can pass to createToast; an app that passes none gets one
+     * group, as Messaging had.
+     *
+     * toastGroups maps a group's key to its toasts, oldest first, as the
+     * toast model's rows: those are live, so a repeat that notificationmgr's
+     * client writes over a row in place (see removeToastEntry) is followed.
+     * The entries in this model are what is listed; a key with no entry is
+     * left over and taken as empty.
+     */
+    property var toastGroups: ({})
+
+    function groupKeyOf(notifObject) {
+        return (notifObject.sourceId || notifObject.ownerId || "") + "\n" + (notifObject.groupId || "");
+    }
+
+    function indexOfGroup(groupKey) {
+        for (var i = 0; i < mergedModel.count; ++i) {
+            if (mergedModel.get(i).notifType === "notification" &&
+                mergedModel.get(i).groupKey === groupKey)
+                return i;
+        }
+        return -1;
+    }
+
     function addToast(notifObject, withBanner) {
         if (withBanner)
             addBannerNotification(notifObject);
 
-        if (isSticky(notifObject)) {
+        if (!isSticky(notifObject))
+            return;
+
+        var key = groupKeyOf(notifObject);
+        var row = indexOfGroup(key);
+        if (row < 0) {
+            toastGroups[key] = [notifObject];
             mergedModel.append({"notifType": "notification",
                                 "appKey": notifObject.sourceId || notifObject.ownerId || "",
+                                "groupKey": key,
+                                "groupCount": 1,
                                 "window": null,
                                 "notifObject": notifObject,
                                 "notifHeight": dashboardCardFixedHeight});
+        } else {
+            toastGroups[key].push(notifObject);
+            mergedModel.setProperty(row, "notifObject", notifObject);
+            mergedModel.setProperty(row, "groupCount", toastGroups[key].length);
         }
     }
 
@@ -145,14 +189,27 @@ ListModel {
             });
         }
     }
-    // Removes the sticky entry for one toast, if it is still listed. Both the
-    // user closing it and notificationmgr withdrawing it end up here, in
-    // either order, so finding nothing is normal.
+    // Takes one toast out of its group, if it is still listed: the group's
+    // entry then shows the newest of the rest, or goes once none are left.
+    // Both the user closing it and notificationmgr withdrawing it end up here,
+    // in either order, so finding nothing is normal.
     function removeToastEntry(toastId) {
         for( var i=0; i<mergedModel.count; ++i ) {
-            if( mergedModel.get(i).notifObject &&
-                getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
-                mergedModel.remove(i);
+            var entry = mergedModel.get(i);
+            if (entry.notifType !== "notification")
+                continue;
+            var toasts = toastGroups[entry.groupKey] || [];
+            for (var j = 0; j < toasts.length; ++j) {
+                if (getToastIdFromNotif(toasts[j]) !== toastId)
+                    continue;
+                toasts.splice(j, 1);
+                if (toasts.length === 0) {
+                    delete toastGroups[entry.groupKey];
+                    mergedModel.remove(i);
+                } else {
+                    mergedModel.setProperty(i, "notifObject", toasts[toasts.length - 1]);
+                    mergedModel.setProperty(i, "groupCount", toasts.length);
+                }
                 return;
             }
         }
@@ -228,11 +285,34 @@ ListModel {
 
             title: notifObject.title || notifObject.message
             body: notifObject.message
+            // The group's size; the areas' loaders pass it, a bare loader
+            // (as in some tests) shows a single toast.
+            count: typeof loaderGroupCount !== "undefined" ? loaderGroupCount : 1
+            pressed: tapArea.pressed
+
+            /*
+             * The entry is a group's, and shows its newest toast: when one
+             * joins the group or the newest goes, the model hands the loader
+             * another toast, and the item takes that one up as it took up the
+             * first.
+             */
+            property var liveNotifObject: loaderNotifObject
+            property bool _completed: false
+            onLiveNotifObjectChanged: {
+                if (_completed && liveNotifObject)
+                    takeUp(liveNotifObject);
+            }
+
+            function takeUp(live) {
+                iconPathServices.setIconUrlOrDefault(live.iconPath, live.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
+                // work on a copy, to avoid warning when model is destroyed
+                notifObject = JSON.parse(JSON.stringify(live));
+                expiryTimer.restart();
+            }
 
             Component.onCompleted: {
-                iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
-                // work on a copy, to avoid warning when model is destroyed
-                notifObject = JSON.parse(JSON.stringify(loaderNotifObject));
+                takeUp(loaderNotifObject);
+                _completed = true;
             }
 
             onClosed: {
@@ -255,6 +335,7 @@ ListModel {
             }
 
             MouseArea {
+                id: tapArea
                 anchors.fill: parent
                 onClicked: {
                     // Never out of First Use: the list is hidden then, and

@@ -19,29 +19,107 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 
+/*
+ * One entry of the notification area, in legacy webOS's dashboard look: the
+ * webOS 2.2.4 pill on phones, webOS 3.0.5's flat row in the drop-down on
+ * tablets. All sizes are proportions of the entry's height, so they hold at
+ * any density.
+ *
+ * An entry stands for a group of notifications (see NotificationsMergedModel)
+ * and shows the newest; count is how many there are. With more than one:
+ *  - phone: the pill splits into an icon pill and a text pill, 4/48 of the
+ *    height apart, with the count badge on the icon - Mojo's "multi" layout;
+ *  - tablet: the badge goes on the icon, and the newest sits on top of the
+ *    others as a card with a shadowed left edge - Enyo's stacked layers.
+ */
 Item {
     id: notification
 
     property string title: "(no title)"
     property string body: "(no summary)"
     property url iconUrl: Qt.resolvedUrl("../images/default-app-icon.png");
+    property int count: 1
+    property bool pressed: false
 
-    /*
-     * Legacy webOS's dashboard look: the shared bar, the icon sitting on it, a
-     * bold white title over a regular white summary. The tablet ui keeps the
-     * transparent background it has always had.
-     */
+    readonly property bool grouped: count > 1
+    readonly property bool tablet: Settings.tabletUi
+
+    // Phone: the icon pill of a split entry, and the gap after it (Mojo: a
+    // 54 px icon cap, the text cap 4 px further on, on a 48 px pill).
+    readonly property real iconPillWidth: height * 1.02
+    readonly property real pillGap: height * 4 / 48
+    // Tablet: Enyo's icon container, 6 px in and 50 px wide on a 52 px row;
+    // the text 74 px in, or 79 px on the top card of a stack, whose shadow
+    // starts at 58 px.
+    readonly property real tabletIconCellX: height * 6 / 52
+    readonly property real tabletIconCellWidth: height * 50 / 52
+    readonly property real tabletCardX: height * 58 / 52
+
     NotificationBar {
         id: bar
-        anchors.fill: parent
-        visible: !Settings.tabletUi
+        visible: !notification.tablet
+        pressed: notification.pressed
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        width: notification.grouped ? notification.iconPillWidth : parent.width
+    }
+
+    NotificationBar {
+        id: textBar
+        visible: !notification.tablet && notification.grouped
+        pressed: notification.pressed
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.left: bar.right
+        anchors.leftMargin: notification.pillGap
+    }
+
+    // Tablet, stacked: the top card's left edge, as Enyo's
+    // notification-divider.png - a shadow fading in over ten pixels onto the
+    // card below, then a black line and a #555 one.
+    Item {
+        id: cardEdge
+        visible: notification.tablet && notification.grouped
+        x: notification.tabletCardX
+        width: notification.height * 12 / 52
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: parent.width * 10 / 12
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "#00000000" }
+                GradientStop { position: 1.0; color: "#54000000" }
+            }
+        }
+        Rectangle {
+            x: parent.width * 10 / 12
+            width: 1
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            color: "black"
+        }
+        Rectangle {
+            x: parent.width * 10 / 12 + 1
+            width: 1
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            color: "#555555"
+        }
     }
 
     Image {
         id: notificationIcon
-        anchors.left: parent.left
-        anchors.leftMargin: parent.height * 0.2
         anchors.verticalCenter: parent.verticalCenter
+        x: notification.tablet ?
+               notification.tabletIconCellX + (notification.tabletIconCellWidth - width) / 2 :
+               parent.height * 0.2
         height: parent.height * 0.62
         width: height
         source: iconUrl
@@ -49,10 +127,27 @@ Item {
         layer.mipmap: true
     }
 
+    NotificationBadge {
+        id: badge
+        visible: notification.grouped
+        count: notification.count
+        height: notification.height * 20 / 48
+        // On the icon's top right corner and a little past it: over the gap
+        // on a phone, as Mojo's badge hung 3 px off the icon cap.
+        x: notification.tablet ?
+               notification.tabletIconCellX + notification.tabletIconCellWidth + notification.height * 3 / 52 - width :
+               notification.iconPillWidth + notification.height * 3 / 48 - width
+        y: notification.tablet ? notification.height * 3 / 52 : 0
+    }
+
     Column {
         id: textColumn
-        anchors.left: notificationIcon.right
-        anchors.leftMargin: parent.height * 0.35
+        anchors.left: parent.left
+        anchors.leftMargin: notification.tablet ?
+                                (notification.grouped ? notification.tabletCardX + parent.height * 21 / 52
+                                                      : parent.height * 74 / 52) :
+                                (notification.grouped ? notification.iconPillWidth + notification.pillGap + parent.height * 0.15
+                                                      : parent.height * 1.17)
         anchors.right: parent.right
         anchors.rightMargin: parent.height * 0.2
         anchors.verticalCenter: parent.verticalCenter
@@ -69,10 +164,11 @@ Item {
             textFormat: Text.PlainText
         }
 
+        // 16 px under a 16 px title on webOS 2.2.4, 14 px on 3.0.5.
         Text {
             id: bodyText
             width: parent.width
-            font.pixelSize: FontUtils.sizeToPixels("medium")
+            font.pixelSize: FontUtils.sizeToPixels(notification.tablet ? "small" : "medium")
             font.bold: false
             color: "white"
             elide: Text.ElideRight

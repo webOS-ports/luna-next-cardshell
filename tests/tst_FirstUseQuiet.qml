@@ -225,7 +225,10 @@ Item {
             // and a toast after First Use is a toast as ever: banner and list
             addToast("standard", "later");
             compare(a.banners.count, 1);
-            compare(a.model.count, 2);
+            // the same app's: it joins that entry, and is shown on top
+            compare(a.model.count, 1);
+            compare(a.model.get(0).groupCount, 2);
+            compare(a.model.get(0).notifObject.title, "later");
         }
 
         function test_a_light_toast_gets_its_banner_after_data() { return areas_data(); }

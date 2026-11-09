@@ -54,6 +54,9 @@ Item {
                 "title": "title " + stamp,
                 "type": "standard",
                 "sourceId": sourceId,
+                // a group per toast, as an app with a group per conversation
+                // or account would have: several entries of one app
+                "groupId": "group " + stamp,
                 "timestamp": String(1000 + stamp),
                 "schedule": { "expire": Date.now() / 1000 + 3600 },
                 "action": { "launchParams": { "id": sourceId } }
