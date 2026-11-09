@@ -177,8 +177,9 @@ Item {
             compare(below.presses, 1);
         }
 
-        // Elsewhere it stays what legacy's was: the press only dismisses.
-        function test_press_elsewhere_only_dismisses() {
+        // Elsewhere too: a tap into the text, to put the caret there, is not
+        // spent on taking the pill away.
+        function test_press_elsewhere_dismisses_and_goes_through() {
             showKeyboard();
             overlay.showAt(240, 200);
             verify(overlay.visible);
@@ -186,7 +187,7 @@ Item {
             mousePress(root, 240, 400);
             mouseRelease(root, 240, 400);
             verify(!overlay.visible);
-            compare(below.presses, 0);
+            compare(below.presses, 1);
         }
     }
 }

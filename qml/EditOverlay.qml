@@ -270,6 +270,12 @@ Item {
         if (editOverlay.items.length === 0)
             return;
 
+        // Nor one for a field that has already let go of the focus: a hold on
+        // the application's own buttons takes it away from the field before the
+        // hold is over, and what came up was a Paste greyed out over a toolbar.
+        if (!editOverlay.editable)
+            return;
+
         // A hold or a tap on a key is typing, not a question about the text.
         if (editOverlay.onKeyboard(x, y))
             return;
@@ -278,12 +284,36 @@ Item {
         if (!editOverlay.onField(x, y))
             return;
 
-        editOverlay.anchorX = x;
-        editOverlay.anchorY = y;
+        editOverlay.pointAtText(x, y);
         editOverlay.visible = true;
 
         console.log("EditOverlay: shown at " + x + "," + y
                     + " editable=" + editOverlay.editable);
+    }
+
+    /*!
+     * \brief Point the pill at the text a press at this point was on.
+     *
+     * At the selection, or the caret, the application reports, not at the
+     * finger: hanging under the press, the pill sat on the very text it is
+     * about. It goes under that text's bottom edge, or over its top edge when
+     * there is no room underneath, the arrow touching it either way. Across,
+     * it points at the middle of a selection and at a caret itself.
+     *
+     * Without a caret to go by - an application that does not say - it is the
+     * press, as before. Unless the spelling widget already put it at the word.
+     */
+    function pointAtText(x, y) {
+        var caret = editOverlay.caretRectangle();
+        if (caret === undefined || caret === null) {
+            editOverlay.anchorX = x;
+            editOverlay.anchorY = y;
+            return;
+        }
+
+        editOverlay.anchorX = caret.x + caret.width / 2;
+        editOverlay.anchorY = caret.y + caret.height;
+        editOverlay.anchorTopY = caret.y;
     }
 
     /*!
@@ -368,17 +398,19 @@ Item {
             editOverlay.hide();
     }
 
-    // A press anywhere else dismisses, the way the legacy pill did. Below the
-    // pill in z order so its own buttons are hit first.
+    /*
+     * A press anywhere else dismisses, and then goes on to whatever it was on.
+     * Below the pill in z order so its own buttons are hit first.
+     *
+     * It is not spent on taking the pill away. On the keyboard that made every
+     * key want pressing twice; in the text, a tap into the selection to put
+     * the caret there only took the pill down and left the selection as it was.
+     */
     MouseArea {
         anchors.fill: parent
         onPressed: (mouse) => {
             editOverlay.hide();
-
-            // On the keyboard it is a key press first: it goes on through to the
-            // keys, rather than being spent on taking the pill away.
-            if (editOverlay.onKeyboard(mouse.x, mouse.y))
-                mouse.accepted = false;
+            mouse.accepted = false;
         }
     }
 
@@ -427,7 +459,11 @@ Item {
         //! it. Above it instead when there is no room below - the bottom of the
         //! screen, or the top of the keyboard, which it must never cover - which
         //! is what the second arrow slice was always there for.
-        readonly property bool below: editOverlay.anchorY + canvas + arrowRise < editOverlay.bottomLimit
+        //! Clear space between the arrow's point and the text, so the point
+        //! does not sit on the selection's edge or on the line's descenders.
+        readonly property real textGap: Units.gu(0.8)
+
+        readonly property bool below: editOverlay.anchorY + textGap + canvas + arrowRise < editOverlay.bottomLimit
 
         //! The most the words may take before the pill scrolls instead of growing:
         //! the screen less its margins and the two caps, which is the bound legacy
@@ -435,16 +471,31 @@ Item {
         readonly property real maxViewportWidth:
             editOverlay.width - 2 * Units.gu(0.5) - 2 * capWidth
 
-        width: background.width
+        //! Not background's width: the slices in it are split around the arrow,
+        //! and where the arrow goes depends on where the pill is.
+        width: 2 * capWidth + viewport.width
         height: canvas + arrowRise
+
+        /*
+         * Where the arrow's middle is, along the pill: at the anchor, so it
+         * still points at the text when the pill is held off the edge of the
+         * screen - legacy's balloon slid the same way - but never into a cap.
+         */
+        readonly property real arrowCentre:
+            Math.max(capWidth + arrowWidth / 2,
+                     Math.min(width - capWidth - arrowWidth / 2, editOverlay.anchorX - x))
+        readonly property real leftMiddleWidth:
+            Math.max(0, arrowCentre - capWidth - arrowWidth / 2)
+        readonly property real rightMiddleWidth:
+            Math.max(0, viewport.width - arrowWidth - leftMiddleWidth)
 
         x: Math.max(Units.gu(0.5),
                     Math.min(editOverlay.width - width - Units.gu(0.5),
                              editOverlay.anchorX - width / 2))
-        //! The point sits on what it is pointing at, so the bar hangs the
-        //! slice's own distance away from it rather than a made-up gap.
-        y: below ? editOverlay.anchorY - barTop
-                 : editOverlay.anchorTopY - height + barTop
+        //! The point stops textGap short of what it points at; the bar hangs
+        //! the slice's own distance beyond the point.
+        y: below ? editOverlay.anchorY + textGap - barTop
+                 : editOverlay.anchorTopY - textGap - height + barTop
 
         Row {
             id: background
@@ -457,7 +508,7 @@ Item {
             }
             Image {
                 source: Qt.resolvedUrl("images/edit/ate-middle.png")
-                width: viewport.width / 2 - pill.arrowWidth / 2
+                width: pill.leftMiddleWidth
                 height: pill.canvas
             }
             /*
@@ -483,7 +534,7 @@ Item {
             }
             Image {
                 source: Qt.resolvedUrl("images/edit/ate-middle.png")
-                width: viewport.width / 2 - pill.arrowWidth / 2
+                width: pill.rightMiddleWidth
                 height: pill.canvas
             }
             Image {
