@@ -63,6 +63,7 @@ Drawer {
     signal onOffTriggered()
     signal prefsTriggered()
     signal userInputRequested(string servicePath)
+    signal detailsRequested(string servicePath)
     // ------------------------------------------------------------
 
 
@@ -224,6 +225,11 @@ Drawer {
 
                     menuCloseRequest(300);
                     closeOnConnect = true;
+                }
+                // As in the Wi-Fi app: touch and hold for the network's details.
+                onHeld: {
+                    wifiMenu.detailsRequested(delegateService.path);
+                    menuCloseRequest(300);
                 }
             }
 

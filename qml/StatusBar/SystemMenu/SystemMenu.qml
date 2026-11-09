@@ -277,6 +277,11 @@ Item {
                         launcherInstance.launchApplication("org.webosports.app.settings.wifi",{"target":target});
                     }
 
+                    onDetailsRequested: function(servicePath) {
+                        launcherInstance.launchApplication("org.webosports.app.settings.wifi",
+                                                           {"target": {"servicePath": servicePath, "view": "details"}});
+                    }
+
                     onMenuCloseRequest: {
                         closeMenuTimer.interval = delayMs;
                         closeMenuTimer.start();
