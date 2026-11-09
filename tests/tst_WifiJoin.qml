@@ -57,6 +57,29 @@ Item {
         signalName: "userInputRequested"
     }
 
+    SignalSpy {
+        id: detailsSpy
+        signalName: "detailsRequested"
+    }
+
+    Component {
+        id: entryComponent
+        MenuListEntry {
+            width: 300
+            content: Item { width: 300; height: 20 }
+        }
+    }
+
+    SignalSpy {
+        id: actionSpy
+        signalName: "action"
+    }
+
+    SignalSpy {
+        id: heldSpy
+        signalName: "held"
+    }
+
     TestCase {
         name: "WifiJoin"
         when: windowShown
@@ -68,6 +91,9 @@ Item {
             root.launches = [];
             connectSpy.clear();
             delegateSpy.clear();
+            detailsSpy.clear();
+            actionSpy.clear();
+            heldSpy.clear();
         }
 
         function findEntry(item, name) {
@@ -103,6 +129,7 @@ Item {
             var element = createTemporaryObject(elementComponent, root);
             verify(element !== null, "WiFiElement did not load");
             delegateSpy.target = element;
+            detailsSpy.target = element;
             return element;
         }
 
@@ -118,7 +145,83 @@ Item {
             compare(root.launches[0].params.target.servicePath, service.path);
         }
 
+        // --- a menu row: a hold is not also a tap
+
+        function test_entryHoldIsNotATap() {
+            var entry = createTemporaryObject(entryComponent, root);
+            actionSpy.target = entry;
+            heldSpy.target = entry;
+            mousePress(entry);
+            tryCompare(heldSpy, "count", 1, 3000);
+            mouseRelease(entry);
+            compare(heldSpy.count, 1);
+            compare(actionSpy.count, 0, "the hold also tapped the row");
+        }
+
+        function test_entryTapIsNotAHold() {
+            var entry = createTemporaryObject(entryComponent, root);
+            actionSpy.target = entry;
+            heldSpy.target = entry;
+            mouseClick(entry);
+            compare(actionSpy.count, 1);
+            compare(heldSpy.count, 0);
+        }
+
+        // --- how many networks are listed: the first ones in connman's order
+
+        // The rows of the networks the menu lists, by name, in order.
+        function listedNames(menu) {
+            var names = [];
+            ["My Own Wifi", securedName, openName].forEach(function (name) {
+                var entry = null;
+                tryVerify(function () { entry = findEntry(menu, name); return entry !== null; }, 2000);
+                if (entry.parent.visible)
+                    names.push(name);
+            });
+            return names;
+        }
+
+        function test_newMenuListsSixByDefault() {
+            var menu = makeNewMenu();
+            compare(menu.maxListedNetworks, 6);
+            compare(listedNames(menu).length, 3);
+        }
+
+        function test_newMenuListsNoMoreThanTheCap() {
+            var menu = makeNewMenu();
+            menu.maxListedNetworks = 2;
+            compare(listedNames(menu), ["My Own Wifi", securedName]);
+        }
+
+        function test_classicMenuListsNoMoreThanTheCap() {
+            var element = makeElement();
+            compare(element.maxListedNetworks, 6);
+            element.maxListedNetworks = 2;
+            compare(listedNames(element), ["My Own Wifi", securedName]);
+        }
+
         // --- the new menu
+
+        // Held: the network's details in the Wi-Fi app, without connecting.
+        function test_newMenuHoldShowsDetails() {
+            var menu = makeNewMenu();
+            var entry = entryFor(menu, securedName, false);
+            entry.held();
+            compare(connectSpy.count, 0);
+            compare(root.launches.length, 1);
+            compare(root.launches[0].id, "org.webosports.app.settings.wifi");
+            compare(root.launches[0].params.target.servicePath, entry.parent.delegateService.path);
+            compare(root.launches[0].params.target.view, "details");
+        }
+
+        // A tap carries no view, so the app connects.
+        function test_newMenuTapHasNoView() {
+            var menu = makeNewMenu();
+            var entry = entryFor(menu, securedName, false);
+            entry.action();
+            compare(root.launches.length, 1);
+            verify(root.launches[0].params.target.view === undefined);
+        }
 
         function test_newMenuSecuredUnsavedGoesToTheApp() {
             var menu = makeNewMenu();
@@ -181,6 +284,16 @@ Item {
             entry.action();
             compare(connectSpy.count, 1);
             compare(delegateSpy.count, 0);
+        }
+
+        function test_classicMenuHoldShowsDetails() {
+            var element = makeElement();
+            var entry = entryFor(element, openName, false);
+            entry.held();
+            compare(connectSpy.count, 0);
+            compare(delegateSpy.count, 0);
+            compare(detailsSpy.count, 1);
+            compare(detailsSpy.signalArguments[0][0], entry.parent.delegateService.path);
         }
 
         function test_classicMenuAgentRequestGoesToTheApp() {

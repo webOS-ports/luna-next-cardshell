@@ -47,6 +47,15 @@ Item {
     property int  dividerWidthOffset: Units.gu(0.7)
     property bool flickableOverride: false
 
+    /*
+     * How many networks the menu lists, as the first ones in connman's order:
+     * the connected or connecting one, then the saved ones, then the rest by
+     * signal strength. A long list pushed everything under it - Bluetooth,
+     * the toggles - off the bottom of the menu; the full list is one tap away
+     * in Wi-Fi Preferences. Six fit a Pixel 3a's menu without scrolling.
+     */
+    property int maxListedNetworks: 6
+
     // Tells the StatusBar to center the menu instead of docking it to
     // the right edge like the classic system menu.
     property bool centered: true
@@ -161,11 +170,14 @@ Item {
     /*
      * Opens the Wi-Fi app on one network. Given {"target": {"servicePath"}},
      * it connects to that network itself, so connman asks the app's agent for
-     * the passphrase and the app's prompt comes up.
+     * the passphrase and the app's prompt comes up. With "view": "details" it
+     * shows the network's details instead, as a hold on the row does there.
      */
-    function joinInWifiApp(servicePath) {
-        launcherInstance.launchApplication("org.webosports.app.settings.wifi",
-                                           {"target": {"servicePath": servicePath}});
+    function openInWifiApp(servicePath, view) {
+        var target = {"servicePath": servicePath};
+        if (view)
+            target.view = view;
+        launcherInstance.launchApplication("org.webosports.app.settings.wifi", {"target": target});
         closeMenuTimer.interval = 300;
         closeMenuTimer.start();
     }
@@ -185,7 +197,7 @@ Item {
         objectName: "connmanUserAgent"
         onUserInputRequested: function(servicePath, fields) {
             connmanUserAgent.sendUserReply({});
-            deviceMenu.joinInWifiApp(servicePath);
+            deviceMenu.openInWifiApp(servicePath, "");
         }
     }
 
@@ -823,6 +835,7 @@ Item {
         Column {
             spacing: 0
             width: mainMenu.width
+            visible: index < deviceMenu.maxListedNetworks
 
             property NetworkService delegateService: modelData
 
@@ -850,8 +863,8 @@ Item {
                              delegateService.securityType !== NetworkService.SecurityUnknown &&
                              !delegateService.favorite) {
                         // Secured and never joined: the Wi-Fi app asks for the
-                        // passphrase (see joinInWifiApp).
-                        deviceMenu.joinInWifiApp(delegateService.path);
+                        // passphrase (see openInWifiApp).
+                        deviceMenu.openInWifiApp(delegateService.path, "");
                         return;
                     }
                     else {
@@ -860,6 +873,8 @@ Item {
                     closeMenuTimer.interval = 300;
                     closeMenuTimer.start();
                 }
+                // As in the Wi-Fi app: touch and hold for the network's details.
+                onHeld: deviceMenu.openInWifiApp(delegateService.path, "details")
             }
 
             MenuDivider { widthOffset: dividerWidthOffset }

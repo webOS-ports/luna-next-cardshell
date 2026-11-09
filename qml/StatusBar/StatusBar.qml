@@ -639,12 +639,28 @@ Item {
                                : parent.width - item.width + item.edgeOffset
             source: AppTweaks.newDeviceMenuTweakValue ? "SystemMenu/NewDeviceMenu.qml" : "SystemMenu/SystemMenu.qml"
 
-            // The room the menu has to fit in: from below the bar to the
-            // bottom of the (rotated) scene. Both menus read it by name, as a
-            // Loader's properties are in scope for what it loads.
-            property real availableHeight: (windowManagerInstance ? windowManagerInstance.height
-                                                                  : orientationHelper.height)
-                                           - statusBar.barHeight
+            // The room the menu has to fit in: from below the bar down to the
+            // gesture area, or to the bottom of the (rotated) scene where there
+            // is none. Both menus read it by name, as a Loader's properties are
+            // in scope for what it loads.
+            //
+            // The gesture area is drawn in front of everything. Measured to the
+            // bottom of the scene, the menu took the gesture area's strip as
+            // room of its own: on a Pixel 3a an open Wi-Fi list made the menu
+            // just short enough to "fit", so it did not scroll, and its last
+            // entries sat under the strip where no finger could reach them.
+            // A hidden area (under a fullscreen card) gives its room back, as
+            // it does to everything else anchored to it.
+            property real availableHeight: _menuBottom - statusBar.barHeight
+
+            readonly property real _menuBottom: {
+                if (!windowManagerInstance)
+                    return orientationHelper.height;
+                var gestureArea = windowManagerInstance.gestureAreaInstance;
+                if (!gestureArea)
+                    return windowManagerInstance.height;
+                return gestureArea.visible ? gestureArea.y : gestureArea.y + gestureArea.height;
+            }
 
             onLoaded: item.visible = false
 
