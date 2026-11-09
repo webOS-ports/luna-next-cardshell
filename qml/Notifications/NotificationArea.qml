@@ -164,6 +164,8 @@ Rectangle {
         interactive: height === maxDashboardWindowHeight
         clip: interactive
         orientation: ListView.Vertical
+        // LunaSysMgr scrolled the phone's dashboards by whole entries.
+        snapMode: ListView.SnapToItem
         cacheBuffer: maxDashboardWindowHeight
         height: Math.min(maxDashboardWindowHeight, contentHeight);
         anchors {

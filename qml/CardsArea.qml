@@ -412,7 +412,18 @@ WindowManager {
             notificationAreaInstance.setSource("Notifications/NotificationArea.qml",
                       {"compositorInstance": compositor,
                        "windowManagerInstance": parent,
-                       "maxDashboardWindowHeight": Qt.binding(() => {return windowManager.height/2;})});
+                       /*
+                        * As tall as LunaSysMgr let the phone's dashboards grow
+                        * (DashboardWindowContainer::calculateScrollProperties):
+                        * up to where the cards keep their minimum, 0.26 / 2 / 0.40
+                        * = 32.5% of the screen's height below the status bar
+                        * (CardWindowManager's kMinimumWindowScale and
+                        * kWindowOriginRatio). More entries scroll.
+                        */
+                       "maxDashboardWindowHeight": Qt.binding(() => {
+                           return Math.max(0, gestureAreaInstance.y - statusBarInstance.height
+                                              - 0.325 * windowManager.height - Units.gu(1));
+                       })});
         }
     }
 

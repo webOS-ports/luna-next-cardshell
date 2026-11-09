@@ -47,8 +47,11 @@ Rectangle {
     visible: !held
     enabled: !held
 
-    property int maxDashboardWindowHeight: parent.height/2
     readonly property int dashboardCardFixedHeight: Units.gu(5.6) // this value comes from the CSS of the dashboard cards
+    // Five and a half rows, as LunaSysMgr's drop-down on the TouchPad
+    // (DashboardWindowContainer's kMaxWindowsToDisplay): the half row shows
+    // there is more to scroll to.
+    property int maxDashboardWindowHeight: 5.5 * dashboardCardFixedHeight + 4.5 * openListView.spacing
     readonly property Item boundingRect: visibleMinimizedView
     property bool blackMode: false
 
