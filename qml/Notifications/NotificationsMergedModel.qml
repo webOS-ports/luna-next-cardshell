@@ -104,7 +104,9 @@ ListModel {
      * toast model's rows: those are live, so a repeat that notificationmgr's
      * client writes over a row in place (see removeToastEntry) is followed.
      * The entries in this model are what is listed; a key with no entry is
-     * left over and taken as empty.
+     * left over and taken as empty. An entry's belowNotifObject is the toast
+     * under its newest, which a swipe of the top layer uncovers (see
+     * NotificationItem), or null.
      */
     property var toastGroups: ({})
 
@@ -138,10 +140,12 @@ ListModel {
                                 "groupCount": 1,
                                 "window": null,
                                 "notifObject": notifObject,
+                                "belowNotifObject": null,
                                 "notifHeight": dashboardCardFixedHeight});
         } else {
             toastGroups[key].push(notifObject);
             mergedModel.setProperty(row, "notifObject", notifObject);
+            mergedModel.setProperty(row, "belowNotifObject", toastGroups[key][toastGroups[key].length - 2]);
             mergedModel.setProperty(row, "groupCount", toastGroups[key].length);
         }
     }
@@ -208,6 +212,7 @@ ListModel {
                     mergedModel.remove(i);
                 } else {
                     mergedModel.setProperty(i, "notifObject", toasts[toasts.length - 1]);
+                    mergedModel.setProperty(i, "belowNotifObject", toasts.length > 1 ? toasts[toasts.length - 2] : null);
                     mergedModel.setProperty(i, "groupCount", toasts.length);
                 }
                 return;
@@ -256,6 +261,7 @@ ListModel {
                                 "appKey": window.appId || "",
                                 "window": window,
                                 "notifObject": null,
+                                "belowNotifObject": null,
                                 "notifHeight": dashHeight});
         }
         onRowsAboutToBeRemoved: (index, first, last) => {
@@ -293,6 +299,11 @@ ListModel {
             // (as in some tests) shows a single toast.
             count: typeof loaderGroupCount !== "undefined" ? loaderGroupCount : 1
             pressed: tapArea.pressed
+            // A group's top layer slides on its own (see SwipeableNotification).
+            layerOffset: typeof loaderLayerOffset !== "undefined" ? loaderLayerOffset : 0
+            property var belowObject: typeof loaderBelowNotifObject !== "undefined" ? loaderBelowNotifObject : null
+            belowTitle: belowObject ? (belowObject.title || belowObject.message || "") : ""
+            belowBody: belowObject ? (belowObject.message || "") : ""
 
             /*
              * The entry is a group's, and shows its newest toast: when one

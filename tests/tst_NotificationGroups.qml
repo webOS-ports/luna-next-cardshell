@@ -42,6 +42,7 @@ Item {
                 model: freshModel
                 delegate: Item {
                     property int shownCount: typeof groupCount !== 'undefined' && groupCount ? groupCount : 1
+                    property var shownBelow: typeof belowNotifObject !== 'undefined' ? belowNotifObject : null
                 }
             }
         }
@@ -232,6 +233,45 @@ Item {
             compare(list.view.count, 2);
             compare(list.view.itemAt(1).shownCount, 3, "the view sees the group's count");
             compare(list.view.itemAt(0).shownCount, 1, "a dashboard is one entry");
+        }
+
+        // What a swipe of the top layer uncovers: the toast under the newest,
+        // kept up as toasts come and go, and none for a single toast.
+        function below(row) {
+            var b = mergedModel.get(row).belowNotifObject;
+            return b ? b.title : null;
+        }
+        function test_entryKnowsTheToastUnderItsNewest() {
+            var first = addToast("org.webosports.app.messaging");
+            compare(below(0), null, "nothing under a single toast");
+            var second = addToast("org.webosports.app.messaging");
+            compare(below(0), first);
+            addToast("org.webosports.app.messaging");
+            compare(below(0), second);
+
+            var loader = showRow(0);
+            loader.item.closed();                   // the top layer swiped away
+            compare(below(0), first);
+            loader.item.closed();
+            compare(below(0), null);
+
+            var third = addToast("org.webosports.app.messaging");
+            addToast("org.webosports.app.messaging");
+            ModelSingletons.toastModel.remove(ModelSingletons.toastModel.count - 2);   // the one under
+            compare(below(0), first, "a withdrawn toast under the top one is no longer shown");
+        }
+
+        // The roles a view follows are the first row's: a dashboard listed
+        // first must already have this one.
+        function test_belowAfterADashboardIsListedFirst() {
+            var list = createTemporaryObject(freshList, root);
+            var window = createTemporaryObject(dashboardWindow, root);
+            compositorInstance.surfaceModel.append({"obj": window});
+            var first = addToast("org.webosports.app.messaging");
+            addToast("org.webosports.app.messaging");
+            var shown = list.view.itemAt(1).shownBelow;
+            verify(shown, "the view sees the toast under the newest");
+            compare(shown.title, first);
         }
 
         function test_entryStaysWhereItWas() {

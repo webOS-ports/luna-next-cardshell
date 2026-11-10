@@ -7,6 +7,16 @@ Item {
     property alias interactive: flickableArea.interactive
     property alias notifItem: notifLoader.item
     property bool blockSwipesToLeft: false
+    // A group with more than one layer: a swipe moves its top layer only,
+    // which reads layerOffset, and the rest stays where it is - Enyo's
+    // dashboard, whose layers were swipeables of their own. The last layer
+    // goes with the whole entry, as before.
+    property bool layered: false
+    readonly property real layerOffset: layered ? -flickableArea.contentX : 0
+    // Enyo's layers went right only (allowLeft: false), as the tablet's
+    // entries do: to the left a top layer would go out past the icon, and
+    // uncover nothing of the text of the one under it.
+    readonly property bool leftBlocked: blockSwipesToLeft || layered
 
     signal requestDestruction()
 
@@ -36,6 +46,9 @@ Item {
         Item {
             width: swipeableRoot.width
             height: swipeableRoot.height
+            // Layered, the entry stays put while the flickable moves: the
+            // top layer follows layerOffset instead.
+            x: swipeableRoot.layered ? flickableArea.contentX : 0
 
             Loader {
                 id: notifLoader
@@ -43,7 +56,7 @@ Item {
                 sourceComponent: swipeableRoot.notifComponent
             }
         }
-        onContentXChanged: if ((contentX>0) && (swipeableRoot.blockSwipesToLeft)) contentX=0;
+        onContentXChanged: if ((contentX>0) && (swipeableRoot.leftBlocked)) contentX=0;
 
         // Let go short of a swipe-out, it slides back into place. (A Behavior
         // on contentY was meant to do this, but the notification moves along
@@ -121,7 +134,7 @@ Item {
         }
         onFlickingChanged: {
             if(flicking && !swipeoutNotification.running) {
-                if( ((!swipeableRoot.blockSwipesToLeft)&&(horizontalVelocity>1000)) ||
+                if( ((!swipeableRoot.leftBlocked)&&(horizontalVelocity>1000)) ||
                    horizontalVelocity<-1000)
                 {
                     swipeOut(horizontalVelocity > 0);

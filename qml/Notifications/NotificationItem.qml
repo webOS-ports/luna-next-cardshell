@@ -31,6 +31,15 @@ import LunaNext.Common 0.1
  *    height apart, with the count badge on the icon - Mojo's "multi" layout;
  *  - tablet: the badge goes on the icon, and the newest sits on top of the
  *    others as a card with a shadowed left edge - Enyo's stacked layers.
+ *
+ * Swiping a group takes its top layer only, as Enyo's dashboard did (each
+ * text layer a swipeable of its own, the icon and the layers under it left
+ * where they are): layerOffset is how far the top layer has been dragged,
+ * and the toast under it (belowTitle, belowBody) shows in what it uncovers.
+ * Phone: the text pill and its text slide, under the icon pill, over a pill
+ * that shows the next toast. Tablet: the card and its text slide, and the
+ * next toast shows between the card's old edge and where it is now - Enyo
+ * clipped the layer under to the drag (DashboardLayer.configureClipping).
  */
 Item {
     id: notification
@@ -40,6 +49,11 @@ Item {
     property url iconUrl: Qt.resolvedUrl("../images/default-app-icon.png");
     property int count: 1
     property bool pressed: false
+    // The top layer of a group, dragged this far to the right (negative: to
+    // the left); the toast under it.
+    property real layerOffset: 0
+    property string belowTitle: ""
+    property string belowBody: ""
 
     readonly property bool grouped: count > 1
     readonly property bool tablet: Settings.tabletUi
@@ -57,6 +71,7 @@ Item {
 
     NotificationBar {
         id: bar
+        z: 2
         visible: !notification.tablet
         pressed: notification.pressed
         anchors.top: parent.top
@@ -65,8 +80,44 @@ Item {
         width: notification.grouped ? notification.iconPillWidth : parent.width
     }
 
+    // Phone, grouped: the pill of the toast under the top one, uncovered as
+    // the top one slides away.
+    NotificationBar {
+        id: belowBar
+        visible: textBar.visible && notification.layerOffset !== 0
+        anchors.fill: textBar
+    }
+    LayerText {
+        visible: belowBar.visible
+        anchors.left: textColumn.left
+        anchors.right: textColumn.right
+        anchors.verticalCenter: textColumn.verticalCenter
+        title: notification.belowTitle
+        body: notification.belowBody
+    }
+
+    // Tablet, grouped: the toast under the top card, in the strip the card
+    // has moved off.
+    Item {
+        visible: notification.tablet && notification.grouped && notification.layerOffset > 0
+        x: notification.tabletCardX
+        width: Math.max(0, notification.layerOffset)
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        clip: true
+
+        LayerText {
+            x: textColumn.x - parent.x
+            width: textColumn.width
+            anchors.verticalCenter: parent.verticalCenter
+            title: notification.belowTitle
+            body: notification.belowBody
+        }
+    }
+
     NotificationBar {
         id: textBar
+        z: 1
         visible: !notification.tablet && notification.grouped
         pressed: notification.pressed
         anchors.top: parent.top
@@ -74,6 +125,7 @@ Item {
         anchors.right: parent.right
         anchors.left: bar.right
         anchors.leftMargin: notification.pillGap
+        transform: Translate { x: notification.layerOffset }
     }
 
     // Tablet, stacked: the top card's left edge, as Enyo's
@@ -81,7 +133,9 @@ Item {
     // card below, then a black line and a #555 one.
     Item {
         id: cardEdge
+        z: 1
         visible: notification.tablet && notification.grouped
+        transform: Translate { x: notification.layerOffset }
         x: notification.tabletCardX
         width: notification.height * 12 / 52
         anchors.top: parent.top
@@ -116,6 +170,7 @@ Item {
 
     Image {
         id: notificationIcon
+        z: 2
         anchors.verticalCenter: parent.verticalCenter
         x: notification.tablet ?
                notification.tabletIconCellX + (notification.tabletIconCellWidth - width) / 2 :
@@ -129,6 +184,7 @@ Item {
 
     NotificationBadge {
         id: badge
+        z: 2
         visible: notification.grouped
         count: notification.count
         height: notification.height * 20 / 48
@@ -140,8 +196,9 @@ Item {
         y: notification.tablet ? notification.height * 3 / 52 : 0
     }
 
-    Column {
+    LayerText {
         id: textColumn
+        z: 1
         anchors.left: parent.left
         anchors.leftMargin: notification.tablet ?
                                 (notification.grouped ? notification.tabletCardX + parent.height * 21 / 52
@@ -151,28 +208,34 @@ Item {
         anchors.right: parent.right
         anchors.rightMargin: parent.height * 0.2
         anchors.verticalCenter: parent.verticalCenter
+        transform: Translate { x: notification.grouped ? notification.layerOffset : 0 }
+        title: notification.title
+        body: notification.body
+    }
+
+    // A layer's two lines: the title, and the body under it - 16 px under a
+    // 16 px title on webOS 2.2.4, 14 px on 3.0.5.
+    component LayerText: Column {
+        property string title
+        property string body
         spacing: 0
 
         Text {
-            id: summaryText
             width: parent.width
             font.bold: true
             font.pixelSize: FontUtils.sizeToPixels("medium")
             color: "white"
             elide: Text.ElideRight
-            text: notification.title
+            text: parent.title
             textFormat: Text.PlainText
         }
-
-        // 16 px under a 16 px title on webOS 2.2.4, 14 px on 3.0.5.
         Text {
-            id: bodyText
             width: parent.width
             font.pixelSize: FontUtils.sizeToPixels(notification.tablet ? "small" : "medium")
             font.bold: false
             color: "white"
             elide: Text.ElideRight
-            text: notification.body
+            text: parent.body
             textFormat: Text.PlainText
         }
     }
