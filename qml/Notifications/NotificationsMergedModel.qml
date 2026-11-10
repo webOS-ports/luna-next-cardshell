@@ -84,6 +84,19 @@ ListModel {
             addToast(toasts[i], !isSticky(toasts[i]));
     }
 
+    /*
+     * A dashboard whose page swipes its own layers: Enyo 1's (enyo.Dashboard,
+     * as Email's), which says how many it has in LuneOS_dashLayers. With more
+     * than one, the drag is the page's, so that only the top layer goes and
+     * the rest stays, as on legacy webOS; the shell's swipe would take it and
+     * slide the whole window. With one left, the shell slides the dashboard as
+     * a whole, as it does any other.
+     */
+    function swipesOwnLayers(window) {
+        return !!window && !!window.windowProperties &&
+               Number(window.windowProperties["LuneOS_dashLayers"]) > 1;
+    }
+
     // A notification is a toast that is not "light": it goes in the list too.
     function isSticky(notifObject) {
         return !!notifObject.type && notifObject.type !== "light";

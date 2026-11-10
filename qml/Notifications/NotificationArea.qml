@@ -189,6 +189,8 @@ Rectangle {
                 property int delegateGroupCount: typeof groupCount !== 'undefined' && groupCount ? groupCount : 1
                 property var delegateBelowNotifObject: typeof belowNotifObject !== 'undefined' ? belowNotifObject : null
                 layered: delegateType === "notification" && delegateGroupCount > 1
+                // an Enyo dashboard with layers swipes them itself
+                interactive: !mergedModel.swipesOwnLayers(delegateWindow)
                 // the next toast of a group whose top one was swiped away
                 onDelegateNotifObjectChanged: comeBack()
                 property int delegateIndex: index

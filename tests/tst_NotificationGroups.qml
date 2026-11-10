@@ -286,6 +286,32 @@ Item {
             compare(shown.title, first);
         }
 
+        // An Enyo 1 dashboard (Email's) swipes its own layers once it has
+        // more than one, and says how many in LuneOS_dashLayers: the shell's
+        // swipe then keeps out of it, and comes back for the last layer. The
+        // page changes the count as layers come and go, so it is followed.
+        Component {
+            id: swipeWatcher
+            QtObject {
+                property Item window
+                property bool pageSwipes: mergedModel.swipesOwnLayers(window)
+            }
+        }
+        function test_enyoDashboardWithLayersSwipesThemItself() {
+            var window = createTemporaryObject(dashboardWindow, root);
+            var watcher = createTemporaryObject(swipeWatcher, root, { "window": window });
+            verify(!watcher.pageSwipes, "no count: the shell's swipe");
+            window.windowProperties = { "LuneOS_dashLayers": "3" };
+            verify(watcher.pageSwipes, "three layers: the page's");
+            window.windowProperties = { "LuneOS_dashLayers": "1" };
+            verify(!watcher.pageSwipes, "the last one: the shell's again");
+            window.windowProperties = { "LuneOS_dashLayers": "2", "LuneOS_dashheight": "60" };
+            verify(watcher.pageSwipes);
+            window.windowProperties = { "LuneOS_dashLayers": "many" };
+            verify(!watcher.pageSwipes, "not a number: the shell's");
+            verify(!mergedModel.swipesOwnLayers(null), "a toast has no window");
+        }
+
         // A tap opens the app and leaves the entry, all its layers, listed:
         // on legacy webOS a dashboard went when it was slid away, or when its
         // app closed it, never for a tap.
