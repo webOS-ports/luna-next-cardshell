@@ -392,7 +392,15 @@ Item {
         width: fullLauncher.width
         clip: true
         orientation: ListView.Horizontal
-        cacheBuffer: fullLauncher.width*tabRowList.model.count // don't destroy the delegates
+        // Don't destroy the delegates. Sized on the panel's long edge, not on
+        // the launcher's width: when the screen turns, the view, this buffer
+        // and the pages change width one after another, and for a moment the
+        // pages were still the old width while the buffer was already the new
+        // one, so the last pages fell outside it. A turn to portrait threw
+        // away ~1200-1600 items of tab pages, hidden as the launcher was, and
+        // built them again - ~0.3 s of the pause before the turn on the
+        // sm-t520.
+        cacheBuffer: Math.max(Settings.displayWidth, Settings.displayHeight) * tabRowList.model.count
 
         snapMode: ListView.SnapOneItem
 

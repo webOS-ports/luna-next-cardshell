@@ -16,10 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>
  */
 
-import QtQuick 2.9
+import QtQuick 2.12
+import QtQuick.Window 2.2
 import QtSensors 5.11
 import LuneOS.Service 1.0
 import "LunaSysAPI"
+import "OrientationFilter.js" as OrientationFilter
 
 Item {
     Preferences {
@@ -31,7 +33,11 @@ Item {
     // before; the subscription below corrects it on the first reply.
     property bool displayOn: true
 
-    OrientationSensor {
+    // The raw accelerometer rather than OrientationSensor: sensorfw's
+    // orientation interpreter turns the screen after 20-25 degrees of tilt,
+    // and less than that when the phone is held leaning back. See
+    // OrientationFilter.js for the rule used instead.
+    Accelerometer {
         id: sensor
 
         // Rotation only matters while the screen is on. sensorfwd keeps the
@@ -46,26 +52,44 @@ Item {
         active: orientationHelperItem.displayOn
 
         property int sensorOrientationAngle: 0
+        property int pendingAngle: -1
 
         onReadingChanged: {
-          if (reading.orientation === OrientationReading.TopUp) {
-             sensorOrientationAngle = 0;
-          }
-          else if (reading.orientation === OrientationReading.LeftUp) {
-             sensorOrientationAngle = 90;
-          }
-          else if (reading.orientation === OrientationReading.TopDown) {
-             sensorOrientationAngle = 180;
-          }
-          else if (reading.orientation === OrientationReading.RightUp) {
-             sensorOrientationAngle = 270;
-          }
+            var proposed = OrientationFilter.orientationFor(reading.x, reading.y, reading.z,
+                                                            sensorOrientationAngle);
+            if (proposed === sensorOrientationAngle) {
+                pendingAngle = -1;
+                settleTimer.stop();
+            } else if (proposed !== pendingAngle) {
+                pendingAngle = proposed;
+                settleTimer.restart();
+            }
+        }
+    }
+
+    // A new orientation has to hold this long before the screen turns, so
+    // swinging the phone through one on the way to another does not flip it
+    // twice.
+    Timer {
+        id: settleTimer
+        interval: 200
+        onTriggered: {
+            if (sensor.pendingAngle >= 0)
+                sensor.sensorOrientationAngle = sensor.pendingAngle;
+            sensor.pendingAngle = -1;
         }
     }
 
     id: orientationHelperItem
-    x: 0; y: 0
-    height: parent.height; width: parent.width
+
+    // Laid out for the orientation it is turning to from the first moment,
+    // centred on the screen and turned about its own centre: a quarter turn
+    // of a height x width item centred there covers the screen exactly.
+    readonly property bool __sideways: orientationAngle % 180 !== 0
+    width: __sideways ? parent.height : parent.width
+    height: __sideways ? parent.width : parent.height
+    x: (parent.width - width) / 2
+    y: (parent.height - height) / 2
 
     property real __lockedRotationAngle: 0
     property bool automaticOrientation: false
@@ -74,11 +98,77 @@ Item {
     property bool rotationLock: false
     property bool locked: rotationLock || preferences.rotationLock
 
-    property real rotationCenterX: parent.width/2;
-    property real rotationCenterY: parent.height/2;
+    // What is on screen. orientationAngle is where the shell is going and
+    // changes once; this follows it with the animation. Everything else
+    // (status bar insets, the rotation lock) wants the destination, and used
+    // to be fed every angle in between as well.
+    property real visualAngle: 0
 
-    transform: Rotation { origin.x: rotationCenterX; origin.y: rotationCenterY; angle: -orientationAngle}
-    Behavior on orientationAngle { RotationAnimation { duration: 500; direction: RotationAnimation.Shortest}}
+    transform: Rotation { origin.x: width / 2; origin.y: height / 2; angle: -visualAngle }
+
+    // Swapping width and height relays the whole shell and every card, and on
+    // sargo that frame takes ~450 ms. It used to land in the middle of the
+    // animation (the item fell back to its base geometry while the angle was
+    // in between, then took the new one at the end), so the turn stopped
+    // around 45 degrees. Now the size changes at once and the turn starts
+    // after the first frame at the new size is on screen, so the expensive
+    // frame is out of the way before anything moves.
+    property bool __turnPending: false
+    // A frame already being drawn when the angle changed can still swap;
+    // the one at the new size is the next.
+    property int __framesToWait: 0
+
+    onOrientationAngleChanged: {
+        publishTimer.restart();
+        if (!displayOn || !Window.window || !Window.window.visible) {
+            turnAnimation.stop();
+            __turnPending = false;
+            visualAngle = orientationAngle;
+            return;
+        }
+        __framesToWait = 2;
+        __turnPending = true;
+        turnFallback.restart();
+    }
+
+    function __startTurn() {
+        if (!__turnPending)
+            return;
+        __turnPending = false;
+        turnFallback.stop();
+        turnAnimation.to = orientationAngle;
+        turnAnimation.restart();
+    }
+
+    Connections {
+        target: orientationHelperItem.Window.window
+        enabled: orientationHelperItem.__turnPending
+        function onFrameSwapped() {
+            if (--orientationHelperItem.__framesToWait <= 0)
+                orientationHelperItem.__startTurn();
+        }
+    }
+
+    // In case no frame comes (nothing to redraw), turn anyway.
+    Timer {
+        id: turnFallback
+        interval: 500
+        onTriggered: orientationHelperItem.__startTurn()
+    }
+
+    // Quick, and decelerating, so the turn starts at once and settles. At
+    // 500 ms linear it lagged well behind the hand.
+    RotationAnimation {
+        id: turnAnimation
+        target: orientationHelperItem
+        property: "visualAngle"
+        duration: 250
+        easing.type: Easing.OutCubic
+        direction: RotationAnimation.Shortest
+        // Shortest can finish on an equivalent angle (360 for 0); settle on
+        // the real one. finished, not stopped: restart() stops too.
+        onFinished: orientationHelperItem.visualAngle = turnAnimation.to % 360
+    }
 
     Connections {
         target: preferences;
@@ -136,8 +226,7 @@ Item {
                               });
     }
 
-    // The angle animates, so publish where it settled rather than every frame.
-    onOrientationAngleChanged: publishTimer.restart()
+    // Publish where it settled, not a quick back-and-forth.
 
     Timer {
         id: publishTimer
@@ -173,42 +262,6 @@ Item {
         else if (response.event === "displayOn" || response.event === "displayDimmed")
             displayOn = true;
     }
-
-    states: [
-        State {
-            name: "normal"
-            when: orientationAngle === 0 || orientationAngle === 180
-            PropertyChanges {
-                target: orientationHelperItem
-                height: parent.height
-                width: parent.width
-                rotationCenterX: parent.width/2;
-                rotationCenterY: parent.height/2;
-            }
-        },
-        State {
-            name: "rotated"
-            when: orientationAngle === 90
-            PropertyChanges {
-                target: orientationHelperItem
-                height: parent.width
-                width: parent.height
-                rotationCenterX: parent.height/2;
-                rotationCenterY: parent.height/2;
-            }
-        },
-        State {
-            name: "rotatedInversed"
-            when: orientationAngle === 270
-            PropertyChanges {
-                target: orientationHelperItem
-                height: parent.width
-                width: parent.height
-                rotationCenterX: parent.width/2;
-                rotationCenterY: parent.width/2;
-            }
-        }
-    ]
 
     function setOrientation(angle) {
         if (locked) return;

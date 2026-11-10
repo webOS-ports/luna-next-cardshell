@@ -73,20 +73,54 @@ Item {
 
     readonly property real glowRadius: orbRadius * 3.372
 
+    /* Both canvases cover only the square the orb is drawn in, not the whole
+       item. The widest part is the glow, whose wedges reach 1.05 x 3.232R,
+       so 3.4R and a couple of pixels of slack. The square sits on whole
+       pixels; the paint code puts the orb at this item's centre, not the
+       canvas's, so a half-pixel offset is drawn rather than resampled.
+
+       This matters because the shell keeps this item alive and hidden all
+       the time, filling the screen. With full-screen canvases every rotation
+       of the screen repainted both - 180 gradient wedges of 57 stops each,
+       in JavaScript on the GUI thread, into a screen-sized image - for an orb
+       nobody could see: ~1.3 s of the pause before the screen turned on the
+       sm-t520. Now the canvases do not change size when the screen turns,
+       and what they hold does not change either: the item is only turned
+       sideways, so the orb has the same radius and, on a panel with even
+       sides, the same place in the canvas. refresh() repaints only when that
+       changes, and never while hidden - a hidden canvas is painted when it
+       is shown, if it has to be. */
+    readonly property real paintHalf: Math.ceil(orbRadius * 3.4) + 2
+
     /* --- the static part: glow, disc, ellipse ------------------------- */
     Canvas {
         id: orbCanvas
-        anchors.fill: parent
+        x: Math.floor(root.width / 2 - root.paintHalf)
+        y: Math.floor(root.height / 2 - root.paintHalf)
+        width: 2 * root.paintHalf
+        height: 2 * root.paintHalf
         renderStrategy: Canvas.Cooperative
 
+        // What the last paint was for; see paintHalf.
+        property string paintedFor: ""
+        function paintKey() {
+            return [root.orbRadius, root.width / 2 - x, root.height / 2 - y, width].join();
+        }
+        function refresh() {
+            if (visible && paintKey() !== paintedFor)
+                requestPaint();
+        }
+        onVisibleChanged: refresh()
+
         onPaint: {
+            paintedFor = paintKey();
             var ctx = getContext("2d");
             ctx.reset();
             ctx.clearRect(0, 0, width, height);
 
             var R = root.orbRadius;
-            var cx = width / 2;
-            var cy = height / 2;
+            var cx = root.width / 2 - x;
+            var cy = root.height / 2 - y;
 
             /* Everything outside the disc, from a rank-2 separable fit of
                the original (rms 0.63/255):
@@ -323,34 +357,55 @@ Item {
             ctx.restore();
         }
 
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
+        onWidthChanged: refresh()
+        onHeightChanged: refresh()
+        onXChanged: refresh()
+        onYChanged: refresh()
         Connections {
             target: root
-            function onOrbRadiusChanged() { orbCanvas.requestPaint(); }
+            function onOrbRadiusChanged() { orbCanvas.refresh(); }
         }
     }
 
     /* --- the moving part: two tapered comets, rotated as a unit --------- */
     Canvas {
         id: arcCanvas
-        anchors.fill: parent
+        x: Math.floor(root.width / 2 - root.paintHalf)
+        y: Math.floor(root.height / 2 - root.paintHalf)
+        width: 2 * root.paintHalf
+        height: 2 * root.paintHalf
         renderStrategy: Canvas.Cooperative
 
-        rotation: root.stepped
-                  ? root.currentFrame * root.degreesPerFrame
-                  : continuousAngle
+        // About the orb's centre, which may be half a pixel off the canvas's.
+        transform: Rotation {
+            origin.x: root.width / 2 - arcCanvas.x
+            origin.y: root.height / 2 - arcCanvas.y
+            angle: root.stepped
+                   ? root.currentFrame * root.degreesPerFrame
+                   : arcCanvas.continuousAngle
+        }
+
+        property string paintedFor: ""
+        function paintKey() {
+            return [root.orbRadius, root.width / 2 - x, root.height / 2 - y, width].join();
+        }
+        function refresh() {
+            if (visible && paintKey() !== paintedFor)
+                requestPaint();
+        }
+        onVisibleChanged: refresh()
 
         property real continuousAngle: 0
 
         onPaint: {
+            paintedFor = paintKey();
             var ctx = getContext("2d");
             ctx.reset();
             ctx.clearRect(0, 0, width, height);
 
             var R = root.orbRadius;
-            var cx = width / 2;
-            var cy = height / 2;
+            var cx = root.width / 2 - x;
+            var cy = root.height / 2 - y;
 
             var arcR = 0.629 * R;
             var startDeg = 104;
@@ -408,11 +463,13 @@ Item {
             }
         }
 
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
+        onWidthChanged: refresh()
+        onHeightChanged: refresh()
+        onXChanged: refresh()
+        onYChanged: refresh()
         Connections {
             target: root
-            function onOrbRadiusChanged() { arcCanvas.requestPaint(); }
+            function onOrbRadiusChanged() { arcCanvas.refresh(); }
         }
     }
 

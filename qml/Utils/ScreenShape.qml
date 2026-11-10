@@ -112,7 +112,7 @@ QtObject {
      *
      * so scene x runs along the panel from bottom to top - x = H - y - h - and
      * scene y runs along it from left to right - y = x. Width and height swap,
-     * as the scene itself does (OrientationHelper's "rotated" state is
+     * as the scene itself does (at a quarter turn OrientationHelper is
      * height: parent.width, width: parent.height). 270 is the mirror of that,
      * and 180 needs no swap, only both edges reflected.
      */
