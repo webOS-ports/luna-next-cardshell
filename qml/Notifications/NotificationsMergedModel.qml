@@ -372,8 +372,12 @@ ListModel {
                     // launchParams = {id, params}; hand the app the inner
                     // params, not the whole envelope, so it sees the same
                     // parameters the toast's creator provided
+                    // A tap only opens the app. On legacy webOS the shell
+                    // never took a dashboard away for a tap - it went when
+                    // slid away or when its app closed it - and a group's
+                    // tap took its newest toast out from under the user.
                     var lp = notificationItem.notifObject.action.launchParams;
-                    launcherInstance.launchApplication(lp.id, lp.params || lp, handleLaunchAppSuccess);
+                    launcherInstance.launchApplication(lp.id, lp.params || lp);
                 }
             }
 
@@ -381,9 +385,6 @@ ListModel {
                 console.warn("Failed to close toast: " + message);
             }
 
-            function handleLaunchAppSuccess() {
-                notificationItem.closed();
-            }
         }
     }
     property Component dashboardDelegate: Component {

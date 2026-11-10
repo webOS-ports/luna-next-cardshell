@@ -22,6 +22,18 @@ Item {
     }
     Item { id: notificationArea }
 
+    // What a tapped entry launches through; it reports success, as the
+    // shell's launcher does once the app is up.
+    Item {
+        id: launcherInstance
+        property var launched: []
+        function launchApplication(id, params, successCB) {
+            launched = launched.concat([id]);
+            if (successCB)
+                successCB();
+        }
+    }
+
     NotificationsMergedModel {
         id: mergedModel
     }
@@ -272,6 +284,20 @@ Item {
             var shown = list.view.itemAt(1).shownBelow;
             verify(shown, "the view sees the toast under the newest");
             compare(shown.title, first);
+        }
+
+        // A tap opens the app and leaves the entry, all its layers, listed:
+        // on legacy webOS a dashboard went when it was slid away, or when its
+        // app closed it, never for a tap.
+        function test_tapLaunchesAndKeepsTheEntry() {
+            launcherInstance.launched = [];
+            addToast("org.webosports.app.messaging");
+            var newest = addToast("org.webosports.app.messaging");
+            var loader = showRow(0);
+            mouseClick(loader.item);
+            compare(launcherInstance.launched, ["org.webosports.app.messaging"]);
+            wait(50);
+            compare(entries(), [newest + " x2"], "nothing closed");
         }
 
         // notificationmgr can take several toasts away in one go: every one
