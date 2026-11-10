@@ -25,7 +25,10 @@ import "NotificationSound.js" as NotificationSound
 
 Item {
     id: bannerItemsPopups
-    property string color: Settings.tabletUi? "transparent" : "black";
+    // A banner as the tablet's status bar shows one, sliding in on the right,
+    // or as the phone's ticker over the gesture area: which area it is in.
+    property bool tablet: Settings.tabletUi
+    property string color: tablet? "transparent" : "black";
 
     property ListModel popupModel: ListModel {
         id: bannerItemsModel
@@ -47,7 +50,7 @@ Item {
     // This one asked for the same keys again, once, and wrote them back there.
 
     Loader {
-        active: !Settings.tabletUi
+        active: !bannerItemsPopups.tablet
         sourceComponent: Component {
             Rectangle {
                 color: bannerItemsPopups.color
@@ -227,10 +230,10 @@ Item {
         delegate:Rectangle {
             id: itemDelegate
             color: bannerItemsPopups.color
-            width: Settings.tabletUi? 0 : bannerItemsPopups.width;
+            width: bannerItemsPopups.tablet? 0 : bannerItemsPopups.width;
             height: Units.gu(3)
-            y: Settings.tabletUi? 0 : Units.gu(3);
-            anchors.right: Settings.tabletUi? parent.right : undefined;
+            y: bannerItemsPopups.tablet? 0 : Units.gu(3);
+            anchors.right: bannerItemsPopups.tablet? parent.right : undefined;
 
             property int delegateIndex: index
 
@@ -281,8 +284,8 @@ Item {
 
                 NumberAnimation {
                     target: itemDelegate
-                    property: Settings.tabletUi? "width" : "y";
-                    to: Settings.tabletUi? bannerItemsPopups.width : 0;
+                    property: bannerItemsPopups.tablet? "width" : "y";
+                    to: bannerItemsPopups.tablet? bannerItemsPopups.width : 0;
                     duration: 500;
                     easing.type: Easing.InOutQuad
                 }
@@ -300,10 +303,10 @@ Item {
                 // dropped to 2 seconds per banner when more were queued
                 // behind it (BannerMessageHandler's kMaxShowTimeMs /
                 // kMinShowTimeMs); evaluated when the slide-in starts.
-                PauseAnimation { duration: Settings.tabletUi? 0 : (bannerItemsModel.count > 1 ? 2000 : 5000); }
+                PauseAnimation { duration: bannerItemsPopups.tablet? 0 : (bannerItemsModel.count > 1 ? 2000 : 5000); }
 
                 ScriptAction {
-                    script: if (Settings.tabletUi)
+                    script: if (bannerItemsPopups.tablet)
                                 timerAnimation.start();
                             else
                                 bannerItemsModel.remove(delegateIndex);
@@ -334,12 +337,12 @@ Item {
             }
 
             onDelegateIndexChanged: {
-                if( (delegateIndex === 0) && !Settings.tabletUi )
+                if( (delegateIndex === 0) && !bannerItemsPopups.tablet )
                     slideItemAnimation.start();
             }
 
             Connections {
-                target: Settings.tabletUi? bannerItemsPopups.popupModel : null;
+                target: bannerItemsPopups.tablet? bannerItemsPopups.popupModel : null;
                 function onCountChanged() {
                     if (delegateIndex < bannerItemsPopups.popupModel.count-1) {
                         itemDelegate.opacity = 0.5;
@@ -357,7 +360,7 @@ Item {
             Component.onCompleted: {
                 if( delegateIndex === 0 )
                     slideItemAnimation.start();
-                else if (Settings.tabletUi)
+                else if (bannerItemsPopups.tablet)
                     slideItemAnimation.start();
             }
         }

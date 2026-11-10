@@ -56,8 +56,8 @@ Item {
             }
         }
 
-        function create(tablet) {
-            item = createTemporaryObject(swipeableComponent, root, { blockSwipesToLeft: tablet });
+        function create(tablet, layered) {
+            item = createTemporaryObject(swipeableComponent, root, { blockSwipesToLeft: tablet, layered: !!layered });
             flickable = item.children[0];
             removed.target = item;
             removed.clear();
@@ -149,6 +149,80 @@ Item {
             var back = seen.slice(furthest + 1).filter(function (v) { return v < -1; });
             verify(back.length >= 2, "slid back through " + JSON.stringify(seen.map(Math.round)));
             compare(removed.count, 0);
+        }
+
+        // Turned landscape and back: the entry grows and shrinks again, and
+        // has to end up where it started. Sargo's widths (GridUnit 25) left it
+        // 85 pixels to the right.
+        function test_widenedAndNarrowedStaysCentred_data() { return forms(); }
+        function test_widenedAndNarrowedStaysCentred(data) {
+            create(data.tablet);
+            item.width = 1055;
+            wait(50);
+            compare(flickable.contentX, 0);
+            item.width = 2195;
+            wait(50);
+            item.width = 1055;
+            wait(300);
+            compare(flickable.contentX, 0, "back in place after turning back");
+            compare(removed.count, 0);
+        }
+
+        // A group with layers under its top one: a drag moves the top layer
+        // only. The entry stays where it is and is told how far the top layer
+        // has gone (layerOffset, + to the right); let go past half, the top
+        // layer goes, and the entry is asked to drop it as before.
+        function test_layeredEntryStaysPut_data() { return forms(); }
+        function test_layeredEntryStaysPut(data) {
+            create(data.tablet, true);
+            var content = item.notifItem;
+            var before = content.mapToItem(root, 0, 0).x;
+            var x = item.width / 2, y = item.height / 2;
+            mousePress(item, x, y);
+            for (var i = 1; i <= 20; ++i)
+                mouseMove(item, x + 100 * i / 20, y, 30, Qt.LeftButton);
+            wait(100);
+            verify(item.layerOffset > 50, "the top layer moved right: " + item.layerOffset);
+            compare(item.layerOffset, -flickable.contentX);
+            compare(content.mapToItem(root, 0, 0).x, before, "the rest did not");
+            mouseRelease(item, x + 100, y);
+            wait(800);
+            compare(item.layerOffset, 0, "back in place");
+            drag(200);
+            tryCompare(removed, "count", 1, 2000);
+            compare(content.mapToItem(root, 0, 0).x, before, "nor while the top layer went");
+        }
+
+        // A layered entry, like Enyo's layers, goes right only: on a phone
+        // too, which otherwise takes either direction.
+        function test_layeredEntryDoesNotGoLeft() {
+            create(false, true);
+            drag(-200);
+            wait(800);
+            compare(removed.count, 0, "not swiped away to the left");
+            compare(maxX, 0, "and does not move that way");
+            compare(item.layerOffset, 0);
+            flick(-150);
+            wait(800);
+            compare(removed.count, 0, "nor flicked away");
+            compare(maxX, 0);
+        }
+
+        // One layer left: the whole entry moves, and nothing is offset.
+        function test_unlayeredEntryMoves_data() { return forms(); }
+        function test_unlayeredEntryMoves(data) {
+            create(data.tablet, false);
+            var content = item.notifItem;
+            var before = content.mapToItem(root, 0, 0).x;
+            var x = item.width / 2, y = item.height / 2;
+            mousePress(item, x, y);
+            for (var i = 1; i <= 20; ++i)
+                mouseMove(item, x + 100 * i / 20, y, 30, Qt.LeftButton);
+            wait(100);
+            compare(item.layerOffset, 0);
+            verify(content.mapToItem(root, 0, 0).x - before > 50, "moved with the finger");
+            mouseRelease(item, x + 100, y);
+            wait(800);
         }
 
         function test_flickRight_data() { return forms(); }

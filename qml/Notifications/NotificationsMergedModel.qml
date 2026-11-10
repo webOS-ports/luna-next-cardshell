@@ -32,22 +32,44 @@ ListModel {
 
     signal addBannerNotification(var notif);
     signal removeBannerNotification(var notif);
+    // A dashboard window came in: the area showing the list shows its icon.
+    signal dashboardAdded();
+
+    /*
+     * There is one of this, CardsArea's, and the notification area that is
+     * up shows it: the phone's, above the gesture area, or the tablet's, in
+     * the status bar - whichever Settings' Notifications page chose for the
+     * way the screen is held (NotificationLayout). It outlives them: a toast
+     * comes in from notificationmgr only once, and a dashboard window when it
+     * is mapped, so an area made later with a list of its own would have
+     * neither - the toasts and dashboards up at the time would be gone from
+     * the screen, though they were still there.
+     */
+    // CardsArea's compositor: its surfaceModel, and closeWindow for a dashboard
+    property var compositorInstance: null
+    readonly property int dashboardCardFixedHeight: Units.gu(5.6)
 
     function getToastIdFromNotif(notifObject) {
         return notifObject.sourceId+"-"+notifObject.timestamp;
     }
 
     /*
-     * The minimized bar shows one icon per application, however many entries
-     * it has. Legacy drew an icon per dashboard window, and Messaging kept
-     * every new message in a single dashboard, so it was one icon there; here
-     * Messaging posts one notificationmgr toast per message, and a busy
-     * evening became a row of identical icons. Tapping the icon still opens
-     * the list with every entry in it.
+     * The minimized bar shows one icon per application and icon, however many
+     * entries have it. Legacy drew an icon per dashboard window, and Messaging
+     * kept every new message in a single dashboard, so it was one icon there;
+     * here Messaging posts one notificationmgr toast per message, and a busy
+     * evening became a row of identical icons. An application whose entries
+     * name different icons - Messaging's protocols, each its own stack with
+     * its account's icon - shows each of them once. Tapping an icon still
+     * opens the list with every entry in it.
      */
-    function firstIndexOfApp(appKey) {
+    function iconKeyOf(appKey, icon) {
+        return appKey + "\n" + (icon || "");
+    }
+
+    function firstIndexOfIcon(iconKey) {
         for( var i=0; i<mergedModel.count; ++i ) {
-            if( mergedModel.get(i).appKey === appKey )
+            if( mergedModel.get(i).iconKey === iconKey )
                 return i;
         }
         return -1;
@@ -84,30 +106,103 @@ ListModel {
             addToast(toasts[i], !isSticky(toasts[i]));
     }
 
+    /*
+     * A dashboard whose page swipes its own layers: Enyo 1's (enyo.Dashboard,
+     * as Email's), which says how many it has in LuneOS_dashLayers. With more
+     * than one, the drag is the page's, so that only the top layer goes and
+     * the rest stays, as on legacy webOS; the shell's swipe would take it and
+     * slide the whole window. With one left, the shell slides the dashboard as
+     * a whole, as it does any other.
+     */
+    function swipesOwnLayers(window) {
+        return !!window && !!window.windowProperties &&
+               Number(window.windowProperties["LuneOS_dashLayers"]) > 1;
+    }
+
+    /*
+     * A dashboard that draws its own bar, and says so in LuneOS_dashOwnBar:
+     * Enyo 1's on a phone, whose page draws the pills of the entry itself (one
+     * for the icon, one per layer), as they slide with its layers. The bar
+     * drawn behind other dashboards would show round its pills.
+     */
+    function drawsOwnBar(window) {
+        return !!window && !!window.windowProperties &&
+               window.windowProperties["LuneOS_dashOwnBar"] === "true";
+    }
+
     // A notification is a toast that is not "light": it goes in the list too.
     function isSticky(notifObject) {
         return !!notifObject.type && notifObject.type !== "light";
+    }
+
+    /*
+     * Toasts are listed in groups, as legacy webOS listed dashboards: one
+     * entry per group, showing the newest toast, with the count badged on its
+     * icon once there is more than one.
+     *
+     * On legacy the app chose the groups, by putting notifications in one
+     * dashboard window or another: Email had one per account, Messaging one
+     * for all messages. Here a group is an app's toasts with the same groupId,
+     * which the app can pass to createToast; an app that passes none gets one
+     * group, as Messaging had.
+     *
+     * toastGroups maps a group's key to its toasts, oldest first, as the
+     * toast model's rows: those are live, so a repeat that notificationmgr's
+     * client writes over a row in place (see removeToastEntry) is followed.
+     * The entries in this model are what is listed; a key with no entry is
+     * left over and taken as empty. An entry's belowNotifObject is the toast
+     * under its newest, which a swipe of the top layer uncovers (see
+     * NotificationItem), or null.
+     */
+    property var toastGroups: ({})
+
+    function groupKeyOf(notifObject) {
+        return (notifObject.sourceId || notifObject.ownerId || "") + "\n" + (notifObject.groupId || "");
+    }
+
+    function indexOfGroup(groupKey) {
+        for (var i = 0; i < mergedModel.count; ++i) {
+            if (mergedModel.get(i).notifType === "notification" &&
+                mergedModel.get(i).groupKey === groupKey)
+                return i;
+        }
+        return -1;
     }
 
     function addToast(notifObject, withBanner) {
         if (withBanner)
             addBannerNotification(notifObject);
 
-        if (isSticky(notifObject)) {
+        if (!isSticky(notifObject))
+            return;
+
+        var key = groupKeyOf(notifObject);
+        var row = indexOfGroup(key);
+        if (row < 0) {
+            toastGroups[key] = [notifObject];
             mergedModel.append({"notifType": "notification",
                                 "appKey": notifObject.sourceId || notifObject.ownerId || "",
+                                "iconKey": iconKeyOf(notifObject.sourceId || notifObject.ownerId || "",
+                                                     notifObject.iconUrl || notifObject.iconPath),
+                                "groupKey": key,
+                                "groupCount": 1,
                                 "window": null,
                                 "notifObject": notifObject,
+                                "belowNotifObject": null,
                                 "notifHeight": dashboardCardFixedHeight});
+        } else {
+            toastGroups[key].push(notifObject);
+            mergedModel.setProperty(row, "notifObject", notifObject);
+            mergedModel.setProperty(row, "belowNotifObject", toastGroups[key][toastGroups[key].length - 2]);
+            mergedModel.setProperty(row, "groupCount", toastGroups[key].length);
         }
     }
 
     /*
      * Drives the notification LED off the same toast model. It lives here
-     * rather than in CardShell so that there is exactly one of it: the phone
-     * and tablet notification areas each build their own merged model, but only
-     * one of the two is ever loaded, and NotificationService - whose
-     * subscription to notificationmgr this shares - is created per model.
+     * rather than in CardShell so that it shares this model's
+     * NotificationService, whose subscription to notificationmgr is made per
+     * instance; there is one of this model, and so one of the LED.
      */
     property NotificationLed notificationLed: NotificationLed {
         notificationModel: notificationService.toastModel
@@ -117,49 +212,73 @@ ListModel {
         target: notificationService.toastModel
         // the signal itemAdded is declared in C++, without a qmltype declaration,
         // so QML isn't able to guess the name of the signal argument.
+        // Rows come and go several at a time too (the toasts already waiting
+        // when the shell starts, several withdrawn at once): every one of
+        // first to last is taken, not only the last. A row left out of a
+        // removal stayed in its group after it had gone, and its entry
+        // showed nothing.
         function onRowsInserted(index, first, last) {
-            var notifObject = notificationService.toastModel.get(last);
-
-            if (mergedModel.held) {
-                // A copy: the row is the model's, and the model may go on
-                // changing it while the toast waits.
-                heldToasts = heldToasts.concat([JSON.parse(JSON.stringify(notifObject))]);
-                return;
-            }
-
-            // Banner in all cases; also in the list unless it is "light"
-            addToast(notifObject, true);
+            for (var row = first; row <= last; ++row)
+                toastInserted(notificationService.toastModel.get(row));
         }
         function onRowsAboutToBeRemoved(index, first, last) {
-            let notifObject = notificationService.toastModel.get(last);
-            let toastId = getToastIdFromNotif(notifObject);
-
-            // The banner popup is a separate model, so removing the sticky
-            // entry below is not enough: a banner still on screen when its
-            // toast is withdrawn would sit there until its own timer expired.
-            removeBannerNotification(notifObject);
-            removeToastEntry(toastId);
-            // Withdrawn before First Use was over: it no longer comes in then.
-            heldToasts = heldToasts.filter(function(entry) {
-                return getToastIdFromNotif(entry) !== toastId;
-            });
+            for (var row = first; row <= last; ++row)
+                toastRemoved(notificationService.toastModel.get(row));
         }
     }
-    // Removes the sticky entry for one toast, if it is still listed. Both the
-    // user closing it and notificationmgr withdrawing it end up here, in
-    // either order, so finding nothing is normal.
+    function toastInserted(notifObject) {
+        if (mergedModel.held) {
+            // A copy: the row is the model's, and the model may go on
+            // changing it while the toast waits.
+            heldToasts = heldToasts.concat([JSON.parse(JSON.stringify(notifObject))]);
+            return;
+        }
+
+        // Banner in all cases; also in the list unless it is "light"
+        addToast(notifObject, true);
+    }
+    function toastRemoved(notifObject) {
+        let toastId = getToastIdFromNotif(notifObject);
+
+        // The banner popup is a separate model, so removing the sticky
+        // entry below is not enough: a banner still on screen when its
+        // toast is withdrawn would sit there until its own timer expired.
+        removeBannerNotification(notifObject);
+        removeToastEntry(toastId);
+        // Withdrawn before First Use was over: it no longer comes in then.
+        heldToasts = heldToasts.filter(function(entry) {
+            return getToastIdFromNotif(entry) !== toastId;
+        });
+    }
+    // Takes one toast out of its group, if it is still listed: the group's
+    // entry then shows the newest of the rest, or goes once none are left.
+    // Both the user closing it and notificationmgr withdrawing it end up here,
+    // in either order, so finding nothing is normal.
     function removeToastEntry(toastId) {
         for( var i=0; i<mergedModel.count; ++i ) {
-            if( mergedModel.get(i).notifObject &&
-                getToastIdFromNotif(mergedModel.get(i).notifObject) === toastId ) {
-                mergedModel.remove(i);
+            var entry = mergedModel.get(i);
+            if (entry.notifType !== "notification")
+                continue;
+            var toasts = toastGroups[entry.groupKey] || [];
+            for (var j = 0; j < toasts.length; ++j) {
+                if (getToastIdFromNotif(toasts[j]) !== toastId)
+                    continue;
+                toasts.splice(j, 1);
+                if (toasts.length === 0) {
+                    delete toastGroups[entry.groupKey];
+                    mergedModel.remove(i);
+                } else {
+                    mergedModel.setProperty(i, "notifObject", toasts[toasts.length - 1]);
+                    mergedModel.setProperty(i, "belowNotifObject", toasts.length > 1 ? toasts[toasts.length - 2] : null);
+                    mergedModel.setProperty(i, "groupCount", toasts.length);
+                }
                 return;
             }
         }
     }
 
     property WindowModel listDashboardsModel : WindowModel {
-        surfaceSource: compositorInstance.surfaceModel
+        surfaceSource: mergedModel.compositorInstance ? mergedModel.compositorInstance.surfaceModel : null
         acceptFunction: "filter"
 
         function filter(surfaceItem) {
@@ -188,14 +307,19 @@ ListModel {
             }
             if( dashHeight<=0 ) dashHeight = dashboardCardFixedHeight;
 
-            if( notificationArea.state === "hidden" || notificationArea.state == "open" ) {
-                notificationArea.state = "minimized";
-            }
             mergedModel.append({"notifType": "dashboard",
+                                // the roles a toast's entry has: a view follows only
+                                // the roles the model's first row came with
+                                "groupKey": "",
+                                "groupCount": 1,
                                 "appKey": window.appId || "",
+                                "iconKey": iconKeyOf(window.appId || "",
+                                                     window.windowProperties && window.windowProperties.LuneOS_icon),
                                 "window": window,
                                 "notifObject": null,
+                                "belowNotifObject": null,
                                 "notifHeight": dashHeight});
+            mergedModel.dashboardAdded();
         }
         onRowsAboutToBeRemoved: (index, first, last) => {
             var window = listDashboardsModel.get(last);
@@ -228,11 +352,40 @@ ListModel {
 
             title: notifObject.title || notifObject.message
             body: notifObject.message
+            // The group's size; the areas' loaders pass it, a bare loader
+            // (as in some tests) shows a single toast.
+            count: typeof loaderGroupCount !== "undefined" ? loaderGroupCount : 1
+            pressed: tapArea.pressed
+            pressX: tapArea.mouseX
+            // A group's top layer slides on its own (see SwipeableNotification).
+            layerOffset: typeof loaderLayerOffset !== "undefined" ? loaderLayerOffset : 0
+            property var belowObject: typeof loaderBelowNotifObject !== "undefined" ? loaderBelowNotifObject : null
+            belowTitle: belowObject ? (belowObject.title || belowObject.message || "") : ""
+            belowBody: belowObject ? (belowObject.message || "") : ""
+
+            /*
+             * The entry is a group's, and shows its newest toast: when one
+             * joins the group or the newest goes, the model hands the loader
+             * another toast, and the item takes that one up as it took up the
+             * first.
+             */
+            property var liveNotifObject: loaderNotifObject
+            property bool _completed: false
+            onLiveNotifObjectChanged: {
+                if (_completed && liveNotifObject)
+                    takeUp(liveNotifObject);
+            }
+
+            function takeUp(live) {
+                iconPathServices.setIconUrlOrDefault(live.iconPath, live.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
+                // work on a copy, to avoid warning when model is destroyed
+                notifObject = JSON.parse(JSON.stringify(live));
+                expiryTimer.restart();
+            }
 
             Component.onCompleted: {
-                iconPathServices.setIconUrlOrDefault(notifObject.iconPath, notifObject.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
-                // work on a copy, to avoid warning when model is destroyed
-                notifObject = JSON.parse(JSON.stringify(loaderNotifObject));
+                takeUp(loaderNotifObject);
+                _completed = true;
             }
 
             onClosed: {
@@ -255,6 +408,7 @@ ListModel {
             }
 
             MouseArea {
+                id: tapArea
                 anchors.fill: parent
                 onClicked: {
                     // Never out of First Use: the list is hidden then, and
@@ -266,8 +420,12 @@ ListModel {
                     // launchParams = {id, params}; hand the app the inner
                     // params, not the whole envelope, so it sees the same
                     // parameters the toast's creator provided
+                    // A tap only opens the app. On legacy webOS the shell
+                    // never took a dashboard away for a tap - it went when
+                    // slid away or when its app closed it - and a group's
+                    // tap took its newest toast out from under the user.
                     var lp = notificationItem.notifObject.action.launchParams;
-                    launcherInstance.launchApplication(lp.id, lp.params || lp, handleLaunchAppSuccess);
+                    launcherInstance.launchApplication(lp.id, lp.params || lp);
                 }
             }
 
@@ -275,9 +433,6 @@ ListModel {
                 console.warn("Failed to close toast: " + message);
             }
 
-            function handleLaunchAppSuccess() {
-                notificationItem.closed();
-            }
         }
     }
     property Component dashboardDelegate: Component {
@@ -292,7 +447,14 @@ ListModel {
 
             onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
 
-            children: [ dashboardWindow ]
+            // Behind the window, which Component.onCompleted parents here and
+            // so stacks on top. Shows through a transparent dashboard window.
+            NotificationBar {
+                anchors.fill: parent
+                visible: !NotificationLayout.tabletStyle && !mergedModel.drawsOwnBar(dashboardItem.dashboardWindow)
+                // A tall dashboard (dashHeight) keeps a standard entry's corners.
+                cornerHeight: Units.gu(5.6)
+            }
 
             Component.onCompleted: {
                 if( dashboardWindow ) {
@@ -307,8 +469,10 @@ ListModel {
                     dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
                 }
             }
+            // Not once it is another entry's: when the list moves to the other
+            // area, the new one may have taken the window before this goes.
             Component.onDestruction: {
-                if( dashboardWindow ) dashboardWindow.visible = false;
+                if( dashboardWindow && dashboardWindow.parent === dashboardItem ) dashboardWindow.visible = false;
             }
 
             onClosed: {

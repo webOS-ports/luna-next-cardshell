@@ -37,6 +37,8 @@ Item {
     property Item gestureHandlerInstance
     // the tablet's notification area, which lives in the bar; null on phones
     readonly property Item notificationArea: notificationAreaInstance.item
+    // CardsArea's, for the area in the bar when the notifications are up here
+    property QtObject notificationsModel: null
     property bool fullLauncherVisible: false
     property bool justTypeLauncherActive: false
     property Item batteryService
@@ -380,7 +382,12 @@ Item {
              */
             x: {
                 var minX = statusBar.contentInsetLeft;
-                var maxX = systemIndicatorsBoundingRect.x - Units.gu(0.5);
+                // Clear of the notification icons too, when they are up here
+                // (NotificationLayout): they grow to the left from the
+                // indicators, and the clock moves out of their way.
+                var rightOf = notificationAreaInstance.item && notificationAreaInstance.width > 0
+                        ? notificationAreaInstance.x : systemIndicatorsBoundingRect.x;
+                var maxX = Math.min(rightOf, systemIndicatorsBoundingRect.x) - Units.gu(0.5);
                 var centred = Math.max(minX, Math.min((background.width - width) / 2,
                                                       maxX - width));
 
@@ -494,14 +501,15 @@ Item {
             anchors.right: systemIndicators.left
             enabled: !statusBar.blackMode
             visible: !lockScreen.visible
-            active: Settings.tabletUi
+            // see CardsArea's notificationAreaInstance
+            active: NotificationLayout.atTop
 
             Component.onCompleted: {
                 notificationAreaInstance.setSource("../Notifications/NotificationAreaTablet.qml",
                 {
                     "windowManagerInstance": statusBar.windowManagerInstance,
                     "compositorInstance": statusBar.compositorInstance,
-                    "maxDashboardWindowHeight": Qt.binding(() => {return windowManagerInstance.height*0.67;}),
+                    "mergedModel": Qt.binding(() => statusBar.notificationsModel),
                     // Bound, not copied: blackMode ends with First Use.
                     "blackMode": Qt.binding(() => statusBar.blackMode),
                 });

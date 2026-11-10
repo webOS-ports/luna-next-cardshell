@@ -4,9 +4,35 @@ import LunaNext.Common 0.1
 import LuneOS.Service 1.0
 
 QtObject {
+    id: iconPathServices
+
+    /*
+     * A call made before the service is on the bus goes nowhere - it is
+     * registered as its creation completes - and so the icon it was for stayed
+     * blank. That is what an area made while the shell runs had: its entries,
+     * already in the model, asked for their icons as they were made, with the
+     * area's own service, which was not there yet. So calls wait for it.
+     */
+    property bool _ready: false
+    property var _waiting: []
 
     property LunaService service: LunaService {
         name: "com.webos.surfacemanager.cardshell"
+
+        onInitialized: {
+            iconPathServices._ready = true;
+            var waiting = iconPathServices._waiting;
+            iconPathServices._waiting = [];
+            for (var i = 0; i < waiting.length; ++i)
+                iconPathServices.service.call(waiting[i][0], waiting[i][1], waiting[i][2], waiting[i][3]);
+        }
+    }
+
+    function _call(uri, args, onResponse, onError) {
+        if (_ready)
+            service.call(uri, args, onResponse, onError);
+        else
+            _waiting = _waiting.concat([[uri, args, onResponse, onError]]);
     }
 
     function setIconUrlFromWindow(window, setterFct) {
@@ -63,7 +89,7 @@ QtObject {
 
 
         //Get the app folder so we can make an absolute path if needed
-        service.call("luna://com.webos.service.applicationManager/getAppInfo",
+        _call("luna://com.webos.service.applicationManager/getAppInfo",
                      JSON.stringify({"id":window.appId}),
                      handleGetAppInfoResponse2, handleGetAppInfoError2);
     }
@@ -78,7 +104,7 @@ QtObject {
         }
         else {
             //Do lookup of the appIcon
-            service.call("luna://com.webos.service.applicationManager/getAppInfo",
+            _call("luna://com.webos.service.applicationManager/getAppInfo",
                          JSON.stringify({"id":appId}),
                          handleGetAppInfoResponse, handleGetAppInfoError);
 

@@ -5,9 +5,11 @@ import WebOSCompositorBase 1.0
 import "../qml/Notifications"
 
 /*
- * The minimized notification bar shows one icon per application. Messaging
- * posts a toast per message, and each used to get an icon of its own, so a
- * dozen messages made a row of a dozen identical icons; legacy showed one.
+ * The minimized notification bar shows one icon per application and icon.
+ * Messaging posts a toast per message, and each used to get an icon of its
+ * own, so a dozen messages made a row of a dozen identical icons; legacy
+ * showed one. Its protocols are stacks of their own, each with its account's
+ * icon, and those show once each.
  */
 Item {
     id: root
@@ -36,7 +38,7 @@ Item {
                 width: 10
                 height: 10
                 visible: mergedModel.count > 0 &&
-                         (model.appKey === "" || mergedModel.firstIndexOfApp(model.appKey) === index)
+                         (model.appKey === "" || mergedModel.firstIndexOfIcon(model.iconKey) === index)
             }
         }
     }
@@ -47,13 +49,17 @@ Item {
 
         property int stamp: 0
 
-        function addToast(sourceId) {
+        function addToast(sourceId, iconUrl, groupId) {
             stamp++;
             ModelSingletons.toastModel.append({
+                "iconUrl": iconUrl || "",
                 "message": "message " + stamp,
                 "title": "title " + stamp,
                 "type": "standard",
                 "sourceId": sourceId,
+                // a group per toast, as an app with a group per conversation
+                // or account would have: several entries of one app
+                "groupId": groupId || ("group " + stamp),
                 "timestamp": String(1000 + stamp),
                 "schedule": { "expire": Date.now() / 1000 + 3600 },
                 "action": { "launchParams": { "id": sourceId } }
@@ -93,6 +99,28 @@ Item {
             addToast("com.example.mail");
             compare(mergedModel.count, 5);
             compare(shownIcons(), 3);
+        }
+
+        function test_oneIconPerProtocolOfOneApp() {
+            var sms = "file:///usr/palm/public/accounts/com.palm.palmprofile/images/sms-48x48.png";
+            var tg = "file:///usr/palm/public/accounts/com.palm.telegram/images/telegram-48x48.png";
+            addToast("org.webosports.app.messaging", sms, "sms");
+            addToast("org.webosports.app.messaging", tg, "type_telegram");
+            addToast("org.webosports.app.messaging", sms, "sms");
+            addToast("org.webosports.app.messaging", tg, "type_telegram");
+            compare(mergedModel.count, 2, "a stack a protocol");
+            compare(shownIcons(), 2);
+            // groups that share an icon, as an app's accounts may: still one
+            addToast("com.example.mail", "", "work");
+            addToast("com.example.mail", "", "home");
+            compare(mergedModel.count, 4);
+            compare(shownIcons(), 3);
+        }
+
+        function test_theSameIconInAnotherAppIsAnotherIcon() {
+            addToast("com.example.one", "file:///icon.png");
+            addToast("com.example.two", "file:///icon.png");
+            compare(shownIcons(), 2);
         }
 
         function test_nextEntryTakesOverTheIcon() {

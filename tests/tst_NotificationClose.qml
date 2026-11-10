@@ -49,6 +49,8 @@ Item {
                 "title": "title " + n,
                 "type": "standard",
                 "sourceId": "com.example.app",
+                // each in a group of its own, so each is an entry of its own
+                "groupId": "group " + n,
                 "timestamp": String(1000 + n),
                 "schedule": { "expire": Date.now() / 1000 + 3600 },
                 "action": { "launchParams": { "id": "com.example.app" } }
