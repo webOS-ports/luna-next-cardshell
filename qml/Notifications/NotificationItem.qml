@@ -69,9 +69,11 @@ Item {
     readonly property real tabletIconCellWidth: height * 50 / 52
     readonly property real tabletCardX: height * 58 / 52
 
+    // Over the sliding layer only as the icon pill of a group. A single
+    // toast's bar is the whole entry, and above its text it hid every word.
     NotificationBar {
         id: bar
-        z: 2
+        z: notification.grouped ? 2 : 0
         visible: !notification.tablet
         pressed: notification.pressed
         anchors.top: parent.top

@@ -114,6 +114,33 @@ Item {
             verify(!shows(find(g, "under title"), g));
         }
 
+        // White text pixels in the text's own area, as drawn: what the
+        // user sees, stacking included. A single toast's bar is the whole
+        // entry, and over its text it hid every word.
+        function whitePixelsOfText(g) {
+            var top = find(g, "top title");
+            var img = grabImage(g);
+            var x0 = Math.ceil(top.mapToItem(g, 0, 0).x);
+            var white = 0;
+            for (var y = 0; y < g.height; y += 1)
+                for (var x = x0; x < g.width; x += 2) {
+                    var c = img.pixel(x, y);
+                    if (c.r > 0.85 && c.g > 0.85 && c.b > 0.85)
+                        ++white;
+                }
+            return white;
+        }
+        function test_singleToastTextIsDrawn() {
+            var g = createTemporaryObject(groupComponent, item.parent, { count: 1 });
+            waitForRendering(g);
+            verify(whitePixelsOfText(g) > 20, "the text shows over its bar");
+        }
+        function test_groupTopTextIsDrawn() {
+            var g = createTemporaryObject(groupComponent, item.parent, { count: 3 });
+            waitForRendering(g);
+            verify(whitePixelsOfText(g) > 20, "the text shows over its bar");
+        }
+
         // The title and the body, wherever the layout puts them.
         function texts() {
             var found = [];
