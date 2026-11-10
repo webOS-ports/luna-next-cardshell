@@ -155,10 +155,10 @@ Rectangle {
             model: notificationArea.mergedModel
             delegate: Image {
                     id: notifIconImage
-                    // One icon per application (see firstIndexOfApp). Reading
-                    // count re-evaluates this as entries come and go.
+                    // One icon per application and icon (see firstIndexOfIcon).
+                    // Reading count re-evaluates this as entries come and go.
                     visible: notificationArea.mergedModel.count > 0 &&
-                             (model.appKey === "" || notificationArea.mergedModel.firstIndexOfApp(model.appKey) === index)
+                             (model.appKey === "" || notificationArea.mergedModel.firstIndexOfIcon(model.iconKey) === index)
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     anchors.margins: Units.gu(1)/2

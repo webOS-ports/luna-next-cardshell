@@ -54,16 +54,22 @@ ListModel {
     }
 
     /*
-     * The minimized bar shows one icon per application, however many entries
-     * it has. Legacy drew an icon per dashboard window, and Messaging kept
-     * every new message in a single dashboard, so it was one icon there; here
-     * Messaging posts one notificationmgr toast per message, and a busy
-     * evening became a row of identical icons. Tapping the icon still opens
-     * the list with every entry in it.
+     * The minimized bar shows one icon per application and icon, however many
+     * entries have it. Legacy drew an icon per dashboard window, and Messaging
+     * kept every new message in a single dashboard, so it was one icon there;
+     * here Messaging posts one notificationmgr toast per message, and a busy
+     * evening became a row of identical icons. An application whose entries
+     * name different icons - Messaging's protocols, each its own stack with
+     * its account's icon - shows each of them once. Tapping an icon still
+     * opens the list with every entry in it.
      */
-    function firstIndexOfApp(appKey) {
+    function iconKeyOf(appKey, icon) {
+        return appKey + "\n" + (icon || "");
+    }
+
+    function firstIndexOfIcon(iconKey) {
         for( var i=0; i<mergedModel.count; ++i ) {
-            if( mergedModel.get(i).appKey === appKey )
+            if( mergedModel.get(i).iconKey === iconKey )
                 return i;
         }
         return -1;
@@ -176,6 +182,8 @@ ListModel {
             toastGroups[key] = [notifObject];
             mergedModel.append({"notifType": "notification",
                                 "appKey": notifObject.sourceId || notifObject.ownerId || "",
+                                "iconKey": iconKeyOf(notifObject.sourceId || notifObject.ownerId || "",
+                                                     notifObject.iconUrl || notifObject.iconPath),
                                 "groupKey": key,
                                 "groupCount": 1,
                                 "window": null,
@@ -305,6 +313,8 @@ ListModel {
                                 "groupKey": "",
                                 "groupCount": 1,
                                 "appKey": window.appId || "",
+                                "iconKey": iconKeyOf(window.appId || "",
+                                                     window.windowProperties && window.windowProperties.LuneOS_icon),
                                 "window": window,
                                 "notifObject": null,
                                 "belowNotifObject": null,
