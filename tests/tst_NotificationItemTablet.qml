@@ -70,6 +70,32 @@ Item {
             return true;
         }
 
+        // Enyo's dashboards lit nothing when pressed: a tablet's neither.
+        function test_aPressLightsNothing() {
+            var g = createTemporaryObject(groupComponent, root);
+            waitForRendering(g);
+            var before = grabImage(g);
+            for (var x of [20, 70, 300, 480]) {
+                g.pressX = x;
+                g.pressed = true;
+                waitForRendering(g);
+                var after = grabImage(g);
+                verify(!g.iconLit && !g.textLit);
+                for (var px = 2; px < 500; px += 9)
+                    for (var py = 2; py < 52; py += 9)
+                        compare(String(after.pixel(px, py)), String(before.pixel(px, py)), "at " + px + "," + py + " pressed at " + x);
+                g.pressed = false;
+            }
+        }
+
+        // Enyo's 48 px icon on a 52 px row, centred in its 50 px cell 6 px in.
+        function test_theIconIsEnyosSizeInItsCell() {
+            var g = createTemporaryObject(groupComponent, root);
+            var icon = findChild(g, "notificationIcon");
+            fuzzyCompare(icon.height, g.height * 48 / 52, 0.01);
+            fuzzyCompare(icon.x + icon.width / 2, g.height * (6 + 25) / 52, 0.01);
+        }
+
         function test_onlyTheTopCardSlides() {
             var g = createTemporaryObject(groupComponent, root);
             verify(g.tablet, "the tablet layout");

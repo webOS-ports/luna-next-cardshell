@@ -141,6 +141,46 @@ Item {
             verify(whitePixelsOfText(g) > 20, "the text shows over its bar");
         }
 
+        // A press lights what Mojo lit: the half touched, or a single
+        // notification's whole entry; drawn, so the stacking counts.
+        function grey(g, x, y) {
+            return grabImage(g).pixel(x, y).r;
+        }
+        function pressed(count, x) {
+            var g = createTemporaryObject(groupComponent, item.parent, { count: count });
+            g.pressX = x;
+            g.pressed = true;
+            waitForRendering(g);
+            return g;
+        }
+        // Inside each pill, clear of the icon and the text.
+        readonly property int iconPillX: 4
+        readonly property int textPillX: 314
+        readonly property real lit: 0x50 / 255
+        function test_pressOnTheTextLightsTheTextPillOnly() {
+            var g = pressed(3, 200);
+            verify(grey(g, textPillX, 30) > lit, "text pill lit");
+            verify(grey(g, iconPillX, 30) < lit, "icon pill not");
+            verify(g.textLit && !g.iconLit);
+        }
+        function test_pressOnTheIconLightsTheIconPillOnly() {
+            var g = pressed(3, 20);
+            verify(grey(g, iconPillX, 30) > lit, "icon pill lit");
+            verify(grey(g, textPillX, 30) < lit, "text pill not");
+            verify(g.iconLit && !g.textLit);
+        }
+        function test_pressOnASingleLightsTheEntry() {
+            var g = pressed(1, 200);
+            verify(grey(g, iconPillX, 30) > lit);
+            verify(grey(g, textPillX, 30) > lit);
+        }
+        function test_nothingLitUnpressed() {
+            var g = createTemporaryObject(groupComponent, item.parent, { count: 3 });
+            waitForRendering(g);
+            verify(grey(g, iconPillX, 30) < lit);
+            verify(grey(g, textPillX, 30) < lit);
+        }
+
         // The title and the body, wherever the layout puts them.
         function texts() {
             var found = [];
@@ -154,6 +194,26 @@ Item {
                 }
             })(item);
             return found;
+        }
+
+        // As a Pre drew it (and Mojo's 48 px icon on a 52 px row): the icon
+        // 48/52 of the height, centred on the icon pill whether the entry is
+        // split or not, the text 1.34 heights in either way.
+        function test_phoneIconAndTextSitWhereAPresDid() {
+            var single = item;
+            var group = createTemporaryObject(groupComponent, null);
+            group.parent = item.parent;
+            [single, group].forEach(function(e) {
+                var icon = findChild(e, "notificationIcon");
+                fuzzyCompare(icon.height, e.height * 48 / 52, 0.01, "icon size");
+                fuzzyCompare(icon.x + icon.width / 2, e.iconPillWidth / 2, 0.01, "centred on the icon pill");
+                // anchored, so on a whole pixel
+                fuzzyCompare(icon.y + icon.height / 2, e.height / 2, 0.5, "centred top to bottom");
+            });
+            var singleTitle = find(single, single.title);
+            var groupTitle = find(group, "top title");
+            fuzzyCompare(singleTitle.mapToItem(single, 0, 0).x, single.height * 1.34, 0.01);
+            fuzzyCompare(groupTitle.mapToItem(group, 0, 0).x, group.height * 1.34, 0.01);
         }
 
         function test_longTextStaysInside() {

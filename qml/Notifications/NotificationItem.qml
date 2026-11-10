@@ -19,6 +19,8 @@
 import QtQuick 2.0
 import LunaNext.Common 0.1
 
+import "../Utils"
+
 /*
  * One entry of the notification area, in legacy webOS's dashboard look: the
  * webOS 2.2.4 pill on phones, webOS 3.0.5's flat row in the drop-down on
@@ -48,7 +50,9 @@ Item {
     property string body: "(no summary)"
     property url iconUrl: Qt.resolvedUrl("../images/default-app-icon.png");
     property int count: 1
+    // Held down, and where: across the entry, from its left.
     property bool pressed: false
+    property real pressX: 0
     // The top layer of a group, dragged this far to the right (negative: to
     // the left); the toast under it.
     property real layerOffset: 0
@@ -56,12 +60,27 @@ Item {
     property string belowBody: ""
 
     readonly property bool grouped: count > 1
-    readonly property bool tablet: Settings.tabletUi
+    // The look Settings' Notifications page chose, the device's own by default
+    readonly property bool tablet: NotificationLayout.tabletStyle
+
+    /*
+     * What a press lights, as on legacy webOS. A phone's is webOS 2.2.4's:
+     * Mojo lit the half that was touched (.palm-dashboard-icon-container:active
+     * and .palm-dashboard-text-container:active), the icon's with the pressed
+     * badge, and a single notification's whole entry (.single:active). A
+     * tablet's is 3.0's, where Enyo's dashboards lit nothing. A swipe takes
+     * the press from the tap area, so nothing stays lit as an entry slides.
+     */
+    readonly property bool _pressOnIcon: pressX < iconPillWidth + pillGap / 2
+    readonly property bool iconLit: pressed && !tablet && (!grouped || _pressOnIcon)
+    readonly property bool textLit: pressed && !tablet && grouped && !_pressOnIcon
 
     // Phone: the icon pill of a split entry, and the gap after it (Mojo: a
     // 54 px icon cap, the text cap 4 px further on, on a 48 px pill).
     readonly property real iconPillWidth: height * 1.02
     readonly property real pillGap: height * 4 / 48
+    // and the text, in heights from the left
+    readonly property real phoneTextX: 1.34
     // Tablet: Enyo's icon container, 6 px in and 50 px wide on a 52 px row;
     // the text 74 px in, or 79 px on the top card of a stack, whose shadow
     // starts at 58 px.
@@ -75,7 +94,7 @@ Item {
         id: bar
         z: notification.grouped ? 2 : 0
         visible: !notification.tablet
-        pressed: notification.pressed
+        pressed: notification.iconLit
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
@@ -121,7 +140,7 @@ Item {
         id: textBar
         z: 1
         visible: !notification.tablet && notification.grouped
-        pressed: notification.pressed
+        pressed: notification.textLit
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.right: parent.right
@@ -170,14 +189,21 @@ Item {
         }
     }
 
+    // Enyo's and Mojo's 48 px icon on a 52 px row, centred in Enyo's icon
+    // cell on a tablet and on the icon pill on a phone, as webOS 2.2.4 had it
+    // whether the entry was split or not. Icons carry their own margin (an
+    // application's icon fills 0.84 to 0.91 of its image), so what shows is
+    // about 0.8 of the row, as on a Pre.
+    readonly property real iconSize: height * 48 / 52
     Image {
         id: notificationIcon
+        objectName: "notificationIcon"
         z: 2
         anchors.verticalCenter: parent.verticalCenter
         x: notification.tablet ?
                notification.tabletIconCellX + (notification.tabletIconCellWidth - width) / 2 :
-               parent.height * 0.2
-        height: parent.height * 0.62
+               (notification.iconPillWidth - width) / 2
+        height: notification.iconSize
         width: height
         source: iconUrl
         fillMode: Image.PreserveAspectFit
@@ -188,6 +214,7 @@ Item {
         id: badge
         z: 2
         visible: notification.grouped
+        pressed: notification.iconLit
         count: notification.count
         height: notification.height * 20 / 48
         // On the icon's top right corner and a little past it: over the gap
@@ -202,11 +229,11 @@ Item {
         id: textColumn
         z: 1
         anchors.left: parent.left
+        // Phone: 1.34 of the height in, split or not, where a Pre's text was.
         anchors.leftMargin: notification.tablet ?
                                 (notification.grouped ? notification.tabletCardX + parent.height * 21 / 52
                                                       : parent.height * 74 / 52) :
-                                (notification.grouped ? notification.iconPillWidth + notification.pillGap + parent.height * 0.15
-                                                      : parent.height * 1.17)
+                                parent.height * notification.phoneTextX
         anchors.right: parent.right
         anchors.rightMargin: parent.height * 0.2
         anchors.verticalCenter: parent.verticalCenter

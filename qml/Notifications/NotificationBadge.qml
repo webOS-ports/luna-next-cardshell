@@ -35,6 +35,9 @@ Rectangle {
     id: badge
 
     property int count: 0
+    // Its icon held down: Mojo's dashboard-newitem-badge-active.png, the
+    // same glass lit, from #AED4F6 at the rim through #7BBBF1 to #5795C0.
+    property bool pressed: false
 
     readonly property real _ring: Math.max(1, height / 20)
 
@@ -46,13 +49,26 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: badge._ring
         radius: height / 2
-        gradient: Gradient {
+        gradient: badge.pressed ? litGlass : glass
+        Gradient {
+            id: glass
             GradientStop { position: 0.00; color: "#A8D1F6" }
             GradientStop { position: 0.06; color: "#517DA4" }
             GradientStop { position: 0.49; color: "#345069" }
             GradientStop { position: 0.50; color: "#233747" }
             GradientStop { position: 0.94; color: "#416483" }
             GradientStop { position: 1.00; color: "#4E86AF" }
+        }
+        Gradient {
+            id: litGlass
+            GradientStop { position: 0.00; color: "#AED4F6" }
+            GradientStop { position: 0.06; color: "#68A0D0" }
+            GradientStop { position: 0.21; color: "#79B9F0" }
+            GradientStop { position: 0.49; color: "#7BBBF1" }
+            GradientStop { position: 0.50; color: "#70AEE3" }
+            GradientStop { position: 0.79; color: "#669DCD" }
+            GradientStop { position: 0.94; color: "#5A8AB5" }
+            GradientStop { position: 1.00; color: "#5795C0" }
         }
     }
 

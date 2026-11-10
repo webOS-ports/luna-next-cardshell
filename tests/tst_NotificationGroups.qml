@@ -15,12 +15,10 @@ Item {
     width: 320
     height: 480
 
-    // what NotificationsMergedModel resolves from the shell around it
-    property int dashboardCardFixedHeight: 50
+    // what NotificationsMergedModel is given by CardsArea
     property QtObject compositorInstance: QtObject {
         property ListModel surfaceModel: ListModel {}
     }
-    Item { id: notificationArea }
 
     // What a tapped entry launches through; it reports success, as the
     // shell's launcher does once the app is up.
@@ -36,6 +34,7 @@ Item {
 
     NotificationsMergedModel {
         id: mergedModel
+        compositorInstance: root.compositorInstance
     }
 
     // A model and a view of their own, new for the test: a model takes the
@@ -46,7 +45,7 @@ Item {
         Item {
             property alias model: freshModel
             property alias view: freshView
-            NotificationsMergedModel { id: freshModel }
+            NotificationsMergedModel { id: freshModel; compositorInstance: root.compositorInstance }
             // each row's delegate reads the roles, as the areas' delegates
             // read groupCount
             Repeater {

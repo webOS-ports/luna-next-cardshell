@@ -49,6 +49,29 @@ WindowManager {
 
     signal showPowerMenu()
 
+    /*
+     * What the notification area lists, made once for whichever area is up -
+     * at the bottom (notificationAreaInstance below) or in the status bar -
+     * so that moving between them keeps it; see NotificationsMergedModel.
+     * Held during First Use, as the areas are.
+     */
+    NotificationsMergedModel {
+        id: notificationsModel
+        objectName: "notificationMergedModel"
+        compositorInstance: compositor
+        held: windowManager.state === "firstuse"
+    }
+
+    // Where the notifications go may depend on how the screen is held. The
+    // angle as well as the size: a square screen (the Titan Pocket's) is as
+    // wide as it is high whichever way up it is.
+    Binding {
+        target: NotificationLayout
+        property: "landscape"
+        value: NotificationLayout.isLandscape(windowManager.width, windowManager.height,
+                                              orientationHelper.orientationAngle)
+    }
+
     states: [
         State {
             name: "firstuse"
@@ -408,10 +431,38 @@ WindowManager {
 
         z: 2 // on top of cardview when no card is active
 
-        Component.onCompleted: if (!Settings.tabletUi) {
+        /*
+         * At the bottom, as on a phone, unless Settings' Notifications page put
+         * them in the status bar (StatusBar's notificationAreaInstance) for the
+         * way the screen is held; one or the other is there, both showing
+         * notificationsModel, and the one that comes up is made afresh.
+         *
+         * Not there is an empty item, not an inactive Loader: a Loader keeps
+         * the size of the item it unloads, and the cards, the launcher and the
+         * dismiss area hang from its top - they stayed short of the bottom by
+         * the list that had gone.
+         */
+        Component {
+            id: noNotificationArea
+            Item {}
+        }
+
+        Connections {
+            target: NotificationLayout
+            function onAtTopChanged() { notificationAreaInstance.placeArea(); }
+        }
+
+        Component.onCompleted: placeArea()
+
+        function placeArea() {
+            if (NotificationLayout.atTop) {
+                notificationAreaInstance.sourceComponent = noNotificationArea;
+                return;
+            }
             notificationAreaInstance.setSource("Notifications/NotificationArea.qml",
                       {"compositorInstance": compositor,
-                       "windowManagerInstance": parent,
+                       "mergedModel": notificationsModel,
+                       "windowManagerInstance": windowManager,
                        /*
                         * As tall as LunaSysMgr let the phone's dashboards grow
                         * (DashboardWindowContainer::calculateScrollProperties):
@@ -438,9 +489,9 @@ WindowManager {
         anchors.bottom: notificationAreaInstance.top
         z: 2
 
-        // the phone's area sits above the gesture area, the tablet's in the bar
-        notificationArea: Settings.tabletUi ? statusBarInstance.notificationArea
-                                            : notificationAreaInstance.item
+        // the bottom area sits above the gesture area, the top one in the bar
+        notificationArea: NotificationLayout.atTop ? statusBarInstance.notificationArea
+                                                   : notificationAreaInstance.item
         launcher: launcherInstance
     }
 
@@ -741,6 +792,8 @@ WindowManager {
 
     StatusBar {
         id: statusBarInstance
+
+        notificationsModel: notificationsModel
 
         anchors.top: parent.top
         anchors.left: parent.left

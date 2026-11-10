@@ -65,23 +65,30 @@ Rectangle {
         id: iconPathServices
     }
 
-    NotificationsMergedModel {
-        id: mergedModel
-        objectName: "notificationMergedModel"
+    // What is listed: CardsArea's, which outlives this area (see
+    // NotificationsMergedModel), its held set there from First Use too.
+    property NotificationsMergedModel mergedModel
 
-        held: notificationArea.held
+    Connections {
+        target: notificationArea.mergedModel
 
-        onAddBannerNotification: (notifObject) => {
+        function onAddBannerNotification(notifObject) {
            bannerItemsPopups.popupModel.append({"object": notifObject});
         }
 
-        onRemoveBannerNotification: (notifObject) => {
-           let toastId = mergedModel.getToastIdFromNotif(notifObject);
+        function onRemoveBannerNotification(notifObject) {
+           let toastId = notificationArea.mergedModel.getToastIdFromNotif(notifObject);
            for (var i = bannerItemsPopups.popupModel.count - 1; i >= 0; i--) {
                let entry = bannerItemsPopups.popupModel.get(i).object;
-               if (entry && mergedModel.getToastIdFromNotif(entry) === toastId)
+               if (entry && notificationArea.mergedModel.getToastIdFromNotif(entry) === toastId)
                    bannerItemsPopups.popupModel.remove(i);
            }
+        }
+
+        function onDashboardAdded() {
+            if( notificationArea.state === "hidden" || notificationArea.state == "open" ) {
+                notificationArea.state = "minimized";
+            }
         }
     }
 
@@ -130,7 +137,7 @@ Rectangle {
 
         spacing: Units.gu(1)/2
         padding: Units.gu(1)/2
-        visible: mergedModel.count > 0
+        visible: notificationArea.mergedModel.count > 0
 
         layoutDirection: Qt.RightToLeft
 
@@ -145,13 +152,13 @@ Rectangle {
         }
 
         Repeater {
-            model: mergedModel
+            model: notificationArea.mergedModel
             delegate: Image {
                     id: notifIconImage
                     // One icon per application (see firstIndexOfApp). Reading
                     // count re-evaluates this as entries come and go.
-                    visible: mergedModel.count > 0 &&
-                             (model.appKey === "" || mergedModel.firstIndexOfApp(model.appKey) === index)
+                    visible: notificationArea.mergedModel.count > 0 &&
+                             (model.appKey === "" || notificationArea.mergedModel.firstIndexOfApp(model.appKey) === index)
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     anchors.margins: Units.gu(1)/2
@@ -301,7 +308,7 @@ Rectangle {
             }
         }
         spacing: 2
-        model: mergedModel
+        model: notificationArea.mergedModel
 
         delegate:
             SwipeableNotification {
@@ -315,7 +322,7 @@ Rectangle {
                 property var delegateBelowNotifObject: typeof belowNotifObject !== 'undefined' ? belowNotifObject : null
                 layered: delegateType === "notification" && delegateGroupCount > 1
                 // an Enyo dashboard with layers swipes them itself
-                interactive: !mergedModel.swipesOwnLayers(delegateWindow)
+                interactive: !notificationArea.mergedModel.swipesOwnLayers(delegateWindow)
                 // the next toast of a group whose top one was swiped away
                 onDelegateNotifObjectChanged: comeBack()
                 property int delegateIndex: index
@@ -346,8 +353,8 @@ Rectangle {
                         height: slidingNotificationArea.delegateHeight
 
                         sourceComponent: slidingNotificationArea.delegateType === "notification" ?
-                                             mergedModel.notificationItemDelegate :
-                                             mergedModel.dashboardDelegate
+                                             notificationArea.mergedModel.notificationItemDelegate :
+                                             notificationArea.mergedModel.dashboardDelegate
 
                         property var loaderNotifObject: slidingNotificationArea.delegateNotifObject
                         property Item loaderWindow: slidingNotificationArea.delegateWindow
@@ -385,6 +392,7 @@ Rectangle {
     BannerPopupArea {
         id: bannerItemsPopups
         objectName: "bannerPopupArea"
+        tablet: true
         visible: notificationArea.state === "banner"
 
         anchors {
@@ -406,7 +414,7 @@ Rectangle {
         },
         State {
             name: "hidden"
-            when: (bannerItemsPopups.popupModel.count + mergedModel.count) === 0
+            when: (bannerItemsPopups.popupModel.count + notificationArea.mergedModel.count) === 0
             PropertyChanges { target: minimizedListView; visible: false }
             PropertyChanges { target: openListView; visible: false }
         },

@@ -81,6 +81,10 @@ Item {
                     property ListModel surfaceModel: ListModel {}
                 }
                 windowManagerInstance: windowManager
+                mergedModel: NotificationsMergedModel {
+                    objectName: "notificationMergedModel"
+                    held: windowManager.state === "firstuse"
+                }
                 maxDashboardWindowHeight: 240
             }
 
@@ -136,6 +140,10 @@ Item {
                         property ListModel surfaceModel: ListModel {}
                     }
                     windowManagerInstance: windowManager
+                    mergedModel: NotificationsMergedModel {
+                        objectName: "notificationMergedModel"
+                        held: windowManager.state === "firstuse"
+                    }
                     maxDashboardWindowHeight: 240
                 }
             }

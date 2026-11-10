@@ -32,6 +32,22 @@ ListModel {
 
     signal addBannerNotification(var notif);
     signal removeBannerNotification(var notif);
+    // A dashboard window came in: the area showing the list shows its icon.
+    signal dashboardAdded();
+
+    /*
+     * There is one of this, CardsArea's, and the notification area that is
+     * up shows it: the phone's, above the gesture area, or the tablet's, in
+     * the status bar - whichever Settings' Notifications page chose for the
+     * way the screen is held (NotificationLayout). It outlives them: a toast
+     * comes in from notificationmgr only once, and a dashboard window when it
+     * is mapped, so an area made later with a list of its own would have
+     * neither - the toasts and dashboards up at the time would be gone from
+     * the screen, though they were still there.
+     */
+    // CardsArea's compositor: its surfaceModel, and closeWindow for a dashboard
+    property var compositorInstance: null
+    readonly property int dashboardCardFixedHeight: Units.gu(5.6)
 
     function getToastIdFromNotif(notifObject) {
         return notifObject.sourceId+"-"+notifObject.timestamp;
@@ -95,6 +111,17 @@ ListModel {
     function swipesOwnLayers(window) {
         return !!window && !!window.windowProperties &&
                Number(window.windowProperties["LuneOS_dashLayers"]) > 1;
+    }
+
+    /*
+     * A dashboard that draws its own bar, and says so in LuneOS_dashOwnBar:
+     * Enyo 1's on a phone, whose page draws the pills of the entry itself (one
+     * for the icon, one per layer), as they slide with its layers. The bar
+     * drawn behind other dashboards would show round its pills.
+     */
+    function drawsOwnBar(window) {
+        return !!window && !!window.windowProperties &&
+               window.windowProperties["LuneOS_dashOwnBar"] === "true";
     }
 
     // A notification is a toast that is not "light": it goes in the list too.
@@ -165,10 +192,9 @@ ListModel {
 
     /*
      * Drives the notification LED off the same toast model. It lives here
-     * rather than in CardShell so that there is exactly one of it: the phone
-     * and tablet notification areas each build their own merged model, but only
-     * one of the two is ever loaded, and NotificationService - whose
-     * subscription to notificationmgr this shares - is created per model.
+     * rather than in CardShell so that it shares this model's
+     * NotificationService, whose subscription to notificationmgr is made per
+     * instance; there is one of this model, and so one of the LED.
      */
     property NotificationLed notificationLed: NotificationLed {
         notificationModel: notificationService.toastModel
@@ -244,7 +270,7 @@ ListModel {
     }
 
     property WindowModel listDashboardsModel : WindowModel {
-        surfaceSource: compositorInstance.surfaceModel
+        surfaceSource: mergedModel.compositorInstance ? mergedModel.compositorInstance.surfaceModel : null
         acceptFunction: "filter"
 
         function filter(surfaceItem) {
@@ -273,9 +299,6 @@ ListModel {
             }
             if( dashHeight<=0 ) dashHeight = dashboardCardFixedHeight;
 
-            if( notificationArea.state === "hidden" || notificationArea.state == "open" ) {
-                notificationArea.state = "minimized";
-            }
             mergedModel.append({"notifType": "dashboard",
                                 // the roles a toast's entry has: a view follows only
                                 // the roles the model's first row came with
@@ -286,6 +309,7 @@ ListModel {
                                 "notifObject": null,
                                 "belowNotifObject": null,
                                 "notifHeight": dashHeight});
+            mergedModel.dashboardAdded();
         }
         onRowsAboutToBeRemoved: (index, first, last) => {
             var window = listDashboardsModel.get(last);
@@ -322,6 +346,7 @@ ListModel {
             // (as in some tests) shows a single toast.
             count: typeof loaderGroupCount !== "undefined" ? loaderGroupCount : 1
             pressed: tapArea.pressed
+            pressX: tapArea.mouseX
             // A group's top layer slides on its own (see SwipeableNotification).
             layerOffset: typeof loaderLayerOffset !== "undefined" ? loaderLayerOffset : 0
             property var belowObject: typeof loaderBelowNotifObject !== "undefined" ? loaderBelowNotifObject : null
@@ -416,7 +441,7 @@ ListModel {
             // so stacks on top. Shows through a transparent dashboard window.
             NotificationBar {
                 anchors.fill: parent
-                visible: !Settings.tabletUi
+                visible: !NotificationLayout.tabletStyle && !mergedModel.drawsOwnBar(dashboardItem.dashboardWindow)
                 // A tall dashboard (dashHeight) keeps a standard entry's corners.
                 cornerHeight: Units.gu(5.6)
             }
@@ -434,8 +459,10 @@ ListModel {
                     dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
                 }
             }
+            // Not once it is another entry's: when the list moves to the other
+            // area, the new one may have taken the window before this goes.
             Component.onDestruction: {
-                if( dashboardWindow ) dashboardWindow.visible = false;
+                if( dashboardWindow && dashboardWindow.parent === dashboardItem ) dashboardWindow.visible = false;
             }
 
             onClosed: {
