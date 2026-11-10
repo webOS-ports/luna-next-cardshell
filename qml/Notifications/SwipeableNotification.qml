@@ -67,6 +67,21 @@ Item {
             onStopped: flickableArea.settled = true
         }
 
+        /* A resize moves the content as well: the margins are the width, and
+         * when the width grows and shrinks again (the phone turned landscape
+         * and back) the content is left off centre - 85 pixels to the right on
+         * a sargo. The Binding below writes 0 only when it comes into force,
+         * so it does not bring it back; this does, once the width, margins and
+         * content width have all followed. */
+        function recentre() {
+            if (settled && !swipeoutNotification.running && !slideBack.running && !moving)
+                contentX = 0;
+        }
+        onWidthChanged: Qt.callLater(recentre)
+        onContentWidthChanged: Qt.callLater(recentre)
+        onLeftMarginChanged: Qt.callLater(recentre)
+        onRightMarginChanged: Qt.callLater(recentre)
+
         // When nothing special is happening, always have the card centered
         Binding {
             when: flickableArea.settled && !swipeoutNotification.running

@@ -151,6 +151,23 @@ Item {
             compare(removed.count, 0);
         }
 
+        // Turned landscape and back: the entry grows and shrinks again, and
+        // has to end up where it started. Sargo's widths (GridUnit 25) left it
+        // 85 pixels to the right.
+        function test_widenedAndNarrowedStaysCentred_data() { return forms(); }
+        function test_widenedAndNarrowedStaysCentred(data) {
+            create(data.tablet);
+            item.width = 1055;
+            wait(50);
+            compare(flickable.contentX, 0);
+            item.width = 2195;
+            wait(50);
+            item.width = 1055;
+            wait(300);
+            compare(flickable.contentX, 0, "back in place after turning back");
+            compare(removed.count, 0);
+        }
+
         function test_flickRight_data() { return forms(); }
         function test_flickRight(data) {
             create(data.tablet);
