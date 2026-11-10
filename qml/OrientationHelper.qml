@@ -20,6 +20,7 @@ import QtQuick 2.9
 import QtSensors 5.11
 import LuneOS.Service 1.0
 import "LunaSysAPI"
+import "OrientationFilter.js" as OrientationFilter
 
 Item {
     Preferences {
@@ -31,7 +32,11 @@ Item {
     // before; the subscription below corrects it on the first reply.
     property bool displayOn: true
 
-    OrientationSensor {
+    // The raw accelerometer rather than OrientationSensor: sensorfw's
+    // orientation interpreter turns the screen after 20-25 degrees of tilt,
+    // and less than that when the phone is held leaning back. See
+    // OrientationFilter.js for the rule used instead.
+    Accelerometer {
         id: sensor
 
         // Rotation only matters while the screen is on. sensorfwd keeps the
@@ -46,20 +51,31 @@ Item {
         active: orientationHelperItem.displayOn
 
         property int sensorOrientationAngle: 0
+        property int pendingAngle: -1
 
         onReadingChanged: {
-          if (reading.orientation === OrientationReading.TopUp) {
-             sensorOrientationAngle = 0;
-          }
-          else if (reading.orientation === OrientationReading.LeftUp) {
-             sensorOrientationAngle = 90;
-          }
-          else if (reading.orientation === OrientationReading.TopDown) {
-             sensorOrientationAngle = 180;
-          }
-          else if (reading.orientation === OrientationReading.RightUp) {
-             sensorOrientationAngle = 270;
-          }
+            var proposed = OrientationFilter.orientationFor(reading.x, reading.y, reading.z,
+                                                            sensorOrientationAngle);
+            if (proposed === sensorOrientationAngle) {
+                pendingAngle = -1;
+                settleTimer.stop();
+            } else if (proposed !== pendingAngle) {
+                pendingAngle = proposed;
+                settleTimer.restart();
+            }
+        }
+    }
+
+    // A new orientation has to hold this long before the screen turns, so
+    // swinging the phone through one on the way to another does not flip it
+    // twice.
+    Timer {
+        id: settleTimer
+        interval: 200
+        onTriggered: {
+            if (sensor.pendingAngle >= 0)
+                sensor.sensorOrientationAngle = sensor.pendingAngle;
+            sensor.pendingAngle = -1;
         }
     }
 
