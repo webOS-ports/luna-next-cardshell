@@ -243,7 +243,13 @@ WindowManager {
             source: preferences.wallpaperFile
             asynchronous: true
             layer.mipmap: true
-            sourceSize: Qt.size(screenwidth, screenheight)
+            // Decode once, for both orientations: a square of the panel's long
+            // edge covers portrait and landscape alike. Following the screen
+            // size changed the request on every turn, and the wallpaper was
+            // decoded again from the JPEG each time - for the square wallpapers
+            // that ship, to exactly the same image.
+            sourceSize: Qt.size(longEdge, longEdge)
+            readonly property int longEdge: Math.max(Settings.displayWidth, Settings.displayHeight)
         }
     }
 
