@@ -51,10 +51,10 @@ Item {
 
     id: orientationHelperItem
 
-    // Laid out for the orientation it is turning to from the first moment,
-    // centred on the screen and turned about its own centre: a quarter turn
+    // Laid out for visualAngle, centred on the screen and turned about its
+    // own centre: a quarter turn
     // of a height x width item centred there covers the screen exactly.
-    readonly property bool __sideways: orientationAngle % 180 !== 0
+    readonly property bool __sideways: visualAngle % 180 !== 0
     width: __sideways ? parent.height : parent.width
     height: __sideways ? parent.width : parent.height
     x: (parent.width - width) / 2
@@ -71,36 +71,70 @@ Item {
     property bool rotationLock: false
     property bool locked: rotationLock || preferences.rotationLock
 
-    // What is on screen. orientationAngle is where the shell is going and
-    // changes once; this follows it with the animation. Everything else
-    // (status bar insets, the rotation lock) wants the destination, and used
-    // to be fed every angle in between as well.
-    property real visualAngle: 0
+    // The orientation the shell is laid out and turned for. orientationAngle
+    // is where it is going; this follows it once the snapshot of the old
+    // screen is taken. Everything else (status bar insets, the rotation lock)
+    // reads orientationAngle.
+    property int visualAngle: 0
+    Component.onCompleted: visualAngle = orientationAngle
 
     transform: Rotation { origin.x: width / 2; origin.y: height / 2; angle: -visualAngle }
 
-    // Swapping width and height relays the whole shell and every card, and on
-    // sargo that frame takes ~450 ms. It used to land in the middle of the
-    // animation (the item fell back to its base geometry while the angle was
-    // in between, then took the new one at the end), so the turn stopped
-    // around 45 degrees. Now the size changes at once and the turn starts
-    // after the first frame at the new size is on screen, so the expensive
-    // frame is out of the way before anything moves.
-    property bool __turnPending: false
-    // A frame already being drawn when the angle changed can still swap;
-    // the one at the new size is the next.
+    /*
+     * The turn, as LunaSysMgr drew it (WindowServer::rotateUi,
+     * Rotation_RotateAndCrossFade): a snapshot of the screen before, and one
+     * after the UI is laid out for the new orientation, over black. The old
+     * one turns away and fades out while the new one turns in from the same
+     * side and fades in, 400 ms InOutCubic (lunaAnimations.conf
+     * rotationAnimationDuration). The UI itself is hidden meanwhile, and a
+     * change of orientation during the turn waits until it is done.
+     *
+     * 0 idle, 1 taking the snapshot of the old screen, 2 laid out for the new
+     * one and waiting for it to be drawn, 3 turning.
+     */
+    property int __turnPhase: 0
     property int __framesToWait: 0
+    property int __fromAngle: 0
+    property int __toAngle: 0
+    // How far the screen turns, clockwise, in LunaSysMgr's terms: its
+    // angles run the other way round from ours (it turns its root item by
+    // +angle, this item turns by -angle), and new - old is wrapped into
+    // -180..180 with both ends kept, so a half turn goes the way it did.
+    property int __turnDelta: 0
+    property real __turnProgress: 0
+    property size __fromSize: Qt.size(0, 0)
+
+    function __legacyDelta(from, to) {
+        var d = ((360 - to) % 360) - ((360 - from) % 360);
+        if (d > 180)
+            d -= 360;
+        else if (d < -180)
+            d += 360;
+        return d;
+    }
 
     onOrientationAngleChanged: {
         publishTimer.restart();
         if (!displayOn || !Window.window || !Window.window.visible) {
-            turnAnimation.stop();
-            __turnPending = false;
+            __endTurn();
             visualAngle = orientationAngle;
             return;
         }
-        __framesToWait = 2;
-        __turnPending = true;
+        if (__turnPhase === 0)
+            __beginTurn();
+    }
+
+    function __beginTurn() {
+        if (orientationAngle === visualAngle)
+            return;
+        __fromAngle = visualAngle;
+        __toAngle = orientationAngle;
+        __turnDelta = __legacyDelta(__fromAngle, __toAngle);
+        __fromSize = Qt.size(width, height);
+        __turnProgress = 0;
+        __turnPhase = 1;
+        beforeSnapshot.scheduleUpdate();
+        __framesToWait = 1;
         turnFallback.restart();
         // Ask for the frames being waited for. When the turn changes no size
         // (a square screen such as the Titan's) nothing else redraws, and the
@@ -108,45 +142,112 @@ Item {
         Window.window.update();
     }
 
-    function __startTurn() {
-        if (!__turnPending)
-            return;
-        __turnPending = false;
+    function __nextPhase() {
         turnFallback.stop();
-        turnAnimation.to = orientationAngle;
-        turnAnimation.restart();
+        if (__turnPhase === 1) {
+            // The old screen is in the snapshot: lay out for the new one,
+            // under it.
+            visualAngle = __toAngle;
+            __turnPhase = 2;
+            // A frame already in flight can come first.
+            __framesToWait = 2;
+            turnFallback.restart();
+        } else if (__turnPhase === 2) {
+            __turnPhase = 3;
+            turnAnimation.restart();
+        }
+    }
+
+    function __endTurn() {
+        turnAnimation.stop();
+        turnFallback.stop();
+        if (__turnPhase === 1)
+            visualAngle = __toAngle;
+        __turnPhase = 0;
+        __turnProgress = 0;
     }
 
     Connections {
         target: orientationHelperItem.Window.window
-        enabled: orientationHelperItem.__turnPending
+        enabled: orientationHelperItem.__turnPhase === 1 || orientationHelperItem.__turnPhase === 2
         function onFrameSwapped() {
             if (--orientationHelperItem.__framesToWait <= 0)
-                orientationHelperItem.__startTurn();
+                orientationHelperItem.__nextPhase();
             else
                 orientationHelperItem.Window.window.update();
         }
     }
 
-    // In case no frame comes at all, turn anyway.
+    // In case no frame comes at all, go on anyway.
     Timer {
         id: turnFallback
         interval: 500
-        onTriggered: orientationHelperItem.__startTurn()
+        onTriggered: orientationHelperItem.__nextPhase()
     }
 
-    // Quick, and decelerating, so the turn starts at once and settles. At
-    // 500 ms linear it lagged well behind the hand.
-    RotationAnimation {
+    NumberAnimation {
         id: turnAnimation
         target: orientationHelperItem
-        property: "visualAngle"
-        duration: 250
-        easing.type: Easing.OutCubic
-        direction: RotationAnimation.Shortest
-        // Shortest can finish on an equivalent angle (360 for 0); settle on
-        // the real one. finished, not stopped: restart() stops too.
-        onFinished: orientationHelperItem.visualAngle = turnAnimation.to % 360
+        property: "__turnProgress"
+        from: 0
+        to: 1
+        duration: 400
+        easing.type: Easing.InOutCubic
+        onFinished: {
+            orientationHelperItem.__endTurn();
+            // LunaSysMgr kept the newest orientation pending and turned again
+            // once the animation was over.
+            if (orientationHelperItem.orientationAngle !== orientationHelperItem.visualAngle)
+                orientationHelperItem.__beginTurn();
+        }
+    }
+
+    // Drawn over the shell, in screen coordinates, only while turning.
+    Item {
+        id: turnOverlay
+        parent: orientationHelperItem.parent
+        anchors.fill: parent
+        z: 10000
+        visible: orientationHelperItem.__turnPhase > 0
+
+        Rectangle {
+            anchors.fill: parent
+            color: "black"
+        }
+
+        // The new screen, live, turning in from where the old one started.
+        ShaderEffectSource {
+            id: afterSnapshot
+            sourceItem: orientationHelperItem.__turnPhase >= 2 ? orientationHelperItem : null
+            hideSource: true
+            live: true
+            width: orientationHelperItem.width
+            height: orientationHelperItem.height
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            rotation: -orientationHelperItem.__toAngle
+                      - orientationHelperItem.__turnDelta * (1 - orientationHelperItem.__turnProgress)
+            opacity: orientationHelperItem.__turnProgress
+        }
+
+        // The old screen, taken once, turning away.
+        ShaderEffectSource {
+            id: beforeSnapshot
+            sourceItem: orientationHelperItem.__turnPhase >= 1 ? orientationHelperItem : null
+            live: false
+            width: orientationHelperItem.__fromSize.width
+            height: orientationHelperItem.__fromSize.height
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            rotation: -orientationHelperItem.__fromAngle
+                      + orientationHelperItem.__turnDelta * orientationHelperItem.__turnProgress
+            opacity: 1 - orientationHelperItem.__turnProgress
+        }
+
+        // The UI was hidden during the turn; nothing below takes input.
+        MouseArea {
+            anchors.fill: parent
+        }
     }
 
     Connections {
