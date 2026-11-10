@@ -274,6 +274,36 @@ Item {
             compare(shown.title, first);
         }
 
+        // notificationmgr can take several toasts away in one go: every one
+        // of them leaves its group. Only the last was taken out, and the
+        // others stayed in their groups as rows that were no longer there -
+        // an entry with no title, no text and no count.
+        function test_toastsWithdrawnTogetherAllLeave() {
+            addToast("org.webosports.app.testr", "a");
+            addToast("org.webosports.app.testr", "a");
+            var keptA = addToast("org.webosports.app.testr", "a");
+            var firstB = addToast("org.webosports.app.testr", "b");
+            addToast("org.webosports.app.testr", "b");
+            ModelSingletons.toastModel.remove(1, 3);   // a2, a3, b1
+            compare(entries(), ["title " + (stamp - 4) + " x1", "title " + stamp + " x1"]);
+            compare(mergedModel.get(0).belowNotifObject, null);
+        }
+
+        // and can hand several over at once, as when the shell starts with
+        // toasts already waiting: each one is listed.
+        function test_toastsAddedTogetherAreAllListed() {
+            var batch = [];
+            for (var i = 0; i < 3; i++) {
+                stamp++;
+                batch.push({ "message": "message " + stamp, "title": "title " + stamp, "type": "standard",
+                             "sourceId": "org.webosports.app.testr", "timestamp": String(1000 + stamp),
+                             "schedule": { "expire": Date.now() / 1000 + 3600 },
+                             "action": { "launchParams": { "id": "org.webosports.app.testr" } } });
+            }
+            ModelSingletons.toastModel.append(batch);
+            compare(entries(), ["title " + stamp + " x3"]);
+        }
+
         function test_entryStaysWhereItWas() {
             var mail = addToast("com.palm.app.email");
             addToast("org.webosports.app.messaging");

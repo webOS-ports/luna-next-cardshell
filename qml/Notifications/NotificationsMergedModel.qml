@@ -165,33 +165,43 @@ ListModel {
         target: notificationService.toastModel
         // the signal itemAdded is declared in C++, without a qmltype declaration,
         // so QML isn't able to guess the name of the signal argument.
+        // Rows come and go several at a time too (the toasts already waiting
+        // when the shell starts, several withdrawn at once): every one of
+        // first to last is taken, not only the last. A row left out of a
+        // removal stayed in its group after it had gone, and its entry
+        // showed nothing.
         function onRowsInserted(index, first, last) {
-            var notifObject = notificationService.toastModel.get(last);
-
-            if (mergedModel.held) {
-                // A copy: the row is the model's, and the model may go on
-                // changing it while the toast waits.
-                heldToasts = heldToasts.concat([JSON.parse(JSON.stringify(notifObject))]);
-                return;
-            }
-
-            // Banner in all cases; also in the list unless it is "light"
-            addToast(notifObject, true);
+            for (var row = first; row <= last; ++row)
+                toastInserted(notificationService.toastModel.get(row));
         }
         function onRowsAboutToBeRemoved(index, first, last) {
-            let notifObject = notificationService.toastModel.get(last);
-            let toastId = getToastIdFromNotif(notifObject);
-
-            // The banner popup is a separate model, so removing the sticky
-            // entry below is not enough: a banner still on screen when its
-            // toast is withdrawn would sit there until its own timer expired.
-            removeBannerNotification(notifObject);
-            removeToastEntry(toastId);
-            // Withdrawn before First Use was over: it no longer comes in then.
-            heldToasts = heldToasts.filter(function(entry) {
-                return getToastIdFromNotif(entry) !== toastId;
-            });
+            for (var row = first; row <= last; ++row)
+                toastRemoved(notificationService.toastModel.get(row));
         }
+    }
+    function toastInserted(notifObject) {
+        if (mergedModel.held) {
+            // A copy: the row is the model's, and the model may go on
+            // changing it while the toast waits.
+            heldToasts = heldToasts.concat([JSON.parse(JSON.stringify(notifObject))]);
+            return;
+        }
+
+        // Banner in all cases; also in the list unless it is "light"
+        addToast(notifObject, true);
+    }
+    function toastRemoved(notifObject) {
+        let toastId = getToastIdFromNotif(notifObject);
+
+        // The banner popup is a separate model, so removing the sticky
+        // entry below is not enough: a banner still on screen when its
+        // toast is withdrawn would sit there until its own timer expired.
+        removeBannerNotification(notifObject);
+        removeToastEntry(toastId);
+        // Withdrawn before First Use was over: it no longer comes in then.
+        heldToasts = heldToasts.filter(function(entry) {
+            return getToastIdFromNotif(entry) !== toastId;
+        });
     }
     // Takes one toast out of its group, if it is still listed: the group's
     // entry then shows the newest of the rest, or goes once none are left.
