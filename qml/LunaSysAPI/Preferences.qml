@@ -83,7 +83,12 @@ Item {
                 preferences.airplaneMode = response.airplaneMode;
             }
             if (response.hasOwnProperty("rotationLock")) {
-                preferences.rotationLockAngle = response.rotationLock;
+                // The locked angle, or rotationInvalid when free. Anything
+                // but a number (a false from an older store) is no lock: an
+                // int property took false as 0, locked upright. Not written
+                // back, as nothing read is.
+                preferences.rotationLockAngle = typeof response.rotationLock === "number"
+                        ? response.rotationLock : preferences.rotationInvalid;
             }
             if (response.hasOwnProperty("muteSound")) {
                 preferences.muteSound = response.muteSound;
