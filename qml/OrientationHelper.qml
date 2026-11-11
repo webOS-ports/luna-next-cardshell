@@ -18,10 +18,9 @@
 
 import QtQuick 2.12
 import QtQuick.Window 2.2
-import QtSensors 5.11
 import LuneOS.Service 1.0
+import LuneOS.System 1.0
 import "LunaSysAPI"
-import "OrientationFilter.js" as OrientationFilter
 
 Item {
     Preferences {
@@ -33,11 +32,9 @@ Item {
     // before; the subscription below corrects it on the first reply.
     property bool displayOn: true
 
-    // The raw accelerometer rather than OrientationSensor: sensorfw's
-    // orientation interpreter turns the screen after 20-25 degrees of tilt,
-    // and less than that when the phone is held leaning back. See
-    // OrientationFilter.js for the rule used instead.
-    Accelerometer {
+    // Which way the phone is held, by OrientationFilter.js's rule (in
+    // LuneOS.System, shared with apps that need the phone's own turn).
+    DeviceOrientation {
         id: sensor
 
         // Rotation only matters while the screen is on. sensorfwd keeps the
@@ -50,34 +47,6 @@ Item {
         // channel stops with the screen and comes back, with a fresh
         // reading, when it is lit again.
         active: orientationHelperItem.displayOn
-
-        property int sensorOrientationAngle: 0
-        property int pendingAngle: -1
-
-        onReadingChanged: {
-            var proposed = OrientationFilter.orientationFor(reading.x, reading.y, reading.z,
-                                                            sensorOrientationAngle);
-            if (proposed === sensorOrientationAngle) {
-                pendingAngle = -1;
-                settleTimer.stop();
-            } else if (proposed !== pendingAngle) {
-                pendingAngle = proposed;
-                settleTimer.restart();
-            }
-        }
-    }
-
-    // A new orientation has to hold this long before the screen turns, so
-    // swinging the phone through one on the way to another does not flip it
-    // twice.
-    Timer {
-        id: settleTimer
-        interval: 200
-        onTriggered: {
-            if (sensor.pendingAngle >= 0)
-                sensor.sensorOrientationAngle = sensor.pendingAngle;
-            sensor.pendingAngle = -1;
-        }
     }
 
     id: orientationHelperItem
@@ -93,7 +62,7 @@ Item {
 
     property real __lockedRotationAngle: 0
     property bool automaticOrientation: false
-    property int orientationAngle: !locked ? sensor.sensorOrientationAngle : __lockedRotationAngle;
+    property int orientationAngle: !locked ? sensor.angle : __lockedRotationAngle;
     property bool transitionEnabled: false
     property bool rotationLock: false
     property bool locked: rotationLock || preferences.rotationLock
