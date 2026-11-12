@@ -38,6 +38,12 @@ Item {
         }
     }
 
+    SignalSpy {
+        id: acknowledgements
+        target: alert
+        signalName: "acknowledged"
+    }
+
     TestCase {
         name: "CellBroadcastAlert"
         when: windowShown
@@ -60,6 +66,35 @@ Item {
             muteCalls = [];
             calls = [];
             vibrations = [];
+            acknowledgements.clear();
+        }
+
+        function test_OK_tells_which_record() {
+            alert.show("Dreiging", "", false, 41, "NL-Alert");
+            alert.show("Threat", "", false, 42, "NL-Alert");
+            alert.acknowledge();
+            compare(acknowledgements.count, 1);
+            compare(acknowledgements.signalArguments[0][0], 41);
+            alert.acknowledge();
+            compare(acknowledgements.signalArguments[1][0], 42);
+            alert.acknowledge();
+            compare(acknowledgements.count, 2);
+        }
+
+        function test_without_a_record_OK_still_closes() {
+            alert.show("Dreiging", "");
+            alert.acknowledge();
+            compare(acknowledgements.count, 1);
+            compare(acknowledgements.signalArguments[0][0], undefined);
+            verify(!alert.visible);
+        }
+
+        function test_the_catalog_title() {
+            alert.show("Dreiging", "", false, 41, "NL-Alert");
+            compare(findChild(alert, "cellBroadcastTitle").text, "NL-Alert");
+            alert.acknowledge();
+            alert.show("Threat", "");
+            compare(findChild(alert, "cellBroadcastTitle").text, "Emergency Alert");
         }
 
         function called(uri) {

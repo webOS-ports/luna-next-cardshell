@@ -228,11 +228,14 @@ Rectangle {
 
         inCall: shellAudioOutputService.inCall
         headphones: shellAudioOutputService.headset || shellAudioOutputService.bluetoothAudio
+
+        onAcknowledged: (recordId) => cellBroadcastService.acknowledge(recordId)
     }
 
     CellBroadcastService {
-        onWarningReceived: (text, soundFile, throughMute) =>
-            cellBroadcastAlert.show(text, soundFile, throughMute)
+        id: cellBroadcastService
+        onWarningReceived: (text, soundFile, throughMute, recordId, title) =>
+            cellBroadcastAlert.show(text, soundFile, throughMute, recordId, title)
     }
 
     PowerMenu {
