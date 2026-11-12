@@ -102,6 +102,10 @@ Item {
         __framesToWait = 2;
         __turnPending = true;
         turnFallback.restart();
+        // Ask for the frames being waited for. When the turn changes no size
+        // (a square screen such as the Titan's) nothing else redraws, and the
+        // turn used to start only from the fallback, half a second late.
+        Window.window.update();
     }
 
     function __startTurn() {
@@ -119,10 +123,12 @@ Item {
         function onFrameSwapped() {
             if (--orientationHelperItem.__framesToWait <= 0)
                 orientationHelperItem.__startTurn();
+            else
+                orientationHelperItem.Window.window.update();
         }
     }
 
-    // In case no frame comes (nothing to redraw), turn anyway.
+    // In case no frame comes at all, turn anyway.
     Timer {
         id: turnFallback
         interval: 500
