@@ -14,8 +14,18 @@ TestCase {
     readonly property string toneFile:
         "/usr/share/cell-broadcast-provider-info/attention-tones/cellbroadcast-attention-853-960.ogg"
 
+    /* What went to voicecall-manager, and what activeAlert answers. */
+    property var voicecallCalls: []
+    property var activeReply: null
+
     CellBroadcastService {
         id: service
+
+        function callVoicecall(method, args, onReply, onError) {
+            voicecallCalls = voicecallCalls.concat([{ method: method, args: args }]);
+            if (method === "activeAlert" && onReply)
+                onReply(activeReply);
+        }
     }
 
     SignalSpy {
@@ -32,6 +42,9 @@ TestCase {
 
     function init() {
         service._seen = {};
+        service._records = {};
+        voicecallCalls = [];
+        activeReply = null;
         service.repeatWindowMs = 24 * 60 * 60 * 1000;
         warnings.clear();
     }
@@ -112,6 +125,81 @@ TestCase {
         service.handleBroadcast("/ril_0", "Dreiging", attention(4370));
         service.handleBroadcast("/ril_0", "Update", attention(4370));
         compare(warnings.count, 2);
+    }
+
+    function record(id, topic, extra) {
+        var properties = { RecordId: id, Topic: topic, CellBroadcastDisplay: "alert",
+                           CellBroadcastTitle: "NL-Alert" };
+        for (var key in extra)
+            properties[key] = extra[key];
+        return properties;
+    }
+
+    function acknowledged() {
+        return voicecallCalls.filter(function(c) { return c.method === "acknowledgeAlert"; })
+                             .map(function(c) { return c.args[0]; });
+    }
+
+    function test_voicecall_decides_what_is_shown() {
+        // Classified, it is voicecall-manager's call, inside the range or not.
+        service.handleBroadcast("/ril_0", "Alerta", record(1, 6400));
+        service.handleBroadcast("/ril_0", "Hidden", record(2, 4370, { CellBroadcastDisplay: "none" }));
+        compare(warnings.count, 1);
+        compare(warnings.signalArguments[0][0], "Alerta");
+    }
+
+    function test_the_record_and_title_go_along() {
+        service.handleBroadcast("/ril_0", "Dreiging", record(7, 4371));
+        compare(warnings.signalArguments[0][3], 7);
+        compare(warnings.signalArguments[0][4], "NL-Alert");
+    }
+
+    function test_without_a_title_the_default() {
+        service.handleBroadcast("/ril_0", "Dreiging", { Topic: 4370 });
+        compare(warnings.signalArguments[0][3], undefined);
+        compare(warnings.signalArguments[0][4], "Emergency Alert");
+    }
+
+    function test_a_record_sent_again_is_not_shown_again() {
+        // voicecall-manager sends a waiting one again once it becomes active.
+        service.handleBroadcast("/ril_0", "Dreiging", record(7, 4370));
+        service.handleBroadcast("/ril_0", "Threat", record(8, 4383));
+        service.handleBroadcast("/ril_0", "Threat", record(8, 4383));
+        compare(warnings.count, 2);
+        compare(acknowledged().length, 0);
+    }
+
+    function test_a_repeat_not_shown_is_acknowledged() {
+        // The second modem's copy is a record of its own; left alone it would
+        // hold up voicecall-manager's queue.
+        service.handleBroadcast("/ril_0", "Dreiging", record(7, 4370));
+        service.handleBroadcast("/ril_1", "Dreiging", record(9, 4370));
+        compare(warnings.count, 1);
+        compare(acknowledged(), [{ type: "t", value: 9 }]);
+    }
+
+    function test_acknowledge_tells_voicecall() {
+        service.acknowledge(12);
+        service.acknowledge(undefined);
+        service.acknowledge(null);
+        compare(acknowledged(), [{ type: "t", value: 12 }]);
+    }
+
+    function test_the_active_alert_at_start_shows() {
+        activeReply = record(5, 4370, { ModemPath: "/ril_0", Text: "Dreiging" });
+        service.fetchActive();
+        compare(warnings.count, 1);
+        compare(warnings.signalArguments[0][0], "Dreiging");
+        compare(warnings.signalArguments[0][3], 5);
+        // And not again when it is sent once more.
+        service.handleBroadcast("/ril_0", "Dreiging", activeReply);
+        compare(warnings.count, 1);
+    }
+
+    function test_no_active_alert_at_start() {
+        activeReply = {};
+        service.fetchActive();
+        compare(warnings.count, 0);
     }
 
     function test_repeat_window_ends() {

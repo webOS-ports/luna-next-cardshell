@@ -50,8 +50,13 @@ Item {
     /* Headphones or a Bluetooth headset are carrying the audio. */
     property bool headphones: false
 
-    /* The warnings not acknowledged yet, oldest first. */
+    /* The warnings not acknowledged yet, oldest first: { text, title,
+     * recordId }. */
     property var pending: []
+
+    /* OK on the warning voicecall-manager knows as recordId (undefined when
+     * it keeps no record of it). */
+    signal acknowledged(var recordId)
 
     /* The tone is due, and whether it may sound now. */
     property bool toneOwed: false
@@ -79,7 +84,9 @@ Item {
 
     onToneOwedChanged: if (!toneOwed) throughMute = false
 
-    readonly property string currentText: pending.length > 0 ? pending[0] : ""
+    readonly property string currentText: pending.length > 0 ? pending[0].text : ""
+    readonly property string currentTitle: pending.length > 0 && pending[0].title
+                                           ? pending[0].title : "Emergency Alert"
 
     /* Larger than a dialog's usual words: read at arm's length, in a hurry. */
     readonly property real titleSize: FontUtils.sizeToPixels("large") * 1.2
@@ -87,8 +94,9 @@ Item {
 
     visible: pending.length > 0
 
-    function show(text, soundFile, soundsThroughMute) {
-        pending = pending.concat([text]);
+    function show(text, soundFile, soundsThroughMute, recordId, title) {
+        pending = pending.concat([{ "text": text, "title": title || "",
+                                    "recordId": recordId }]);
         vibrate();
         if (soundFile.length > 0) {
             tone.source = "file://" + soundFile;
@@ -99,7 +107,11 @@ Item {
     }
 
     function acknowledge() {
+        if (pending.length === 0)
+            return;
+        var recordId = pending[0].recordId;
         pending = pending.slice(1);
+        acknowledged(recordId);
         if (pending.length === 0) {
             toneOwed = false;
             vibrationTimer.stop();
@@ -242,7 +254,7 @@ Item {
         Text {
             objectName: "cellBroadcastTitle"
             width: dialog.textWidth
-            text: "Emergency Alert"
+            text: root.currentTitle
             color: "#be0003"
             font.pixelSize: root.titleSize
             font.bold: true

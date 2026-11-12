@@ -60,6 +60,28 @@ function isPublicWarning(properties) {
 }
 
 /**
+ * Whether voicecall-manager wants this broadcast on screen.
+ *
+ * Once it has classified one against its catalog it says so in
+ * CellBroadcastDisplay, which is "none" only for a category the country does
+ * not put in front of people; it only sends those it keeps up (active or
+ * waiting their turn), and a country's warnings are not all in 4352-4399
+ * (Mexico 6400, Taiwan 911, Korea 40961...). Without that property, an older
+ * voicecall-manager, the warning range decides.
+ */
+function isShown(properties) {
+    if (properties && properties.CellBroadcastDisplay !== undefined)
+        return String(properties.CellBroadcastDisplay) !== "none";
+    return isPublicWarning(properties);
+}
+
+/// The heading voicecall-manager's catalog gives the category, or the default.
+function title(properties) {
+    var name = properties ? properties.CellBroadcastTitle : "";
+    return name ? String(name) : "Emergency Alert";
+}
+
+/**
  * Whether this one was seen less than windowMs ago, noting it if not.
  *
  * A warning is repeated by the network as long as it holds, and a dual SIM
