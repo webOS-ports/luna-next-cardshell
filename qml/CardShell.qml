@@ -19,7 +19,7 @@
  */
 
 import QtQuick 2.0
-import QtQuick.Window 2.0
+import QtQuick.Window 2.2 as QtWindow
 import LuneOS.Components 1.0
 import LunaNext.Common 0.1
 import LunaNext.Shell 0.1
@@ -132,8 +132,11 @@ Rectangle {
         // dead in landscape. Size from the window, the space the raw positions
         // are in; the mapped position below is then classified against the
         // scene, which is orientationHelper's space.
-        height: Window.height
-        width: Window.width
+        // Through the qualified import: under this file's "import QtQuick 2.0"
+        // a plain Window.width/height reads as undefined, the handler stayed
+        // 0x0 and every touch counted as a screen-edge touch.
+        height: QtWindow.Window.height
+        width: QtWindow.Window.width
 
         signal screenEdgeFlickEdgeLeft(bool timeout,point pos)
         signal screenEdgeFlickEdgeRight(bool timeout, point pos)
