@@ -62,7 +62,11 @@ Item {
 
     property real __lockedRotationAngle: 0
     property bool automaticOrientation: false
-    property int orientationAngle: !locked ? sensor.angle : __lockedRotationAngle;
+    // An angle set by hand (F6-F9 through setOrientation), kept until the
+    // phone is turned; -1 when there is none.
+    property int __manualAngle: -1
+    property int orientationAngle: locked ? __lockedRotationAngle
+                                          : (__manualAngle >= 0 ? __manualAngle : sensor.angle)
     property bool transitionEnabled: false
     property bool rotationLock: false
     property bool locked: rotationLock || preferences.rotationLock
@@ -98,6 +102,10 @@ Item {
         __framesToWait = 2;
         __turnPending = true;
         turnFallback.restart();
+        // Ask for the frames being waited for. When the turn changes no size
+        // (a square screen such as the Titan's) nothing else redraws, and the
+        // turn used to start only from the fallback, half a second late.
+        Window.window.update();
     }
 
     function __startTurn() {
@@ -115,10 +123,12 @@ Item {
         function onFrameSwapped() {
             if (--orientationHelperItem.__framesToWait <= 0)
                 orientationHelperItem.__startTurn();
+            else
+                orientationHelperItem.Window.window.update();
         }
     }
 
-    // In case no frame comes (nothing to redraw), turn anyway.
+    // In case no frame comes at all, turn anyway.
     Timer {
         id: turnFallback
         interval: 500
@@ -232,9 +242,19 @@ Item {
             displayOn = true;
     }
 
+    // Turns the screen by hand, for keyboards and testing. This used to
+    // assign orientationAngle, which in QML replaces its binding for good:
+    // after one F6-F9 the shell no longer followed the sensor at all, and
+    // the screen stayed where the key left it until the shell restarted.
+    // The angle now holds until the phone itself is turned.
     function setOrientation(angle) {
         if (locked) return;
-        orientationAngle = angle;
+        __manualAngle = ((angle % 360) + 360) % 360;
+    }
+
+    Connections {
+        target: sensor
+        function onAngleChanged() { orientationHelperItem.__manualAngle = -1; }
     }
 
     function setLocked(lock) {
