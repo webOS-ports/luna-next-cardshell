@@ -230,6 +230,12 @@ Rectangle {
         z: 950
     }
 
+    /* A file a Bluetooth device sends: see BluetoothTransferPromptArea. */
+    BluetoothTransferPromptArea {
+        id: bluetoothTransferPrompt
+        z: 950
+    }
+
     /* Over everything, the lock screen included: see CellBroadcastAlert. */
     CellBroadcastAlert {
         id: cellBroadcastAlert
