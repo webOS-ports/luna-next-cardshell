@@ -2,15 +2,16 @@ import QtQuick 2.0
 import QtTest 1.0
 
 import "../qml/Notifications"
-import "../../luneos-components/test/imports/LuneOS/Service/devmode.js" as DevMode
+import LuneOS.Service 1.0
 
 /*
  * The shell shows devmode's adbAuthRequests and answers with respondAdbAuth:
  * the fingerprint it was told, Allow / Always / Deny as the user said, Deny
  * when nobody answers, and a question the service closed taken away.
  * DevMode is the same stand-in LuneOS.Service's LunaService mock answers
- * from (luneos-components' test/imports, found as COMPONENTS is by
- * run-tests.sh).
+ * from, taken from the module (its qmldir lists devmode.js) so it is found
+ * wherever COMPONENTS points - not by a path relative to this checkout, which
+ * failed whenever luneos-components was not a sibling of it.
  */
 Item {
     id: page
