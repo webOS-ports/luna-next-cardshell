@@ -223,6 +223,13 @@ Rectangle {
         z: 950
     }
 
+    /* A pairing a Bluetooth device starts, whatever app is open: see
+     * BluetoothPairingPromptArea. Waits on the user, as the prompt above. */
+    BluetoothPairingPromptArea {
+        id: bluetoothPairingPrompt
+        z: 950
+    }
+
     /* Over everything, the lock screen included: see CellBroadcastAlert. */
     CellBroadcastAlert {
         id: cellBroadcastAlert
