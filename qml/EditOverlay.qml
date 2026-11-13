@@ -367,7 +367,45 @@ Item {
         }
     }
 
+    /*!
+     * \brief Keep the pill for the selection a Select or Select All makes.
+     *
+     * The items follow the input method's report by themselves; what is left is
+     * to point at the selection rather than where the caret was, and to come
+     * back up if the hand-over of the keyboard focus took the pill down on the
+     * way. No selection within the wait means the application made none.
+     */
+    function awaitSelection() {
+        selectionWait.restart();
+    }
+
+    Timer {
+        id: selectionWait
+
+        interval: 1000
+        repeat: false
+
+        onTriggered: if (!editOverlay.hasSelection) editOverlay.hide()
+    }
+
+    Connections {
+        target: editOverlay.keyboardService
+
+        function onInputHasSelectionChanged() {
+            if (!selectionWait.running || !editOverlay.hasSelection)
+                return;
+
+            selectionWait.stop();
+            if (!editOverlay.editable || editOverlay.items.length === 0)
+                return;
+
+            editOverlay.pointAtText(editOverlay.anchorX, editOverlay.anchorY);
+            editOverlay.visible = true;
+        }
+    }
+
     function hide() {
+        selectionWait.stop();
         caretWait.stop();
         editOverlay.visible = false;
         editOverlay.spellingMode = false;
@@ -386,7 +424,17 @@ Item {
     }
 
     //! The field going away takes the overlay with it once it is up.
-    onEditableChanged: if (!editOverlay.editable) editOverlay.hide()
+    //! Except while a Select waits for its selection: handing the keyboard focus
+    //! back can drop it for a moment, and the pill is to come back after that.
+    onEditableChanged: {
+        if (editOverlay.editable)
+            return;
+
+        var waiting = selectionWait.running;
+        editOverlay.hide();
+        if (waiting)
+            selectionWait.restart();
+    }
 
     //! The keyboard coming up over the text the pill points at takes it away;
     //! anywhere else the pill only moves above the keyboard, which bottomLimit
@@ -686,8 +734,19 @@ Item {
                                         editOverlay.compositorInstance.sendEditCommand(modelData.command);
 
                                     // Legacy hid the widget before running any command,
-                                    // Select All included; the selection it leaves is
-                                    // what a tap raises the pill for again.
+                                    // and a tap on the selection raised it again. Here
+                                    // that tap reaches the application first, which
+                                    // takes the selection away, so after Select All
+                                    // there was no way to copy it (BraX3, 13 Nov 2026).
+                                    // A selecting command keeps the pill up instead: it
+                                    // turns into Cut and Copy once the selection is
+                                    // reported.
+                                    if (modelData.command === "selectAll"
+                                            || modelData.command === "selectWord") {
+                                        editOverlay.awaitSelection();
+                                        return;
+                                    }
+
                                     editOverlay.hide();
                                 }
                             }
