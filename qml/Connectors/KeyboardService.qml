@@ -94,18 +94,64 @@ Item {
         id: imeService
         name: "com.webos.surfacemanager.cardshell"
 
-        onInitialized: {
+        onInitialized: keyboardService._subscribe()
+    }
+
+    /*
+     * The subscription ends whenever maliit-server does - a package install or
+     * any restart of the keyboard - and the hub says so with one last reply
+     * that has returnValue false. Without subscribing again the shell kept the
+     * last state it heard for good: no field focused, so the edit pill never
+     * came back until the shell itself was restarted (BraX3, 13 Nov 2026).
+     */
+    property var _call: null
+    readonly property int _retryFirst: 1000
+    readonly property int _retryMost: 30000
+
+    function _subscribe() {
+        if (keyboardService._call)
+            keyboardService._call.cancel();
+        keyboardService._call =
             imeService.subscribe("luna://com.webos.service.ime/getKeyboardStatus",
                                  JSON.stringify({"subscribe": true}),
                                  keyboardService._onStatus, keyboardService._onError);
+    }
+
+    //! Forgets what the input method said about the field, which no longer
+    //! holds once it has gone, and tries again a little later each time.
+    function _lost() {
+        keyboardService.inputFocus = false;
+        keyboardService.inputHasSelection = false;
+        keyboardService.inputHasText = false;
+        keyboardService.spellingWord = "";
+        keyboardService.spellingSuggestions = [];
+        keyboardService.spellingRect = null;
+        keyboardService.spellingCanLearn = false;
+
+        if (!resubscribeTimer.running)
+            resubscribeTimer.start();
+    }
+
+    Timer {
+        id: resubscribeTimer
+        interval: keyboardService._retryFirst
+        onTriggered: {
+            resubscribeTimer.interval = Math.min(resubscribeTimer.interval * 2,
+                                                 keyboardService._retryMost);
+            keyboardService._subscribe();
         }
     }
 
     function _onStatus(message) {
         var response = JSON.parse(message.payload);
 
-        if (!response.returnValue)
+        if (!response.returnValue) {
+            keyboardService._lost();
             return;
+        }
+
+        resubscribeTimer.stop();
+        resubscribeTimer.interval = keyboardService._retryFirst;
 
         if (response.hardwareKeyboard !== undefined) {
             keyboardService.hardwareKeyboardPresent = response.hardwareKeyboard.present === true;
@@ -147,6 +193,7 @@ Item {
             keyboardService._warned = true;
             console.warn("KeyboardService: no keyboard status: " + message.payload);
         }
+        keyboardService._lost();
     }
 
     property bool _warned: false
