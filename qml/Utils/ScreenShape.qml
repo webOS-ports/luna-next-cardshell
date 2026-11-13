@@ -172,9 +172,10 @@ QtObject {
      * How tall a bar across the top of the screen has to be for the hardware to
      * fall entirely inside it.
      *
-     * Only cutouts against the top edge count. One further down the panel is not
-     * a top bar's problem, and one at the bottom (an under-screen sensor, a
-     * second notch) would otherwise make the bar absurd.
+     * Only cutouts that start within defaultHeight of the top count (see
+     * topCutoutBottom). One further down the panel is not a top bar's problem,
+     * and one at the bottom (an under-screen sensor, a second notch) would
+     * otherwise make the bar absurd.
      *
      * This is what stops maximized apps being drawn under the camera: every
      * surface in CardsArea anchors below the bar, so the bar absorbing the notch
@@ -187,15 +188,54 @@ QtObject {
         if (!known)
             return defaultHeight;
 
-        var h = defaultHeight;
+        return Math.max(defaultHeight, topCutoutBottom(defaultHeight, angle));
+    }
+
+    /*
+     * Where the hardware at the top of the screen ends: the lowest edge of any
+     * cutout that starts within the top `depth` pixels, or 0 if there is none.
+     *
+     * "Starts within depth" rather than "touches the top edge" because a punch
+     * hole is a circle a little below the edge, and transcribed as measured its
+     * rectangle has y > 0. A bar of that depth still runs straight through it, so
+     * it counts - Android extends a hole's bounding rect to the edge for the same
+     * reason. A cutout further down the panel is still not a top bar's problem.
+     *
+     * This is also where a second row of status bar content can start, which is
+     * what StatusBar uses it for when one row beside the camera is too crowded.
+     */
+    function topCutoutBottom(depth, angle) {
+        if (!known)
+            return 0;
+
+        var bottom = 0;
         var rects = rectsFor(angle);
         for (var i = 0; i < rects.length; i++) {
             var c = rects[i];
-            if (c.y > 0)
+            if (c.y >= depth)
                 continue;
-            h = Math.max(h, c.y + c.height);
+            bottom = Math.max(bottom, c.y + c.height);
         }
-        return h;
+        return bottom;
+    }
+
+    /*
+     * Whether none of the spans - {x, width}, things that cannot be shortened or
+     * moved, such as the indicator block - overlap any of the obstacles. An empty
+     * span (width <= 0) never overlaps anything.
+     */
+    function spansClear(spans, obstacles) {
+        for (var i = 0; i < spans.length; i++) {
+            var s = spans[i];
+            if (s.width <= 0)
+                continue;
+            for (var j = 0; j < obstacles.length; j++) {
+                var o = obstacles[j];
+                if (s.x < o.x + o.width && s.x + s.width > o.x)
+                    return false;
+            }
+        }
+        return true;
     }
 
     /*
@@ -302,9 +342,11 @@ QtObject {
      * When neither side of an obstacle has room the item is left where it was
      * rather than shoved somewhere arbitrary: a clock a few pixels under the lens
      * is bad, a clock pushed off screen or on top of the indicators is worse.
-     * Phosh makes the same call, and logs, so this does too.
+     * Phosh makes the same call, and logs, so this does too - unless quiet is
+     * set, for a caller only asking "would it fit?" ahead of a layout it may
+     * not use.
      */
-    function shiftClear(x, itemWidth, obstacles, minX, maxX) {
+    function shiftClear(x, itemWidth, obstacles, minX, maxX, quiet) {
         for (var i = 0; i < obstacles.length; i++) {
             var o = obstacles[i];
             if (x >= o.x + o.width || x + itemWidth <= o.x)
@@ -321,7 +363,7 @@ QtObject {
                 x = toLeft;
             else if (rightFits)
                 x = toRight;
-            else
+            else if (!quiet)
                 console.warn("ScreenShape: no room either side of the cutout at " +
                              o.x + "+" + o.width + " for an item " + itemWidth +
                              "px wide in [" + minX + ", " + maxX + "]; leaving it put");

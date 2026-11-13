@@ -65,8 +65,67 @@ Item {
      * the 17px it would lose centred, or the 75px a naive full-radius inset takes.
      */
     readonly property real contentHeight: Units.gu(3)
-    readonly property real barHeight: ScreenShape.topBarHeight(contentHeight,
-                                                               orientationHelper.orientationAngle)
+    readonly property real barHeight: contentBelowCutout
+                                      ? ScreenShape.topCutoutBottom(oneRowHeight, shapeAngle) + contentHeight
+                                      : oneRowHeight
+    // Where the content band starts; everything that routes around the camera
+    // asks about this band.
+    readonly property real contentTop: barHeight - contentHeight
+
+    readonly property real shapeAngle: orientationHelper.orientationAngle
+
+    /*
+     * One row or two.
+     *
+     * Normally the contents share a single row with the camera: the bar is
+     * oneRowHeight - tall enough for the cutout to fall inside it - the clock
+     * steps off the lens and the carrier name stops short of it. That only works
+     * while the things that cannot move or shrink - the indicator block, the app
+     * menu, the clock - fit beside the camera. On brax3 (a 161px teardrop at
+     * 280..441 of 720) one SIM fits, but with four SIMs, Wi-Fi and Bluetooth the
+     * indicators reach x=330 and were drawn straight across it.
+     *
+     * When that happens the contents drop to a second row under the camera and
+     * the strip beside it is left empty, as other phone shells do for a crowded
+     * bar. The bar grows by the cutout's depth, but only while it is crowded:
+     * a device with room keeps the one-row bar.
+     *
+     * Decided from the one-row geometry only - widths and the one-row insets,
+     * never barHeight or anything positioned from it - so the decision cannot
+     * feed back into itself.
+     */
+    readonly property real oneRowHeight: ScreenShape.topBarHeight(contentHeight, shapeAngle)
+    readonly property bool contentBelowCutout: {
+        var top = oneRowHeight - contentHeight;
+        var obstacles = ScreenShape.obstaclesInBand(top, contentHeight, shapeAngle);
+        if (obstacles.length === 0)
+            return false;
+
+        var inkTop = top + contentHeight * (1 - contentInkFraction) / 2;
+        var insetLeft = ScreenShape.topLeftInset(inkTop, shapeAngle);
+        var insetRight = ScreenShape.topRightInset(inkTop, shapeAngle);
+
+        // The indicators, and the tablet-style notification icons to their left.
+        var indicatorsRight = statusBar.width - insetRight;
+        var indicatorsLeft = indicatorsRight - systemIndicatorsBoundingRect.width;
+        var notificationsLeft = indicatorsLeft
+                - (notificationAreaInstance.item ? notificationAreaInstance.width : 0);
+        var spans = [ { "x": notificationsLeft, "width": indicatorsRight - notificationsLeft } ];
+
+        if (appMenu.visible)
+            spans.push({ "x": insetLeft, "width": appMenu.width });
+
+        // The phone clock, placed as phoneTweaksClock.x would place it in one row.
+        if (phoneTweaksClock.width > 0 && phoneTweaksClock.visible) {
+            var w = phoneTweaksClock.width;
+            var maxX = notificationsLeft - Units.gu(0.5);
+            var centred = Math.max(insetLeft, Math.min((statusBar.width - w) / 2, maxX - w));
+            spans.push({ "x": ScreenShape.shiftClear(centred, w, obstacles, insetLeft, maxX, true),
+                         "width": w });
+        }
+
+        return !ScreenShape.spansClear(spans, obstacles);
+    }
 
     /*
      * How far in from each end the contents have to start to clear the rounded
@@ -97,6 +156,25 @@ Item {
     // more than one SIM is up; updateCarrierName() picks between them
     property string singleSimCarrierName: "LuneOS"
     property string multiSimCarrierName: ""
+    // the same operators one by one, for the bar when it splits them over its rows
+    property var multiSimCarrierNames: []
+
+    /*
+     * With the contents dropped under the camera (contentBelowCutout) the bar
+     * has two rows, and two operators get one each: the first SIM's in the
+     * strip beside the camera, the rest in the row below. Joined into one row
+     * they elided each other away on brax3, while the strip stood empty.
+     * Not for a custom carrier string, which is one string, nor while the
+     * carrier area is showing something else ("Launcher").
+     */
+    readonly property bool splitCarrier: contentBelowCutout && multiSimCarrierNames.length >= 2
+                                         && AppTweaks.enableCustomCarrierStringValue !== true
+                                         && state !== "launcher-visible"
+    onSplitCarrierChanged: updateCarrierName()
+    // Where both names end when split: right-aligned to the nearer of the two
+    // rows' limits (the camera above, the clock below), so they line up.
+    readonly property real splitCarrierRight: Math.min(carrierTopText.naturalRight,
+                                                       carrierString.naturalRight)
     property string defaultColor: "#FF515558"
     property real fontSize: carrierText.font.pixelSize
 
@@ -161,6 +239,7 @@ Item {
 
         if (!response.returnValue || !response.sims) {
             multiSimCarrierName = ""
+            multiSimCarrierNames = []
             updateCarrierName()
             return;
         }
@@ -180,6 +259,7 @@ Item {
         }
 
         multiSimCarrierName = names.length > 0 ? names.join(" | ") : ""
+        multiSimCarrierNames = names
         updateCarrierName()
     }
 
@@ -196,6 +276,8 @@ Item {
 
         if (AppTweaks.enableCustomCarrierStringValue === true)
             carrierText.text = AppTweaks.customCarrierStringValue
+        else if (splitCarrier)
+            carrierText.text = multiSimCarrierNames.slice(1).join(" | ")
         else
             carrierText.text = carrierName
     }
@@ -281,6 +363,49 @@ Item {
      * the bar height is the point: the carrier's margins and font size are both
      * derived from it and must not grow when the bar does.
      */
+    /*
+     * The first SIM's operator, in the strip beside the camera, when the bar has
+     * two rows (see splitCarrier). Same font and left margin as the carrier name
+     * below it; it ends at the camera and elides there.
+     */
+    Text {
+        id: carrierTopText
+        readonly property var obstacles: ScreenShape.obstaclesInBand(0, statusBar.contentTop,
+                                                                     statusBar.shapeAngle)
+        visible: statusBar.splitCarrier && carrierString.visible
+        text: statusBar.multiSimCarrierNames.length > 0 ? statusBar.multiSimCarrierNames[0] : ""
+        y: 0
+        height: statusBar.contentTop
+        x: {
+            // The corner bites hardest up here, at the top of the screen.
+            var inkTop = Math.max(0, (statusBar.contentTop - font.pixelSize) / 2);
+            var left = statusBar.contentHeight * 0.25
+                    + ScreenShape.topLeftInset(inkTop, statusBar.shapeAngle);
+            for (var i = 0; i < obstacles.length; i++) {
+                if (obstacles[i].x <= left && obstacles[i].x + obstacles[i].width > left)
+                    left = obstacles[i].x + obstacles[i].width + Units.gu(0.5);
+            }
+            return left;
+        }
+        // Up to the camera.
+        readonly property real naturalRight: {
+            var right = statusBar.width - statusBar.contentInsetRight;
+            for (var i = 0; i < obstacles.length; i++) {
+                if (obstacles[i].x >= x && obstacles[i].x < right)
+                    right = obstacles[i].x;
+            }
+            return right - Units.gu(0.5);
+        }
+        width: Math.max(0, statusBar.splitCarrierRight - x)
+        horizontalAlignment: Text.AlignRight
+        verticalAlignment: Text.AlignVCenter
+        color: "white"
+        font.family: Settings.fontStatusBar
+        font.pixelSize: carrierText.font.pixelSize
+        font.bold: true
+        elide: Text.ElideRight
+    }
+
     Item {
         id: background
         anchors.left: parent.left
@@ -306,9 +431,9 @@ Item {
 
                 return ScreenShape.shiftClear(centred, contentWidth,
                                               ScreenShape.obstaclesInBand(
-                                                  statusBar.barHeight - statusBar.contentHeight,
+                                                  statusBar.contentTop,
                                                   statusBar.contentHeight,
-                                                  orientationHelper.orientationAngle),
+                                                  statusBar.shapeAngle),
                                               minX, maxX);
             }
             width: contentWidth
@@ -393,9 +518,9 @@ Item {
 
                 return ScreenShape.shiftClear(centred, width,
                                               ScreenShape.obstaclesInBand(
-                                                  statusBar.barHeight - statusBar.contentHeight,
+                                                  statusBar.contentTop,
                                                   statusBar.contentHeight,
-                                                  orientationHelper.orientationAngle),
+                                                  statusBar.shapeAngle),
                                               minX, maxX);
             }
 
@@ -412,8 +537,19 @@ Item {
             anchors.left: parent.left
             anchors.topMargin: parent.height * 0.25
             anchors.bottomMargin: parent.height * 0.25
-            // Its own margin, plus whatever the rounded corner takes.
-            anchors.leftMargin: parent.height * 0.25 + statusBar.contentInsetLeft
+            // Its own margin, plus whatever the rounded corner takes - and past
+            // a camera in the top-left corner, if there is one where it starts.
+            anchors.leftMargin: {
+                var left = parent.height * 0.25 + statusBar.contentInsetLeft;
+                var obstacles = ScreenShape.obstaclesInBand(statusBar.contentTop,
+                                                            statusBar.contentHeight,
+                                                            statusBar.shapeAngle);
+                for (var i = 0; i < obstacles.length; i++) {
+                    if (obstacles[i].x <= left && obstacles[i].x + obstacles[i].width > left)
+                        left = obstacles[i].x + obstacles[i].width + Units.gu(0.5);
+                }
+                return left;
+            }
             /*
              * Half the bar on a tablet, as it always was. On a phone,
              * whatever is left once the clock and the indicators have taken
@@ -425,9 +561,27 @@ Item {
              * nowhere to be that was not on top of something, and scaling
              * the interface up only moved the collision further left.
              */
-            anchors.right: Settings.tabletUi ? undefined : phoneTweaksClock.left
-            anchors.rightMargin: Settings.tabletUi ? 0 : Units.gu(0.5)
-            width: Settings.tabletUi ? (background.width / 2) - Units.gu(3) : undefined
+            /*
+             * On a phone it ends at the clock, or at the camera if that comes
+             * first: when the clock has stepped to the right of the lens the
+             * room up to the clock includes the lens, and the name was drawn
+             * through it.
+             */
+            // Up to the clock, or the camera if that comes first (phone only).
+            readonly property real naturalRight: {
+                var right = phoneTweaksClock.x;
+                var obstacles = ScreenShape.obstaclesInBand(statusBar.contentTop,
+                                                            statusBar.contentHeight,
+                                                            statusBar.shapeAngle);
+                for (var i = 0; i < obstacles.length; i++) {
+                    if (obstacles[i].x >= x && obstacles[i].x < right)
+                        right = obstacles[i].x;
+                }
+                return right - Units.gu(0.5);
+            }
+            width: Settings.tabletUi ? (background.width / 2) - Units.gu(3)
+                 : Math.max(0, (statusBar.splitCarrier ? statusBar.splitCarrierRight
+                                                       : naturalRight) - x)
             visible: !appMenu.visible
 
             LunaService {
@@ -454,7 +608,8 @@ Item {
             Text {
                 id: carrierText
                 anchors.fill: parent
-                horizontalAlignment: Text.AlignHLeft
+                // Split over two rows, both names end at the same x.
+                horizontalAlignment: statusBar.splitCarrier ? Text.AlignRight : Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
                 color: "white"
                 font.family: Settings.fontStatusBar
