@@ -179,4 +179,56 @@ TestCase {
         ignoreWarning(/no room either side of the cutout/)
         compare(ScreenShape.shiftClear(10, 80, obs, 0, 700), 10)
     }
+
+    function test_quiet_shift_does_not_warn() {
+        // StatusBar asks "would the clock fit in one row?" before choosing a
+        // layout; that question must not log.
+        failOnWarning(/no room either side of the cutout/)
+        var obs = [ { x: 0, width: 700 } ]
+        compare(ScreenShape.shiftClear(10, 80, obs, 0, 700, true), 10)
+    }
+
+    /*
+     * Where a second row can start: the bottom of the hardware at the top edge.
+     */
+    function test_second_row_starts_under_the_notch() {
+        compare(ScreenShape.topCutoutBottom(contentH, 0), 102)
+        // Turned, nothing is at the top any more.
+        compare(ScreenShape.topCutoutBottom(contentH, 180), 0)
+        compare(ScreenShape.topCutoutBottom(contentH, 90), 0)
+    }
+
+    /*
+     * A cutout that starts a little below the edge - a punch hole as measured -
+     * still counts once it starts inside the bar. At a quarter turn radon's
+     * notch is at y=324..396 of the scene: outside a 45px bar, inside a 400px
+     * one.
+     */
+    function test_a_hole_below_the_edge_counts_when_the_bar_reaches_it() {
+        compare(ScreenShape.topCutoutBottom(400, 90), 396)
+        compare(ScreenShape.topBarHeight(400, 90), 400)
+        compare(ScreenShape.topCutoutBottom(324, 90), 0)    // starts exactly at the bar's foot
+    }
+
+    function test_spans_clear() {
+        var obs = ScreenShape.obstaclesInBand(102 - contentH, contentH, 0)  // 324..396
+        verify(ScreenShape.spansClear([ { x: 400, width: 300 } ], obs))
+        verify(ScreenShape.spansClear([ { x: 244, width: 80 } ], obs))     // touches, no overlap
+        verify(!ScreenShape.spansClear([ { x: 330, width: 370 } ], obs))   // indicators into it
+        verify(!ScreenShape.spansClear([ { x: 0, width: 10 }, { x: 390, width: 10 } ], obs))
+        verify(ScreenShape.spansClear([ { x: 330, width: 0 } ], obs))      // empty span
+        verify(ScreenShape.spansClear([ { x: 330, width: 370 } ], []))
+    }
+
+    /*
+     * brax3's numbers, the case this was written for: a 161px teardrop at
+     * 280..441 of 720. One SIM leaves the indicators right of it; four SIMs,
+     * Wi-Fi and Bluetooth reach x=330 - into it, so the bar has to take a
+     * second row.
+     */
+    function test_brax3_four_sims_do_not_fit_beside_the_camera() {
+        var obs = [ { x: 280, width: 161 } ]
+        verify(ScreenShape.spansClear([ { x: 520, width: 200 } ], obs))
+        verify(!ScreenShape.spansClear([ { x: 330, width: 390 } ], obs))
+    }
 }
