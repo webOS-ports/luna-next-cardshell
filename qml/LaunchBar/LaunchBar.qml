@@ -51,6 +51,26 @@ Item {
 
     property real launcherBarIconSize: launchBarItem.height * 0.7;
 
+    //! Apps the bar holds at most; the launcher button takes one more slot.
+    readonly property int maxIcons: Settings.tabletUi ? 5 : 4
+
+    /*!
+     * Width of one slot. The apps and the launcher button share the bar in
+     * equal slots, each icon centred in its own, so the gaps between all of
+     * them - the button included - are the same.
+     */
+    readonly property real slotWidth: launchBarItem.width /
+                                      (launchBarListView.count + 1 + (launcherAppDropArea.gapIndex >= 0 ? 1 : 0))
+
+    //! slotWidth as drawn: when a place opens for an app from the launcher,
+    //! or closes again, the icons slide to their new spacing rather than
+    //! jumping to it.
+    property real shownSlotWidth: slotWidth
+    Behavior on shownSlotWidth {
+        enabled: launcherAppDropArea.containsDrag
+        NumberAnimation { duration: launchBarItem.animationDuration; easing.type: Easing.OutQuad }
+    }
+
     states: [
         State {
             name: "hidden"
@@ -126,7 +146,13 @@ Item {
 
                 anchors.verticalCenter: parent ? parent.verticalCenter : undefined
                 height: launcherIcon.height
-                width: launcherIcon.width
+                width: launchBarItem.shownSlotWidth
+
+                // The icons after the place an app from the launcher would go
+                // in move aside, leaving that place open.
+                property real shift: launcherAppDropArea.gapIndex >= 0 && index >= launcherAppDropArea.gapIndex ? 1 : 0
+                Behavior on shift { NumberAnimation { duration: launchBarItem.animationDuration; easing.type: Easing.OutQuad } }
+                transform: Translate { x: launcherIconDelegate.shift * launchBarItem.shownSlotWidth }
 
                 LaunchableAppIcon {
                     id: launcherIcon
@@ -142,8 +168,18 @@ Item {
                     iconSize: launchBarItem.launcherBarIconSize
                     width: launchBarItem.launcherBarIconSize
 
+                    // Dragged up out of the bar, the icon is on its way off it.
+                    readonly property bool outOfBar: dragArea.held && y + height / 2 < 0
+                    // An app from the launcher hovering over this one would take its place.
+                    readonly property bool toBeReplaced: launcherAppDropArea.replaceIndex === index
+                    opacity: outOfBar ? 0.5 : (toBeReplaced ? 0.25 : 1)
+                    scale: toBeReplaced ? 0.8 : 1
+                    Behavior on opacity { NumberAnimation { duration: launchBarItem.animationDuration } }
+                    Behavior on scale { NumberAnimation { duration: launchBarItem.animationDuration } }
+
                     Drag.active: dragArea.held
                     Drag.source: launcherIconDelegate
+                    Drag.keys: [ "launchbar-icon" ]
                     Drag.hotSpot.x: width / 2
                     Drag.hotSpot.y: height / 2
 
@@ -165,33 +201,136 @@ Item {
                     id: dragArea
                     anchors { fill: parent }
 
+                    // Sideways to reorder, upwards to take the icon off the bar.
                     drag.target: held ? launcherIcon : undefined
-                    drag.axis: Drag.XAxis
+                    drag.axis: Drag.XAndYAxis
 
                     property bool held: false
 
                     propagateComposedEvents: true
                     onPressAndHold: held = true;
                     onReleased: {
+                        if (!held)
+                            return;
+                        var removing = launcherIcon.outOfBar;
                         held = false;
 
-                        // save that layout in DB
-                        saveCurrentLayout();
+                        var ids = launchBarItem.currentLayout();
+                        if (removing)
+                            ids.splice(ids.indexOf(model.appId), 1);
+                        launchBarItem.applyLayout(ids);
                     }
                 }
 
-                DropArea {
-                    anchors { fill: parent; margins: 10 }
-
-                    onEntered: (drag) => {
-                        if( drag.source !== launcherIconDelegate ) {
-                            launcherListModel.items.move(
-                                    drag.source.VisualDataModel.itemsIndex,
-                                    launcherIconDelegate.VisualDataModel.itemsIndex);
-                        }
-                    }
-                }
             }
+    }
+
+    /*!
+     * Reorders the bar while one of its icons is dragged along it: the icon
+     * goes to whichever slot the drag is over. The slot comes from the drag's
+     * position on the bar rather than from a drop area on each icon - those
+     * slide while the others make room, pass back under the finger, and send
+     * the icon back where it came from.
+     */
+    DropArea {
+        anchors.fill: launchBarItem
+        keys: [ "launchbar-icon" ]
+
+        function follow(drag) {
+            var to = Math.max(0, Math.min(launchBarListView.count - 1, Math.floor(drag.x / launchBarItem.slotWidth)));
+            var from = drag.source.DelegateModel.itemsIndex;
+            if (from !== to)
+                launcherListModel.items.move(from, to);
+        }
+
+        onEntered: (drag) => follow(drag)
+        onPositionChanged: (drag) => follow(drag)
+    }
+
+    /*!
+     * Takes an app dragged out of the full launcher, and shows where it will
+     * land before it is let go:
+     *  - with a slot to spare, the icons move aside and leave an open place
+     *    for it, and it goes in there;
+     *  - on a full bar, the app it is over fades and shrinks: that is the one
+     *    it replaces;
+     *  - an app already on the bar moves to the slot it is dropped on.
+     * The app stays in the launcher grid either way, as it did on webOS.
+     */
+    DropArea {
+        id: launcherAppDropArea
+        anchors.fill: launchBarItem
+        keys: [ "launcher-app" ]
+
+        // What FullLauncher checks before calling Drag.drop() on the bar.
+        readonly property bool acceptsLauncherApps: true
+
+        //! Where the hovering app would go in, the icons from there on
+        //! moving aside; else -1.
+        property int gapIndex: -1
+        //! The app on a full bar the hovering app would replace; else -1.
+        property int replaceIndex: -1
+        //! The slot an app already on the bar would move to; else -1.
+        property int moveIndex: -1
+
+        function clear() {
+            gapIndex = -1;
+            replaceIndex = -1;
+            moveIndex = -1;
+        }
+
+        // Works the three out from the drag's place on the bar. Each is found
+        // on a grid that stays put while it is shown - the open place counts
+        // as a slot of its own - so the preview does not jump back and forth
+        // under the finger.
+        function follow(drag) {
+            var appId = drag.source ? drag.source.modelId : "";
+            var count = launchBarListView.count;
+            var ids = launchBarItem.currentLayout();
+            clear();
+            if (!appId)
+                return;
+
+            if (ids.indexOf(appId) !== -1) {
+                var slot = launchBarItem.width / (count + 1);
+                moveIndex = Math.max(0, Math.min(count - 1, Math.floor(drag.x / slot)));
+            }
+            else if (count < launchBarItem.maxIcons) {
+                var withGap = launchBarItem.width / (count + 2);
+                gapIndex = Math.max(0, Math.min(count, Math.floor(drag.x / withGap)));
+            }
+            else {
+                var full = launchBarItem.width / (count + 1);
+                replaceIndex = Math.max(0, Math.min(count - 1, Math.floor(drag.x / full)));
+            }
+        }
+
+        onEntered: (drag) => follow(drag)
+        onPositionChanged: (drag) => follow(drag)
+        onExited: clear()
+        onDropped: (drop) => {
+            var appId = drop.source ? drop.source.modelId : "";
+            var gap = gapIndex, replace = replaceIndex, move = moveIndex;
+            clear();
+            if (!appId)
+                return;
+
+            var ids = launchBarItem.currentLayout();
+            if (move >= 0) {
+                ids.splice(ids.indexOf(appId), 1);
+                ids.splice(move, 0, appId);
+            }
+            else if (gap >= 0) {
+                ids.splice(gap, 0, appId);
+            }
+            else if (replace >= 0) {
+                ids[replace] = appId;
+            }
+            else {
+                return;
+            }
+            launchBarItem.applyLayout(ids);
+        }
     }
 
     RowLayout {
@@ -203,35 +342,36 @@ Item {
 
         ListView {
             id: launchBarListView
-            Layout.fillWidth: true
+            Layout.fillWidth: false
             Layout.preferredHeight: launchBarItem.height
-            Layout.preferredWidth: launchBarItem.width
-            Layout.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+            // With room left for the open place an app from the launcher is
+            // shown going into.
+            Layout.preferredWidth: launchBarItem.shownSlotWidth * (count + (launcherAppDropArea.gapIndex >= 0 ? 1 : 0))
+            Layout.alignment: Qt.AlignVCenter | Qt.AlignLeft
 
-            spacing: count > 0 ? (width - launchBarItem.launcherBarIconSize*count) / count : 0
+            spacing: 0
 
             orientation: ListView.Horizontal
             interactive: false
             model: launcherListModel
 
-            header: Item {
-                width: launchBarListView.spacing/2
-            }
             moveDisplaced: Transition {
                 NumberAnimation { properties: "x"; duration: AppTweaks.disableAnimations ? 0 : 200 }
             }
         }
 
+        // The launcher button, in a slot of its own like any app.
         Item {
-            Layout.fillWidth: false
-            Layout.preferredHeight: launchBarItem.launcherBarIconSize
-            Layout.minimumWidth: launchBarItem.launcherBarIconSize
+            Layout.fillWidth: true
+            Layout.preferredHeight: launchBarItem.height
             Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
 
             Image {
                 id: appsIcon
 
-                anchors.fill: parent
+                anchors.centerIn: parent
+                width: launchBarItem.launcherBarIconSize
+                height: launchBarItem.launcherBarIconSize
                 fillMode: Image.PreserveAspectFit
                 source: "../images/empty-launcher.png"
 
@@ -256,37 +396,44 @@ Item {
                   handleResultFct, __handleDBError)
     }
 
+    /*!
+     * The arrangement the user made, as app ids in order, or null while there
+     * is none (then the bar follows /etc/palm/default-dock-positions.json).
+     * The bar is rebuilt from this whenever the apps model refreshes, so it
+     * has to be kept here: rebuilding from the defaults alone threw away
+     * whatever the user had set up the next time an app was installed or the
+     * shell restarted.
+     */
+    property var _savedLayout: null
+
     function __quickLaunchBarDBResult(message) {
         var result = JSON.parse(message.payload);
 
         if( result && result.results && result.results.length ) {
-            for( var i=0; i<result.results.length; ++i ) {
-                var obj = result.results[i];
-                launcherListModel.model.append({appId: obj.appId, icon: obj.icon});
-            }
-        }
-        else {
-            //fallback to static filling
-
-            //Icons are depending on Settings.tabletUi, which we check and we'll populate the list accordingly
-            if(Settings.tabletUi)
-            {
-                launcherListModel.model.append({appId: "org.webosports.app.atlas",     icon: "/usr/palm/applications/org.webosports.app.atlas/icon.png"});
-                launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
-                launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/launcher/icon-"+Qt.formatDate(new Date, "d")+".png"});
-                launcherListModel.model.append({appId: "org.webosports.app.messaging", icon: "/usr/palm/applications/org.webosports.app.messaging/icon.png"});
-                launcherListModel.model.append({appId: "org.webosports.app.memos",   icon: "/usr/palm/applications/org.webosports.app.memos/icon.png"});
-            }
-            else
-            {
-                launcherListModel.model.append({appId: "org.webosports.app.phone",   icon: "/usr/palm/applications/org.webosports.app.phone/icon.png"});
-                launcherListModel.model.append({appId: "org.webosports.app.messaging", icon: "/usr/palm/applications/org.webosports.app.messaging/icon.png"});
-                launcherListModel.model.append({appId: "com.palm.app.email",         icon: "/usr/palm/applications/com.palm.app.email/icon.png"});
-                launcherListModel.model.append({appId: "com.palm.app.calendar", icon: "/usr/palm/applications/com.palm.app.calendar/images/launcher/icon-"+Qt.formatDate(new Date, "d")+".png"});
-            }
+            var objs = result.results.slice();
+            objs.sort(function(a, b) { return a.pos - b.pos; });
+            _savedLayout = objs.map(function(obj) { return obj.appId; });
+            refreshConfig();
         }
     }
-    function saveCurrentLayout() {
+
+    //! The app ids on the bar, in the order shown.
+    function currentLayout() {
+        var ids = [];
+        for( var i=0; i<launcherListModel.items.count; ++i )
+            ids.push(launcherListModel.items.get(i).model.appId);
+        return ids;
+    }
+
+    //! Makes ids the bar's arrangement: remembers it, stores it, shows it.
+    function applyLayout(ids) {
+        _savedLayout = ids;
+        saveCurrentLayout(ids);
+        // Not from inside the handler of a delegate that is about to go.
+        Qt.callLater(refreshConfig);
+    }
+
+    function saveCurrentLayout(ids) {
         if( Settings.isTestEnvironment ) return;
 
         // first, clean up the DB
@@ -296,16 +443,15 @@ Item {
 
         // then build up the object to save
         var data = [];
-        for( var i=0; i<launcherListModel.items.count; ++i ) {
-            var obj = launcherListModel.items.get(i);
+        for( var i=0; i<ids.length; ++i ) {
             data.push({_kind: "org.webosports.lunalauncher:1",
-                       pos: obj.itemsIndex,
-                       appId: obj.model.appId,
-                       icon: obj.model.icon});
+                       pos: i,
+                       appId: ids[i]});
         }
 
         // and put it in the DB
-         __queryDB("put", {objects: data}, function (message) {});
+        if( data.length > 0 )
+            __queryDB("put", {objects: data}, function (message) {});
     }
 
     Component.onCompleted: {
@@ -341,32 +487,34 @@ Item {
         // appId: string
         if( !Settings.isTestEnvironment ) {
             __queryDB("find",
-                      {query:{from:"org.webosports.lunalauncher:1", orderBy: "pos", limit:5}},
+                      {query:{from:"org.webosports.lunalauncher:1", orderBy: "pos", limit: launchBarItem.maxIcons}},
                       __quickLaunchBarDBResult);
         }
         launcherRow.visible = true;
     }
     property var _defaultLaunchBarConfig: []
 
-    // refreshes the quick launcher configuration
+    // refreshes the quick launcher configuration: the saved arrangement if
+    // there is one, the default one otherwise, using the apps model's icons so
+    // they are always up to date
     function refreshConfig() {
-        // for all the apps from appsModel, use their icon so we always have an up-2-date icons
         launcherListModel.model.clear();
-        var unsortedAppsArray = [];
-        var nbApps = appsModel.count;
-        for( var i = 0; i < nbApps; ++i ) {
-            var appObj = appsModel.get(i);
-            if(_defaultLaunchBarConfig.indexOf(appObj.id+"_default") !== -1)
-            {
-                unsortedAppsArray.push({pos: _defaultLaunchBarConfig.indexOf(appObj.id+"_default"), appId: appObj.id, icon: appObj.icon});
-            }
+
+        var order = _savedLayout;
+        if( !order ) {
+            order = _defaultLaunchBarConfig.map(function(launchPointId) {
+                return launchPointId.replace(/_default$/, "");
+            });
         }
 
-        //Sort the apps
-        unsortedAppsArray.sort(function(a,b){ return a.pos - b.pos; });
-        // fill the model
-        for( var j = 0; j < unsortedAppsArray.length; ++j ) {
-            launcherListModel.model.append({appId: unsortedAppsArray[j].appId, icon: unsortedAppsArray[j].icon});
+        for( var j = 0; j < order.length; ++j ) {
+            for( var i = 0; i < appsModel.count; ++i ) {
+                var appObj = appsModel.get(i);
+                if( appObj.id === order[j] ) {
+                    launcherListModel.model.append({appId: appObj.id, icon: appObj.icon});
+                    break;
+                }
+            }
         }
     }
 }
