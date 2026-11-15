@@ -36,53 +36,17 @@ BaseIndicator {
     // Always as wide as a full charge reads, so the cell keeps one size and the
     // indicators either side of it keep one position.
     textReferenceValue: "100%"
-    textColor: __getColorForBatteryLevel(level)
-
-    Connections {
-        target: AppTweaks
-        function onBatteryIndicatorTypeValueChanged() {
-            updateBatteryIndicator();
-        }
-
-        function updateBatteryIndicator()
-        {
-            if (AppTweaks.batteryIndicatorTypeValue === "iconOnly"){
-                batteryIndicator.textVisible = false
-                batteryIndicator.imageVisible = true
-            }
-            else if (AppTweaks.batteryIndicatorTypeValue === "iconPercentage"){
-                batteryIndicator.textVisible = true
-                batteryIndicator.imageVisible = true
-
-            }
-            else if (AppTweaks.batteryIndicatorTypeValue === "percentageOnly"){
-                batteryIndicator.textVisible = true
-                batteryIndicator.imageVisible = false
-            }
-
-        }
-    }
-
-    Connections {
-        target: AppTweaks
-        function onBatteryPercentageColorOptionsValueChanged() {
-            updateBatteryPercentageColor();
-        }
-
-        function updateBatteryPercentageColor()
-        {
-            if (AppTweaks.batteryPercentageColorOptionsValue === "white") {
-                //Show white color
-                batteryIndicator.textColor = "white";
-            }
-            else {
-                //Get the color for the level, keeping property binding
-                batteryIndicator.textColor = Qt.binding(function() {
-                    return batteryIndicator.__getColorForBatteryLevel(level);
-                } );
-            }
-        }
-    }
+    /*
+     * Tweaks > Luna > Status Bar: the icon, the percentage or both, and the
+     * percentage white or in the level's colour. Bound, so the saved values
+     * apply at start-up as well as when changed: as handlers they only ran on
+     * a change, and White, the default, never did, so the percentage was the
+     * level's colour (green when charged) until White was picked again.
+     */
+    readonly property string __indicatorType: AppTweaks.batteryIndicatorTypeValue
+    imageVisible: __indicatorType !== "percentageOnly"
+    textVisible: __indicatorType === "iconPercentage" || __indicatorType === "percentageOnly"
+    textColor: AppTweaks.batteryPercentageColorOptionsValue === "white" ? "white" : __getColorForBatteryLevel(level)
 
     // Tints taken from legacy's own status bar battery frames
     // (battery-11/-1/-0.png): the fill green, the low amber and the empty
