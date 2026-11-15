@@ -49,6 +49,9 @@ Item {
 
     Drag.active: draggableAppIconItem.draggingActive
     Drag.source: draggableAppIconItem
+    // The launch bar takes these (LaunchBar's launcherAppDropArea); the grid's
+    // own drop areas set no keys and take anything.
+    Drag.keys: [ "launcher-app" ]
     Drag.hotSpot.x: width / 2
     Drag.hotSpot.y: height / 2
 
