@@ -56,25 +56,12 @@ Rectangle {
 
     Loader {
         id: reticleItem
-        property bool showReticle: true
-
-        Connections {
-            target: AppTweaks
-            function onShowTapRippleTweakValueChanged() {
-                updateShowTapRippleTweak();
-            }
-        }
-
-        function updateShowTapRippleTweak() {
-            if (AppTweaks.showTapRippleTweakValue === true){
-                console.log("INFO: Enabling Reticle Area...");
-                reticleItem.showReticle = true;
-            }
-            else {
-                console.log("INFO: Disabling Reticle Area...");
-                reticleItem.showReticle = false;
-            }
-        }
+        // Tweaks > Luna > UI, "Visual support for tap ripple": bound, so the
+        // saved value applies at start-up and every change after it. A
+        // Connections handler calling the Loader's own function unqualified
+        // threw a ReferenceError under Qt 6, so turning it off did nothing.
+        readonly property bool showReticle: AppTweaks.showTapRippleTweakValue !== false
+        onShowReticleChanged: console.log("INFO: Tap ripple " + (showReticle ? "enabled" : "disabled"));
 
         source: Settings.showReticle && showReticle ? "Utils/ReticleItem.qml" : ""
         z: 1000
