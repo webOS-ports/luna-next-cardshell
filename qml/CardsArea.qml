@@ -81,7 +81,7 @@ WindowManager {
         },
         State {
             name: "normal"
-            PropertyChanges { target: gestureAreaInstance; height: Units.gu(4) }
+            // The gesture area's own height applies: 0 while Tweaks has it switched off.
             PropertyChanges { target: lockScreen; isFirstUse: false }
             PropertyChanges { target: cardViewInstance; keepCurrentCardMaximized: false }
         }
@@ -840,23 +840,10 @@ WindowManager {
     LunaGestureArea {
         id: gestureAreaInstance
 
-        Connections {
-            target: AppTweaks
-            function onGestureAreaTweakValueChanged () {
-                updateShowGestureAreaTweak();
-            }
+        // Tweaks > Show gesture area; shown until Tweaks answers.
+        enableGestureArea: AppTweaks.gestureAreaTweakValue !== false
+        onEnableGestureAreaChanged: console.log("INFO: Gesture area " + (enableGestureArea ? "enabled" : "disabled"));
 
-            function updateShowGestureAreaTweak() {
-                if (AppTweaks.gestureAreaTweakValue === true){
-                    console.log("INFO: Enabling Gesture Area...");
-                    gestureAreaInstance.enableGestureArea = true;
-                }
-                else {
-                    console.log("INFO: Disabling Gesture Area...");
-                    gestureAreaInstance.enableGestureArea = false;
-                }
-            }
-        }
         anchors.bottom: parent.bottom
         /*
          * Lifted clear of anything against the bottom edge of the panel.
