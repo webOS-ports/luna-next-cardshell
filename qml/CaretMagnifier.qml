@@ -90,6 +90,10 @@ Item {
     property bool dragging: false
     //! The press resized the caret's rectangle after it became a drag.
     property bool engaged: false
+    //! The finger stayed put for a long press before it moved: the runtime
+    //! has put the caret under it, and a drag now carries the caret, in any
+    //! direction, as legacy's did.
+    property bool held: false
 
     //! The caret's rectangle as last reported during this press.
     property var lastCaret: undefined
@@ -163,6 +167,21 @@ Item {
         magnifier.lastCaret = magnifier.caretRectangle();
         magnifier.lineHeight = magnifier.lastCaret ? magnifier.lastCaret.height : 0;
         magnifier.sourceWindow = magnifier.foregroundWindow ? magnifier.foregroundWindow() : null;
+        holdTimer.restart();
+    }
+
+    /*
+     * A long press, as the runtime counts it: Chromium's comes at about 650 ms
+     * and is what puts the caret under the finger in the field being edited,
+     * ready for a drag to carry it.
+     */
+    Timer {
+        id: holdTimer
+
+        interval: 650
+        repeat: false
+
+        onTriggered: if (magnifier.pressing && !magnifier.dragging) magnifier.held = true
     }
 
     function move(x, y) {
@@ -173,13 +192,17 @@ Item {
 
         var dx = x - magnifier.pressedAt.x;
         var dy = y - magnifier.pressedAt.y;
-        if (dx * dx + dy * dy > magnifier.slop * magnifier.slop)
+        if (dx * dx + dy * dy > magnifier.slop * magnifier.slop) {
             magnifier.dragging = true;
+            holdTimer.stop();
+        }
     }
 
     function release() {
+        holdTimer.stop();
         magnifier.pressing = false;
         magnifier.dragging = false;
+        magnifier.held = false;
         magnifier.engaged = false;
         magnifier.lastCaret = undefined;
         magnifier.lineHeight = 0;
@@ -212,7 +235,9 @@ Item {
         var alongLine = caret.y === before.y && caret.x !== before.x
                         && caret.width <= magnifier.caretWidthMax;
 
-        if (resized || alongLine)
+        // After a hold the finger is carrying the caret, up and down the lines
+        // as well as along them.
+        if (resized || alongLine || magnifier.held)
             magnifier.engaged = true;
     }
 

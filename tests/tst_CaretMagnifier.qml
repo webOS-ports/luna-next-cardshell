@@ -9,8 +9,9 @@ import "../qml"
  *
  * The application reports its caret's rectangle - from a web page, the span
  * between the selection's two ends - and the loupe comes up when a drag
- * resizes it, never for a drag that only moves it (scrolling) nor for a press
- * that did not drag (a long press selecting a word).
+ * resizes it or moves it along its line, never for a drag that only moves it
+ * (scrolling) nor for a press that did not drag (a long press selecting a
+ * word). After a hold, a drag carries the caret anywhere and the loupe follows.
  */
 Item {
     id: root
@@ -176,6 +177,61 @@ Item {
             inputMethod.caret = Qt.rect(150, 290, 2, 30);
             magnifier.press(160, 305);
             inputMethod.moveCaret(word);
+            verify(!magnifier.visible);
+        }
+
+        // A hold, then a drag: the runtime put the caret under the finger at
+        // the long press and the finger is carrying it now, here down a line
+        // and back along it - as legacy's tap-and-hold-and-drag did.
+        function holdAndDrag() {
+            inputMethod.caret = Qt.rect(150, 290, 2, 30);
+            magnifier.press(160, 305);
+            inputMethod.moveCaret(Qt.rect(160, 290, 2, 30));
+            wait(800);
+            magnifier.move(160, 330);
+            inputMethod.moveCaret(Qt.rect(160, 320, 2, 30));
+            magnifier.move(150, 360);
+            inputMethod.moveCaret(Qt.rect(148, 350, 2, 30));
+        }
+
+        function test_held_after_a_long_press() {
+            magnifier.press(160, 305);
+            verify(!magnifier.held);
+            tryVerify(function() { return magnifier.held; }, 1500);
+        }
+
+        function test_up_while_a_hold_drags_the_caret_between_lines() {
+            holdAndDrag();
+            verify(magnifier.visible);
+            compare(magnifier.lookAt.y, 365);
+        }
+
+        // The hold put the caret under a finger that did not move: no loupe.
+        function test_not_for_a_hold_alone() {
+            inputMethod.caret = Qt.rect(150, 290, 2, 30);
+            magnifier.press(160, 305);
+            wait(800);
+            verify(magnifier.held);
+            inputMethod.moveCaret(Qt.rect(160, 290, 2, 30));
+            verify(!magnifier.visible);
+        }
+
+        // A finger that was already moving when the long press would have come
+        // is a scroll or a slide, not a hold, however long it stays down.
+        function test_not_held_after_moving_first() {
+            inputMethod.caret = Qt.rect(150, 290, 2, 30);
+            magnifier.press(160, 400);
+            magnifier.move(160, 360);
+            wait(800);
+            verify(!magnifier.held);
+            inputMethod.moveCaret(Qt.rect(150, 250, 2, 30));
+            verify(!magnifier.visible);
+        }
+
+        function test_hold_ends_with_the_finger() {
+            holdAndDrag();
+            magnifier.release();
+            verify(!magnifier.held);
             verify(!magnifier.visible);
         }
 

@@ -673,18 +673,49 @@ WindowManager {
         PointHandler {
             id: caretMagnifierMonitor
 
+            /*
+             * A hold that turned into a drag: the finger is carrying the caret,
+             * so the pill the hold raised (or is waiting to raise) is out of
+             * the way until the finger lifts, and then comes up at the caret,
+             * as legacy's did after its tap-and-hold.
+             */
+            property bool pillAfterDrag: false
+
             onActiveChanged: {
-                if (caretMagnifierMonitor.active)
+                if (caretMagnifierMonitor.active) {
+                    caretMagnifierMonitor.pillAfterDrag = false;
                     caretMagnifier.press(caretMagnifierMonitor.point.position.x,
                                          caretMagnifierMonitor.point.position.y);
-                else
+                } else {
+                    var x = caretMagnifierMonitor.point.position.x;
+                    var y = caretMagnifierMonitor.point.position.y;
                     caretMagnifier.release();
+                    if (caretMagnifierMonitor.pillAfterDrag) {
+                        caretMagnifierMonitor.pillAfterDrag = false;
+                        var caret = editOverlay.caretRectangle();
+                        if (caret !== undefined && caret !== null)
+                            editOverlay.showForHold(caret.x + caret.width / 2,
+                                                    caret.y + caret.height / 2);
+                        else
+                            editOverlay.showForHold(x, y);
+                    }
+                }
             }
 
             onPointChanged: {
-                if (caretMagnifierMonitor.active)
-                    caretMagnifier.move(caretMagnifierMonitor.point.position.x,
-                                        caretMagnifierMonitor.point.position.y);
+                if (!caretMagnifierMonitor.active)
+                    return;
+
+                caretMagnifier.move(caretMagnifierMonitor.point.position.x,
+                                    caretMagnifierMonitor.point.position.y);
+
+                if (caretMagnifier.held && caretMagnifier.dragging
+                        && !caretMagnifierMonitor.pillAfterDrag) {
+                    caretMagnifierMonitor.pillAfterDrag = true;
+                    editPressTimer.stop();
+                    if (!editOverlay.spellingMode)
+                        editOverlay.hide();
+                }
             }
         }
     }
@@ -711,7 +742,10 @@ WindowManager {
         anchors.fill: parent
         z: 1000 // under the pill itself, over the cards
 
+        // Nor while a hold-and-drag is carrying the caret: the pill comes up
+        // when that finger lifts, not under it when it pauses.
         enabled: editOverlay.editable && !editOverlay.visible
+                 && !caretMagnifierMonitor.pillAfterDrag
 
         PointHandler {
             id: editPressMonitor
