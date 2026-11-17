@@ -566,7 +566,18 @@ WindowManager {
         id: overlaysManagerInstance
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
+        /*
+         * Above the notifications at the bottom, as the application is: a
+         * keyboard - or only its suggestion bar, under a physical keyboard - was
+         * drawn over them, and a notification that came in while a field had
+         * the focus shrank the application for a bar that could not be seen.
+         * Legacy kept that bar showing under a maximised card. Down to the
+         * gesture area still over a fullscreen card, which covers the
+         * notifications, and over the lock screen, which hides them.
+         */
+        anchors.bottom: lockScreen.visible || cardViewInstance.state === "fullscreenCard"
+                        ? (gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom)
+                        : notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
