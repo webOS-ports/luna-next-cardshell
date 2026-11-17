@@ -278,7 +278,7 @@ Item {
             anchors.topMargin: -Units.gu(0.1)
             anchors.bottomMargin: -Units.gu(0.5)
             radius: lens.radius + Units.gu(0.3)
-            color: "#40000000"
+            color: "#1F000000"
         }
 
         // The page behind the text, for a window that leaves it transparent.
@@ -337,13 +337,16 @@ Item {
             }
         }
 
-        // Legacy's pill's grey for the rim.
+        // The rim: the soft grey and thin line of a text field's own outline
+        // (measured off an Enyo field on sargo), not a dark frame.
         Rectangle {
+            objectName: "caretMagnifierRim"
+
             anchors.fill: parent
             radius: lens.radius
             color: "transparent"
-            border.color: "#5A5A5A"
-            border.width: Math.max(1, Units.gu(0.15))
+            border.color: "#B9B9B9"
+            border.width: Math.max(1, Units.gu(0.1))
         }
     }
 }
