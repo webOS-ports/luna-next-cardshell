@@ -647,6 +647,48 @@ WindowManager {
                               overlaysManagerInstance.keyboardRect.height)
     }
 
+    //! The loupe over a selection's end while a finger drags it.
+    CaretMagnifier {
+        id: caretMagnifier
+
+        anchors.fill: parent
+        compositorInstance: compositor
+        foregroundWindow: windowManager.foregroundWindow
+        editable: editOverlay.editable
+        keyboardRect: editOverlay.keyboardRect
+    }
+
+    /*
+     * The finger, for the loupe: watched, never taken, as for the pill. Not
+     * the pill's own watcher, which is off while the pill is up - and a
+     * selection handle is dragged right after the long press that put the
+     * pill up, so that press would never have been seen.
+     */
+    Item {
+        anchors.fill: parent
+        z: 1000
+
+        enabled: editOverlay.editable
+
+        PointHandler {
+            id: caretMagnifierMonitor
+
+            onActiveChanged: {
+                if (caretMagnifierMonitor.active)
+                    caretMagnifier.press(caretMagnifierMonitor.point.position.x,
+                                         caretMagnifierMonitor.point.position.y);
+                else
+                    caretMagnifier.release();
+            }
+
+            onPointChanged: {
+                if (caretMagnifierMonitor.active)
+                    caretMagnifier.move(caretMagnifierMonitor.point.position.x,
+                                        caretMagnifierMonitor.point.position.y);
+            }
+        }
+    }
+
     /*!
      * \brief A long press on the text is what asks for that pill.
      *
