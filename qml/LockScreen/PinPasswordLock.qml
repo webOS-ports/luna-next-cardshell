@@ -70,6 +70,21 @@ Item {
         passwordField.setHintText(hintMessage);
      }
 
+    //! Back to an empty pad, each time the pad is shown (see onVisibleChanged).
+    //! A passcode clears itself once it matches, but a finger or a face can
+    //! unlock with digits half typed, and so can the screen locking again
+    //! while they sit there; those digits were still in the field at the
+    //! next unlock. A running lockout keeps its title and countdown.
+    function resetEntry() {
+        queuedTitle = "";
+        queuedHint = "";
+        passwordField.clearAll();
+        if (lockedOut)
+            return;
+        titleText.text = "Device Locked";
+        passwordField.setHintText(isPINEntry ? "Enter PIN" : "Enter password");
+    }
+
     function queueUpTitle(newTitle, newHint) {
         queuedTitle = newTitle;
         queuedHint = newHint;
@@ -230,9 +245,11 @@ Item {
     // reboot, or begun on the other pad. Ask when the pad opens, so it never
     // takes a passcode the daemon would refuse unseen.
     onVisibleChanged: {
-        if (visible)
-            service.call("luna://com.palm.systemmanager/getDeviceLockMode", "{}",
-                         handleLockModeResult, handleServiceError);
+        if (!visible)
+            return;
+        resetEntry();
+        service.call("luna://com.palm.systemmanager/getDeviceLockMode", "{}",
+                     handleLockModeResult, handleServiceError);
     }
 
     function handleLockModeResult(message) {
