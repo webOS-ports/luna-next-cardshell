@@ -566,7 +566,18 @@ WindowManager {
         id: overlaysManagerInstance
 
         anchors.top: statusBarInstance.bottom
-        anchors.bottom: gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom
+        /*
+         * Above the notifications at the bottom, as the application is: a
+         * keyboard - or only its suggestion bar, under a physical keyboard - was
+         * drawn over them, and a notification that came in while a field had
+         * the focus shrank the application for a bar that could not be seen.
+         * Legacy kept that bar showing under a maximised card. Down to the
+         * gesture area still over a fullscreen card, which covers the
+         * notifications, and over the lock screen, which hides them.
+         */
+        anchors.bottom: lockScreen.visible || cardViewInstance.state === "fullscreenCard"
+                        ? (gestureAreaInstance.visible ? gestureAreaInstance.top : gestureAreaInstance.bottom)
+                        : notificationAreaInstance.top
         anchors.left: parent.left
         anchors.right: parent.right
 
@@ -647,6 +658,79 @@ WindowManager {
                               overlaysManagerInstance.keyboardRect.height)
     }
 
+    //! The loupe over a selection's end while a finger drags it.
+    CaretMagnifier {
+        id: caretMagnifier
+
+        anchors.fill: parent
+        compositorInstance: compositor
+        foregroundWindow: windowManager.foregroundWindow
+        editable: editOverlay.editable
+        keyboardRect: editOverlay.keyboardRect
+    }
+
+    /*
+     * The finger, for the loupe: watched, never taken, as for the pill. Not
+     * the pill's own watcher, which is off while the pill is up - and a
+     * selection handle is dragged right after the long press that put the
+     * pill up, so that press would never have been seen.
+     */
+    Item {
+        anchors.fill: parent
+        z: 1000
+
+        enabled: editOverlay.editable
+
+        PointHandler {
+            id: caretMagnifierMonitor
+
+            /*
+             * A hold that turned into a drag: the finger is carrying the caret,
+             * so the pill the hold raised (or is waiting to raise) is out of
+             * the way until the finger lifts, and then comes up at the caret,
+             * as legacy's did after its tap-and-hold.
+             */
+            property bool pillAfterDrag: false
+
+            onActiveChanged: {
+                if (caretMagnifierMonitor.active) {
+                    caretMagnifierMonitor.pillAfterDrag = false;
+                    caretMagnifier.press(caretMagnifierMonitor.point.position.x,
+                                         caretMagnifierMonitor.point.position.y);
+                } else {
+                    var x = caretMagnifierMonitor.point.position.x;
+                    var y = caretMagnifierMonitor.point.position.y;
+                    caretMagnifier.release();
+                    if (caretMagnifierMonitor.pillAfterDrag) {
+                        caretMagnifierMonitor.pillAfterDrag = false;
+                        var caret = editOverlay.caretRectangle();
+                        if (caret !== undefined && caret !== null)
+                            editOverlay.showForHold(caret.x + caret.width / 2,
+                                                    caret.y + caret.height / 2);
+                        else
+                            editOverlay.showForHold(x, y);
+                    }
+                }
+            }
+
+            onPointChanged: {
+                if (!caretMagnifierMonitor.active)
+                    return;
+
+                caretMagnifier.move(caretMagnifierMonitor.point.position.x,
+                                    caretMagnifierMonitor.point.position.y);
+
+                if (caretMagnifier.held && caretMagnifier.dragging
+                        && !caretMagnifierMonitor.pillAfterDrag) {
+                    caretMagnifierMonitor.pillAfterDrag = true;
+                    editPressTimer.stop();
+                    if (!editOverlay.spellingMode)
+                        editOverlay.hide();
+                }
+            }
+        }
+    }
+
     /*!
      * \brief A long press on the text is what asks for that pill.
      *
@@ -669,7 +753,10 @@ WindowManager {
         anchors.fill: parent
         z: 1000 // under the pill itself, over the cards
 
+        // Nor while a hold-and-drag is carrying the caret: the pill comes up
+        // when that finger lifts, not under it when it pauses.
         enabled: editOverlay.editable && !editOverlay.visible
+                 && !caretMagnifierMonitor.pillAfterDrag
 
         PointHandler {
             id: editPressMonitor
