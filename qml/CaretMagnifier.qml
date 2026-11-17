@@ -22,21 +22,28 @@ import QtQuick.Effects
 import LunaNext.Common 0.1
 
 /*!
- * \brief A loupe over the text while a finger drags a selection's end.
+ * \brief A loupe over the text while a finger moves the caret through it, or
+ * drags a selection's end.
  *
- * The finger that drags a selection handle covers the very letters it is
- * choosing between, so this shows them, larger, just above the line: the
- * application's own window around the end that moves, sampled live.
+ * The finger that slides the caret along the text, or drags a selection
+ * handle, covers the very letters it is choosing between, so this shows them,
+ * larger, just above the line: the application's own window around the caret
+ * or the end that moves, sampled live.
  *
- * The shell does not know there is a handle, nor where it is. What it does
- * know is the rectangle the application reports for its caret: a web page
- * reports the span from one end of the selection to the other
- * (RectBetweenSelectionBounds), so a handle being dragged changes that
- * rectangle's size, letter by letter. A page scrolling under the finger only
- * moves it. So the loupe comes up when the finger has dragged and the
- * rectangle changes size, and stays until the finger lifts:
+ * The shell does not know what the finger is doing to the text. What it does
+ * know is the rectangle the application reports for its caret, and how it
+ * changes during a drag:
+ *   - a caret the finger slides along the text (Chromium's swipe to move the
+ *     cursor) moves sideways on its line, letter by letter;
+ *   - a web page reports a selection as the span from one end to the other
+ *     (RectBetweenSelectionBounds), so a handle being dragged changes that
+ *     rectangle's size;
+ *   - a page scrolling under the finger moves the line, or the whole
+ *     selection, without either.
+ * So the loupe comes up when the finger has dragged and the rectangle either
+ * changes size or moves along its line, and stays until the finger lifts:
  *   - a long press that selects a word did not drag: no loupe;
- *   - a drag that scrolls moves the rectangle without resizing it: no loupe;
+ *   - a drag that scrolls moves the line, not along it: no loupe;
  *   - an application that reports no caret gets none either, as there is
  *     nothing to tell where its text is.
  *
@@ -62,8 +69,15 @@ Item {
     //! there is typing.
     property rect keyboardRect: Qt.rect(0, 0, 0, 0)
 
-    //! How much larger the text is drawn.
-    property real zoom: 1.5
+    //! How much larger the text is drawn, and how large the loupe is: about
+    //! four letters around the caret, as Android's shows a few, at twice
+    //! their size, and one line of them.
+    property real zoom: 2
+    property real lensWidth: Units.gu(7)
+    property real lensHeight: Units.gu(5)
+
+    //! The widest a caret is reported, as opposed to a selection.
+    readonly property real caretWidthMax: Units.gu(1)
 
     //! How far the finger has to move before the press is a drag.
     readonly property real slop: Units.gu(1.5)
@@ -112,8 +126,8 @@ Item {
     /*!
      * \brief Where in the text a loupe for this rectangle and finger looks.
      *
-     * Across: at the finger, kept within the rectangle, so past the end of the
-     * text it shows the end rather than empty field. Down: the middle of the
+     * Across: at a caret; along a selection, at the finger, kept within it,
+     * so past the end of the text it shows the end rather than empty field. Down: the middle of the
      * rectangle while it is one line; on a selection of several lines, the
      * line at the end the finger is at - the last one below the middle, the
      * first above it - which is the end being dragged.
@@ -122,7 +136,11 @@ Item {
         if (caret === undefined || caret === null)
             return at;
 
-        var x = Math.max(caret.x, Math.min(caret.x + caret.width, at.x));
+        // A caret is looked at itself; a selection, where the finger is
+        // along it.
+        var x = caret.width <= magnifier.caretWidthMax
+                ? caret.x + caret.width / 2
+                : Math.max(caret.x, Math.min(caret.x + caret.width, at.x));
         var line = magnifier.lineHeight > 0 ? magnifier.lineHeight : caret.height;
 
         if (caret.height <= line * 1.5)
@@ -168,8 +186,9 @@ Item {
         magnifier.sourceWindow = null;
     }
 
-    //! The caret's rectangle changed: a selection's end moving, or the page
-    //! moving the text. Only the first is a reason for the loupe.
+    //! The caret's rectangle changed: the caret or a selection's end moving
+    //! through the text, or the page moving the text. Only the first is a
+    //! reason for the loupe.
     function caretMoved() {
         if (!magnifier.pressing)
             return;
@@ -184,8 +203,16 @@ Item {
         if (caret.height > 0 && (magnifier.lineHeight <= 0 || caret.height < magnifier.lineHeight))
             magnifier.lineHeight = caret.height;
 
-        if (magnifier.dragging && before
-                && (caret.width !== before.width || caret.height !== before.height))
+        if (!magnifier.dragging || !before)
+            return;
+
+        var resized = caret.width !== before.width || caret.height !== before.height;
+        // Sideways on the same line. A selection moved sideways whole is a
+        // page scrolled sideways, not an end moving: only a caret counts.
+        var alongLine = caret.y === before.y && caret.x !== before.x
+                        && caret.width <= magnifier.caretWidthMax;
+
+        if (resized || alongLine)
             magnifier.engaged = true;
     }
 
@@ -220,8 +247,8 @@ Item {
         //! Whether there is room for it above the line, clear of it.
         readonly property bool above: lineTop - gap - height >= Units.gu(0.5)
 
-        width: Units.gu(15)
-        height: Units.gu(6)
+        width: magnifier.lensWidth
+        height: magnifier.lensHeight
 
         x: Math.max(Units.gu(0.5),
                     Math.min(magnifier.width - width - Units.gu(0.5), magnifier.lookAt.x - width / 2))

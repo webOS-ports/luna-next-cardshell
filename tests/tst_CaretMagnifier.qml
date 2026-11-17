@@ -72,6 +72,20 @@ Item {
         name: "CaretMagnifier"
         when: windowShown
 
+        // The window's frame with the loupe's middle red - the letter - in
+        // it, or the last one grabbed when two seconds go by without one.
+        function grabWithLetterAt(x, y) {
+            var image = null;
+            for (var t = 0; t < 40; ++t) {
+                image = grabImage(root);
+                var c = image.pixel(x, y);
+                if (c.r > 0.8 && c.g < 0.3 && c.b < 0.3)
+                    return { image: image, found: true };
+                wait(50);
+            }
+            return { image: image, found: false };
+        }
+
         // "quick" selected on the line from 290 to 320.
         readonly property rect word: Qt.rect(130, 290, 60, 30)
 
@@ -97,6 +111,48 @@ Item {
         function test_up_while_a_handle_is_dragged() {
             dragEndHandle();
             verify(magnifier.visible);
+        }
+
+        // A finger sliding through the text takes the caret along the line
+        // with it (Chromium's swipe to move the cursor).
+        function slideCaret() {
+            inputMethod.caret = Qt.rect(150, 290, 2, 30);
+            magnifier.press(150, 305);
+            magnifier.move(170, 305);
+            inputMethod.moveCaret(Qt.rect(166, 290, 2, 30));
+            magnifier.move(190, 306);
+            inputMethod.moveCaret(Qt.rect(182, 290, 2, 30));
+        }
+
+        function test_up_while_the_caret_slides_along() {
+            slideCaret();
+            verify(magnifier.visible);
+        }
+
+        // At the caret, on its line, not at the finger ahead of it.
+        function test_looks_at_the_sliding_caret() {
+            slideCaret();
+            compare(magnifier.lookAt.x, 183);
+            compare(magnifier.lookAt.y, 305);
+        }
+
+        // A caret on a line a scroll moves - here a little sideways too:
+        // not along the line.
+        function test_not_for_a_caret_scrolled_away() {
+            inputMethod.caret = Qt.rect(150, 290, 2, 30);
+            magnifier.press(150, 400);
+            magnifier.move(140, 360);
+            inputMethod.moveCaret(Qt.rect(140, 250, 2, 30));
+            verify(!magnifier.visible);
+        }
+
+        // A selection a page scrolls sideways moves whole: that is not one of
+        // its ends being dragged.
+        function test_not_for_a_selection_scrolled_sideways() {
+            magnifier.press(300, 400);
+            magnifier.move(260, 400);
+            inputMethod.moveCaret(Qt.rect(90, 290, 60, 30));
+            verify(!magnifier.visible);
         }
 
         function test_gone_when_the_finger_lifts() {
@@ -255,10 +311,7 @@ Item {
                 var lens = findChild(magnifier, "caretMagnifierLens");
                 var cx = Math.round(lens.x + lens.width / 2);
                 var cy = Math.round(lens.y + lens.height / 2);
-                tryVerify(function() {
-                    var c = grabImage(root).pixel(cx, cy);
-                    return c.r > 0.8 && c.g < 0.3 && c.b < 0.3;
-                }, 2000, "the letter is in loupe " + (i + 1) + "'s middle");
+                verify(grabWithLetterAt(cx, cy).found, "the letter is in loupe " + (i + 1) + "'s middle");
 
                 magnifier.release();
             }
@@ -294,11 +347,9 @@ Item {
             var isRed = function(c) { return c.r > 0.8 && c.g < 0.3 && c.b < 0.3; };
 
             // The loupe's first frame can be a frame behind the grab.
-            var image = null;
-            tryVerify(function() {
-                image = grabImage(root);
-                return isRed(image.pixel(cx, cy));
-            }, 2000, "the letter is in the loupe's middle");
+            var grab = grabWithLetterAt(cx, cy);
+            verify(grab.found, "the letter is in the loupe's middle");
+            var image = grab.image;
 
             var red = 0;
             for (var x = Math.round(lens.x) + 4; x < lens.x + lens.width - 4; ++x) {
