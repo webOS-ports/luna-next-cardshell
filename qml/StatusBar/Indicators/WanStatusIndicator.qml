@@ -42,6 +42,8 @@ BaseIndicator {
         "hspa":      "hsdpa-plus",
         "hspa+":     "hsdpa-plus",
         "lte":       "4g",
+        // telephonyd's word for NR, standalone or alongside LTE (EN-DC)
+        "5g":        "5g",
         "1x":        "1x",
         "evdo":      "evdo"
     })
