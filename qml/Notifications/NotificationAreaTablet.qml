@@ -392,6 +392,7 @@ Rectangle {
     BannerPopupArea {
         id: bannerItemsPopups
         objectName: "bannerPopupArea"
+        mergedModel: notificationArea.mergedModel
         tablet: true
         visible: notificationArea.state === "banner"
 

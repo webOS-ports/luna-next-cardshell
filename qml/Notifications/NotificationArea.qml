@@ -276,6 +276,7 @@ Rectangle {
     BannerPopupArea {
         id: bannerItemsPopups
         objectName: "bannerPopupArea"
+        mergedModel: notificationArea.mergedModel
         tablet: false
         visible: height>0
 
