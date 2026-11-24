@@ -728,8 +728,12 @@ Item {
                         else {
                             // Dropped on the launch bar, the app is put there as
                             // well; it goes back to its place in the grid too.
-                            if( dropTarget && dropTarget.acceptsLauncherApps )
+                            // The hold that started the drag also turned on edit
+                            // mode; the grid was not edited, so end it again.
+                            if( dropTarget && dropTarget.acceptsLauncherApps ) {
                                 draggedLauncherIcon.Drag.drop();
+                                fullLauncher.isEditionActive = false;
+                            }
                             else
                                 console.log("no drop target, resetting drag source");
                             currentGridView.model.insert(draggedLauncherIcon.modelIndex,
