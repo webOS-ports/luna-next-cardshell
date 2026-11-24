@@ -63,6 +63,22 @@ ListModel {
      * its account's icon - shows each of them once. Tapping an icon still
      * opens the list with every entry in it.
      */
+    // Open the app a notification is for, as a tap on its entry or its banner
+    // does. notificationmgr wraps the toast's onclick as launchParams =
+    // {id, params}; the app gets the inner params, not the whole envelope, so
+    // it sees the same parameters the toast's creator provided. Never out of
+    // First Use (held). Whether an app was launched: a toast with nothing to
+    // open, a banner of "light" status text among them, launches none.
+    function launchFromNotification(notifObject) {
+        if (held)
+            return false;
+        var lp = notifObject && notifObject.action && notifObject.action.launchParams;
+        if (!lp || !lp.id)
+            return false;
+        launcherInstance.launchApplication(lp.id, lp.params || lp);
+        return true;
+    }
+
     function iconKeyOf(appKey, icon) {
         return appKey + "\n" + (icon || "");
     }
@@ -411,21 +427,11 @@ ListModel {
                 id: tapArea
                 anchors.fill: parent
                 onClicked: {
-                    // Never out of First Use: the list is hidden then, and
-                    // this is the one place a notification launches an app.
-                    if (mergedModel.held)
-                        return;
-
-                    // notificationmgr wraps the toast's onclick as
-                    // launchParams = {id, params}; hand the app the inner
-                    // params, not the whole envelope, so it sees the same
-                    // parameters the toast's creator provided
                     // A tap only opens the app. On legacy webOS the shell
                     // never took a dashboard away for a tap - it went when
                     // slid away or when its app closed it - and a group's
                     // tap took its newest toast out from under the user.
-                    var lp = notificationItem.notifObject.action.launchParams;
-                    launcherInstance.launchApplication(lp.id, lp.params || lp);
+                    mergedModel.launchFromNotification(notificationItem.notifObject);
                 }
             }
 

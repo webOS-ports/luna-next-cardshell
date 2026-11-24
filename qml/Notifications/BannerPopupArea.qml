@@ -34,6 +34,10 @@ Item {
         id: bannerItemsModel
     }
 
+    // What a tapped banner opens its app through (NotificationsMergedModel's
+    // launchFromNotification). Unset, a banner is not tappable.
+    property var mergedModel: null
+
     clip: true
 
     IconPathServices {
@@ -229,6 +233,7 @@ Item {
         model: bannerItemsModel
         delegate:Rectangle {
             id: itemDelegate
+            objectName: "bannerItem"
             color: bannerItemsPopups.color
             width: bannerItemsPopups.tablet? 0 : bannerItemsPopups.width;
             height: Units.gu(3)
@@ -275,6 +280,23 @@ Item {
                     elide: Text.ElideRight
                     horizontalAlignment: Text.AlignLeft
                     verticalAlignment: Text.AlignVCenter
+                }
+            }
+
+            // A tap opens the app the notification is for, as legacy webOS's
+            // banners did and as its entry in the list does. Without this the
+            // banner let the tap through to nothing: the notification had to
+            // be opened from the list. The banner goes once it has launched;
+            // the toast stays listed.
+            MouseArea {
+                anchors.fill: parent
+                enabled: bannerItemsPopups.mergedModel !== null
+                onClicked: {
+                    if (bannerItemsPopups.mergedModel.launchFromNotification(object)) {
+                        slideItemAnimation.stop();
+                        timerAnimation.stop();
+                        bannerItemsModel.remove(itemDelegate.delegateIndex);
+                    }
                 }
             }
 
