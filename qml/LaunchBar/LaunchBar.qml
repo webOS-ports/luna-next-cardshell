@@ -55,12 +55,24 @@ Item {
     readonly property int maxIcons: Settings.tabletUi ? 5 : 4
 
     /*!
-     * Width of one slot. The apps and the launcher button share the bar in
-     * equal slots, each icon centred in its own, so the gaps between all of
-     * them - the button included - are the same.
+     * Width of one app's slot, each icon centred in its own, when the bar
+     * shows n of them.
+     *  - Phone: the apps and the launcher button share the bar in equal
+     *    slots, so the gaps between all of them - the button included - are
+     *    the same.
+     *  - Tablet: as webOS 3 laid it out (LunaSysMgr QuickLaunchBar): the
+     *    launcher button is centred one icon width in from the right edge,
+     *    and the apps share the bar up to the button's left edge.
      */
-    readonly property real slotWidth: launchBarItem.width /
-                                      (launchBarListView.count + 1 + (launcherAppDropArea.gapIndex >= 0 ? 1 : 0))
+    function slotWidthFor(n) {
+        if (Settings.tabletUi)
+            return (launchBarItem.width - 1.5 * launchBarItem.launcherBarIconSize) / Math.max(n, 1);
+        return launchBarItem.width / (n + 1);
+    }
+
+    //! Width of one slot as the bar is now, with the open place for an app
+    //! from the launcher counted as a slot.
+    readonly property real slotWidth: slotWidthFor(launchBarListView.count + (launcherAppDropArea.gapIndex >= 0 ? 1 : 0))
 
     //! slotWidth as drawn: when a place opens for an app from the launcher,
     //! or closes again, the icons slide to their new spacing rather than
@@ -292,15 +304,15 @@ Item {
                 return;
 
             if (ids.indexOf(appId) !== -1) {
-                var slot = launchBarItem.width / (count + 1);
+                var slot = launchBarItem.slotWidthFor(count);
                 moveIndex = Math.max(0, Math.min(count - 1, Math.floor(drag.x / slot)));
             }
             else if (count < launchBarItem.maxIcons) {
-                var withGap = launchBarItem.width / (count + 2);
+                var withGap = launchBarItem.slotWidthFor(count + 1);
                 gapIndex = Math.max(0, Math.min(count, Math.floor(drag.x / withGap)));
             }
             else {
-                var full = launchBarItem.width / (count + 1);
+                var full = launchBarItem.slotWidthFor(count);
                 replaceIndex = Math.max(0, Math.min(count - 1, Math.floor(drag.x / full)));
             }
         }
@@ -360,7 +372,8 @@ Item {
             }
         }
 
-        // The launcher button, in a slot of its own like any app.
+        // The launcher button: on a phone in a slot of its own like any app,
+        // on a tablet centred one icon width in from the right edge.
         Item {
             Layout.fillWidth: true
             Layout.preferredHeight: launchBarItem.height
@@ -369,7 +382,8 @@ Item {
             Image {
                 id: appsIcon
 
-                anchors.centerIn: parent
+                anchors.verticalCenter: parent.verticalCenter
+                x: Settings.tabletUi ? parent.width - 1.5 * width : (parent.width - width) / 2
                 width: launchBarItem.launcherBarIconSize
                 height: launchBarItem.launcherBarIconSize
                 fillMode: Image.PreserveAspectFit
