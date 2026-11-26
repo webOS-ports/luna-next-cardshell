@@ -22,6 +22,8 @@ import LunaNext.Common 0.1
 // Connman
 import Connman 0.2
 
+import "../../Connectors/WifiSignal.js" as WifiSignal
+
 Item {
     property string name:           ""
     property int    strength:       0
@@ -41,7 +43,7 @@ Item {
             return "";
         }
     }
-    readonly property int _signalBars: Math.floor(strength/25)
+    readonly property int _signalBars: WifiSignal.bars(strength)
 
     property int iconSpacing : Units.gu(0.4)
     property int rightMarging: Units.gu(0.8)

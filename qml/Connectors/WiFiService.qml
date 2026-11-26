@@ -17,69 +17,69 @@
  */
 
 import QtQuick 2.0
+import QtQml 2.2
 import LuneOS.Service 1.0
 import LunaNext.Common 0.1
 import Connman 0.2
+
+import "WifiSignal.js" as WifiSignal
 
 Item {
     id: wifiService
 
     property bool powered: wifiModel.powered
     property bool connected: wifiModel.connected
-    property bool online: false
-    property int signalBars: 0
+    readonly property bool online: __currentService !== null && __currentService.state === "online"
+    readonly property int signalBars: __currentService !== null ? WifiSignal.bars(__currentService.strength) : 0
 
     property QtObject __currentService: null
 
-    function convertStrengthToBars(strength) {
-        if (strength > 0 && strength < 34)
-            return 1;
-        else if (strength >= 34 && strength < 50)
-            return 2;
-        else if (strength >= 50)
-            return 3;
-        return 0;
-    }
+    /*
+     * The connected network is whichever service is ready or online; there is
+     * only ever one for wifi. This is looked up again whenever the list or a
+     * service's state changes, not only when the technology's Connected does:
+     * libconnman-qt emits connectedChanged before it has filled in the service
+     * list, so with wifi already up when the shell starts the list was still
+     * empty at that point, nothing ever looked again, and the indicator sat at
+     * no bars while the system menu showed the network's real strength.
+     */
+    function updateCurrentService() {
+        var found = null;
 
-    function updateFromCurrentService() {
-        if (__currentService == null) {
-            wifiService.signalBars = 0;
-            wifiService.online = false;
-            return;
+        if (wifiModel.powered) {
+            for (var n = 0; n < wifiModel.count; n++) {
+                var service = wifiModel.get(n);
+                if (service && (service.state === "ready" || service.state === "online")) {
+                    found = service;
+                    break;
+                }
+            }
         }
 
-        wifiService.signalBars = convertStrengthToBars(__currentService.strength);
-        wifiService.online = (__currentService.state === "online");
+        __currentService = found;
     }
 
     TechnologyModel {
         id: wifiModel
         name: "wifi"
 
-        function updateCurrentService() {
-            __currentService = null;
-
-            if (!wifiModel.powered || !wifiModel.connected) {
-                updateFromCurrentService();
-                return;
-            }
-
-            for (var n = 0; n < wifiModel.count; n++) {
-                var service = wifiModel.get(n);
-                if (service.state === "ready" || service.state === "online") {
-                    /* we can only have one connected wifi service at the same time */
-                    __currentService = service;
-
-                    updateFromCurrentService();
-                    __currentService.strengthChanged.connect(updateFromCurrentService);
-                    __currentService.stateChanged.connect(updateFromCurrentService);
-                    break;
-                }
-            }
-        }
-
-        onPoweredChanged: updateCurrentService()
-        onScanningChanged: updateCurrentService()
-        onConnectedChanged: updateCurrentService()
+        onPoweredChanged: wifiService.updateCurrentService()
+        onConnectedChanged: wifiService.updateCurrentService()
+        onCountChanged: wifiService.updateCurrentService()
+        onRowsMoved: wifiService.updateCurrentService()
+        onModelReset: wifiService.updateCurrentService()
     }
+
+    // A service going ready or dropping back to idle without the list changing.
+    Instantiator {
+        model: wifiModel
+        delegate: Connections {
+            target: wifiModel.get(index) || null
+            function onStateChanged() { wifiService.updateCurrentService(); }
+        }
+        onObjectAdded: wifiService.updateCurrentService()
+        onObjectRemoved: wifiService.updateCurrentService()
+    }
+
+    Component.onCompleted: updateCurrentService()
 }
