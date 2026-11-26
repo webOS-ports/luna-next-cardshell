@@ -189,6 +189,23 @@ Item {
             compare(mergedModel.count, 0);
         }
 
+        // Swiped away from its icon (SwipeableNotification's whole-entry
+        // drag): every toast of the group is closed with notificationmgr and
+        // the entry goes; other groups stay.
+        function test_closingTheWholeGroup() {
+            addToast("org.webosports.app.messaging");
+            addToast("org.webosports.app.messaging");
+            addToast("org.webosports.app.messaging");
+            var other = addToast("com.palm.app.email", "work account");
+            var loader = showRow(0);
+            compare(loader.item.count, 3);
+
+            loader.item.closedAll();
+            compare(entries(), [other + " x1"]);
+            compare(ModelSingletons.toastModel.count, 1, "the group's toasts were closed, the other's not");
+            compare(ModelSingletons.toastModel.get(0).sourceId, "com.palm.app.email");
+        }
+
         function test_withdrawnToastLeavesTheRest() {
             addToast("org.webosports.app.messaging");
             addToast("org.webosports.app.messaging");

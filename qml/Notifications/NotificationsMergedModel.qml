@@ -357,6 +357,8 @@ ListModel {
 
             signal clicked()
             signal closed()
+            // Swiped away from its icon: every toast of the group goes.
+            signal closedAll()
 
             Timer {
                 id: expiryTimer
@@ -435,6 +437,19 @@ ListModel {
                 }
             }
 
+            onClosedAll: {
+                var live = loaderNotifObject && loaderNotifObject.timestamp !== undefined ? loaderNotifObject : notifObject;
+                // A copy: removeToastEntry takes them out of the group.
+                var toasts = (toastGroups[groupKeyOf(live)] || []).slice();
+                for (var i = 0; i < toasts.length; ++i) {
+                    var toastId = getToastIdFromNotif(toasts[i]);
+                    notificationLunaService.call(
+                                "luna://com.webos.notification/closeToast",
+                                JSON.stringify({"toastId": toastId}), undefined, onCloseNotifError);
+                    removeToastEntry(toastId);
+                }
+            }
+
             function onCloseNotifError(message) {
                 console.warn("Failed to close toast: " + message);
             }
@@ -450,6 +465,9 @@ ListModel {
 
             signal clicked()
             signal closed()
+            // Swiped away from its icon: the window goes with all its layers.
+            signal closedAll()
+            onClosedAll: closed()
 
             onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
 

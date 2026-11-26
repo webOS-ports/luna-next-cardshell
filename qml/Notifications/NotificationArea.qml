@@ -216,7 +216,11 @@ Rectangle {
                 property var delegateBelowNotifObject: typeof belowNotifObject !== 'undefined' ? belowNotifObject : null
                 layered: delegateType === "notification" && delegateGroupCount > 1
                 // an Enyo dashboard with layers swipes them itself
-                interactive: !notificationArea.mergedModel.swipesOwnLayers(delegateWindow)
+                ownLayers: notificationArea.mergedModel.swipesOwnLayers(delegateWindow)
+                // the icon: its pill and half the gap after it on a phone,
+                // up to the card on a tablet (NotificationItem's geometry,
+                // which an Enyo dashboard's page follows)
+                iconZoneWidth: height * (NotificationLayout.tabletStyle ? 58 / 52 : 1.02 + 2 / 48)
                 // the next toast of a group whose top one was swiped away
                 onDelegateNotifObjectChanged: comeBack()
                 property int delegateIndex: index
@@ -261,10 +265,14 @@ Rectangle {
                         onClosed: {
                             item.closed();
                         }
+                        // the whole group, swiped away from its icon
+                        signal closedAll()
+                        onClosedAll: item.closedAll()
                     }
                 }
 
                 onRequestDestruction: slidingNotificationArea.notifItem.closed();
+                onRequestGroupDestruction: slidingNotificationArea.notifItem.closedAll();
         }
 
         Behavior on height {
