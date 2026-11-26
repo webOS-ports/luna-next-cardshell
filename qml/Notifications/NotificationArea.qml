@@ -187,13 +187,80 @@ Rectangle {
         objectName: "openListView"
 
         visible: false
-        interactive: height === maxDashboardWindowHeight
+        interactive: contentHeight > height
         clip: interactive
         orientation: ListView.Vertical
-        // LunaSysMgr scrolled the phone's dashboards by whole entries.
-        snapMode: ListView.SnapToItem
         cacheBuffer: maxDashboardWindowHeight
         height: Math.min(maxDashboardWindowHeight, contentHeight);
+
+        /*
+         * Laid out as webOS 2.x's LunaSysMgr did (DashboardWindowContainer::
+         * setScrollBottom and restoreNonDeletedItems): the newest entry is
+         * at the bottom, and the list always comes to rest with a row's
+         * bottom edge on its own bottom edge, scrolled by whole rows. The
+         * height is not a whole number of rows, so what does not fit is cut
+         * at the top, under dashboardTopMask, never at the bottom.
+         *
+         * As there, the stops are only those bottom-aligned ones: when the
+         * rows overflow by less than a whole row, the oldest one is not
+         * fully shown at any of them.
+         */
+        readonly property bool rowsAbove: contentY - originY > 0.5
+        readonly property bool rowsBelow: originY + contentHeight - height - contentY > 0.5
+
+        // Where contentY may come to rest, from originY: each row's bottom
+        // on the list's bottom edge.
+        function restingOffsets() {
+            var model = notificationArea.mergedModel;
+            var stops = [];
+            var bottom = 0;
+            for (var i = 0; model && i < model.count; i++) {
+                bottom += (i > 0 ? spacing : 0) + model.get(i).notifHeight;
+                if (bottom >= height)
+                    stops.push(bottom - height);
+            }
+            return stops.length ? stops : [0];
+        }
+
+        function settle(animated) {
+            settleAnimation.stop();
+            var stops = restingOffsets();
+            var at = contentY - originY;
+            var best = stops[0];
+            for (var i = 1; i < stops.length; i++) {
+                if (Math.abs(stops[i] - at) < Math.abs(best - at))
+                    best = stops[i];
+            }
+            if (Math.abs(best - at) < 0.5)
+                return;
+            if (animated) {
+                settleAnimation.to = originY + best;
+                settleAnimation.start();
+            } else {
+                contentY = originY + best;
+            }
+        }
+
+        // Opened on the newest rows, at the bottom.
+        function toNewest() {
+            settleAnimation.stop();
+            var stops = restingOffsets();
+            contentY = originY + stops[stops.length - 1];
+        }
+
+        NumberAnimation {
+            id: settleAnimation
+            target: openListView
+            property: "contentY"
+            duration: 150
+            easing.type: Easing.OutCubic
+        }
+
+        onMovementStarted: settleAnimation.stop()
+        onMovementEnded: settle(true)
+        onVisibleChanged: if (visible) Qt.callLater(toNewest)
+        onCountChanged: if (visible) Qt.callLater(settle, false)
+        onHeightChanged: if (visible && !moving) Qt.callLater(settle, false)
         anchors {
             bottom: parent.bottom
             left: parent.left
@@ -278,6 +345,39 @@ Rectangle {
         Behavior on height {
             NumberAnimation { duration: 150 }
         }
+    }
+
+    /*
+     * LunaSysMgr 2.x's dashboard masks (DashboardWindowContainer::
+     * showOrHideMasks): a shadow along the top edge while rows are hidden
+     * above, along the bottom one while rows are hidden below. 8 px against
+     * its 52 px rows. The tablet style's rows sit on the drop-down's panel,
+     * which has no such edges.
+     */
+    readonly property int dashboardMaskHeight: Math.round(dashboardCardFixedHeight * 8 / 52)
+
+    Image {
+        id: dashboardTopMask
+        objectName: "dashboardTopMask"
+        source: "../images/dashboard-mask-top.png"
+        fillMode: Image.TileHorizontally
+        x: openListView.x
+        y: openListView.y
+        width: openListView.width
+        height: dashboardMaskHeight
+        visible: openListView.visible && openListView.rowsAbove && !NotificationLayout.tabletStyle
+    }
+
+    Image {
+        id: dashboardBottomMask
+        objectName: "dashboardBottomMask"
+        source: "../images/dashboard-mask-bottom.png"
+        fillMode: Image.TileHorizontally
+        x: openListView.x
+        y: openListView.y + openListView.height - height
+        width: openListView.width
+        height: dashboardMaskHeight
+        visible: openListView.visible && openListView.rowsBelow && !NotificationLayout.tabletStyle
     }
 
     // Banner popup view
