@@ -44,6 +44,18 @@ Item {
         }
 
         SignalSpy { id: removed; signalName: "requestDestruction" }
+        SignalSpy { id: removedAll; signalName: "requestGroupDestruction" }
+
+        // An entry that takes taps itself, as an Enyo dashboard's page or a
+        // toast's tap area does.
+        Component {
+            id: tappableComponent
+            Rectangle {
+                width: 300; height: 80; color: "grey"
+                property int taps: 0
+                MouseArea { anchors.fill: parent; onClicked: parent.taps++ }
+            }
+        }
 
         property var item: null
         property var flickable: null
@@ -56,11 +68,16 @@ Item {
             }
         }
 
-        function create(tablet, layered) {
-            item = createTemporaryObject(swipeableComponent, root, { blockSwipesToLeft: tablet, layered: !!layered });
+        function create(tablet, layered, more) {
+            var props = { blockSwipesToLeft: tablet, layered: !!layered };
+            for (var k in (more || {}))
+                props[k] = more[k];
+            item = createTemporaryObject(swipeableComponent, root, props);
             flickable = item.children[0];
             removed.target = item;
             removed.clear();
+            removedAll.target = item;
+            removedAll.clear();
             minX = 0;
             maxX = 0;
             wait(50);
@@ -68,8 +85,8 @@ Item {
 
         // dx > 0: the finger moves right. Slow enough not to flick, and still
         // at the end, so the release is not a flick either.
-        function drag(dx) {
-            var x = item.width / 2, y = item.height / 2, steps = 20;
+        function drag(dx, fromX) {
+            var x = fromX !== undefined ? fromX : item.width / 2, y = item.height / 2, steps = 20;
             mousePress(item, x, y);
             for (var i = 1; i <= steps; ++i)
                 mouseMove(item, x + dx * i / steps, y, 30, Qt.LeftButton);
@@ -248,6 +265,109 @@ Item {
                 compare(removed.count, 0);
                 compare(maxX, 0);
             }
+        }
+    
+        // The icon of a stacked entry, as luna-sysmgr had it: a drag that
+        // starts there takes the whole entry along (nothing is offset as a
+        // layer), and past half it slides out and the whole group goes.
+        readonly property real iconZone: 60
+
+        function test_iconDragTakesTheWholeStack_data() { return forms(); }
+        function test_iconDragTakesTheWholeStack(data) {
+            create(data.tablet, true, { iconZoneWidth: iconZone });
+            var content = item.notifItem;
+            var before = content.mapToItem(root, 0, 0).x;
+            var x = 20, y = item.height / 2;
+            mousePress(item, x, y);
+            for (var i = 1; i <= 20; ++i)
+                mouseMove(item, x + 100 * i / 20, y, 30, Qt.LeftButton);
+            wait(100);
+            verify(content.mapToItem(root, 0, 0).x - before > 50,
+                   "the whole entry moved: " + (content.mapToItem(root, 0, 0).x - before));
+            compare(item.layerOffset, 0, "not as a layer");
+            mouseRelease(item, x + 100, y);
+            wait(800);
+            compare(content.mapToItem(root, 0, 0).x, before, "back in place");
+            compare(removed.count + removedAll.count, 0);
+            drag(200, 20);
+            tryCompare(removedAll, "count", 1, 2000);
+            compare(removed.count, 0, "not only the top layer");
+        }
+
+        // Further in, the drag is the top layer's, as before.
+        function test_textDragStillTakesTheTopLayer_data() { return forms(); }
+        function test_textDragStillTakesTheTopLayer(data) {
+            create(data.tablet, true, { iconZoneWidth: iconZone });
+            drag(200);
+            tryCompare(removed, "count", 1, 2000);
+            compare(removedAll.count, 0);
+        }
+
+        // Stacked entries go right only, from the icon too.
+        function test_iconDragDoesNotGoLeft() {
+            create(false, true, { iconZoneWidth: iconZone });
+            drag(-200, 20);
+            wait(800);
+            compare(removed.count + removedAll.count, 0);
+            compare(maxX, 0);
+        }
+
+        // One layer: nothing to tell apart, a drag from the icon takes the
+        // entry as any other drag does.
+        function test_iconDragOnASingleEntry() {
+            create(false, false, { iconZoneWidth: iconZone });
+            drag(200, 20);
+            tryCompare(removed, "count", 1, 2000);
+            compare(removedAll.count, 0);
+        }
+
+        // A dashboard that swipes its own layers (Enyo's): a drag on its
+        // text is the page's and moves nothing here; one from its icon takes
+        // the whole window away.
+        function test_ownLayersTextDragIsThePages_data() { return forms(); }
+        function test_ownLayersTextDragIsThePages(data) {
+            create(data.tablet, false, { ownLayers: true, iconZoneWidth: iconZone });
+            drag(200);
+            wait(800);
+            compare(minX, 0, "the shell did not move it");
+            compare(removed.count + removedAll.count, 0);
+        }
+
+        function test_ownLayersIconDragTakesTheWindow_data() { return forms(); }
+        function test_ownLayersIconDragTakesTheWindow(data) {
+            create(data.tablet, false, { ownLayers: true, iconZoneWidth: iconZone });
+            drag(200, 20);
+            tryCompare(removedAll, "count", 1, 2000);
+            compare(removed.count, 0);
+            compare(minX, -item.width, "slid out to the right");
+            // and the next drag on its text is the page's again
+            removedAll.clear(); minX = 0;
+            wait(300);
+            drag(200);
+            wait(800);
+            compare(minX, 0);
+            compare(removed.count + removedAll.count, 0);
+        }
+
+        // A tap on the icon still reaches the entry: it opens the app.
+        function test_iconTapReachesTheEntry_data() {
+            return [ { tag: "group", layered: true, own: false },
+                     { tag: "dashboard", layered: false, own: true } ];
+        }
+        function test_iconTapReachesTheEntry(data) {
+            item = createTemporaryObject(swipeableComponent, root,
+                    { layered: data.layered, ownLayers: data.own, iconZoneWidth: iconZone,
+                      notifComponent: tappableComponent });
+            flickable = item.children[0];
+            removed.target = item; removedAll.target = item;
+            removed.clear(); removedAll.clear();
+            wait(50);
+            mouseClick(item, 20, item.height / 2);
+            tryCompare(item.notifItem, "taps", 1, 1000);
+            mouseClick(item, item.width / 2, item.height / 2);
+            tryCompare(item.notifItem, "taps", 2, 1000);
+            wait(300);
+            compare(removed.count + removedAll.count, 0);
         }
     }
 }
