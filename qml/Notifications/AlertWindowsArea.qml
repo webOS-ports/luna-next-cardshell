@@ -26,7 +26,9 @@ import "NotificationSound.js" as NotificationSound
 
 Rectangle {
     id: rootAlertsArea
-    height: maxHeight + 2 * contentMargin
+    // Nothing at all without an alert: the margin is around an alert, and an
+    // empty panel would sit over the phone's dashboard bar.
+    height: maxHeight > 0 ? maxHeight + 2 * contentMargin : 0
 
     // The tallest window alert. In the phone's bar a notification alert hides
     // the window alerts behind it, so the area is its size alone while it is
@@ -42,12 +44,13 @@ Rectangle {
             if (window.height > height)
                 height = window.height;
         }
-        return Math.max(0, Math.min(height, rootAlertsArea.maxAlertHeight));
+        return Math.max(0, Math.min(height, rootAlertsArea.windowRoom));
     }
 
     /*!
-     * The most an alert may take: the space between the status bar and the
-     * gesture area. An alert asking for more - the incoming call asks for the
+     * The free space alerts go in: between the status bar and the gesture
+     * area (an alert window gets it less the panel's margins, windowRoom).
+     * An alert asking for more - the incoming call asks for the
      * whole screen - is fitted into it, client window included, rather than
      * running under the status bar.
      */
@@ -139,12 +142,20 @@ Rectangle {
             windowManagerItem.removeTapAction("hideAlertWindow");
     }
 
-    /* Phone ui fills its bar edge to edge with the alert. Tablet ui floats it,
-     * so the alert needs room to breathe inside a rounded panel - measured off
-     * webOS 3.0.5 on a touchpad, where the 320 wide alert sat in a ~340 wide
-     * panel with the corners rounded by about the same margin.
+    /* The alert sits inside a rounded panel, inset by the radius so the
+     * page's corners stay clear of the rounding - measured off webOS 3.0.5 on
+     * a touchpad, where the 320 wide alert sat in a ~340 wide panel with the
+     * corners rounded by about the same margin. A phone's panel runs across
+     * the screen, as its bar does, and is rounded the same way rather than a
+     * square slab. The page draws on it: WebAppMgr makes a popup alert's page
+     * transparent, as a dashboard's.
      */
-    readonly property real contentMargin: Settings.tabletUi ? Units.length(10) : 0
+    readonly property real contentMargin: Settings.tabletUi || !callAlertShowing ? Units.length(10) : 0
+
+    // What an alert window may take of the free space: all of it but the
+    // panel's margins. A phone's incoming call has none and fills it, as the
+    // whole-screen alert it asks to be.
+    readonly property real windowRoom: Math.max(0, maxAlertHeight - 2 * contentMargin)
 
     color: Settings.tabletUi ? Qt.rgba(0, 0, 0, 0.85) : "black"
     radius: contentMargin
@@ -224,18 +235,18 @@ Rectangle {
             x: rootAlertsArea.contentMargin
             y: rootAlertsArea.height - rootAlertsArea.contentMargin - height
             width: rootAlertsArea.width - 2 * rootAlertsArea.contentMargin
-            height: alertItem.window ? Math.min(alertItem.window.height, rootAlertsArea.maxAlertHeight) : 0
+            height: alertItem.window ? Math.min(alertItem.window.height, rootAlertsArea.windowRoom) : 0
 
             function fit() {
                 var w = alertItem.window;
                 if (w && w.height > 0)
-                    w.changeSize(Qt.size(alertItem.width, Math.min(w.height, rootAlertsArea.maxAlertHeight)));
+                    w.changeSize(Qt.size(alertItem.width, Math.min(w.height, rootAlertsArea.windowRoom)));
             }
 
             onWidthChanged: fit()
             Connections {
                 target: rootAlertsArea
-                function onMaxAlertHeightChanged() { alertItem.fit(); }
+                function onWindowRoomChanged() { alertItem.fit(); }
             }
 
             children: [ window ]
@@ -254,10 +265,9 @@ Rectangle {
                      *
                      * This used to re-read a "LuneOS_metrics" == "units" height as grid
                      * units, on the assumption that WAM had scaled the requested height by
-                     * the layout scale on the way in. WAM does no such thing: it hands the
-                     * "height=" window feature straight to WebAppBase::Resize(), so the
-                     * surface height we see here is the number the application asked for -
-                     * or 100, the floor Chromium puts under a popup. Converting it anyway
+                     * the layout scale on the way in. It had not: the surface height seen
+                     * here is what the page's "height=" window feature works out to - or
+                     * 100, the floor Chromium puts under a popup. Converting it anyway
                      * multiplied it by gridUnit/layoutScale, a ratio unrelated to anything
                      * either side meant, which is why the same alert came out 743px tall on
                      * tissot, 748 on sargo and 764 on mindphone - taller there than the
@@ -265,8 +275,13 @@ Rectangle {
                      * sitting above the notification area.
                      *
                      * An html alert knows its own content height and nothing here does, so
-                     * the size has to be settled before the window is opened; luna-systemui
-                     * scales its css heights by the page zoom for exactly that reason.
+                     * the size has to be settled before the window is opened. The page asks
+                     * for it in its own css pixels and is drawn zoomed by its UI scale, so
+                     * WebAppMgr scales the requested height by the same factor
+                     * (WebPageBlink::UiScaleFactor()) before it resizes the window: the
+                     * window fits the page it holds. luna-systemui's utils/uiscale.js
+                     * openPopup wrapper did that scaling in the page until WebAppMgr took it
+                     * over; with both, a popup would be scaled twice.
                      */
 
                     // be careful here: at this point in time, window.height is usually not yet set

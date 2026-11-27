@@ -22,6 +22,7 @@ import LuneOS.System 1.0
 import LunaNext.Common 0.1
 
 import "../Connectors"
+import "../Utils"
 
 Item {
     id: lockScreen
@@ -43,6 +44,24 @@ Item {
     property bool needKeyboard: pinPasswordLock.visible && deviceLockMode === "password"
 
     property string deviceLockMode: "none"
+
+    // CardsArea's notifications, shown here while locked (LockScreenDashboards).
+    property var notificationsModel: null
+    property QtObject compositorInstance: null
+
+    // An incoming call or the alarm is over the lock screen: LockWindow put
+    // its dashboards away while a popup alert showed.
+    property bool alertShowing: false
+
+    // Settings' "Show alerts when locked" (Screen & Lock), on unless turned
+    // off, as Preferences' showAlertsWhenLocked defaulted in LunaSysMgr.
+    property bool showAlertsWhenLocked: true
+
+    // Whether the notifications are on the lock screen: at the padlock only,
+    // as LockWindow showed them in StateNormal and put them away for the
+    // PIN entry and its dialogs.
+    readonly property bool dashboardsShown: locked && state === "pad" && showAlertsWhenLocked &&
+                                            !alertShowing && !isFirstUse
 
     // luna-authmanager's word on whether a finger or face may unlock now:
     // not before the passcode after a boot, not 72 h after it, not during a
@@ -550,6 +569,8 @@ Item {
                 lockScreen.fingerprintUnlockEnabled = response.enableFingerprintUnlock;
             if (response.enableFaceUnlock !== undefined)
                 lockScreen.faceUnlockEnabled = response.enableFaceUnlock;
+            if (typeof response.showAlertsWhenLocked === "boolean")
+                lockScreen.showAlertsWhenLocked = response.showAlertsWhenLocked;
         }
 
         function handleFaceStatus(message) {
@@ -658,9 +679,9 @@ Item {
     // the service comes back, not once at startup.
     SystemPreferences {
         clientName: "com.webos.surfacemanager.cardshell"
-        keys: ["enableFingerprintUnlock", "enableFaceUnlock"]
+        keys: ["enableFingerprintUnlock", "enableFaceUnlock", "showAlertsWhenLocked"]
         onUpdated: (response) => service.handleBiometricPreferences(response)
-        onError: (message) => console.warn("LockScreen: cannot read the biometric preferences: " + message)
+        onError: (message) => console.warn("LockScreen: cannot read the lock screen preferences: " + message)
     }
 
     ServiceStatus {
@@ -715,6 +736,22 @@ Item {
             PropertyChanges { target: lockScreen; locked: true }
         }
     ]
+
+    LockScreenDashboards {
+        id: lockScreenDashboards
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        // The whole screen for the tablet's panel in its middle; down to just
+        // over the padlock for the phone's stack, which stays under the clock.
+        height: NotificationLayout.tabletStyle ? parent.height : Math.max(0, padLock.restingTop - Units.gu(1))
+        availableHeight: height - lockScreenClock.digitsBottom - Units.gu(2)
+
+        mergedModel: lockScreen.notificationsModel
+        compositorInstance: lockScreen.compositorInstance
+        active: lockScreen.dashboardsShown && !!lockScreen.notificationsModel
+    }
 
     PadLock {
         id: padLock
