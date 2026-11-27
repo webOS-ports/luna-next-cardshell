@@ -251,5 +251,98 @@ Item {
             setSims(1);
             compare(bar.barHeight, Units.gu(3));
         }
+
+        // As find(), but every match, and through non-visual objects too
+        function findAll(item, pred, out) {
+            out = out || [];
+            if (pred(item))
+                out.push(item);
+            var kids = item.children || [];
+            for (var i = 0; i < kids.length; i++)
+                findAll(kids[i], pred, out);
+            var res = item.resources || [];
+            for (var j = 0; j < res.length; j++)
+                findAll(res[j], pred, out);
+            return out;
+        }
+
+        /*
+         * brax3 as it is used: two SIMs, the first registered with VoLTE. The
+         * VoLTE icon is what leaves the indicators no room beside the camera.
+         */
+        function setVoLTE(volte) {
+            var connectors = findAll(bar, function (i) {
+                return i.hasOwnProperty("volte") && i.hasOwnProperty("registration");
+            }, []);
+            // The ones that subscribe themselves (an indicator shows the same
+            // properties, read from a connector)
+            connectors = connectors.filter(function (t) {
+                return findAll(t, function (i) { return i.method === "networkStatusQuery"; },
+                               []).length === 1;
+            });
+            verify(connectors.length > 0, "no telephony connector");
+            // telephonyd answers every subscriber
+            for (var c = 0; c < connectors.length; c++) {
+                var queries = findAll(connectors[c], function (i) {
+                    return i.method === "networkStatusQuery";
+                }, []);
+                queries[0].onResponse({ "payload": JSON.stringify({ "returnValue": true, "extended": {
+                    "state": "service", "registration": "home", "networkName": "Lebara",
+                    "volte": volte } }) });
+            }
+            tryVerify(function () {
+                return connectors.every(function (t) { return t.volte === volte; });
+            }, 2000);
+            // let the indicator's show/hide width animation settle
+            wait(500);
+        }
+
+        /// The operators as simListQuery would give them, on brax3's two SIMs.
+        function setOperators(names) {
+            setSims(2);
+            setVoLTE(true);
+            verify(bar.contentBelowCutout, "two SIMs and VoLTE did not drop the bar to two rows");
+            bar.multiSimCarrierNames = names;
+            bar.multiSimCarrierName = names.join(" | ");
+            bar.updateCarrierName();
+        }
+
+        function carrierRows() {
+            var top = find(bar, function (i) { return i.objectName === "carrierTopText"; });
+            var below = find(bar, function (i) { return i.objectName === "carrierText"; });
+            verify(top !== null && below !== null);
+            return { "top": top.visible ? top.text : "", "below": below.text };
+        }
+
+        /*
+         * Two rows, and room for both names in the lower one: they stay
+         * together there, rather than one sitting alone above the other.
+         */
+        function test_operators_that_fit_stay_together() {
+            setOperators([ "Lebara", "simyo" ]);
+            verify(bar.multiSimCarrierFits);
+            verify(!bar.splitCarrier);
+            compare(carrierRows().top, "");
+            compare(carrierRows().below, "Lebara | simyo");
+        }
+
+        /// Names too long for the lower row: the first moves up beside the camera.
+        function test_operators_that_do_not_fit_split() {
+            setOperators([ "Vodafone Libertel B.V.", "T-Mobile Netherlands" ]);
+            verify(!bar.multiSimCarrierFits);
+            verify(bar.splitCarrier);
+            compare(carrierRows().top, "Vodafone Libertel B.V.");
+            compare(carrierRows().below, "T-Mobile Netherlands");
+        }
+
+        /// And back together once they fit again, with nothing left above.
+        function test_operators_join_again() {
+            setOperators([ "Vodafone Libertel B.V.", "T-Mobile Netherlands" ]);
+            verify(bar.splitCarrier);
+            setOperators([ "Lebara", "simyo" ]);
+            verify(!bar.splitCarrier);
+            compare(carrierRows().top, "");
+            compare(carrierRows().below, "Lebara | simyo");
+        }
     }
 }

@@ -161,15 +161,29 @@ Item {
 
     /*
      * With the contents dropped under the camera (contentBelowCutout) the bar
-     * has two rows, and two operators get one each: the first SIM's in the
-     * strip beside the camera, the rest in the row below. Joined into one row
-     * they elided each other away on brax3, while the strip stood empty.
+     * has two rows. The operators stay together in the row below while they
+     * fit there; only when they don't - they elided each other away on brax3,
+     * while the strip stood empty - does the first SIM's move up to the strip
+     * beside the camera, and the rest stay below.
      * Not for a custom carrier string, which is one string, nor while the
      * carrier area is showing something else ("Launcher").
      */
     readonly property bool splitCarrier: contentBelowCutout && multiSimCarrierNames.length >= 2
+                                         && !multiSimCarrierFits
                                          && AppTweaks.enableCustomCarrierStringValue !== true
                                          && state !== "launcher-visible"
+    /*
+     * Whether all the operators fit in the row below, up to the clock or the
+     * camera. Measured against that row's own room (naturalRight), never the
+     * width the split gives it, so the answer cannot feed back into itself.
+     */
+    readonly property bool multiSimCarrierFits: Math.ceil(multiSimCarrierMetrics.advanceWidth)
+                                                <= carrierString.naturalRight - carrierString.x
+    TextMetrics {
+        id: multiSimCarrierMetrics
+        font: carrierText.font
+        text: statusBar.multiSimCarrierName
+    }
     onSplitCarrierChanged: updateCarrierName()
     // Where both names end when split: right-aligned to the nearer of the two
     // rows' limits (the camera above, the clock below), so they line up.
@@ -370,6 +384,7 @@ Item {
      */
     Text {
         id: carrierTopText
+        objectName: "carrierTopText"
         readonly property var obstacles: ScreenShape.obstaclesInBand(0, statusBar.contentTop,
                                                                      statusBar.shapeAngle)
         visible: statusBar.splitCarrier && carrierString.visible
@@ -607,6 +622,7 @@ Item {
 
             Text {
                 id: carrierText
+                objectName: "carrierText"
                 anchors.fill: parent
                 // Split over two rows, both names end at the same x.
                 horizontalAlignment: statusBar.splitCarrier ? Text.AlignRight : Text.AlignLeft

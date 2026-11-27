@@ -145,6 +145,16 @@ Row {
         isTurningOn: BluetoothManager.initializing
     }
 
+    VoLTEIndicator {
+        id: volteIndicator
+
+        anchors.top: indicatorsRow.top
+        anchors.bottom: indicatorsRow.bottom
+
+        enabled: telephonyService.powered && !airplaneModeService.active &&
+                 telephonyService.volte
+    }
+
     WanStatusIndicator {
         id: wanStatusIndicator
 

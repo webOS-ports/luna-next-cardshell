@@ -32,6 +32,8 @@ Item {
     property bool powered: false
     property bool connected: false
     property string registration: "noservice"
+    // Registered with IMS for voice calls (VoLTE)
+    property bool volte: false
     property int bars: 0
     property int rssi: 0
 
@@ -173,8 +175,12 @@ Item {
             if (!response.returnValue) {
                 telephonyService.registration = "noservice";
                 telephonyService.connected = false;
+                telephonyService.volte = false;
                 return;
             }
+
+            // Absent from a telephonyd that does not know about IMS
+            telephonyService.volte = response.extended.volte === true;
 
             if (response.extended.state)
                 telephonyService.connected = (response.extended.state === "service");
