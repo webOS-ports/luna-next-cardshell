@@ -415,9 +415,8 @@ Item {
             compare(areaBanners(area).count, 0, "not handed on to be played again");
         }
 
-        function test_both_spellings_of_clickable() {
+        function test_clickable_when_locked() {
             verify(sharedModel.clickableWhenLocked({ windowProperties: { "LuneOS_clickablewhenlocked": "true" } }));
-            verify(sharedModel.clickableWhenLocked({ windowProperties: { "LuneOS_clickableWhenLocked": "true" } }));
             verify(!sharedModel.clickableWhenLocked({ windowProperties: { "LuneOS_clickablewhenlocked": "false" } }));
             verify(!sharedModel.clickableWhenLocked({ windowProperties: {} }));
             verify(!sharedModel.clickableWhenLocked(null));

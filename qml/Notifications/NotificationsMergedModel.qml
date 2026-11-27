@@ -159,17 +159,15 @@ ListModel {
      * Whether a dashboard may be used from the lock screen: the alarm's
      * snooze and dismiss. Its application asked for that with
      * {clickableWhenLocked: true} in the window attributes, as
-     * DashboardWebApp read it from the stage arguments. WAM makes them
-     * LuneOS_ properties, lowercased with the rest of the features. A tap on
-     * any other entry does nothing there, as in LockWindow, which sent clicks
-     * on to a dashboard only when it was clickable while locked.
+     * DashboardWebApp read it from the stage arguments. The engine lowercases
+     * the whole window.open features string, so WAM hands it on as
+     * LuneOS_clickablewhenlocked, as AlertWindowsArea reads it. A tap on any
+     * other entry does nothing there, as in LockWindow, which sent clicks on
+     * to a dashboard only when it was clickable while locked.
      */
     function clickableWhenLocked(window) {
-        if (!window || !window.windowProperties)
-            return false;
-        var props = window.windowProperties;
-        return props["LuneOS_clickableWhenLocked"] === "true" ||
-               props["LuneOS_clickablewhenlocked"] === "true";
+        return !!window && !!window.windowProperties &&
+               String(window.windowProperties["LuneOS_clickablewhenlocked"]) === "true";
     }
 
     // A notification is a toast that is not "light": it goes in the list too.
