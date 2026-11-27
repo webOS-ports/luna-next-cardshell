@@ -64,6 +64,8 @@ Item {
 
         function test_empty() {
             compare(area.maxHeight, 0);
+            // no panel without an alert: it would sit over the dashboard bar
+            compare(area.height, 0);
         }
 
         function test_tallest_window_alert() {
@@ -73,6 +75,9 @@ Item {
 
             first.height = 120;
             compare(area.maxHeight, 120);
+            // the rounded panel's margin around the alert
+            compare(area.height, 120 + 2 * area.contentMargin);
+            verify(area.contentMargin > 0);
 
             compositor.closeWindow(first);
             compare(area.maxHeight, 90);
