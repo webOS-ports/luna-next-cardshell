@@ -20,12 +20,20 @@ import LunaNext.Common 0.1
 
 /*
  * "VoLTE" while the voice SIM is registered with IMS for voice: calls go
- * over LTE (or 5G, or Wi-Fi) instead of falling back to 2G/3G. telephonyd
- * reports it as networkStatusQuery's extended.volte, from oFono's
- * IpMultimediaSystem Registered and VoiceCapable.
+ * over LTE (or 5G) instead of falling back to 2G/3G. "VoWiFi" instead while
+ * that registration is over Wi-Fi: Wi-Fi calling.
+ *
+ * telephonyd reports them as networkStatusQuery's extended.volte, from
+ * oFono's IpMultimediaSystem Registered and VoiceCapable, whatever the
+ * bearer, and extended.vowifi, from the MediaTek extension's
+ * org.ofono.mtk.IpMultimediaSystem Bearer "wifi". A telephonyd without the
+ * bearer never sets vowifi, and Wi-Fi calling then shows as VoLTE.
  */
 BaseIndicator {
     id: volteIndicator
 
-    imageSource: "../../images/statusbar/network/network-volte.png"
+    property bool vowifi: false
+
+    imageSource: vowifi ? "../../images/statusbar/network/network-vowifi.png"
+                        : "../../images/statusbar/network/network-volte.png"
 }

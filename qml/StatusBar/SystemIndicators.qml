@@ -152,7 +152,8 @@ Row {
         anchors.bottom: indicatorsRow.bottom
 
         enabled: telephonyService.powered && !airplaneModeService.active &&
-                 telephonyService.volte
+                 (telephonyService.volte || telephonyService.vowifi)
+        vowifi: telephonyService.vowifi
     }
 
     WanStatusIndicator {
