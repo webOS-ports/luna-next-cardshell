@@ -60,6 +60,8 @@ WindowManager {
         objectName: "notificationMergedModel"
         compositorInstance: compositor
         held: windowManager.state === "firstuse"
+        // the lock screen shows the list, with its dashboards, while it is up
+        onLockScreen: lockScreen.dashboardsShown
     }
 
     // Where the notifications go may depend on how the screen is held. The
@@ -623,6 +625,9 @@ WindowManager {
         z: 700
 
         windowManagerInstance: windowManager
+        notificationsModel: notificationsModel
+        compositorInstance: compositor
+        alertShowing: alertWindowsAreaInstance.lockScreenAlertShowing
 
         isFirstUse: false
 

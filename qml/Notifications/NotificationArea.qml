@@ -67,6 +67,10 @@ Rectangle {
         target: notificationArea.mergedModel
 
         function onAddBannerNotification(notifObject) {
+           // The lock screen's then (LockScreenDashboards): this area is
+           // hidden behind it, and would play the banner's sound a second time.
+           if (notificationArea.mergedModel.onLockScreen)
+               return;
            bannerItemsPopups.popupModel.append({"object": notifObject});
         }
 

@@ -88,6 +88,22 @@ Item {
     // Stays up, unlike the status line, but the lockout says more when it shows.
     property string passcodeHint: ""
 
+    /*
+     * The top of what stands at the bottom: the padlock at rest and the line
+     * over it, when one shows. The lock screen's list of notifications sits
+     * on it, as LunaSysMgr 2.x put its dashboards just above the lock button.
+     * From where the padlock rests, not from where a drag has taken it.
+     */
+    readonly property real restingTop: {
+        var top = pad._basePositionY;
+        var texts = [fpLockoutText, passcodeHintText, fpStatusText];
+        for (var i = 0; i < texts.length; i++) {
+            if (texts[i].visible)
+                top = Math.min(top, pad._basePositionY - texts[i].anchors.bottomMargin - texts[i].height);
+        }
+        return top;
+    }
+
     function biometricPasscodeHint(deviceLockMode, fingerprint, face) {
         if (!fingerprint && !face)
             return "";

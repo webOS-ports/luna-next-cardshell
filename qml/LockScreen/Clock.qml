@@ -35,6 +35,10 @@ Item {
     property string screenLockImagePrefix: "../images/lockscreen/screen-lock-clock-"
     property string screenLockImageSuffix: ".png"
 
+    // Where the digits end: the lock screen's list of notifications stays
+    // below them.
+    readonly property real digitsBottom: clockDigits.y + clockDigits.height
+
     function onPrefsChanged(response) {
         if (response.timeFormat !== undefined) {
             timeFormat = response.timeFormat

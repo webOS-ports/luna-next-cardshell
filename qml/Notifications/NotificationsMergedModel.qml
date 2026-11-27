@@ -146,6 +146,32 @@ ListModel {
                window.windowProperties["LuneOS_dashOwnBar"] === "true";
     }
 
+    /*
+     * Whether the lock screen lists the entries (LockScreenDashboards), as
+     * LunaSysMgr's LockWindow drew the dashboards over the wallpaper. A
+     * dashboard window can be in one place only, so while this holds the
+     * lock screen's rows hold the windows, and the notification area's rows,
+     * hidden behind the lock screen, take them back once it no longer does.
+     */
+    property bool onLockScreen: false
+
+    /*
+     * Whether a dashboard may be used from the lock screen: the alarm's
+     * snooze and dismiss. Its application asked for that with
+     * {clickableWhenLocked: true} in the window attributes, as
+     * DashboardWebApp read it from the stage arguments. WAM makes them
+     * LuneOS_ properties, lowercased with the rest of the features. A tap on
+     * any other entry does nothing there, as in LockWindow, which sent clicks
+     * on to a dashboard only when it was clickable while locked.
+     */
+    function clickableWhenLocked(window) {
+        if (!window || !window.windowProperties)
+            return false;
+        var props = window.windowProperties;
+        return props["LuneOS_clickableWhenLocked"] === "true" ||
+               props["LuneOS_clickablewhenlocked"] === "true";
+    }
+
     // A notification is a toast that is not "light": it goes in the list too.
     function isSticky(notifObject) {
         return !!notifObject.type && notifObject.type !== "light";
@@ -354,6 +380,9 @@ ListModel {
 
             property var notifObject: loaderNotifObject;
             property var expiryDiff: notifObject ? notifObject.schedule.expire*1000 - Date.now() : 0;
+            // The lock screen's copy of an entry: the notification area's,
+            // still there behind it, closes the toast when it expires.
+            readonly property bool lockScreenRow: typeof loaderOnLockScreen !== "undefined" && !!loaderOnLockScreen
 
             signal clicked()
             signal closed()
@@ -362,9 +391,10 @@ ListModel {
 
             Timer {
                 id: expiryTimer
+                objectName: "expiryTimer"
                 interval: Math.max(5000, Math.min(expiryDiff, 2000000000 /*never exceed max int32 value*/))
                 repeat: false
-                running: true
+                running: !notificationItem.lockScreenRow
                 onTriggered: notificationItem.closed()
             }
 
@@ -398,7 +428,8 @@ ListModel {
                 iconPathServices.setIconUrlOrDefault(live.iconPath, live.sourceId, function(resolvedUrl) { notificationItem.iconUrl = resolvedUrl; });
                 // work on a copy, to avoid warning when model is destroyed
                 notifObject = JSON.parse(JSON.stringify(live));
-                expiryTimer.restart();
+                if (!lockScreenRow)
+                    expiryTimer.restart();
             }
 
             Component.onCompleted: {
@@ -469,7 +500,29 @@ ListModel {
             signal closedAll()
             onClosedAll: closed()
 
-            onWidthChanged: if(dashboardWindow) dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
+            // On the lock screen's list or on the notification area's (see
+            // onLockScreen): only the row where the window is to be shows it.
+            readonly property bool lockScreenRow: typeof loaderOnLockScreen !== "undefined" && !!loaderOnLockScreen
+            readonly property bool ownsWindow: lockScreenRow === mergedModel.onLockScreen
+            onOwnsWindowChanged: if (ownsWindow) takeWindow()
+
+            onWidthChanged: if (dashboardWindow && dashboardWindow.parent === dashboardItem)
+                                dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
+
+            function takeWindow() {
+                if (!dashboardWindow)
+                    return;
+                dashboardWindow.parent = dashboardItem;
+
+                /* This resizes only the quick item which contains the child surface but
+                 * doesn't really resize the client window */
+                dashboardWindow.anchors.fill = dashboardItem;
+                dashboardWindow.visible = true;
+
+                /* Resize the real client window to have the right size: the lock
+                 * screen's rows and the notification area's are not as wide */
+                dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
+            }
 
             // Behind the window, which Component.onCompleted parents here and
             // so stacks on top. Shows through a transparent dashboard window.
@@ -480,21 +533,10 @@ ListModel {
                 cornerHeight: Units.gu(5.6)
             }
 
-            Component.onCompleted: {
-                if( dashboardWindow ) {
-                    dashboardWindow.parent = dashboardItem;
-
-                    /* This resizes only the quick item which contains the child surface but
-                                             * doesn't really resize the client window */
-                    dashboardWindow.anchors.fill = dashboardItem;
-                    dashboardWindow.visible = true;
-
-                    /* Resize the real client window to have the right size */
-                    dashboardWindow.changeSize(Qt.size(dashboardItem.width, dashboardItem.height));
-                }
-            }
+            Component.onCompleted: if (ownsWindow) takeWindow()
             // Not once it is another entry's: when the list moves to the other
-            // area, the new one may have taken the window before this goes.
+            // area, the new one may have taken the window before this goes,
+            // and so may the lock screen's or the notification area's.
             Component.onDestruction: {
                 if( dashboardWindow && dashboardWindow.parent === dashboardItem ) dashboardWindow.visible = false;
             }
