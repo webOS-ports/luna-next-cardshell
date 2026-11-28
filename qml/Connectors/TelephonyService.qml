@@ -32,8 +32,10 @@ Item {
     property bool powered: false
     property bool connected: false
     property string registration: "noservice"
-    // Registered with IMS for voice calls (VoLTE)
+    // Registered with IMS for voice calls, over any bearer (VoLTE)
     property bool volte: false
+    // ... and that registration is over Wi-Fi (VoWiFi, Wi-Fi calling)
+    property bool vowifi: false
     property int bars: 0
     property int rssi: 0
 
@@ -176,11 +178,14 @@ Item {
                 telephonyService.registration = "noservice";
                 telephonyService.connected = false;
                 telephonyService.volte = false;
+                telephonyService.vowifi = false;
                 return;
             }
 
-            // Absent from a telephonyd that does not know about IMS
+            // Absent from a telephonyd that does not know about IMS, or
+            // (vowifi) about what carries it
             telephonyService.volte = response.extended.volte === true;
+            telephonyService.vowifi = response.extended.vowifi === true;
 
             if (response.extended.state)
                 telephonyService.connected = (response.extended.state === "service");

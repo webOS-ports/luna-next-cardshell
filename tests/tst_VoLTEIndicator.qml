@@ -24,9 +24,12 @@ import "../qml/Connectors"
 
 /*
  * The status bar says VoLTE while telephonyd reports the voice SIM registered
- * with IMS for voice (networkStatusQuery's extended.volte), and not otherwise:
- * not without it, not from a telephonyd that does not report it, not with the
- * modem off or in airplane mode.
+ * with IMS for voice (networkStatusQuery's extended.volte), and VoWiFi instead
+ * while that is over Wi-Fi (extended.vowifi); and neither otherwise: not
+ * without IMS voice, not from a telephonyd that does not report it. VoLTE
+ * hides with the modem off or in airplane mode; VoWiFi stays, as calls over
+ * Wi-Fi keep working then. A telephonyd that knows volte but not vowifi gets
+ * VoLTE, as before.
  */
 Item {
     id: root
@@ -47,6 +50,12 @@ Item {
     VoLTEIndicator {
         id: standalone
         height: 40
+    }
+
+    VoLTEIndicator {
+        id: standaloneWifi
+        height: 40
+        vowifi: true
     }
 
     TestCase {
@@ -89,11 +98,18 @@ Item {
             queries[0].onResponse({ "payload": JSON.stringify(reply) });
         }
 
-        function registered(volte) {
+        function registered(volte, vowifi) {
             var extended = { "state": "service", "registration": "home", "networkName": "Lebara" };
             if (volte !== undefined)
                 extended.volte = volte;
+            if (vowifi !== undefined)
+                extended.vowifi = vowifi;
             return { "returnValue": true, "extended": extended };
+        }
+
+        function shows(indicator, name) {
+            return indicator.visible
+                    && indicator.imageSource.indexOf("/network-" + name + ".png") >= 0;
         }
 
         function makeBar() {
@@ -104,8 +120,7 @@ Item {
             });
             compare(connectors.length, 1, "the telephony connector");
             var indicators = findAll(bar, function(i) {
-                return i.hasOwnProperty("imageSource")
-                        && i.imageSource.indexOf("network-volte") >= 0;
+                return i.hasOwnProperty("imageSource") && i.hasOwnProperty("vowifi");
             });
             compare(indicators.length, 1, "the VoLTE indicator");
             return { bar: bar, telephony: connectors[0], indicator: indicators[0] };
@@ -117,6 +132,57 @@ Item {
             // As wide as "VoLTE" needs, at the height of the other network icons
             verify(image(standalone).sourceSize.width > image(standalone).sourceSize.height);
             compare(image(standalone).sourceSize.height, 72);
+        }
+
+        function test_the_vowifi_icon_loads() {
+            verify(standaloneWifi.imageVisible);
+            compare(standaloneWifi.imageSource.indexOf("network-vowifi.png") >= 0, true);
+            tryCompare(image(standaloneWifi), "status", Image.Ready, 2000);
+            tryCompare(image(standalone), "status", Image.Ready, 2000);
+            // The same box as VoLTE's, as tall, wider by the extra letter
+            compare(image(standaloneWifi).sourceSize.height, image(standalone).sourceSize.height);
+            verify(image(standaloneWifi).sourceSize.width > image(standalone).sourceSize.width);
+            verify(standaloneWifi.width > standalone.width);
+        }
+
+        function test_vowifi_follows_telephonyd() {
+            var t = makeBar();
+            t.telephony.powered = true;
+
+            // Wi-Fi calling
+            answerNetworkStatus(t.telephony, registered(true, true));
+            verify(t.telephony.vowifi);
+            verify(shows(t.indicator, "vowifi"), "VoWiFi over Wi-Fi");
+
+            // Out of Wi-Fi coverage, onto LTE
+            answerNetworkStatus(t.telephony, registered(true, false));
+            verify(!t.telephony.vowifi);
+            verify(shows(t.indicator, "volte"), "VoLTE after leaving Wi-Fi");
+
+            // And back
+            answerNetworkStatus(t.telephony, registered(true, true));
+            verify(shows(t.indicator, "vowifi"), "VoWiFi again");
+
+            // IMS lost
+            answerNetworkStatus(t.telephony, registered(false, false));
+            tryVerify(function() { return !t.indicator.visible; }, 2000, "nothing without IMS voice");
+        }
+
+        // telephonyd sets vowifi only with volte; the bar does not rely on it
+        function test_vowifi_alone_still_shows() {
+            var t = makeBar();
+            t.telephony.powered = true;
+            answerNetworkStatus(t.telephony, registered(false, true));
+            verify(shows(t.indicator, "vowifi"));
+        }
+
+        function test_telephonyd_without_the_bearer_says_volte() {
+            var t = makeBar();
+            t.telephony.powered = true;
+            answerNetworkStatus(t.telephony, registered(true, true));
+            answerNetworkStatus(t.telephony, registered(true, undefined));
+            verify(!t.telephony.vowifi);
+            verify(shows(t.indicator, "volte"));
         }
 
         function test_volte_follows_telephonyd() {
@@ -144,12 +210,14 @@ Item {
         function test_failed_query_clears_volte() {
             var t = makeBar();
             t.telephony.powered = true;
-            answerNetworkStatus(t.telephony, registered(true));
+            answerNetworkStatus(t.telephony, registered(true, true));
             answerNetworkStatus(t.telephony, { "returnValue": false });
             verify(!t.telephony.volte);
+            verify(!t.telephony.vowifi);
+            tryVerify(function() { return !t.indicator.visible; }, 2000);
         }
 
-        function test_hidden_with_the_modem_off_or_in_airplane_mode() {
+        function test_volte_hidden_with_the_modem_off_or_in_airplane_mode() {
             var t = makeBar();
             t.telephony.powered = true;
             answerNetworkStatus(t.telephony, registered(true));
@@ -162,6 +230,30 @@ Item {
             tryVerify(function() { return t.indicator.visible; }, 2000, "modem back on");
             root.airplaneModeService.active = true;
             tryVerify(function() { return !t.indicator.visible; }, 2000, "airplane mode");
+            root.airplaneModeService.active = false;
+
+        }
+
+        // As on the BraX3 on 28 Nov 2026: airplane mode on, IMS still on Wi-Fi
+        function test_vowifi_stays_with_the_modem_off_or_in_airplane_mode() {
+            var t = makeBar();
+            t.telephony.powered = true;
+            answerNetworkStatus(t.telephony, registered(true, true));
+            tryVerify(function() { return shows(t.indicator, "vowifi"); }, 2000);
+
+            root.airplaneModeService.active = true;
+            t.telephony.powered = false;
+            wait(50);
+            verify(shows(t.indicator, "vowifi"), "VoWiFi in airplane mode");
+            root.airplaneModeService.active = false;
+            wait(50);
+            verify(shows(t.indicator, "vowifi"), "VoWiFi, modem off");
+
+            // IMS leaves Wi-Fi while offline: nothing left to show
+            root.airplaneModeService.active = true;
+            answerNetworkStatus(t.telephony, registered(true, false));
+            tryVerify(function() { return !t.indicator.visible; }, 2000,
+                      "VoLTE in airplane mode");
             root.airplaneModeService.active = false;
         }
     }

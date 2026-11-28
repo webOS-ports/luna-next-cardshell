@@ -200,8 +200,40 @@ Item {
             return n;
         }
 
+        /*
+         * Mobile data up, so the network type indicator is drawn too, as it is
+         * on a phone with data on (it hides when nothing carries the internet
+         * over cellular, as on webOS 2.2.4). The desktop com.palm.wan stand-in
+         * reports no data connection, so answer for it here.
+         */
+        function mobileDataUp() {
+            var walk = function (item, pred, out) {
+                if (pred(item))
+                    out.push(item);
+                var kids = (item.children || []).concat(item.resources || []);
+                for (var i = 0; i < kids.length; i++)
+                    walk(kids[i], pred, out);
+                return out;
+            };
+            var wan = walk(bar, function (i) {
+                return i.hasOwnProperty("roamGuard") && i.hasOwnProperty("technology");
+            }, []);
+            compare(wan.length, 1, "the WAN connector");
+            var found = walk(wan[0], function (i) { return i.method === "getstatus"; }, []);
+            compare(found.length, 1, "the com.palm.wan subscription");
+            found[0].onResponse({ "payload": JSON.stringify({
+                "returnValue": true, "simId": 0, "state": "enable", "roamguard": "enable",
+                "networktype": "lte", "dataaccess": "usable", "networkstatus": "attached",
+                "wanstate": "enable", "disablewan": "off",
+                "connectedservices": [{ "service": ["internet"], "cid": 1,
+                                        "connectstatus": "active", "ipaddress": "10.0.0.2" }]
+            }) });
+            wait(500);
+        }
+
         function test_four_sims_stay_off_the_camera() {
             setSims(4);
+            mobileDataUp();
             var r = cutout();
 
             var indicators = find(bar, function (i) {

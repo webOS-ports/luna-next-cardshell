@@ -37,6 +37,19 @@ Item {
     // connection, which is what makes it usable as a status bar indicator.
     // One of: none, gprs, edge, umts, hsdpa, lte, 1x, evdo.
     property string technology: "none"
+    // A cellular connection carries the internet: com.palm.wan reports the
+    // network attached, data access usable, and an "internet" context active
+    // (or dormant, on CDMA). The same test webOS 2.2.4's luna-systemui
+    // (bar-assistant.js) and 3.0's LunaSysMgr (StatusBarServicesConnector)
+    // put their network type icon behind.
+    property bool internetConnected: false
+    // Wi-Fi is connected and on the internet
+    property bool wifiOnInternet: false
+    // What the status bar shows the radio access technology for: a cellular
+    // internet connection, and not while Wi-Fi carries the internet - with
+    // mobile data off there is no network type to show, as on legacy webOS.
+    readonly property bool showTechnology: internetConnected && !wifiOnInternet &&
+                                           technology !== "none"
     // Data roaming is blocked. telephonyd words this the other way round
     // ("roamguard" enabled means roaming is guarded against), and so does the
     // menu entry that drives it.
@@ -47,6 +60,20 @@ Item {
     // only thing that moves roamGuard, so the menu never shows a value the
     // modem did not take.
     signal roamGuardSetFailed()
+
+    // com.palm.wan/getstatus: is an internet context up on cellular
+    function cellularInternet(status) {
+        if (status.networkstatus !== "attached" || status.dataaccess !== "usable")
+            return false;
+        var services = status.connectedservices || [];
+        for (var i = 0; i < services.length; i++) {
+            if ((services[i].service || []).indexOf("internet") < 0)
+                continue;
+            return services[i].connectstatus === "active" ||
+                   services[i].connectstatus === "dormant";
+        }
+        return false;
+    }
 
     function setRoamGuard(enabled) {
         setWanConfig.call("luna://com.palm.wan/set",
@@ -75,6 +102,7 @@ Item {
         function disconnected() {
             wanService.online = false;
             wanService.connected = false;
+            wanService.wifiOnInternet = false;
         }
     }
 
@@ -90,6 +118,7 @@ Item {
             if (!response.returnValue) {
                 wanService.online = false;
                 wanService.connected = false;
+                wanService.wifiOnInternet = false;
                 return;
             }
 
@@ -97,6 +126,8 @@ Item {
             // leaves them out entirely rather than reporting them disabled.
             wanService.online = !!(response.cellular && response.cellular.enabled);
             wanService.connected = !!(response.wan && response.wan.onInternet);
+            wanService.wifiOnInternet = !!(response.wifi && response.wifi.state === "connected" &&
+                                           response.wifi.onInternet === "yes");
         }
 
         onError: function (errorMessage) {
@@ -117,6 +148,7 @@ Item {
         function disconnected() {
             wanService.powered = false;
             wanService.technology = "none";
+            wanService.internetConnected = false;
         }
     }
 
@@ -137,13 +169,16 @@ Item {
             if (!response.returnValue) {
                 wanService.powered = false;
                 wanService.technology = "none";
+                wanService.internetConnected = false;
                 return;
             }
 
             // The first reply to a subscribe only acknowledges it; the status
             // itself arrives in the messages after it.
-            if (response.networkstatus)
+            if (response.networkstatus) {
                 wanService.powered = (response.networkstatus === "attached");
+                wanService.internetConnected = wanService.cellularInternet(response);
+            }
 
             if (response.networktype)
                 wanService.technology = response.networktype;

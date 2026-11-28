@@ -151,8 +151,16 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: telephonyService.powered && !airplaneModeService.active &&
-                 telephonyService.volte
+        /*
+         * VoLTE needs the radio, so not with the modem off or in airplane
+         * mode. Wi-Fi calling keeps going without it (IMS stays registered
+         * over Wi-Fi with oFono offline), so VoWiFi shows whenever telephonyd
+         * reports it.
+         */
+        enabled: telephonyService.vowifi ||
+                 (telephonyService.powered && !airplaneModeService.active &&
+                  telephonyService.volte)
+        vowifi: telephonyService.vowifi
     }
 
     WanStatusIndicator {
@@ -162,17 +170,16 @@ Row {
         anchors.bottom: indicatorsRow.bottom
 
         /*
-         * The service indicator that goes with the signal bars: it says which
-         * radio access technology the modem is registered on, so it is up
-         * whenever there is a mobile network, not only while cellular happens
-         * to be carrying the internet connection - it used to be gated on
-         * that, which hid it for good on any device with WiFi up.
+         * The network type of the mobile data connection (3G, 4G, 5G ...):
+         * shown while a cellular connection carries the internet and Wi-Fi
+         * does not, as webOS 2.2.4 and 3.0 showed it. With mobile data off, or
+         * on Wi-Fi, the signal bars alone say the phone is on a network.
          *
          * Packet data runs on one SIM at a time, so this reflects the SIM
          * currently selected as the data SIM.
          */
         enabled: telephonyService.powered && !airplaneModeService.active &&
-                 wanService.technology !== "none"
+                 wanService.showTechnology
         technology: wanService.technology
     }
 
@@ -199,6 +206,10 @@ Row {
             // the signal icon keeps its full size and a slot takes no more
             // width than the icon itself
             width: simSignalIndicator.width
+            // and none with the radio off, as in airplane mode: the Row only
+            // skips an item that isn't visible. Not the icon's visible, which
+            // follows this item's and would keep the slot hidden for good.
+            visible: simSignalIndicator.enabled
 
             TelephonySignalIndicator {
                 id: simSignalIndicator
