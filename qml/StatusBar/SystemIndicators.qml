@@ -206,6 +206,10 @@ Row {
             // the signal icon keeps its full size and a slot takes no more
             // width than the icon itself
             width: simSignalIndicator.width
+            // and none with the radio off, as in airplane mode: the Row only
+            // skips an item that isn't visible. Not the icon's visible, which
+            // follows this item's and would keep the slot hidden for good.
+            visible: simSignalIndicator.enabled
 
             TelephonySignalIndicator {
                 id: simSignalIndicator
