@@ -26,9 +26,10 @@ import "../qml/Connectors"
  * The status bar says VoLTE while telephonyd reports the voice SIM registered
  * with IMS for voice (networkStatusQuery's extended.volte), and VoWiFi instead
  * while that is over Wi-Fi (extended.vowifi); and neither otherwise: not
- * without IMS voice, not from a telephonyd that does not report it, not with
- * the modem off or in airplane mode. A telephonyd that knows volte but not
- * vowifi gets VoLTE, as before.
+ * without IMS voice, not from a telephonyd that does not report it. VoLTE
+ * hides with the modem off or in airplane mode; VoWiFi stays, as calls over
+ * Wi-Fi keep working then. A telephonyd that knows volte but not vowifi gets
+ * VoLTE, as before.
  */
 Item {
     id: root
@@ -216,7 +217,7 @@ Item {
             tryVerify(function() { return !t.indicator.visible; }, 2000);
         }
 
-        function test_hidden_with_the_modem_off_or_in_airplane_mode() {
+        function test_volte_hidden_with_the_modem_off_or_in_airplane_mode() {
             var t = makeBar();
             t.telephony.powered = true;
             answerNetworkStatus(t.telephony, registered(true));
@@ -231,10 +232,29 @@ Item {
             tryVerify(function() { return !t.indicator.visible; }, 2000, "airplane mode");
             root.airplaneModeService.active = false;
 
+        }
+
+        // As on the BraX3 on 28 Nov 2026: airplane mode on, IMS still on Wi-Fi
+        function test_vowifi_stays_with_the_modem_off_or_in_airplane_mode() {
+            var t = makeBar();
+            t.telephony.powered = true;
             answerNetworkStatus(t.telephony, registered(true, true));
             tryVerify(function() { return shows(t.indicator, "vowifi"); }, 2000);
+
+            root.airplaneModeService.active = true;
             t.telephony.powered = false;
-            tryVerify(function() { return !t.indicator.visible; }, 2000, "VoWiFi, modem off");
+            wait(50);
+            verify(shows(t.indicator, "vowifi"), "VoWiFi in airplane mode");
+            root.airplaneModeService.active = false;
+            wait(50);
+            verify(shows(t.indicator, "vowifi"), "VoWiFi, modem off");
+
+            // IMS leaves Wi-Fi while offline: nothing left to show
+            root.airplaneModeService.active = true;
+            answerNetworkStatus(t.telephony, registered(true, false));
+            tryVerify(function() { return !t.indicator.visible; }, 2000,
+                      "VoLTE in airplane mode");
+            root.airplaneModeService.active = false;
         }
     }
 }

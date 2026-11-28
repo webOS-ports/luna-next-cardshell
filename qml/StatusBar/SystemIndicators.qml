@@ -151,8 +151,15 @@ Row {
         anchors.top: indicatorsRow.top
         anchors.bottom: indicatorsRow.bottom
 
-        enabled: telephonyService.powered && !airplaneModeService.active &&
-                 (telephonyService.volte || telephonyService.vowifi)
+        /*
+         * VoLTE needs the radio, so not with the modem off or in airplane
+         * mode. Wi-Fi calling keeps going without it (IMS stays registered
+         * over Wi-Fi with oFono offline), so VoWiFi shows whenever telephonyd
+         * reports it.
+         */
+        enabled: telephonyService.vowifi ||
+                 (telephonyService.powered && !airplaneModeService.active &&
+                  telephonyService.volte)
         vowifi: telephonyService.vowifi
     }
 
