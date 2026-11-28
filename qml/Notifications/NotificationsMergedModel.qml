@@ -274,8 +274,19 @@ ListModel {
             return;
         }
 
-        // Banner in all cases; also in the list unless it is "light"
-        addToast(notifObject, true);
+        // Banner in all cases but a replayed one; also in the list unless it
+        // is "light"
+        addToast(notifObject, !isReplayed(notifObject));
+    }
+    /*
+     * A toast that was on screen before the shell restarted. notificationmgr
+     * keeps the ones nobody has closed and hands them to a shell that
+     * subscribes again, marked so: they go back in the list as they were,
+     * with no banner and no sound for something the user has already seen
+     * and heard.
+     */
+    function isReplayed(notifObject) {
+        return !!notifObject && notifObject.replayed === true;
     }
     function toastRemoved(notifObject) {
         let toastId = getToastIdFromNotif(notifObject);
