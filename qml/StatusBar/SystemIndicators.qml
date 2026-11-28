@@ -163,17 +163,16 @@ Row {
         anchors.bottom: indicatorsRow.bottom
 
         /*
-         * The service indicator that goes with the signal bars: it says which
-         * radio access technology the modem is registered on, so it is up
-         * whenever there is a mobile network, not only while cellular happens
-         * to be carrying the internet connection - it used to be gated on
-         * that, which hid it for good on any device with WiFi up.
+         * The network type of the mobile data connection (3G, 4G, 5G ...):
+         * shown while a cellular connection carries the internet and Wi-Fi
+         * does not, as webOS 2.2.4 and 3.0 showed it. With mobile data off, or
+         * on Wi-Fi, the signal bars alone say the phone is on a network.
          *
          * Packet data runs on one SIM at a time, so this reflects the SIM
          * currently selected as the data SIM.
          */
         enabled: telephonyService.powered && !airplaneModeService.active &&
-                 wanService.technology !== "none"
+                 wanService.showTechnology
         technology: wanService.technology
     }
 
